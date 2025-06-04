@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle} + ' - 智慧校园管理系统'">财务报表 - 智慧校园管理系统</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- 自定义样式 -->
+    <link href="/css/admin.css" rel="stylesheet">
+    <!-- 引入组件样式 -->
+    <th:block th:replace="~{components/topbar :: topbar-style}"></th:block>
+</head>
+<body>
+    <div class="wrapper">
+       <!-- 左侧导航栏 -->
+        <th:block th:replace="~{components/sidebar :: sidebar}"></th:block>
+
+        <!-- 主内容区域 -->
+        <div id="content" class="content">
+            <!-- 顶部导航栏 -->
+            <nav class="navbar navbar-expand-lg navbar-light bg-light">
+                <div class="container-fluid">
+                    <button type="button" id="sidebarCollapse" class="btn btn-info">
+                        <i class="fas fa-align-left"></i>
+                    </button>
+                    
+                    <div class="navbar-nav ms-auto">
+                        <div class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user"></i> 管理员
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="/admin/profile"><i class="fas fa-user-circle"></i> 个人资料</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="/admin/logout"><i class="fas fa-sign-out-alt"></i> 退出登录</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- 页面内容 -->
+            <div class="content-wrapper">
+                <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                    <h1 class="h3 mb-0 text-gray-800">财务报表</h1>
+                    <div class="btn-group">
+                        <button class="btn btn-outline-primary" onclick="exportReport('excel')">
+                            <i class="fas fa-file-excel"></i> 导出Excel
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="exportReport('pdf')">
+                            <i class="fas fa-file-pdf"></i> 导出PDF
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 报表筛选 -->
+                <div class="card shadow mb-4">
+                    <div class="card-body">
+                        <form class="row g-3">
+                            <div class="col-md-3">
+                                <label for="reportType" class="form-label">报表类型</label>
+                                <select class="form-control" id="reportType" th:value="${reportType}">
+                                    <option value="month">月度报表</option>
+                                    <option value="quarter">季度报表</option>
+                                    <option value="year">年度报表</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="year" class="form-label">年份</label>
+                                <select class="form-control" id="year" th:value="${selectedYear}">
+                                    <option value="2024">2024年</option>
+                                    <option value="2023">2023年</option>
+                                    <option value="2022">2022年</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="month" class="form-label">月份</label>
+                                <select class="form-control" id="month" th:value="${selectedMonth}">
+                                    <option value="1">1月</option>
+                                    <option value="2">2月</option>
+                                    <option value="3">3月</option>
+                                    <option value="4">4月</option>
+                                    <option value="5">5月</option>
+                                    <option value="6">6月</option>
+                                    <option value="7">7月</option>
+                                    <option value="8">8月</option>
+                                    <option value="9">9月</option>
+                                    <option value="10">10月</option>
+                                    <option value="11">11月</option>
+                                    <option value="12">12月</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">&nbsp;</label>
+                                <button type="button" class="btn btn-primary d-block" onclick="generateReport()">
+                                    <i class="fas fa-search"></i> 生成报表
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- 统计卡片 -->
+                <div class="row mb-4">
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card stat-card primary shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="stat-label mb-1">月度收入</div>
+                                        <div class="stat-number" th:text="${stats.monthlyRevenue}">¥0</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-calendar-alt fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card stat-card success shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="stat-label mb-1">年度收入</div>
+                                        <div class="stat-number" th:text="${stats.yearlyRevenue}">¥0</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card stat-card warning shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="stat-label mb-1">未缴费用</div>
+                                        <div class="stat-number" th:text="${stats.unpaidAmount}">¥0</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card stat-card danger shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="stat-label mb-1">退费金额</div>
+                                        <div class="stat-number" th:text="${stats.refundAmount}">¥0</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-undo fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 图表区域 -->
+                <div class="row mb-4">
+                    <!-- 月度收入趋势图 -->
+                    <div class="col-xl-8 col-lg-7">
+                        <div class="card shadow mb-4">
+                            <div class="card-header py-3">
+                                <h6 class="m-0 font-weight-bold text-primary">月度收入趋势</h6>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="monthlyRevenueChart" width="400" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 费用类型分布图 -->
+                    <div class="col-xl-4 col-lg-5">
+                        <div class="card shadow mb-4">
+                            <div class="card-header py-3">
+                                <h6 class="m-0 font-weight-bold text-primary">费用类型分布</h6>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="feeTypeChart" width="400" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 详细数据表格 -->
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">费用类型统计</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>费用类型</th>
+                                        <th>金额</th>
+                                        <th>占比</th>
+                                        <th>趋势</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="feeType : ${feeTypeStats}">
+                                        <td th:text="${feeType.type}"></td>
+                                        <td th:text="'¥' + ${#numbers.formatInteger(feeType.amount, 0, 'COMMA')}"></td>
+                                        <td>
+                                            <span th:text="${feeType.percentage} + '%'"></span>
+                                            <div class="progress mt-1" style="height: 5px;">
+                                                <div class="progress-bar bg-primary" th:style="'width: ' + ${feeType.percentage} + '%'"></div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <i class="fas fa-arrow-up text-success"></i>
+                                            <small class="text-muted">+5.2%</small>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- 自定义脚本 -->
+    <script src="/js/admin.js"></script>
+    <script th:inline="javascript">
+        // 月度收入数据
+        const monthlyData = /*[[${monthlyData}]]*/ [];
+        const feeTypeStats = /*[[${feeTypeStats}]]*/ [];
+        
+        // 月度收入趋势图
+        const monthlyCtx = document.getElementById('monthlyRevenueChart').getContext('2d');
+        new Chart(monthlyCtx, {
+            type: 'line',
+            data: {
+                labels: monthlyData.map(item => item.month),
+                datasets: [{
+                    label: '月度收入',
+                    data: monthlyData.map(item => item.revenue),
+                    borderColor: 'rgb(75, 192, 192)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '¥' + value.toLocaleString();
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // 费用类型分布图
+        const feeTypeCtx = document.getElementById('feeTypeChart').getContext('2d');
+        new Chart(feeTypeCtx, {
+            type: 'doughnut',
+            data: {
+                labels: feeTypeStats.map(item => item.type),
+                datasets: [{
+                    data: feeTypeStats.map(item => item.amount),
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.8)',
+                        'rgba(54, 162, 235, 0.8)',
+                        'rgba(255, 205, 86, 0.8)',
+                        'rgba(75, 192, 192, 0.8)',
+                        'rgba(153, 102, 255, 0.8)'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+        
+        function generateReport() {
+            const type = document.getElementById('reportType').value;
+            const year = document.getElementById('year').value;
+            const month = document.getElementById('month').value;
+            
+            window.location.href = `/admin/reports?type=${type}&year=${year}&month=${month}`;
+        }
+        
+        function exportReport(format) {
+            alert(`导出${format.toUpperCase()}报表功能开发中`);
+        }
+    </script>
+</body>
+</html>

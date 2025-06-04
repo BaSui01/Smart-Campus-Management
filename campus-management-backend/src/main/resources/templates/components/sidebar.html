@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+    <!-- 左侧导航栏组件 -->
+    <nav th:fragment="sidebar" class="sidebar" id="sidebar">
+        <!-- 品牌标识 -->
+        <div class="sidebar-header">
+            <h3>
+                <i class="fas fa-graduation-cap"></i>
+                <span class="sidebar-brand-text">智慧校园</span>
+            </h3>
+        </div>
+
+        <!-- 导航菜单 -->
+        <ul class="components">
+            <!-- 仪表盘 -->
+            <li th:classappend="${currentPage == 'dashboard'} ? 'active'">
+                <a th:href="@{/admin/dashboard}">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>仪表盘</span>
+                </a>
+            </li>
+
+            <!-- 系统管理分组 -->
+            <li class="nav-section">系统管理</li>
+            
+            <li th:classappend="${currentPage == 'users'} ? 'active'">
+                <a th:href="@{/admin/users}">
+                    <i class="fas fa-users"></i>
+                    <span>用户管理</span>
+                </a>
+            </li>
+
+            <li th:classappend="${currentPage == 'roles'} ? 'active'">
+                <a th:href="@{/admin/roles}">
+                    <i class="fas fa-user-tag"></i>
+                    <span>角色管理</span>
+                </a>
+            </li>
+
+            <li th:classappend="${currentPage == 'permissions'} ? 'active'">
+                <a th:href="@{/admin/permissions}">
+                    <i class="fas fa-key"></i>
+                    <span>权限管理</span>
+                </a>
+            </li>
+
+            <li th:classappend="${currentPage == 'settings'} ? 'active'">
+                <a th:href="@{/admin/settings}">
+                    <i class="fas fa-cogs"></i>
+                    <span>系统设置</span>
+                </a>
+            </li>
+
+            <!-- 教务管理分组 -->
+            <li class="nav-section">教务管理</li>
+
+            <li th:classappend="${currentPage == 'courses'} ? 'active'">
+                <a th:href="@{/admin/courses}">
+                    <i class="fas fa-book"></i>
+                    <span>课程管理</span>
+                </a>
+            </li>
+
+            <li th:classappend="${currentPage == 'classes'} ? 'active'">
+                <a th:href="@{/admin/classes}">
+                    <i class="fas fa-users-class"></i>
+                    <span>班级管理</span>
+                </a>
+            </li>
+
+            <li th:classappend="${currentPage == 'schedules'} ? 'active'">
+                <a th:href="@{/admin/schedules}">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>课程安排</span>
+                </a>
+            </li>
+
+            <li th:classappend="${currentPage == 'students'} ? 'active'">
+                <a th:href="@{/admin/students}">
+                    <i class="fas fa-user-graduate"></i>
+                    <span>学生管理</span>
+                </a>
+            </li>
+
+            <!-- 财务管理分组 -->
+            <li class="nav-section">财务管理</li>
+
+            <li th:classappend="${currentPage == 'fee-items'} ? 'active'">
+                <a th:href="@{/admin/fee-items}">
+                    <i class="fas fa-list-alt"></i>
+                    <span>收费项目</span>
+                </a>
+            </li>
+
+            <li th:classappend="${currentPage == 'payments'} ? 'active'">
+                <a th:href="@{/admin/payments}">
+                    <i class="fas fa-credit-card"></i>
+                    <span>缴费管理</span>
+                </a>
+            </li>
+
+            <li th:classappend="${currentPage == 'payment-records'} ? 'active'">
+                <a th:href="@{/admin/payment-records}">
+                    <i class="fas fa-receipt"></i>
+                    <span>缴费记录</span>
+                </a>
+            </li>
+
+            <li th:classappend="${currentPage == 'reports'} ? 'active'">
+                <a th:href="@{/admin/reports}">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>财务报表</span>
+                </a>
+            </li>
+
+            <!-- 其他功能分组 -->
+            <li class="nav-section">其他功能</li>
+
+            <li th:classappend="${currentPage == 'profile'} ? 'active'">
+                <a th:href="@{/admin/profile}">
+                    <i class="fas fa-user-circle"></i>
+                    <span>个人资料</span>
+                </a>
+            </li>
+
+            <li th:classappend="${currentPage == 'test'} ? 'active'">
+                <a th:href="@{/admin/test}">
+                    <i class="fas fa-flask"></i>
+                    <span>系统测试</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- 侧边栏JavaScript -->
+    <script th:fragment="sidebar-script">
+        // 侧边栏切换功能
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const content = document.getElementById('content');
+            
+            if (sidebar && content) {
+                sidebar.classList.toggle('active');
+                content.classList.toggle('active');
+            }
+        }
+
+        // 移动端自动收起侧边栏
+        function handleResize() {
+            const sidebar = document.getElementById('sidebar');
+            const content = document.getElementById('content');
+            
+            if (window.innerWidth <= 768) {
+                if (sidebar && content) {
+                    sidebar.classList.add('active');
+                    content.classList.add('active');
+                }
+            } else {
+                if (sidebar && content) {
+                    sidebar.classList.remove('active');
+                    content.classList.remove('active');
+                }
+            }
+        }
+
+        // 页面加载时执行
+        document.addEventListener('DOMContentLoaded', function() {
+            handleResize();
+            
+            // 监听窗口大小变化
+            window.addEventListener('resize', handleResize);
+            
+            // 高亮当前页面菜单项
+            const currentPath = window.location.pathname;
+            const menuLinks = document.querySelectorAll('.sidebar ul li a');
+            
+            menuLinks.forEach(link => {
+                if (link.getAttribute('href') === currentPath) {
+                    link.parentElement.classList.add('active');
+                }
+            });
+        });
+
+        // 移动端点击菜单项后自动收起侧边栏
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuLinks = document.querySelectorAll('.sidebar ul li a');
+            
+            menuLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    if (window.innerWidth <= 768) {
+                        setTimeout(() => {
+                            const sidebar = document.getElementById('sidebar');
+                            const content = document.getElementById('content');
+                            
+                            if (sidebar && content) {
+                                sidebar.classList.add('active');
+                                content.classList.add('active');
+                            }
+                        }, 100);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

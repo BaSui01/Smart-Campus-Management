@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理员登录 - 智慧校园管理系统</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .login-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            width: 100%;
+            max-width: 450px;
+        }
+        
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .login-header h2 {
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .login-header p {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .form-floating {
+            margin-bottom: 20px;
+        }
+        
+        .form-floating input {
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            padding: 12px 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .form-floating input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        
+        .captcha-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .captcha-input {
+            flex: 1;
+        }
+        
+        .captcha-image {
+            width: 120px;
+            height: 40px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: border-color 0.3s ease;
+        }
+        
+        .captcha-image:hover {
+            border-color: #667eea;
+        }
+        
+        .btn-login {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+        
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        .alert {
+            border-radius: 10px;
+            border: none;
+            margin-bottom: 20px;
+        }
+        
+        .remember-me {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 25px;
+        }
+        
+        .form-check-input:checked {
+            background-color: #667eea;
+            border-color: #667eea;
+        }
+        
+        .forgot-password {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.3s ease;
+        }
+        
+        .forgot-password:hover {
+            color: #764ba2;
+        }
+        
+        .system-info {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e1e5e9;
+            color: #666;
+            font-size: 12px;
+        }
+        
+        .loading {
+            display: none;
+        }
+        
+        .loading .spinner-border {
+            width: 1rem;
+            height: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <i class="fas fa-graduation-cap fa-3x text-primary mb-3"></i>
+            <h2>智慧校园管理系统</h2>
+            <p>管理员登录</p>
+        </div>
+        
+        <!-- 错误提示 -->
+        <div th:if="${error}" class="alert alert-danger" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <span th:text="${error}">错误信息</span>
+        </div>
+        
+        <!-- 成功提示 -->
+        <div th:if="${message}" class="alert alert-success" role="alert">
+            <i class="fas fa-check-circle me-2"></i>
+            <span th:text="${message}">成功信息</span>
+        </div>
+        
+        <form id="loginForm" th:action="@{/admin/login}" method="post">
+            <input type="hidden" name="redirect" th:value="${redirectUrl}">
+            
+            <!-- 用户名 -->
+            <div class="form-floating">
+                <input type="text" class="form-control" id="username" name="username"
+                       placeholder="请输入用户名" required autocomplete="username"
+                       th:value="${username}">
+                <label for="username">
+                    <i class="fas fa-user me-2"></i>用户名
+                </label>
+            </div>
+            
+            <!-- 密码 -->
+            <div class="form-floating">
+                <input type="password" class="form-control" id="password" name="password" 
+                       placeholder="请输入密码" required autocomplete="current-password">
+                <label for="password">
+                    <i class="fas fa-lock me-2"></i>密码
+                </label>
+            </div>
+            
+            <!-- 验证码 -->
+            <div class="captcha-container">
+                <div class="form-floating captcha-input">
+                    <input type="text" class="form-control" id="captcha" name="captcha"
+                           placeholder="请输入6位验证码" required maxlength="6">
+                    <label for="captcha">
+                        <i class="fas fa-shield-alt me-2"></i>验证码
+                    </label>
+                </div>
+                <img id="captchaImage" class="captcha-image" src="/admin/captcha" 
+                     alt="验证码" title="点击刷新验证码">
+            </div>
+            
+            <!-- 记住我和忘记密码 -->
+            <div class="remember-me">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="rememberMe" name="rememberMe"
+                           th:checked="${rememberMe}">
+                    <label class="form-check-label" for="rememberMe">
+                        记住我
+                    </label>
+                </div>
+                <a href="#" class="forgot-password">忘记密码？</a>
+            </div>
+            
+            <!-- 登录按钮 -->
+            <button type="submit" class="btn btn-primary btn-login">
+                <span class="login-text">
+                    <i class="fas fa-sign-in-alt me-2"></i>登录
+                </span>
+                <span class="loading">
+                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                    登录中...
+                </span>
+            </button>
+        </form>
+        
+        <div class="system-info">
+            <p>© 2024 智慧校园管理系统 v1.0.0</p>
+            <p>建议使用Chrome、Firefox、Safari等现代浏览器</p>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.getElementById('loginForm');
+            const captchaImage = document.getElementById('captchaImage');
+            const loginText = document.querySelector('.login-text');
+            const loading = document.querySelector('.loading');
+            const usernameInput = document.getElementById('username');
+            const passwordInput = document.getElementById('password');
+            const rememberMeCheckbox = document.getElementById('rememberMe');
+
+            // 页面加载时恢复记住的登录信息
+            loadRememberedCredentials();
+            
+            // 刷新验证码
+            function refreshCaptcha() {
+                captchaImage.src = '/admin/captcha?' + new Date().getTime();
+            }
+            
+            // 点击验证码图片刷新
+            captchaImage.addEventListener('click', refreshCaptcha);
+            
+            // 表单提交处理
+            loginForm.addEventListener('submit', function(e) {
+                // 显示加载状态
+                loginText.style.display = 'none';
+                loading.style.display = 'inline';
+
+                // 禁用提交按钮
+                const submitBtn = loginForm.querySelector('button[type="submit"]');
+                submitBtn.disabled = true;
+
+                // 表单验证
+                const username = document.getElementById('username').value.trim();
+                const password = document.getElementById('password').value.trim();
+                const captcha = document.getElementById('captcha').value.trim();
+
+                if (!username || !password || !captcha) {
+                    e.preventDefault();
+                    showAlert('请填写完整的登录信息', 'danger');
+                    resetSubmitButton();
+                    return;
+                }
+
+                if (captcha.length !== 6) {
+                    e.preventDefault();
+                    showAlert('验证码必须是6位', 'danger');
+                    resetSubmitButton();
+                    return;
+                }
+
+                // 保存或清除记住的登录信息
+                saveCredentials();
+            });
+            
+            // 重置提交按钮状态
+            function resetSubmitButton() {
+                loginText.style.display = 'inline';
+                loading.style.display = 'none';
+                const submitBtn = loginForm.querySelector('button[type="submit"]');
+                submitBtn.disabled = false;
+                refreshCaptcha();
+            }
+            
+            // 显示提示信息
+            function showAlert(message, type) {
+                // 移除现有提示
+                const existingAlert = document.querySelector('.alert');
+                if (existingAlert) {
+                    existingAlert.remove();
+                }
+                
+                // 创建新提示
+                const alertDiv = document.createElement('div');
+                alertDiv.className = `alert alert-${type}`;
+                alertDiv.innerHTML = `
+                    <i class="fas fa-${type === 'danger' ? 'exclamation-triangle' : 'check-circle'} me-2"></i>
+                    ${message}
+                `;
+                
+                // 插入到表单前面
+                loginForm.parentNode.insertBefore(alertDiv, loginForm);
+                
+                // 3秒后自动消失
+                setTimeout(() => {
+                    alertDiv.remove();
+                }, 3000);
+            }
+            
+            // 回车键快捷登录
+            document.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    loginForm.submit();
+                }
+            });
+            
+            // 自动聚焦到用户名输入框
+            if (!usernameInput.value) {
+                usernameInput.focus();
+            } else {
+                passwordInput.focus();
+            }
+
+            // 保存登录凭据
+            function saveCredentials() {
+                if (rememberMeCheckbox.checked) {
+                    localStorage.setItem('rememberedUsername', usernameInput.value);
+                    localStorage.setItem('rememberedPassword', passwordInput.value);
+                    localStorage.setItem('rememberMe', 'true');
+                } else {
+                    localStorage.removeItem('rememberedUsername');
+                    localStorage.removeItem('rememberedPassword');
+                    localStorage.removeItem('rememberMe');
+                }
+            }
+
+            // 加载记住的登录凭据
+            function loadRememberedCredentials() {
+                const rememberedUsername = localStorage.getItem('rememberedUsername');
+                const rememberedPassword = localStorage.getItem('rememberedPassword');
+                const rememberMe = localStorage.getItem('rememberMe');
+
+                if (rememberMe === 'true' && rememberedUsername) {
+                    usernameInput.value = rememberedUsername;
+                    if (rememberedPassword) {
+                        passwordInput.value = rememberedPassword;
+                    }
+                    rememberMeCheckbox.checked = true;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

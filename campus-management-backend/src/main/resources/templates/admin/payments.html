@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>缴费记录 - 智慧校园管理系统</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- DataTables CSS -->
+    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <!-- 引入组件样式 -->
+    <th:block th:replace="~{components/topbar :: topbar-style}"></th:block>
+    <!-- 自定义样式 -->
+    <link href="/css/admin.css" rel="stylesheet">
+    
+</head>
+<body>
+    <!-- 左侧导航栏 -->
+        <th:block th:replace="~{components/sidebar :: sidebar}"></th:block>
+    <!-- 主内容区域 -->
+    <div class="main-content">
+        <!-- 顶部导航栏 -->
+        <nav class="topbar navbar navbar-expand navbar-light">
+            <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+
+            <ul class="navbar-nav ms-auto">
+                <!-- 用户信息下拉菜单 -->
+                <li class="nav-item dropdown no-arrow">
+                    <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                        <span class="me-2 d-none d-lg-inline text-gray-600 small" th:text="${session.currentUser?.realName ?: '管理员'}">管理员</span>
+                        <i class="fas fa-user-circle fa-fw"></i>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-end shadow">
+                        <a class="dropdown-item" th:href="@{/admin/profile}">
+                            <i class="fas fa-user fa-sm fa-fw me-2 text-gray-400"></i>
+                            个人资料
+                        </a>
+                        <a class="dropdown-item" th:href="@{/admin/change-password}">
+                            <i class="fas fa-key fa-sm fa-fw me-2 text-gray-400"></i>
+                            修改密码
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#logoutModal">
+                            <i class="fas fa-sign-out-alt fa-sm fa-fw me-2 text-gray-400"></i>
+                            退出登录
+                        </a>
+                    </div>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- 页面内容 -->
+        <div class="content-wrapper">
+            <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                <h1 class="h3 mb-0 text-gray-800">缴费记录管理</h1>
+                <div>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#paymentModal">
+                        <i class="fas fa-plus"></i> 添加缴费记录
+                    </button>
+                    <button type="button" class="btn btn-outline-success" onclick="exportPayments()">
+                        <i class="fas fa-download"></i> 导出记录
+                    </button>
+                    <button type="button" class="btn btn-outline-info" onclick="refreshData()">
+                        <i class="fas fa-sync-alt"></i> 刷新
+                    </button>
+                </div>
+            </div>
+
+            <!-- 统计卡片 -->
+            <div class="row mb-4">
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card stat-card success shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="stat-label mb-1">已缴费</div>
+                                    <div class="stat-number">¥2,456,780</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card stat-card warning shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="stat-label mb-1">待缴费</div>
+                                    <div class="stat-number">¥345,600</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-clock fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card stat-card danger shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="stat-label mb-1">逾期未缴</div>
+                                    <div class="stat-number">¥89,200</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card stat-card primary shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="stat-label mb-1">本月收入</div>
+                                    <div class="stat-number">¥567,890</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-money-bill-wave fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 筛选条件 -->
+            <div class="filter-section">
+                <form class="row g-3" id="filterForm">
+                    <div class="col-md-3">
+                        <label for="studentName" class="form-label">学生姓名</label>
+                        <input type="text" class="form-control" id="studentName" name="studentName" placeholder="请输入学生姓名">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="studentNumber" class="form-label">学号</label>
+                        <input type="text" class="form-control" id="studentNumber" name="studentNumber" placeholder="请输入学号">
+                    </div>
+                    <div class="col-md-2">
+                        <label for="paymentStatus" class="form-label">缴费状态</label>
+                        <select class="form-select" id="paymentStatus" name="status">
+                            <option value="">全部状态</option>
+                            <option value="paid">已缴费</option>
+                            <option value="pending">待缴费</option>
+                            <option value="overdue">逾期未缴</option>
+                            <option value="refunded">已退费</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="paymentMethod" class="form-label">缴费方式</label>
+                        <select class="form-select" id="paymentMethod" name="paymentMethod">
+                            <option value="">全部方式</option>
+                            <option value="cash">现金</option>
+                            <option value="bank_transfer">银行转账</option>
+                            <option value="alipay">支付宝</option>
+                            <option value="wechat">微信支付</option>
+                            <option value="credit_card">信用卡</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">&nbsp;</label>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search"></i> 搜索
+                            </button>
+                            <button type="reset" class="btn btn-outline-secondary">
+                                <i class="fas fa-undo"></i> 重置
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- 缴费记录表格 -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">缴费记录列表</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover" id="paymentsTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th width="5%">
+                                        <input type="checkbox" id="selectAll" class="form-check-input">
+                                    </th>
+                                    <th width="8%">学号</th>
+                                    <th width="10%">学生姓名</th>
+                                    <th width="10%">班级</th>
+                                    <th width="10%">缴费项目</th>
+                                    <th width="8%">应缴金额</th>
+                                    <th width="8%">实缴金额</th>
+                                    <th width="8%">缴费方式</th>
+                                    <th width="8%">缴费状态</th>
+                                    <th width="10%">缴费时间</th>
+                                    <th width="15%">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- 模拟数据 -->
+                                <tr>
+                                    <td>
+                                        <input type="checkbox" class="form-check-input row-checkbox" value="1">
+                                    </td>
+                                    <td>2024001</td>
+                                    <td>张三</td>
+                                    <td>计算机1班</td>
+                                    <td>学费</td>
+                                    <td class="amount-display">¥8,000.00</td>
+                                    <td class="amount-display amount-positive">¥8,000.00</td>
+                                    <td>银行转账</td>
+                                    <td>
+                                        <span class="payment-status paid">已缴费</span>
+                                    </td>
+                                    <td>2024-01-15 10:30</td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="viewPayment(1)">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-success" onclick="printReceipt(1)">
+                                                <i class="fas fa-print"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-warning" onclick="editPayment(1)">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="refundPayment(1)">
+                                                <i class="fas fa-undo"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <input type="checkbox" class="form-check-input row-checkbox" value="2">
+                                    </td>
+                                    <td>2024002</td>
+                                    <td>李四</td>
+                                    <td>计算机1班</td>
+                                    <td>住宿费</td>
+                                    <td class="amount-display">¥1,200.00</td>
+                                    <td class="amount-display">¥0.00</td>
+                                    <td>-</td>
+                                    <td>
+                                        <span class="payment-status pending">待缴费</span>
+                                    </td>
+                                    <td>-</td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="viewPayment(2)">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-success" onclick="processPayment(2)">
+                                                <i class="fas fa-credit-card"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-warning" onclick="editPayment(2)">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-info" onclick="sendReminder(2)">
+                                                <i class="fas fa-bell"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <input type="checkbox" class="form-check-input row-checkbox" value="3">
+                                    </td>
+                                    <td>2024003</td>
+                                    <td>王五</td>
+                                    <td>软件工程2班</td>
+                                    <td>学费</td>
+                                    <td class="amount-display">¥8,000.00</td>
+                                    <td class="amount-display">¥0.00</td>
+                                    <td>-</td>
+                                    <td>
+                                        <span class="payment-status overdue">逾期未缴</span>
+                                    </td>
+                                    <td>-</td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="viewPayment(3)">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-success" onclick="processPayment(3)">
+                                                <i class="fas fa-credit-card"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="sendOverdueNotice(3)">
+                                                <i class="fas fa-exclamation-triangle"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <input type="checkbox" class="form-check-input row-checkbox" value="4">
+                                    </td>
+                                    <td>2024004</td>
+                                    <td>赵六</td>
+                                    <td>网络工程1班</td>
+                                    <td>教材费</td>
+                                    <td class="amount-display">¥500.00</td>
+                                    <td class="amount-display amount-negative">¥500.00</td>
+                                    <td>支付宝</td>
+                                    <td>
+                                        <span class="payment-status refunded">已退费</span>
+                                    </td>
+                                    <td>2024-01-20 14:20</td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="viewPayment(4)">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-info" onclick="viewRefundDetails(4)">
+                                                <i class="fas fa-info-circle"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- 分页 -->
+                    <nav class="mt-3">
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#">上一页</a>
+                            </li>
+                            <li class="page-item active">
+                                <a class="page-link" href="#">1</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="#">2</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="#">3</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="#">下一页</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 缴费记录编辑模态框 -->
+    <div class="modal fade" id="paymentModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="paymentModalTitle">添加缴费记录</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="paymentForm">
+                    <div class="modal-body">
+                        <input type="hidden" id="paymentId" name="id">
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="studentSelect" class="form-label">学生 <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="studentSelect" name="studentId" required>
+                                        <option value="">请选择学生</option>
+                                        <option value="1">2024001 - 张三</option>
+                                        <option value="2">2024002 - 李四</option>
+                                        <option value="3">2024003 - 王五</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="feeTypeSelect" class="form-label">缴费项目 <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="feeTypeSelect" name="feeType" required>
+                                        <option value="">请选择缴费项目</option>
+                                        <option value="tuition">学费</option>
+                                        <option value="accommodation">住宿费</option>
+                                        <option value="textbook">教材费</option>
+                                        <option value="insurance">保险费</option>
+                                        <option value="other">其他费用</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="amountDue" class="form-label">应缴金额 <span class="text-danger">*</span></label>
+                                    <input type="number" class="form-control" id="amountDue" name="amountDue"
+                                           step="0.01" min="0" required placeholder="0.00">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="amountPaid" class="form-label">实缴金额</label>
+                                    <input type="number" class="form-control" id="amountPaid" name="amountPaid"
+                                           step="0.01" min="0" placeholder="0.00">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="paymentMethodSelect" class="form-label">缴费方式</label>
+                                    <select class="form-select" id="paymentMethodSelect" name="paymentMethod">
+                                        <option value="">请选择缴费方式</option>
+                                        <option value="cash">现金</option>
+                                        <option value="bank_transfer">银行转账</option>
+                                        <option value="alipay">支付宝</option>
+                                        <option value="wechat">微信支付</option>
+                                        <option value="credit_card">信用卡</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="statusSelect" class="form-label">缴费状态</label>
+                                    <select class="form-select" id="statusSelect" name="status">
+                                        <option value="pending">待缴费</option>
+                                        <option value="paid">已缴费</option>
+                                        <option value="overdue">逾期未缴</option>
+                                        <option value="refunded">已退费</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="dueDate" class="form-label">缴费截止日期</label>
+                                    <input type="date" class="form-control" id="dueDate" name="dueDate">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="paymentDate" class="form-label">实际缴费日期</label>
+                                    <input type="datetime-local" class="form-control" id="paymentDate" name="paymentDate">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="transactionId" class="form-label">交易流水号</label>
+                            <input type="text" class="form-control" id="transactionId" name="transactionId"
+                                   placeholder="银行转账流水号或第三方支付订单号">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="remarks" class="form-label">备注</label>
+                            <textarea class="form-control" id="remarks" name="remarks" rows="3"
+                                      placeholder="缴费相关备注信息"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        <button type="submit" class="btn btn-primary">保存</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 缴费详情模态框 -->
+    <div class="modal fade" id="paymentDetailModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">缴费详情</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="paymentDetailContent">
+                        <!-- 缴费详情内容将通过JavaScript动态加载 -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 退出登录确认模态框 -->
+    <div class="modal fade" id="logoutModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">确认退出</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    确定要退出登录吗？
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <a th:href="@{/admin/logout}" class="btn btn-primary">确定退出</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+    <script th:inline="none">
+        // 页面变量
+        let currentEditingPaymentId = null;
+
+        // 页面加载完成后初始化
+        $(document).ready(function() {
+            initializeDataTable();
+            initializeEventHandlers();
+        });
+
+        // 初始化数据表格
+        function initializeDataTable() {
+            $('#paymentsTable').DataTable({
+                language: {
+                    url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/zh.json'
+                },
+                pageLength: 25,
+                order: [ [9, 'desc'] ], // 按缴费时间降序排列
+                columnDefs: [
+                    { orderable: false, targets: [0, 10] } // 复选框和操作列不可排序
+                ]
+            });
+        }
+
+        // 初始化事件处理器
+        function initializeEventHandlers() {
+            // 全选/取消全选
+            $('#selectAll').change(function() {
+                $('.row-checkbox').prop('checked', this.checked);
+            });
+
+            // 筛选表单提交
+            $('#filterForm').submit(function(e) {
+                e.preventDefault();
+                filterPayments();
+            });
+
+            // 缴费记录表单提交
+            $('#paymentForm').submit(function(e) {
+                e.preventDefault();
+                savePayment();
+            });
+
+            // 模态框关闭时重置表单
+            $('#paymentModal').on('hidden.bs.modal', function() {
+                resetPaymentForm();
+            });
+
+            // 侧边栏切换
+            $('#sidebarToggle').click(function() {
+                $('.sidebar').toggleClass('collapsed');
+                $('.main-content').toggleClass('expanded');
+            });
+        }
+
+        // 筛选缴费记录
+        function filterPayments() {
+            // 这里应该发送AJAX请求到后端进行筛选
+            const formData = new FormData($('#filterForm')[0]);
+            console.log('筛选条件:', Object.fromEntries(formData));
+            showAlert('筛选功能开发中...', 'info');
+        }
+
+        // 查看缴费详情
+        function viewPayment(paymentId) {
+            // 模拟获取缴费详情数据
+            const paymentDetail = {
+                id: paymentId,
+                studentNumber: '2024001',
+                studentName: '张三',
+                className: '计算机1班',
+                feeType: '学费',
+                amountDue: 8000.00,
+                amountPaid: 8000.00,
+                paymentMethod: '银行转账',
+                status: '已缴费',
+                dueDate: '2024-02-01',
+                paymentDate: '2024-01-15 10:30:00',
+                transactionId: 'TXN202401150001',
+                remarks: '按时缴费'
+            };
+
+            const detailHtml = `
+                <div class="row">
+                    <div class="col-6"><strong>学号：</strong></div>
+                    <div class="col-6">${paymentDetail.studentNumber}</div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-6"><strong>学生姓名：</strong></div>
+                    <div class="col-6">${paymentDetail.studentName}</div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-6"><strong>班级：</strong></div>
+                    <div class="col-6">${paymentDetail.className}</div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-6"><strong>缴费项目：</strong></div>
+                    <div class="col-6">${paymentDetail.feeType}</div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-6"><strong>应缴金额：</strong></div>
+                    <div class="col-6">¥${paymentDetail.amountDue.toFixed(2)}</div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-6"><strong>实缴金额：</strong></div>
+                    <div class="col-6">¥${paymentDetail.amountPaid.toFixed(2)}</div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-6"><strong>缴费方式：</strong></div>
+                    <div class="col-6">${paymentDetail.paymentMethod}</div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-6"><strong>缴费状态：</strong></div>
+                    <div class="col-6">${paymentDetail.status}</div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-6"><strong>截止日期：</strong></div>
+                    <div class="col-6">${paymentDetail.dueDate}</div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-6"><strong>缴费时间：</strong></div>
+                    <div class="col-6">${paymentDetail.paymentDate}</div>
+                </div>
+                ${paymentDetail.transactionId ? `
+                <div class="row mt-2">
+                    <div class="col-6"><strong>交易流水号：</strong></div>
+                    <div class="col-6">${paymentDetail.transactionId}</div>
+                </div>
+                ` : ''}
+                ${paymentDetail.remarks ? `
+                <div class="row mt-2">
+                    <div class="col-6"><strong>备注：</strong></div>
+                    <div class="col-6">${paymentDetail.remarks}</div>
+                </div>
+                ` : ''}
+            `;
+
+            $('#paymentDetailContent').html(detailHtml);
+            $('#paymentDetailModal').modal('show');
+        }
+
+        // 编辑缴费记录
+        function editPayment(paymentId) {
+            currentEditingPaymentId = paymentId;
+            $('#paymentModalTitle').text('编辑缴费记录');
+
+            // 这里应该从后端获取缴费记录数据
+            // 模拟数据填充
+            $('#paymentId').val(paymentId);
+            $('#studentSelect').val('1');
+            $('#feeTypeSelect').val('tuition');
+            $('#amountDue').val('8000.00');
+            $('#amountPaid').val('8000.00');
+            $('#paymentMethodSelect').val('bank_transfer');
+            $('#statusSelect').val('paid');
+
+            $('#paymentModal').modal('show');
+        }
+
+        // 保存缴费记录
+        function savePayment() {
+            const formData = new FormData($('#paymentForm')[0]);
+            const paymentId = $('#paymentId').val();
+
+            // 这里应该发送AJAX请求到后端保存数据
+            console.log('保存缴费记录:', Object.fromEntries(formData));
+
+            showAlert('缴费记录保存成功', 'success');
+            $('#paymentModal').modal('hide');
+
+            // 刷新表格数据
+            setTimeout(() => {
+                refreshData();
+            }, 1000);
+        }
+
+        // 处理缴费
+        function processPayment(paymentId) {
+            if (confirm('确定要处理这笔缴费吗？')) {
+                // 这里应该发送AJAX请求到后端处理缴费
+                console.log('处理缴费:', paymentId);
+                showAlert('缴费处理成功', 'success');
+                refreshData();
+            }
+        }
+
+        // 退费处理
+        function refundPayment(paymentId) {
+            if (confirm('确定要退费吗？此操作不可撤销！')) {
+                // 这里应该发送AJAX请求到后端处理退费
+                console.log('退费处理:', paymentId);
+                showAlert('退费处理成功', 'success');
+                refreshData();
+            }
+        }
+
+        // 发送缴费提醒
+        function sendReminder(paymentId) {
+            // 这里应该发送AJAX请求到后端发送提醒
+            console.log('发送缴费提醒:', paymentId);
+            showAlert('缴费提醒已发送', 'success');
+        }
+
+        // 发送逾期通知
+        function sendOverdueNotice(paymentId) {
+            // 这里应该发送AJAX请求到后端发送逾期通知
+            console.log('发送逾期通知:', paymentId);
+            showAlert('逾期通知已发送', 'warning');
+        }
+
+        // 打印收据
+        function printReceipt(paymentId) {
+            // 这里应该生成并打印收据
+            console.log('打印收据:', paymentId);
+            window.open('/admin/payments/' + paymentId + '/receipt', '_blank');
+        }
+
+        // 查看退费详情
+        function viewRefundDetails(paymentId) {
+            // 这里应该显示退费详情
+            console.log('查看退费详情:', paymentId);
+            showAlert('退费详情功能开发中...', 'info');
+        }
+
+        // 导出缴费记录
+        function exportPayments() {
+            const formData = new FormData($('#filterForm')[0]);
+            const params = new URLSearchParams(formData);
+            window.open('/admin/payments/export?' + params.toString());
+        }
+
+        // 刷新数据
+        function refreshData() {
+            window.location.reload();
+        }
+
+        // 重置缴费记录表单
+        function resetPaymentForm() {
+            $('#paymentForm')[0].reset();
+            $('#paymentId').val('');
+            $('#paymentModalTitle').text('添加缴费记录');
+            currentEditingPaymentId = null;
+        }
+
+        // 显示提示信息
+        function showAlert(message, type) {
+            const alertHtml = `
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+
+            // 移除现有的提示
+            $('.alert').remove();
+
+            // 添加新提示到页面顶部
+            $('.content-wrapper').prepend(alertHtml);
+
+            // 3秒后自动消失
+            setTimeout(() => {
+                $('.alert').fadeOut();
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

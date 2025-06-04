@@ -1,0 +1,120 @@
+# 智慧校园管理系统配置文件
+server:
+  port: 8080
+  # 移除context-path，让根路径直接访问
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+
+spring:
+  application:
+    name: campus-management
+
+  # 数据源配置
+  datasource:
+    url: jdbc:mysql://localhost:3306/campus_management?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: xiaoxiao123
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+    # 连接池配置
+    hikari:
+      pool-name: CampusHikariCP
+      minimum-idle: 5
+      maximum-pool-size: 20
+      auto-commit: true
+      idle-timeout: 30000
+      connection-timeout: 30000
+      max-lifetime: 1800000
+
+  # JPA配置
+  jpa:
+    hibernate:
+      ddl-auto: update
+    # 禁用SQL日志输出，减少日志量
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        # 禁用SQL格式化，减少日志处理开销
+        format_sql: false
+        # 禁用SQL注释，减少日志输出
+        use_sql_comments: false
+    open-in-view: false
+    defer-datasource-initialization: true
+
+  # SQL初始化配置
+  sql:
+    init:
+      mode: always
+      continue-on-error: true
+
+  # Thymeleaf配置
+  thymeleaf:
+    prefix: classpath:/templates/
+    suffix: .html
+    mode: HTML
+    encoding: UTF-8
+    cache: false
+
+  # 静态资源配置
+  web:
+    resources:
+      static-locations: classpath:/static/
+      cache:
+        period: 3600
+
+  # 文件上传配置
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 100MB
+
+  # 国际化配置
+  messages:
+    basename: messages
+    encoding: UTF-8
+
+# 日志配置由logback-spring.xml管理
+
+# 管理端点配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# JWT配置 - 完整配置
+jwt:
+  secret: campus-management-jwt-secret-key-2024
+  expiration: 86400000
+  refresh-expiration: 604800000
+  header: Authorization
+  prefix: Bearer
+
+# 自定义配置
+campus:
+  # 系统配置
+  system:
+    name: 智慧校园管理系统
+    version: 1.0.0
+    author: Campus Team
+
+  # 文件上传配置
+  upload:
+    path: uploads/
+    max-size: 10MB
+    allowed-types: jpg,jpeg,png,gif,pdf,doc,docx,xls,xlsx
+
+  # 安全配置
+  security:
+    password:
+      min-length: 6
+      max-attempts: 5
+    session:
+      timeout: 1800

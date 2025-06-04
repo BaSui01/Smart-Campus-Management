@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle} + ' - 智慧校园管理系统'">班级管理 - 智慧校园管理系统</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- 自定义样式 -->
+    <link href="/css/admin.css" rel="stylesheet">
+    <!-- 引入组件样式 -->
+    <th:block th:replace="~{components/topbar :: topbar-style}"></th:block>
+</head>
+<body>
+    <div class="wrapper">
+      
+        <!-- 左侧导航栏 -->
+        <th:block th:replace="~{components/sidebar :: sidebar}"></th:block>
+        <!-- 主内容区域 -->
+        <div id="content" class="content">
+            <!-- 顶部导航栏 -->
+            <th:block th:replace="~{components/topbar :: topbar}"></th:block>
+            <!-- 页面内容 -->
+            <div class="content-wrapper">
+                <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                    <h1 class="h3 mb-0 text-gray-800">班级管理</h1>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addClassModal">
+                        <i class="fas fa-plus"></i> 添加班级
+                    </button>
+                </div>
+
+                <!-- 统计卡片 -->
+                <div class="row mb-4">
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card stat-card primary shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="stat-label mb-1">班级总数</div>
+                                        <div class="stat-number" th:text="${stats.totalClasses}">0</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-chalkboard fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card stat-card success shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="stat-label mb-1">在读班级</div>
+                                        <div class="stat-number" th:text="${stats.activeClasses}">0</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-book-open fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card stat-card info shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="stat-label mb-1">已毕业班级</div>
+                                        <div class="stat-number" th:text="${stats.graduatedClasses}">0</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-graduation-cap fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card stat-card warning shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="stat-label mb-1">学生总数</div>
+                                        <div class="stat-number" th:text="${stats.totalStudents}">0</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-users fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 班级列表 -->
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">班级列表</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered" id="classesTable">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>班级名称</th>
+                                        <th>年级</th>
+                                        <th>专业</th>
+                                        <th>学生人数</th>
+                                        <th>班主任</th>
+                                        <th>状态</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="class : ${classes}">
+                                        <td th:text="${class.id}"></td>
+                                        <td th:text="${class.name}"></td>
+                                        <td><span class="badge bg-primary" th:text="${class.grade}"></span></td>
+                                        <td th:text="${class.major}"></td>
+                                        <td th:text="${class.studentCount}"></td>
+                                        <td th:text="${class.teacher}"></td>
+                                        <td>
+                                            <span class="badge bg-success" th:text="${class.status}"></span>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary" th:onclick="'editClass(' + ${class.id} + ')'">
+                                                <i class="fas fa-edit"></i> 编辑
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-info" th:onclick="'viewStudents(' + ${class.id} + ')'">
+                                                <i class="fas fa-users"></i> 学生
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-warning" th:onclick="'viewSchedule(' + ${class.id} + ')'">
+                                                <i class="fas fa-calendar"></i> 课表
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger" th:onclick="'deleteClass(' + ${class.id} + ')'">
+                                                <i class="fas fa-trash"></i> 删除
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加班级模态框 -->
+    <div class="modal fade" id="addClassModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">添加班级</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addClassForm">
+                        <div class="mb-3">
+                            <label for="className" class="form-label">班级名称</label>
+                            <input type="text" class="form-control" id="className" placeholder="例如: 计算机科学2024-1班" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="classGrade" class="form-label">年级</label>
+                            <select class="form-control" id="classGrade" required>
+                                <option value="">请选择年级</option>
+                                <option value="2024级">2024级</option>
+                                <option value="2023级">2023级</option>
+                                <option value="2022级">2022级</option>
+                                <option value="2021级">2021级</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="classMajor" class="form-label">专业</label>
+                            <input type="text" class="form-control" id="classMajor" placeholder="例如: 计算机科学与技术" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="classTeacher" class="form-label">班主任</label>
+                            <input type="text" class="form-control" id="classTeacher" placeholder="例如: 张老师" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="saveClass()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+     <!-- 退出登录确认模态框 -->
+    <th:block th:replace="~{components/topbar :: logout-modal}"></th:block>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- 自定义脚本 -->
+    <script src="/js/admin.js"></script>
+    <script>
+        function editClass(id) {
+            alert('编辑班级功能开发中，班级ID: ' + id);
+        }
+        
+        function viewStudents(id) {
+            window.location.href = '/admin/students?classId=' + id;
+        }
+        
+        function viewSchedule(id) {
+            window.location.href = '/admin/schedules?classId=' + id;
+        }
+        
+        function deleteClass(id) {
+            if (confirm('确定要删除这个班级吗？')) {
+                alert('删除班级功能开发中，班级ID: ' + id);
+            }
+        }
+        
+        function saveClass() {
+            alert('保存班级功能开发中');
+        }
+    </script>
+</body>
+</html>

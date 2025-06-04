@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>缴费记录 - 智慧校园管理系统</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- 自定义样式 -->
+    <link href="/css/admin.css" rel="stylesheet">
+    <!-- 引入组件样式 -->
+    <th:block th:replace="~{components/topbar :: topbar-style}"></th:block>
+</head>
+<body>
+    <div class="wrapper">
+      <!-- 左侧导航栏 -->
+        <th:block th:replace="~{components/sidebar :: sidebar}"></th:block>
+        <!-- 主内容区域 -->
+        <div id="content" class="content">
+           <!-- 顶部导航栏 -->
+            <th:block th:replace="~{components/topbar :: topbar}"></th:block>
+
+            <!-- 页面内容 -->
+            <div class="content-wrapper">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1><i class="fas fa-receipt"></i> 缴费记录</h1>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addPaymentModal">
+                            <i class="fas fa-plus"></i> 录入缴费
+                        </button>
+                        <button type="button" class="btn btn-outline-primary">
+                            <i class="fas fa-download"></i> 导出记录
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 搜索和筛选 -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <form class="row g-3">
+                            <div class="col-md-3">
+                                <label class="form-label">搜索关键词</label>
+                                <input type="text" class="form-control" placeholder="学号、姓名、流水号">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">缴费方式</label>
+                                <select class="form-select">
+                                    <option value="">全部方式</option>
+                                    <option value="现金">现金</option>
+                                    <option value="银行卡">银行卡</option>
+                                    <option value="支付宝">支付宝</option>
+                                    <option value="微信">微信</option>
+                                    <option value="银行转账">银行转账</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">缴费状态</label>
+                                <select class="form-select">
+                                    <option value="">全部状态</option>
+                                    <option value="1">成功</option>
+                                    <option value="2">退款</option>
+                                    <option value="0">失败</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">开始日期</label>
+                                <input type="date" class="form-control">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">结束日期</label>
+                                <input type="date" class="form-control">
+                            </div>
+                            <div class="col-md-1">
+                                <label class="form-label">&nbsp;</label>
+                                <div class="d-flex flex-column gap-2">
+                                    <button type="submit" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                    <button type="reset" class="btn btn-outline-secondary btn-sm">
+                                        <i class="fas fa-redo"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- 统计卡片 -->
+                <div class="row mb-4">
+                    <div class="col-xl-3 col-md-6">
+                        <div class="card stat-card primary">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <div class="stat-label">总缴费记录</div>
+                                        <div class="stat-number">3,456</div>
+                                    </div>
+                                    <div class="align-self-center">
+                                        <i class="fas fa-receipt fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-md-6">
+                        <div class="card stat-card success">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <div class="stat-label">成功缴费</div>
+                                        <div class="stat-number">3,398</div>
+                                    </div>
+                                    <div class="align-self-center">
+                                        <i class="fas fa-check-circle fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-md-6">
+                        <div class="card stat-card warning">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <div class="stat-label">今日收费</div>
+                                        <div class="stat-number">¥125K</div>
+                                    </div>
+                                    <div class="align-self-center">
+                                        <i class="fas fa-yen-sign fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-md-6">
+                        <div class="card stat-card danger">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <div class="stat-label">退款记录</div>
+                                        <div class="stat-number">58</div>
+                                    </div>
+                                    <div class="align-self-center">
+                                        <i class="fas fa-undo fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 缴费记录列表 -->
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">缴费记录列表</h6>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-outline-info btn-sm">
+                                <i class="fas fa-chart-bar"></i> 统计报表
+                            </button>
+                            <button type="button" class="btn btn-outline-danger btn-sm">
+                                <i class="fas fa-trash"></i> 批量删除
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th><input type="checkbox" class="form-check-input"></th>
+                                        <th>流水号</th>
+                                        <th>学生信息</th>
+                                        <th>缴费项目</th>
+                                        <th>缴费金额</th>
+                                        <th>缴费方式</th>
+                                        <th>缴费时间</th>
+                                        <th>操作员</th>
+                                        <th>状态</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><input type="checkbox" class="form-check-input"></td>
+                                        <td class="font-monospace">PAY20240120001</td>
+                                        <td>
+                                            <div>
+                                                <strong>张三</strong><br>
+                                                <small class="text-muted">2024001001</small>
+                                            </div>
+                                        </td>
+                                        <td>2024年春季学费</td>
+                                        <td class="text-danger fw-bold">¥5,000.00</td>
+                                        <td><span class="badge bg-info">支付宝</span></td>
+                                        <td>2024-01-20 14:30:25</td>
+                                        <td>财务老师</td>
+                                        <td><span class="badge bg-success">成功</span></td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <button type="button" class="btn btn-outline-primary" title="查看详情">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-outline-warning" title="打印凭证">
+                                                    <i class="fas fa-print"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-outline-danger" title="退款">
+                                                    <i class="fas fa-undo"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="checkbox" class="form-check-input"></td>
+                                        <td class="font-monospace">PAY20240120002</td>
+                                        <td>
+                                            <div>
+                                                <strong>李四</strong><br>
+                                                <small class="text-muted">2024001002</small>
+                                            </div>
+                                        </td>
+                                        <td>教材费</td>
+                                        <td class="text-danger fw-bold">¥300.00</td>
+                                        <td><span class="badge bg-success">微信</span></td>
+                                        <td>2024-01-20 15:15:10</td>
+                                        <td>财务老师</td>
+                                        <td><span class="badge bg-success">成功</span></td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <button type="button" class="btn btn-outline-primary" title="查看详情">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-outline-warning" title="打印凭证">
+                                                    <i class="fas fa-print"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-outline-danger" title="退款">
+                                                    <i class="fas fa-undo"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="checkbox" class="form-check-input"></td>
+                                        <td class="font-monospace">PAY20240119001</td>
+                                        <td>
+                                            <div>
+                                                <strong>王五</strong><br>
+                                                <small class="text-muted">2023001001</small>
+                                            </div>
+                                        </td>
+                                        <td>住宿费</td>
+                                        <td class="text-danger fw-bold">¥1,200.00</td>
+                                        <td><span class="badge bg-primary">银行卡</span></td>
+                                        <td>2024-01-19 10:20:45</td>
+                                        <td>财务老师</td>
+                                        <td><span class="badge bg-warning">退款</span></td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <button type="button" class="btn btn-outline-primary" title="查看详情">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-outline-warning" title="打印凭证">
+                                                    <i class="fas fa-print"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-outline-secondary" title="已退款" disabled>
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- 分页 -->
+                        <nav aria-label="缴费记录列表分页">
+                            <ul class="pagination justify-content-center">
+                                <li class="page-item disabled">
+                                    <a class="page-link" href="#" tabindex="-1">上一页</a>
+                                </li>
+                                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                                <li class="page-item"><a class="page-link" href="#">3</a></li>
+                                <li class="page-item">
+                                    <a class="page-link" href="#">下一页</a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 录入缴费模态框 -->
+    <div class="modal fade" id="addPaymentModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">录入缴费记录</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form class="needs-validation" novalidate>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label">学生 *</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" placeholder="输入学号或姓名搜索" required>
+                                    <button class="btn btn-outline-secondary" type="button">搜索</button>
+                                </div>
+                                <div class="invalid-feedback">请选择学生</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">缴费项目 *</label>
+                                <select class="form-select" required>
+                                    <option value="">请选择缴费项目</option>
+                                    <option value="1">2024年春季学费 - ¥5,000.00</option>
+                                    <option value="2">教材费 - ¥300.00</option>
+                                    <option value="3">住宿费 - ¥1,200.00</option>
+                                </select>
+                                <div class="invalid-feedback">请选择缴费项目</div>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <label class="form-label">缴费金额 *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">¥</span>
+                                    <input type="number" class="form-control" step="0.01" min="0" required>
+                                </div>
+                                <div class="invalid-feedback">请输入缴费金额</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">缴费方式 *</label>
+                                <select class="form-select" required>
+                                    <option value="">请选择缴费方式</option>
+                                    <option value="现金">现金</option>
+                                    <option value="银行卡">银行卡</option>
+                                    <option value="支付宝">支付宝</option>
+                                    <option value="微信">微信</option>
+                                    <option value="银行转账">银行转账</option>
+                                </select>
+                                <div class="invalid-feedback">请选择缴费方式</div>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <label class="form-label">交易流水号</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" readonly>
+                                    <button class="btn btn-outline-secondary" type="button">自动生成</button>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">缴费时间</label>
+                                <input type="datetime-local" class="form-control">
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <label class="form-label">备注</label>
+                            <textarea class="form-control" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-success">确认缴费</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- 自定义脚本 -->
+    <script src="/js/admin.js"></script>
+</body>
+</html>

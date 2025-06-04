@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle} + ' - 智慧校园管理系统'">权限管理 - 智慧校园管理系统</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- 自定义样式 -->
+    <link href="/css/admin.css" rel="stylesheet">
+    <!-- 引入组件样式 -->
+    <th:block th:replace="~{components/topbar :: topbar-style}"></th:block>
+</head>
+<body>
+    <div class="wrapper">
+     <!-- 左侧导航栏 -->
+        <th:block th:replace="~{components/sidebar :: sidebar}"></th:block>
+
+        <!-- 主内容区域 -->
+        <div id="content" class="content">
+            <!-- 顶部导航栏 -->
+            <nav class="navbar navbar-expand-lg navbar-light bg-light">
+                <div class="container-fluid">
+                    <button type="button" id="sidebarCollapse" class="btn btn-info">
+                        <i class="fas fa-align-left"></i>
+                    </button>
+                    
+                    <div class="navbar-nav ms-auto">
+                        <div class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user"></i> 管理员
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="/admin/profile"><i class="fas fa-user-circle"></i> 个人资料</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="/admin/logout"><i class="fas fa-sign-out-alt"></i> 退出登录</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- 页面内容 -->
+            <div class="content-wrapper">
+                <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                    <h1 class="h3 mb-0 text-gray-800">权限管理</h1>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPermissionModal">
+                        <i class="fas fa-plus"></i> 添加权限
+                    </button>
+                </div>
+
+                <!-- 统计卡片 -->
+                <div class="row mb-4">
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card stat-card primary shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="stat-label mb-1">权限总数</div>
+                                        <div class="stat-number" th:text="${stats.totalPermissions}">0</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-key fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card stat-card success shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="stat-label mb-1">系统权限</div>
+                                        <div class="stat-number" th:text="${stats.systemPermissions}">0</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-shield-alt fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card stat-card info shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="stat-label mb-1">模块权限</div>
+                                        <div class="stat-number" th:text="${stats.modulePermissions}">0</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-puzzle-piece fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card stat-card warning shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="stat-label mb-1">活跃权限</div>
+                                        <div class="stat-number" th:text="${stats.activePermissions}">0</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 权限列表 -->
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">权限列表</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered" id="permissionsTable">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>权限代码</th>
+                                        <th>权限名称</th>
+                                        <th>所属模块</th>
+                                        <th>描述</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="permission : ${permissions}">
+                                        <td th:text="${permission.id}"></td>
+                                        <td><code th:text="${permission.code}"></code></td>
+                                        <td th:text="${permission.name}"></td>
+                                        <td><span class="badge bg-info" th:text="${permission.module}"></span></td>
+                                        <td th:text="${permission.description}"></td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary" th:onclick="'editPermission(' + ${permission.id} + ')'">
+                                                <i class="fas fa-edit"></i> 编辑
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger" th:onclick="'deletePermission(' + ${permission.id} + ')'">
+                                                <i class="fas fa-trash"></i> 删除
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加权限模态框 -->
+    <div class="modal fade" id="addPermissionModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">添加权限</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addPermissionForm">
+                        <div class="mb-3">
+                            <label for="permissionCode" class="form-label">权限代码</label>
+                            <input type="text" class="form-control" id="permissionCode" placeholder="例如: user:view" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="permissionName" class="form-label">权限名称</label>
+                            <input type="text" class="form-control" id="permissionName" placeholder="例如: 查看用户" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="permissionModule" class="form-label">所属模块</label>
+                            <select class="form-control" id="permissionModule" required>
+                                <option value="">请选择模块</option>
+                                <option value="用户管理">用户管理</option>
+                                <option value="角色管理">角色管理</option>
+                                <option value="权限管理">权限管理</option>
+                                <option value="课程管理">课程管理</option>
+                                <option value="学生管理">学生管理</option>
+                                <option value="财务管理">财务管理</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="permissionDescription" class="form-label">描述</label>
+                            <textarea class="form-control" id="permissionDescription" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="savePermission()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- 自定义脚本 -->
+    <script src="/js/admin.js"></script>
+    <script>
+        function editPermission(id) {
+            alert('编辑权限功能开发中，权限ID: ' + id);
+        }
+        
+        function deletePermission(id) {
+            if (confirm('确定要删除这个权限吗？')) {
+                alert('删除权限功能开发中，权限ID: ' + id);
+            }
+        }
+        
+        function savePermission() {
+            alert('保存权限功能开发中');
+        }
+    </script>
+</body>
+</html>

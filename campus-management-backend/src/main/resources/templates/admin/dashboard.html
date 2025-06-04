@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>仪表盘 - 智慧校园管理系统</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- 自定义CSS -->
+    <link th:href="@{/css/admin.css}" rel="stylesheet">
+
+    <!-- 引入组件样式 -->
+    <th:block th:replace="~{components/topbar :: topbar-style}"></th:block>
+</head>
+<body>
+    <!-- 布局容器 -->
+    <div class="wrapper">
+        <!-- 左侧导航栏 -->
+        <th:block th:replace="~{components/sidebar :: sidebar}"></th:block>
+
+        <!-- 主内容区域 -->
+        <div class="content" id="content">
+            <!-- 顶部导航栏 -->
+            <th:block th:replace="~{components/topbar :: topbar}"></th:block>
+
+            <!-- 页面内容包装器 -->
+            <div class="content-wrapper">
+                <!-- 页面标题 -->
+                <h1 class="h3 mb-4 text-gray-800">仪表盘</h1>
+
+                <!-- 页面内容开始 -->
+        <!-- 统计卡片 -->
+        <div class="row mb-4">
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-primary shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                    在校学生总数
+                                </div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${stats.totalStudents ?: 0}">
+                                    1,234
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-user-graduate fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-success shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                    课程总数
+                                </div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${stats.totalCourses ?: 0}">
+                                    156
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-book fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-info shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                    班级总数
+                                </div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${stats.totalClasses ?: 0}">
+                                    42
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-users-class fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-warning shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                    本月收费
+                                </div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${stats.monthlyRevenue ?: '¥0'}">
+                                    ¥235,680
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-money-bill-wave fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 图表区域 -->
+        <div class="row">
+            <!-- 学生统计图表 -->
+            <div class="col-xl-8 col-lg-7">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                        <h6 class="m-0 font-weight-bold text-primary">学生注册统计</h6>
+                        <div class="dropdown no-arrow">
+                            <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink"
+                               data-bs-toggle="dropdown">
+                                <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right shadow">
+                                <div class="dropdown-header">操作:</div>
+                                <a class="dropdown-item" href="#">导出数据</a>
+                                <a class="dropdown-item" href="#">刷新图表</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-area">
+                            <canvas id="studentChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 课程分布图 -->
+            <div class="col-xl-4 col-lg-5">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                        <h6 class="m-0 font-weight-bold text-primary">课程分布</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-pie pt-4 pb-2">
+                            <canvas id="courseChart"></canvas>
+                        </div>
+                        <div class="mt-4 text-center small">
+                            <span class="mr-2">
+                                <i class="fas fa-circle text-primary"></i> 必修课
+                            </span>
+                            <span class="mr-2">
+                                <i class="fas fa-circle text-success"></i> 选修课
+                            </span>
+                            <span class="mr-2">
+                                <i class="fas fa-circle text-info"></i> 实践课
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 快速操作和通知 -->
+        <div class="row">
+            <!-- 快速操作 -->
+            <div class="col-lg-6 mb-4">
+                <div class="card shadow">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">快速操作</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <a href="#" th:href="@{/admin/students/new}"
+                                   class="btn btn-primary btn-icon-split w-100">
+                                    <span class="icon text-white-50">
+                                        <i class="fas fa-user-plus"></i>
+                                    </span>
+                                    <span class="text">添加学生</span>
+                                </a>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <a href="#" th:href="@{/admin/courses/new}"
+                                   class="btn btn-success btn-icon-split w-100">
+                                    <span class="icon text-white-50">
+                                        <i class="fas fa-book-plus"></i>
+                                    </span>
+                                    <span class="text">添加课程</span>
+                                </a>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <a href="#" th:href="@{/admin/classes/new}"
+                                   class="btn btn-info btn-icon-split w-100">
+                                    <span class="icon text-white-50">
+                                        <i class="fas fa-users"></i>
+                                    </span>
+                                    <span class="text">添加班级</span>
+                                </a>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <a href="#" th:href="@{/admin/schedules/new}"
+                                   class="btn btn-warning btn-icon-split w-100">
+                                    <span class="icon text-white-50">
+                                        <i class="fas fa-calendar-plus"></i>
+                                    </span>
+                                    <span class="text">安排课程</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 系统通知 -->
+            <div class="col-lg-6 mb-4">
+                <div class="card shadow">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">系统通知</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group list-group-flush">
+                            <div class="list-group-item">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">数据备份提醒</h6>
+                                    <small>3小时前</small>
+                                </div>
+                                <p class="mb-1">系统将在今晚2:00进行自动数据备份。</p>
+                                <small>系统管理员</small>
+                            </div>
+                            <div class="list-group-item">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">新学期开始</h6>
+                                    <small>1天前</small>
+                                </div>
+                                <p class="mb-1">2024春季学期即将开始，请检查课程安排。</p>
+                                <small>教务处</small>
+                            </div>
+                            <div class="list-group-item">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">系统更新完成</h6>
+                                    <small>3天前</small>
+                                </div>
+                                <p class="mb-1">智慧校园管理系统已更新至v2.1版本。</p>
+                                <small>技术部</small>
+                            </div>
+                        </div>
+                        <div class="text-center mt-3">
+                            <a href="#" class="btn btn-sm btn-outline-primary">查看全部通知</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+                </div>
+                <!-- 页面内容结束 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 退出登录确认模态框 -->
+    <th:block th:replace="~{components/topbar :: logout-modal}"></th:block>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+
+    <!-- 引入侧边栏脚本 -->
+    <th:block th:replace="~{components/sidebar :: sidebar-script}"></th:block>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // 全局AJAX错误处理
+        $(document).ajaxError(function(event, xhr, settings, thrownError) {
+            if (xhr.status === 401) {
+                window.location.href = '/admin/login';
+            } else if (xhr.status === 403) {
+                window.location.href = '/admin/access-denied';
+            }
+        });
+
+        // 全局提示函数
+        window.showAlert = function(message, type = 'info') {
+            const alertHtml = `
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+
+            $('.alert').remove();
+            $('.content-wrapper').prepend(alertHtml);
+
+            setTimeout(() => {
+                $('.alert').fadeOut();
+            }, 3000);
+        };
+
+        // 页面加载完成后的初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 设置当前页面标识
+            document.body.setAttribute('data-current-page', 'dashboard');
+
+            // 学生统计图表
+            const studentCtx = document.getElementById('studentChart').getContext('2d');
+            const studentChart = new Chart(studentCtx, {
+                type: 'line',
+                data: {
+                    labels: ['1月', '2月', '3月', '4月', '5月', '6月'],
+                    datasets: [{
+                        label: '新增学生',
+                        data: [12, 19, 13, 15, 22, 13],
+                        borderColor: 'rgb(75, 192, 192)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // 课程分布图表
+            const courseCtx = document.getElementById('courseChart').getContext('2d');
+            const courseChart = new Chart(courseCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['必修课', '选修课', '实践课'],
+                    datasets: [{
+                        data: [60, 30, 10],
+                        backgroundColor: [
+                            '#4e73df',
+                            '#1cc88a',
+                            '#36b9cc'
+                        ],
+                        hoverBackgroundColor: [
+                            '#2e59d9',
+                            '#17a673',
+                            '#2c9faf'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

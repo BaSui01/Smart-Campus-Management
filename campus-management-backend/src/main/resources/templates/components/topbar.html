@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+    <!-- 顶部导航栏组件 -->
+    <nav th:fragment="topbar" class="navbar navbar-expand-lg navbar-light bg-white">
+        <div class="container-fluid">
+            <!-- 侧边栏切换按钮 -->
+            <button class="btn btn-link d-md-none d-lg-none" type="button" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+
+            <!-- 页面标题 -->
+            <div class="navbar-brand d-none d-md-block">
+                <h1 class="h4 mb-0 text-gray-800" th:text="${pageTitle ?: '智慧校园管理系统'}">页面标题</h1>
+            </div>
+
+            <!-- 右侧导航菜单 -->
+            <ul class="navbar-nav ms-auto">
+                <!-- 通知下拉菜单 -->
+                <li class="nav-item dropdown no-arrow mx-1">
+                    <a class="nav-link dropdown-toggle" href="#" id="alertsDropdown" role="button" 
+                       data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="fas fa-bell fa-fw"></i>
+                        <!-- 通知计数器 -->
+                        <span class="badge badge-danger badge-counter" th:if="${notificationCount > 0}" 
+                              th:text="${notificationCount}">3+</span>
+                    </a>
+                    <!-- 通知下拉菜单内容 -->
+                    <div class="dropdown-menu dropdown-menu-end shadow animated--grow-in">
+                        <h6 class="dropdown-header">
+                            <i class="fas fa-bell me-2"></i>
+                            通知中心
+                        </h6>
+                        
+                        <!-- 通知列表 -->
+                        <div th:if="${notifications != null and !notifications.isEmpty()}">
+                            <div th:each="notification : ${notifications}" class="dropdown-item d-flex align-items-center">
+                                <div class="me-3">
+                                    <div class="icon-circle bg-primary"
+                                         th:classappend="${notification.type == 'success'} ? 'bg-success' : (${notification.type == 'warning'} ? 'bg-warning' : '')">
+                                        <i class="fas fa-info-circle text-white"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="small text-gray-500" th:text="${notification.time}">2小时前</div>
+                                    <span class="font-weight-bold" th:text="${notification.message}">通知内容</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 无通知时显示 -->
+                        <div th:if="${notifications == null or notifications.isEmpty()}" class="dropdown-item text-center text-gray-500">
+                            <i class="fas fa-inbox fa-2x mb-2"></i>
+                            <p class="mb-0">暂无新通知</p>
+                        </div>
+                        
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item text-center small text-gray-500" href="#" th:href="@{/admin/notifications}">
+                            查看所有通知
+                        </a>
+                    </div>
+                </li>
+
+                <!-- 消息下拉菜单 -->
+                <li class="nav-item dropdown no-arrow mx-1">
+                    <a class="nav-link dropdown-toggle" href="#" id="messagesDropdown" role="button" 
+                       data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="fas fa-envelope fa-fw"></i>
+                        <!-- 消息计数器 -->
+                        <span class="badge badge-warning badge-counter" th:if="${messageCount > 0}" 
+                              th:text="${messageCount}">7</span>
+                    </a>
+                    <!-- 消息下拉菜单内容 -->
+                    <div class="dropdown-menu dropdown-menu-end shadow animated--grow-in">
+                        <h6 class="dropdown-header">
+                            <i class="fas fa-envelope me-2"></i>
+                            消息中心
+                        </h6>
+                        
+                        <!-- 消息列表 -->
+                        <div th:if="${messages != null and !messages.isEmpty()}">
+                            <div th:each="message : ${messages}" class="dropdown-item d-flex align-items-center">
+                                <div class="dropdown-list-image me-3">
+                                    <img class="rounded-circle" th:src="${message.avatar ?: '/images/default-avatar.png'}" 
+                                         alt="头像" style="width: 40px; height: 40px;">
+                                </div>
+                                <div class="font-weight-bold">
+                                    <div class="text-truncate" th:text="${message.content}">消息内容</div>
+                                    <div class="small text-gray-500" th:text="${message.sender + ' · ' + message.time}">发送者 · 时间</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 无消息时显示 -->
+                        <div th:if="${messages == null or messages.isEmpty()}" class="dropdown-item text-center text-gray-500">
+                            <i class="fas fa-inbox fa-2x mb-2"></i>
+                            <p class="mb-0">暂无新消息</p>
+                        </div>
+                        
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item text-center small text-gray-500" href="#" th:href="@{/admin/messages}">
+                            查看所有消息
+                        </a>
+                    </div>
+                </li>
+
+                <!-- 用户信息下拉菜单 -->
+                <li class="nav-item dropdown no-arrow">
+                    <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" 
+                       data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <span class="me-2 d-none d-lg-inline text-gray-600 small" 
+                              th:text="${session.currentUser?.realName ?: '管理员'}">管理员</span>
+                        <img class="img-profile rounded-circle"
+                             th:src="${session.currentUser?.avatarUrl ?: '/images/default-avatar.svg'}"
+                             alt="用户头像" style="width: 32px; height: 32px;">
+                    </a>
+                    <!-- 用户下拉菜单内容 -->
+                    <div class="dropdown-menu dropdown-menu-end shadow animated--grow-in">
+                        <div class="dropdown-header text-center">
+                            <img class="img-profile rounded-circle mb-2"
+                                 th:src="${session.currentUser?.avatarUrl ?: '/images/default-avatar.svg'}"
+                                 alt="用户头像" style="width: 60px; height: 60px;">
+                            <h6 class="mb-0" th:text="${session.currentUser?.realName ?: '管理员'}">管理员</h6>
+                            <small class="text-muted" th:text="${session.currentUser?.email ?: 'admin@campus.com'}">admin@campus.com</small>
+                        </div>
+                        
+                        <div class="dropdown-divider"></div>
+                        
+                        <a class="dropdown-item" th:href="@{/admin/profile}">
+                            <i class="fas fa-user fa-sm fa-fw me-2 text-gray-400"></i>
+                            个人资料
+                        </a>
+                        
+                        <a class="dropdown-item" th:href="@{/admin/settings}">
+                            <i class="fas fa-cogs fa-sm fa-fw me-2 text-gray-400"></i>
+                            系统设置
+                        </a>
+                        
+                        <a class="dropdown-item" href="#" th:href="@{/admin/activity-log}">
+                            <i class="fas fa-list fa-sm fa-fw me-2 text-gray-400"></i>
+                            活动日志
+                        </a>
+                        
+                        <div class="dropdown-divider"></div>
+                        
+                        <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#logoutModal">
+                            <i class="fas fa-sign-out-alt fa-sm fa-fw me-2 text-gray-400"></i>
+                            退出登录
+                        </a>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- 退出登录确认模态框 -->
+    <div th:fragment="logout-modal" class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="logoutModalLabel">
+                        <i class="fas fa-sign-out-alt me-2"></i>
+                        确认退出
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center">
+                        <i class="fas fa-question-circle fa-3x text-warning mb-3"></i>
+                        <p class="mb-0">确定要退出登录吗？</p>
+                        <small class="text-muted">退出后需要重新登录才能访问系统</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>
+                        取消
+                    </button>
+                    <form th:action="@{/admin/logout}" method="post" style="display: inline;">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-sign-out-alt me-1"></i>
+                            确定退出
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 顶部导航栏样式 -->
+    <style th:fragment="topbar-style">
+        .badge-counter {
+            position: absolute;
+            transform: scale(0.7);
+            transform-origin: top right;
+            right: 0.25rem;
+            top: -0.25rem;
+        }
+
+        .icon-circle {
+            height: 2rem;
+            width: 2rem;
+            border-radius: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dropdown-list-image {
+            position: relative;
+        }
+
+        .img-profile {
+            object-fit: cover;
+        }
+
+        .animated--grow-in {
+            animation: growIn 0.2s ease-in-out;
+        }
+
+        @keyframes growIn {
+            0% {
+                transform: scale(0.9);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .navbar {
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+        }
+
+        .dropdown-menu {
+            min-width: 15rem;
+        }
+
+        .dropdown-header {
+            padding: 0.75rem 1rem;
+            background-color: #f8f9fc;
+            border-bottom: 1px solid #e3e6f0;
+        }
+    </style>
+</body>
+</html>

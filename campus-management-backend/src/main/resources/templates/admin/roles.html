@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle} + ' - 智慧校园管理系统'">角色管理 - 智慧校园管理系统</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- 自定义样式 -->
+    <link href="/css/admin.css" rel="stylesheet">
+    <!-- 引入组件样式 -->
+    <th:block th:replace="~{components/topbar :: topbar-style}"></th:block>
+</head>
+<body>
+    <div class="wrapper">
+      <!-- 左侧导航栏 -->
+        <th:block th:replace="~{components/sidebar :: sidebar}"></th:block>
+
+        <!-- 主内容区域 -->
+        <div id="content" class="content">
+            <!-- 顶部导航栏 -->
+            <nav class="navbar navbar-expand-lg navbar-light bg-light">
+                <div class="container-fluid">
+                    <button type="button" id="sidebarCollapse" class="btn btn-info">
+                        <i class="fas fa-align-left"></i>
+                    </button>
+                    
+                    <div class="navbar-nav ms-auto">
+                        <div class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user"></i> 管理员
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="/admin/profile"><i class="fas fa-user-circle"></i> 个人资料</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="/admin/logout"><i class="fas fa-sign-out-alt"></i> 退出登录</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- 页面内容 -->
+            <div class="content-wrapper">
+                <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                    <h1 class="h3 mb-0 text-gray-800">角色管理</h1>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addRoleModal">
+                        <i class="fas fa-plus"></i> 添加角色
+                    </button>
+                </div>
+
+                <!-- 统计卡片 -->
+                <div class="row mb-4">
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card stat-card primary shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="stat-label mb-1">角色总数</div>
+                                        <div class="stat-number" th:text="${stats.totalRoles}">0</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-user-tag fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card stat-card success shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="stat-label mb-1">系统角色</div>
+                                        <div class="stat-number" th:text="${stats.systemRoles}">0</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-shield-alt fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card stat-card info shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="stat-label mb-1">自定义角色</div>
+                                        <div class="stat-number" th:text="${stats.customRoles}">0</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-users-cog fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card stat-card warning shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="stat-label mb-1">活跃角色</div>
+                                        <div class="stat-number" th:text="${stats.activeRoles}">0</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 角色列表 -->
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">角色列表</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered" id="rolesTable">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>角色名称</th>
+                                        <th>显示名称</th>
+                                        <th>描述</th>
+                                        <th>用户数量</th>
+                                        <th>状态</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="role : ${roles}">
+                                        <td th:text="${role.id}"></td>
+                                        <td><span class="badge bg-secondary" th:text="${role.name}"></span></td>
+                                        <td th:text="${role.displayName}"></td>
+                                        <td th:text="${role.description}"></td>
+                                        <td th:text="${role.userCount}"></td>
+                                        <td>
+                                            <span class="badge bg-success" th:if="${role.status == 1}">启用</span>
+                                            <span class="badge bg-danger" th:if="${role.status == 0}">禁用</span>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary" th:onclick="'editRole(' + ${role.id} + ')'">
+                                                <i class="fas fa-edit"></i> 编辑
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-info" th:onclick="'viewPermissions(' + ${role.id} + ')'">
+                                                <i class="fas fa-key"></i> 权限
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger" th:onclick="'deleteRole(' + ${role.id} + ')'" th:if="${role.name != 'ADMIN'}">
+                                                <i class="fas fa-trash"></i> 删除
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加角色模态框 -->
+    <div class="modal fade" id="addRoleModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">添加角色</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addRoleForm">
+                        <div class="mb-3">
+                            <label for="roleName" class="form-label">角色名称</label>
+                            <input type="text" class="form-control" id="roleName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="roleDisplayName" class="form-label">显示名称</label>
+                            <input type="text" class="form-control" id="roleDisplayName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="roleDescription" class="form-label">描述</label>
+                            <textarea class="form-control" id="roleDescription" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="saveRole()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- 自定义脚本 -->
+    <script src="/js/admin.js"></script>
+    <script>
+        function editRole(id) {
+            alert('编辑角色功能开发中，角色ID: ' + id);
+        }
+        
+        function viewPermissions(id) {
+            alert('查看权限功能开发中，角色ID: ' + id);
+        }
+        
+        function deleteRole(id) {
+            if (confirm('确定要删除这个角色吗？')) {
+                alert('删除角色功能开发中，角色ID: ' + id);
+            }
+        }
+        
+        function saveRole() {
+            alert('保存角色功能开发中');
+        }
+    </script>
+</body>
+</html>

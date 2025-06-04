@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle} + ' - 智慧校园管理系统'">系统设置 - 智慧校园管理系统</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- 自定义样式 -->
+    <link href="/css/admin.css" rel="stylesheet">
+    <!-- 引入组件样式 -->
+    <th:block th:replace="~{components/topbar :: topbar-style}"></th:block>
+</head>
+<body>
+    <div class="wrapper">
+        <!-- 左侧导航栏 -->
+        <th:block th:replace="~{components/sidebar :: sidebar}"></th:block>
+
+        <!-- 主内容区域 -->
+        <div id="content" class="content">
+            <!-- 顶部导航栏 -->
+            <nav class="navbar navbar-expand-lg navbar-light bg-light">
+                <div class="container-fluid">
+                    <button type="button" id="sidebarCollapse" class="btn btn-info">
+                        <i class="fas fa-align-left"></i>
+                    </button>
+                    
+                    <div class="navbar-nav ms-auto">
+                        <div class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user"></i> 管理员
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="/admin/profile"><i class="fas fa-user-circle"></i> 个人资料</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="/admin/logout"><i class="fas fa-sign-out-alt"></i> 退出登录</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- 页面内容 -->
+            <div class="content-wrapper">
+                <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                    <h1 class="h3 mb-0 text-gray-800">系统设置</h1>
+                    <button class="btn btn-success" onclick="saveAllSettings()">
+                        <i class="fas fa-save"></i> 保存所有设置
+                    </button>
+                </div>
+
+                <div class="row">
+                    <!-- 基本设置 -->
+                    <div class="col-xl-6 col-lg-6">
+                        <div class="card shadow mb-4">
+                            <div class="card-header py-3">
+                                <h6 class="m-0 font-weight-bold text-primary">基本设置</h6>
+                            </div>
+                            <div class="card-body">
+                                <form id="basicSettingsForm">
+                                    <div class="mb-3">
+                                        <label for="systemName" class="form-label">系统名称</label>
+                                        <input type="text" class="form-control" id="systemName" th:value="${systemSettings.systemName}">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="systemVersion" class="form-label">系统版本</label>
+                                        <input type="text" class="form-control" id="systemVersion" th:value="${systemSettings.systemVersion}" readonly>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="systemLogo" class="form-label">系统Logo</label>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="systemLogo" th:value="${systemSettings.systemLogo}">
+                                            <button class="btn btn-outline-secondary" type="button" onclick="uploadLogo()">
+                                                <i class="fas fa-upload"></i> 上传
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="contactEmail" class="form-label">联系邮箱</label>
+                                        <input type="email" class="form-control" id="contactEmail" th:value="${systemSettings.contactEmail}">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="contactPhone" class="form-label">联系电话</label>
+                                        <input type="tel" class="form-control" id="contactPhone" th:value="${systemSettings.contactPhone}">
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 安全设置 -->
+                    <div class="col-xl-6 col-lg-6">
+                        <div class="card shadow mb-4">
+                            <div class="card-header py-3">
+                                <h6 class="m-0 font-weight-bold text-primary">安全设置</h6>
+                            </div>
+                            <div class="card-body">
+                                <form id="securitySettingsForm">
+                                    <div class="mb-3">
+                                        <label for="maxLoginAttempts" class="form-label">最大登录尝试次数</label>
+                                        <input type="number" class="form-control" id="maxLoginAttempts" th:value="${systemSettings.maxLoginAttempts}" min="1" max="10">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="sessionTimeout" class="form-label">会话超时时间（分钟）</label>
+                                        <input type="number" class="form-control" id="sessionTimeout" th:value="${systemSettings.sessionTimeout}" min="5" max="120">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="passwordMinLength" class="form-label">密码最小长度</label>
+                                        <input type="number" class="form-control" id="passwordMinLength" th:value="${systemSettings.passwordMinLength}" min="4" max="20">
+                                    </div>
+                                    <div class="mb-3">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="enableCaptcha" th:checked="${systemSettings.enableCaptcha}">
+                                            <label class="form-check-label" for="enableCaptcha">启用验证码</label>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- 通知设置 -->
+                    <div class="col-xl-6 col-lg-6">
+                        <div class="card shadow mb-4">
+                            <div class="card-header py-3">
+                                <h6 class="m-0 font-weight-bold text-primary">通知设置</h6>
+                            </div>
+                            <div class="card-body">
+                                <form id="notificationSettingsForm">
+                                    <div class="mb-3">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="enableEmailNotification" th:checked="${systemSettings.enableEmailNotification}">
+                                            <label class="form-check-label" for="enableEmailNotification">启用邮件通知</label>
+                                        </div>
+                                        <small class="form-text text-muted">系统重要事件将通过邮件通知管理员</small>
+                                    </div>
+                                    <div class="mb-3">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="enableSmsNotification" th:checked="${systemSettings.enableSmsNotification}">
+                                            <label class="form-check-label" for="enableSmsNotification">启用短信通知</label>
+                                        </div>
+                                        <small class="form-text text-muted">紧急事件将通过短信通知管理员</small>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="notificationEmail" class="form-label">通知邮箱</label>
+                                        <input type="email" class="form-control" id="notificationEmail" placeholder="admin@campus.edu.cn">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="notificationPhone" class="form-label">通知手机</label>
+                                        <input type="tel" class="form-control" id="notificationPhone" placeholder="13800138000">
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 系统维护 -->
+                    <div class="col-xl-6 col-lg-6">
+                        <div class="card shadow mb-4">
+                            <div class="card-header py-3">
+                                <h6 class="m-0 font-weight-bold text-primary">系统维护</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <h6>数据备份</h6>
+                                    <p class="text-muted">定期备份系统数据，确保数据安全</p>
+                                    <button class="btn btn-outline-primary" onclick="backupData()">
+                                        <i class="fas fa-download"></i> 立即备份
+                                    </button>
+                                </div>
+                                <hr>
+                                <div class="mb-3">
+                                    <h6>清理缓存</h6>
+                                    <p class="text-muted">清理系统缓存，提高系统性能</p>
+                                    <button class="btn btn-outline-warning" onclick="clearCache()">
+                                        <i class="fas fa-broom"></i> 清理缓存
+                                    </button>
+                                </div>
+                                <hr>
+                                <div class="mb-3">
+                                    <h6>系统日志</h6>
+                                    <p class="text-muted">查看和管理系统运行日志</p>
+                                    <button class="btn btn-outline-info" onclick="viewLogs()">
+                                        <i class="fas fa-file-alt"></i> 查看日志
+                                    </button>
+                                </div>
+                                <hr>
+                                <div class="mb-3">
+                                    <h6>重启系统</h6>
+                                    <p class="text-muted text-danger">重启系统服务，请谨慎操作</p>
+                                    <button class="btn btn-outline-danger" onclick="restartSystem()">
+                                        <i class="fas fa-power-off"></i> 重启系统
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 系统信息 -->
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">系统信息</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <strong>系统版本：</strong><br>
+                                <span th:text="${systemSettings.systemVersion}">1.0.0</span>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Java版本：</strong><br>
+                                <span>OpenJDK 17.0.2</span>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>数据库：</strong><br>
+                                <span>MySQL 8.0.33</span>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>运行时间：</strong><br>
+                                <span>15天 8小时 32分钟</span>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <strong>内存使用：</strong><br>
+                                <div class="progress mt-1">
+                                    <div class="progress-bar bg-info" style="width: 65%">65%</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>CPU使用：</strong><br>
+                                <div class="progress mt-1">
+                                    <div class="progress-bar bg-success" style="width: 25%">25%</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>磁盘使用：</strong><br>
+                                <div class="progress mt-1">
+                                    <div class="progress-bar bg-warning" style="width: 45%">45%</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>网络状态：</strong><br>
+                                <span class="badge bg-success">正常</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- 自定义脚本 -->
+    <script src="/js/admin.js"></script>
+    <script>
+        function saveAllSettings() {
+            const basicSettings = {
+                systemName: document.getElementById('systemName').value,
+                systemLogo: document.getElementById('systemLogo').value,
+                contactEmail: document.getElementById('contactEmail').value,
+                contactPhone: document.getElementById('contactPhone').value
+            };
+            
+            const securitySettings = {
+                maxLoginAttempts: document.getElementById('maxLoginAttempts').value,
+                sessionTimeout: document.getElementById('sessionTimeout').value,
+                passwordMinLength: document.getElementById('passwordMinLength').value,
+                enableCaptcha: document.getElementById('enableCaptcha').checked
+            };
+            
+            const notificationSettings = {
+                enableEmailNotification: document.getElementById('enableEmailNotification').checked,
+                enableSmsNotification: document.getElementById('enableSmsNotification').checked,
+                notificationEmail: document.getElementById('notificationEmail').value,
+                notificationPhone: document.getElementById('notificationPhone').value
+            };
+            
+            // 这里应该发送AJAX请求到后端
+            alert('保存系统设置功能开发中');
+            console.log('基本设置:', basicSettings);
+            console.log('安全设置:', securitySettings);
+            console.log('通知设置:', notificationSettings);
+        }
+        
+        function uploadLogo() {
+            alert('上传Logo功能开发中');
+        }
+        
+        function backupData() {
+            if (confirm('确定要进行数据备份吗？这可能需要几分钟时间。')) {
+                alert('数据备份功能开发中');
+            }
+        }
+        
+        function clearCache() {
+            if (confirm('确定要清理系统缓存吗？')) {
+                alert('清理缓存功能开发中');
+            }
+        }
+        
+        function viewLogs() {
+            alert('查看日志功能开发中');
+        }
+        
+        function restartSystem() {
+            if (confirm('确定要重启系统吗？这将中断所有用户的连接。')) {
+                alert('重启系统功能开发中');
+            }
+        }
+    </script>
+</body>
+</html>

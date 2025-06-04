@@ -1,0 +1,50 @@
+# 开发环境配置文件 - 平衡调试和日志输出
+server:
+  port: 8081
+
+spring:
+  # JPA配置 - 开发环境
+  jpa:
+    hibernate:
+      ddl-auto: update
+    # 开发环境可以选择性启用SQL日志
+    show-sql: false  # 默认关闭，需要时可以临时开启
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: false
+        use_sql_comments: false
+
+# 开发环境日志配置 - 适度的日志输出
+logging:
+  level:
+    # 应用程序使用INFO级别，可以看到重要操作
+    com.campus: INFO
+    # Spring Security使用INFO级别，可以看到认证相关信息
+    org.springframework.security: INFO
+    # Spring框架使用INFO级别
+    org.springframework: INFO
+    # Hibernate使用WARN级别，减少SQL日志
+    org.hibernate.SQL: WARN
+    org.hibernate.type.descriptor.sql.BasicBinder: WARN
+    # 数据库连接池使用INFO级别
+    com.zaxxer.hikari: INFO
+    # 根日志级别设置为INFO
+    root: INFO
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n"
+  file:
+    name: logs/campus-management-dev.log
+    max-size: 20MB
+    max-history: 10
+
+# 开发环境管理端点配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,env
+  endpoint:
+    health:
+      show-details: when-authorized

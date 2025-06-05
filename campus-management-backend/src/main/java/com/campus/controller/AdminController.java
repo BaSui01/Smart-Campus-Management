@@ -28,6 +28,16 @@ import com.campus.entity.Student;
 import com.campus.entity.User;
 import com.campus.service.DashboardService;
 import com.campus.service.UserService;
+import com.campus.service.StudentService;
+import com.campus.service.CourseService;
+import com.campus.service.SchoolClassService;
+import com.campus.service.PaymentRecordService;
+import com.campus.service.FeeItemService;
+import com.campus.service.GradeService;
+import com.campus.repository.StudentRepository.StudentGradeCount;
+import com.campus.repository.CourseRepository.CourseTypeCount;
+import com.campus.repository.SchoolClassRepository.ClassGradeCount;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 
 /**
  * 后台管理控制器
@@ -42,11 +52,30 @@ public class AdminController {
 
     private final UserService userService;
     private final DashboardService dashboardService;
+    private final StudentService studentService;
+    private final CourseService courseService;
+    private final SchoolClassService schoolClassService;
+    private final PaymentRecordService paymentRecordService;
+    private final FeeItemService feeItemService;
+    private final GradeService gradeService;
 
     @Autowired
-    public AdminController(UserService userService, DashboardService dashboardService) {
+    public AdminController(UserService userService,
+                          DashboardService dashboardService,
+                          StudentService studentService,
+                          CourseService courseService,
+                          SchoolClassService schoolClassService,
+                          PaymentRecordService paymentRecordService,
+                          FeeItemService feeItemService,
+                          GradeService gradeService) {
         this.userService = userService;
         this.dashboardService = dashboardService;
+        this.studentService = studentService;
+        this.courseService = courseService;
+        this.schoolClassService = schoolClassService;
+        this.paymentRecordService = paymentRecordService;
+        this.feeItemService = feeItemService;
+        this.gradeService = gradeService;
     }
 
     /**
@@ -97,20 +126,36 @@ public class AdminController {
     @GetMapping("/courses")
     public String courses(@RequestParam(defaultValue = "0") int page,
                          @RequestParam(defaultValue = "20") int size,
+                         @RequestParam(defaultValue = "") String search,
+                         @RequestParam(defaultValue = "") String courseType,
                          Model model) {
         try {
-            // 使用模拟数据，待CourseService完善后替换
-            // Page<Course> courses = courseService.findAllCourses(PageRequest.of(page, size));
+            // 构建查询参数
+            Map<String, Object> params = new HashMap<>();
+            if (!search.isEmpty()) {
+                params.put("keyword", search);
+            }
+            if (!courseType.isEmpty()) {
+                params.put("courseType", courseType);
+            }
 
-            // 获取课程统计（使用模拟数据）
+            // 分页查询课程
+            IPage<Course> coursePage = courseService.findCoursesByPage(page, size, params);
+
+            // 获取课程统计
+            List<CourseTypeCount> typeStats = courseService.countCoursesByType();
             Map<String, Object> stats = new HashMap<>();
-            stats.put("totalCourses", 85);
-            stats.put("requiredCourses", 45);
-            stats.put("electiveCourses", 30);
-            stats.put("practicalCourses", 10);
+            long totalCourses = 0;
+            for (CourseTypeCount stat : typeStats) {
+                stats.put(stat.getCourseType() + "Courses", stat.getCount());
+                totalCourses += stat.getCount();
+            }
+            stats.put("totalCourses", totalCourses);
 
-            // model.addAttribute("courses", courses);
+            model.addAttribute("courses", coursePage);
             model.addAttribute("stats", stats);
+            model.addAttribute("search", search);
+            model.addAttribute("courseType", courseType);
             model.addAttribute("pageTitle", "课程管理");
             model.addAttribute("currentPage", "courses");
 

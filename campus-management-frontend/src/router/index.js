@@ -47,6 +47,11 @@ const ParentCommunication = () => import('@/views/parent/Communication.vue')
 const ParentActivities = () => import('@/views/parent/Activities.vue')
 const ParentProfile = () => import('@/views/parent/Profile.vue')
 
+// 页脚页面组件
+const Features = () => import('@/views/about/Features.vue')
+const About = () => import('@/views/about/About.vue')
+const Privacy = () => import('@/views/legal/Privacy.vue')
+
 // 路由配置
 const routes = [
   {
@@ -64,6 +69,143 @@ const routes = [
     component: Login,
     meta: {
       title: '登录',
+      requiresAuth: false
+    }
+  },
+  // 页脚页面路由
+  {
+    path: '/features',
+    name: 'Features',
+    component: Features,
+    meta: {
+      title: '功能介绍',
+      requiresAuth: false
+    }
+  },
+  {
+    path: '/about',
+    name: 'About',
+    component: About,
+    meta: {
+      title: '关于我们',
+      requiresAuth: false
+    }
+  },
+  {
+    path: '/privacy',
+    name: 'Privacy',
+    component: Privacy,
+    meta: {
+      title: '隐私政策',
+      requiresAuth: false
+    }
+  },
+  // 临时占位页面路由
+  {
+    path: '/pricing',
+    name: 'Pricing',
+    redirect: '/features',
+    meta: {
+      title: '价格方案',
+      requiresAuth: false
+    }
+  },
+  {
+    path: '/cases',
+    name: 'Cases',
+    redirect: '/features',
+    meta: {
+      title: '案例展示',
+      requiresAuth: false
+    }
+  },
+  {
+    path: '/updates',
+    name: 'Updates',
+    redirect: '/features',
+    meta: {
+      title: '产品更新',
+      requiresAuth: false
+    }
+  },
+  {
+    path: '/help',
+    name: 'Help',
+    redirect: '/features',
+    meta: {
+      title: '帮助中心',
+      requiresAuth: false
+    }
+  },
+  {
+    path: '/docs',
+    name: 'Docs',
+    redirect: '/features',
+    meta: {
+      title: '技术文档',
+      requiresAuth: false
+    }
+  },
+  {
+    path: '/faq',
+    name: 'FAQ',
+    redirect: '/features',
+    meta: {
+      title: '常见问题',
+      requiresAuth: false
+    }
+  },
+  {
+    path: '/support',
+    name: 'Support',
+    redirect: '/features',
+    meta: {
+      title: '联系支持',
+      requiresAuth: false
+    }
+  },
+  {
+    path: '/team',
+    name: 'Team',
+    redirect: '/about',
+    meta: {
+      title: '团队成员',
+      requiresAuth: false
+    }
+  },
+  {
+    path: '/careers',
+    name: 'Careers',
+    redirect: '/about',
+    meta: {
+      title: '招贤纳士',
+      requiresAuth: false
+    }
+  },
+  {
+    path: '/contact',
+    name: 'Contact',
+    redirect: '/about',
+    meta: {
+      title: '联系我们',
+      requiresAuth: false
+    }
+  },
+  {
+    path: '/terms',
+    name: 'Terms',
+    redirect: '/privacy',
+    meta: {
+      title: '服务条款',
+      requiresAuth: false
+    }
+  },
+  {
+    path: '/legal',
+    name: 'Legal',
+    redirect: '/privacy',
+    meta: {
+      title: '法律声明',
       requiresAuth: false
     }
   },

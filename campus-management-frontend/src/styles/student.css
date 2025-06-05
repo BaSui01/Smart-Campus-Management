@@ -1,0 +1,1392 @@
+/* 学生端样式文件 - 重构版本 */
+
+/* 全局样式 */
+@import '@/styles/global.css';
+
+/* 基础页面布局 */
+.assignments-page,
+.course-detail,
+.exams-page,
+.library-page {
+  min-height: 100vh;
+  background: #f5f7fa;
+}
+
+.student-courses,
+.student-dashboard,
+.student-grades {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 0;
+}
+
+.course-selection-page,
+.profile-page,
+.schedule-page {
+  padding: 20px 0;
+}
+
+/* 页面头部样式 */
+.page-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 40px 20px;
+  color: white;
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.page-header h1 {
+  margin: 0 0 8px 0;
+  font-size: 28px;
+  font-weight: 600;
+}
+
+.page-header p {
+  margin: 0;
+  opacity: 0.9;
+  font-size: 16px;
+}
+
+/* 头部内容布局 */
+.header-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.title-section h1 {
+  font-size: 32px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.title-section p {
+  font-size: 16px;
+  opacity: 0.9;
+}
+
+.header-stats,
+.header-actions {
+  display: flex;
+  gap: 20px;
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-number {
+  display: block;
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  color: #333;
+}
+
+.stat-label {
+  font-size: 14px;
+  opacity: 0.8;
+  color: #666;
+}
+
+/* 主要内容区域 */
+.main-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.main-content-section,
+.bottom-section {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  margin-bottom: 30px;
+}
+
+/* 占位内容 */
+.placeholder-content {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.placeholder-content h3 {
+  margin: 20px 0 10px 0;
+  color: #333;
+}
+
+.placeholder-content p {
+  color: #666;
+}
+
+/* 欢迎横幅 */
+.welcome-banner {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 40px 20px;
+  color: white;
+  margin-bottom: 30px;
+}
+
+.banner-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.welcome-text h1 {
+  font-size: 32px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.welcome-subtitle {
+  font-size: 18px;
+  opacity: 0.9;
+  margin-bottom: 16px;
+}
+
+.user-meta {
+  display: flex;
+  gap: 12px;
+}
+
+.banner-illustration {
+  width: 200px;
+  height: 150px;
+}
+
+.image-slot {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: white;
+  font-size: 48px;
+}
+
+/* 统计卡片样式 */
+.stats-section,
+.stats-overview {
+  max-width: 1200px;
+  margin: -60px auto 30px;
+  padding: 0 20px;
+  position: relative;
+  z-index: 1;
+}
+
+.stat-card,
+.stats-card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 120px;
+  text-align: center;
+}
+
+.stat-card:hover,
+.stats-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+}
+
+/* 统计图标 */
+.stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.stat-courses .stat-icon {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.stat-grades .stat-icon {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.stat-attendance .stat-icon {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.stat-credits .stat-icon {
+  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+}
+
+.stat-content {
+  flex: 1;
+  padding: 20px 0;
+}
+
+.stat-number {
+  font-size: 28px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.stat-label {
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.stat-description {
+  color: #999;
+  font-size: 12px;
+}
+
+.stat-trend {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.trend-up {
+  color: #67c23a;
+}
+
+.trend-down {
+  color: #f56c6c;
+}
+
+/* 工具栏和筛选器 */
+.filter-toolbar,
+.filter-card,
+.toolbar-card {
+  max-width: 1200px;
+  margin: -20px auto 20px;
+  position: relative;
+  z-index: 1;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* 内容卡片 */
+.courses-content,
+.grades-content,
+.trend-chart-card {
+  max-width: 1200px;
+  margin: 0 auto 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-header h3 {
+  margin: 0;
+  color: #333;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.header-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.content-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* 课程网格布局 */
+.courses-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 20px;
+  padding: 20px 0;
+}
+
+.course-card {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: 2px solid transparent;
+}
+
+.course-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.course-card.course-current {
+  border-color: #409eff;
+  box-shadow: 0 4px 20px rgba(64, 158, 255, 0.3);
+}
+
+/* 课程封面 */
+.course-cover {
+  height: 120px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--el-color-primary) 0%, var(--el-color-primary-light-3) 100%);
+}
+
+.course-type-tag {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+}
+
+.course-icon {
+  opacity: 0.8;
+}
+
+/* 课程信息 */
+.course-info {
+  padding: 20px;
+  flex: 1;
+  margin: 0 16px;
+}
+
+.course-title {
+  margin-bottom: 16px;
+}
+
+.course-title h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 4px 0;
+  line-height: 1.3;
+}
+
+.course-title h4 {
+  margin: 0 0 8px 0;
+  color: #333;
+  font-size: 16px;
+}
+
+.course-title p {
+  margin: 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.course-code {
+  font-size: 13px;
+  color: #666;
+  margin-top: 4px;
+}
+
+.course-name strong {
+  color: #333;
+  font-size: 16px;
+}
+
+.course-meta {
+  margin-bottom: 16px;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: #666;
+}
+
+.meta-item:last-child {
+  margin-bottom: 0;
+}
+
+/* 课程详情 */
+.course-details {
+  margin-bottom: 16px;
+  display: flex;
+  gap: 16px;
+  font-size: 13px;
+  color: #666;
+}
+
+.course-details span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.course-details .course-name {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.course-details .course-code {
+  font-size: 12px;
+  color: #666;
+}
+
+/* 进度条 */
+.course-progress {
+  margin-bottom: 16px;
+}
+
+.progress-label {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: #666;
+}
+
+.progress-info {
+  padding: 10px 0;
+}
+
+.progress-item {
+  margin-bottom: 20px;
+}
+
+.progress-item span {
+  display: block;
+  margin-bottom: 8px;
+  color: #666;
+  font-size: 14px;
+}
+
+/* 课程底部 */
+.course-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* 列表视图 */
+.courses-table,
+.grades-table {
+  margin-top: 20px;
+}
+
+.table-course-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.course-icon-small {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.table-progress {
+  padding: 0 10px;
+}
+
+/* 表格行样式 */
+:deep(.current-course-row) {
+  background-color: #e3f2fd;
+}
+
+:deep(.completed-course-row) {
+  background-color: #f5f5f5;
+}
+
+:deep(.pending-row) {
+  background-color: #fdf6ec;
+}
+
+:deep(.excellent-row) {
+  background-color: #f0f9ff;
+}
+
+:deep(.fail-row) {
+  background-color: #fef0f0;
+}
+
+:deep(.changed-row) {
+  background-color: #fff9e6;
+}
+
+:deep(.ungraded-row) {
+  background-color: #fef2f2;
+}
+
+/* 分页 */
+.pagination-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-top: 30px;
+  padding: 20px 0;
+}
+
+/* 今日课程和任务列表 */
+.today-courses-card,
+.recent-grades-card,
+.notifications-card,
+.quick-actions-card {
+  height: 100%;
+}
+
+.courses-content,
+.grades-content,
+.notifications-content {
+  min-height: 300px;
+}
+
+.course-list,
+.grade-list,
+.notification-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.course-item,
+.grade-item,
+.notification-item {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  border: 1px solid #e4e7ed;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  background: #fafafa;
+}
+
+.course-item:hover,
+.grade-item:hover,
+.notification-item:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.course-item.current-course {
+  border-color: #409eff;
+  background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+}
+
+.course-item.completed-course {
+  opacity: 0.7;
+  background: #f5f5f5;
+}
+
+.notification-item.unread {
+  border-left: 4px solid #409eff;
+  background: linear-gradient(135deg, #e3f2fd 0%, #f8f9ff 100%);
+}
+
+.course-time {
+  min-width: 120px;
+  text-align: center;
+  font-size: 14px;
+  color: #666;
+  font-weight: 600;
+}
+
+.time-range {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+/* 成绩相关样式 */
+.grade-subject {
+  flex: 1;
+}
+
+.grade-subject h4 {
+  margin: 0 0 4px 0;
+  color: #333;
+  font-size: 16px;
+}
+
+.exam-type {
+  font-size: 12px;
+  color: #666;
+}
+
+.grade-score {
+  text-align: center;
+  margin: 0 16px;
+}
+
+.score-value {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.score-excellent {
+  color: #67c23a;
+  font-weight: 600;
+}
+
+.score-good {
+  color: #409eff;
+  font-weight: 600;
+}
+
+.score-fair {
+  color: #e6a23c;
+  font-weight: 600;
+}
+
+.score-pass {
+  color: #909399;
+  font-weight: 600;
+}
+
+.score-poor,
+.score-fail {
+  color: #f56c6c;
+  font-weight: 600;
+}
+
+.score-rank {
+  font-size: 12px;
+  color: #666;
+}
+
+.gpa-value {
+  font-weight: 600;
+  color: #409eff;
+}
+
+.rank-info {
+  font-size: 12px;
+  color: #666;
+}
+
+.rank-display {
+  font-weight: 600;
+  color: #e6a23c;
+}
+
+/* 通知相关 */
+.notification-icon {
+  margin-right: 12px;
+  margin-top: 4px;
+}
+
+.notification-content {
+  flex: 1;
+}
+
+.notification-content h4 {
+  margin: 0 0 8px 0;
+  color: #333;
+  font-size: 14px;
+}
+
+.notification-content p {
+  margin: 0 0 8px 0;
+  color: #666;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.notification-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+}
+
+.notification-meta .time {
+  color: #999;
+}
+
+/* 快捷操作 */
+.quick-actions-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.action-item {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  border: 1px solid #e4e7ed;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  background: #fafafa;
+}
+
+.action-item:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.action-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+}
+
+.action-content h4 {
+  margin: 0 0 4px 0;
+  color: #333;
+  font-size: 14px;
+}
+
+.action-content p {
+  margin: 0;
+  color: #666;
+  font-size: 12px;
+}
+
+/* 空状态 */
+.empty-courses,
+.no-courses {
+  padding: 60px 0;
+  text-align: center;
+  color: #999;
+}
+
+.empty-courses p,
+.no-courses p {
+  margin: 16px 0 0 0;
+}
+
+/* 选课系统 */
+.status-alert {
+  margin-bottom: 30px;
+}
+
+.selection-summary {
+  display: flex;
+  align-items: center;
+  height: 32px;
+  font-weight: 600;
+  color: #409eff;
+}
+
+.courses-card,
+.selected-courses-card {
+  margin-bottom: 30px;
+}
+
+.selected-courses-list {
+  display: grid;
+  gap: 12px;
+}
+
+.selected-course-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 6px;
+}
+
+.selected-course-item .course-info h4 {
+  margin: 0 0 4px 0;
+  color: #333;
+}
+
+.selected-course-item .course-info p {
+  margin: 0;
+  color: #666;
+  font-size: 14px;
+}
+
+/* 课程详情页 */
+.course-detail {
+  margin-bottom: 20px;
+}
+
+.course-description,
+.course-syllabus {
+  margin-top: 20px;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  line-height: 1.6;
+  color: #666;
+}
+
+.course-description h4,
+.course-syllabus h4 {
+  margin: 0 0 12px 0;
+  color: #333;
+  font-weight: 600;
+}
+
+.course-description p {
+  margin: 0;
+  color: #666;
+  line-height: 1.6;
+}
+
+.course-syllabus ul {
+  margin: 0;
+  padding-left: 20px;
+  color: #666;
+}
+
+.course-syllabus li {
+  margin-bottom: 4px;
+}
+
+.course-content {
+  line-height: 1.8;
+  color: #666;
+  white-space: pre-line;
+}
+
+/* 个人资料页面 */
+.profile-card,
+.stats-card,
+.form-card {
+  margin-bottom: 20px;
+}
+
+.profile-content {
+  text-align: center;
+}
+
+.avatar-section {
+  margin-bottom: 20px;
+}
+
+.change-avatar {
+  display: block;
+  margin: 10px auto 0;
+  color: #409eff;
+}
+
+.basic-info {
+  text-align: left;
+}
+
+.info-item {
+  display: flex;
+  margin-bottom: 12px;
+  align-items: center;
+}
+
+.info-item label {
+  width: 60px;
+  color: #666;
+  font-size: 14px;
+}
+
+.info-item span {
+  color: #333;
+  font-weight: 500;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.profile-form {
+  margin-top: 20px;
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 30px;
+}
+
+/* 课程表样式 */
+.schedule-card,
+.schedule-list-card {
+  margin-bottom: 30px;
+}
+
+.schedule-container {
+  overflow-x: auto;
+}
+
+.schedule-table {
+  min-width: 800px;
+}
+
+.schedule-header,
+.schedule-body {
+  display: grid;
+  grid-template-columns: 120px repeat(5, 1fr);
+}
+
+.schedule-header {
+  border-bottom: 2px solid #e4e7ed;
+}
+
+.time-slot-header,
+.day-header {
+  padding: 12px;
+  background: #f5f7fa;
+  border-right: 1px solid #e4e7ed;
+  font-weight: 600;
+  text-align: center;
+}
+
+.day-name {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.day-date {
+  font-size: 12px;
+  color: #666;
+}
+
+.time-row {
+  display: contents;
+}
+
+.time-slot {
+  padding: 12px;
+  background: #fafafa;
+  border-right: 1px solid #e4e7ed;
+  border-bottom: 1px solid #e4e7ed;
+  text-align: center;
+}
+
+.slot-number {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.slot-time {
+  font-size: 12px;
+  color: #666;
+}
+
+.course-cell {
+  min-height: 80px;
+  border-right: 1px solid #e4e7ed;
+  border-bottom: 1px solid #e4e7ed;
+  cursor: pointer;
+  position: relative;
+}
+
+.course-cell:hover {
+  background-color: #f0f9ff;
+}
+
+.course-item {
+  height: 100%;
+  padding: 8px;
+  border-radius: 4px;
+  margin: 4px;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.course-required {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.course-major {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.course-elective {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.course-default {
+  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+  color: #333;
+}
+
+.course-name {
+  font-weight: 600;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+
+.course-teacher {
+  font-size: 11px;
+  margin-bottom: 2px;
+  opacity: 0.9;
+}
+
+.course-location {
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+/* 课程表列表视图 */
+.schedule-list {
+  display: grid;
+  gap: 20px;
+}
+
+.day-section {
+  border: 1px solid #e4e7ed;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.day-title {
+  margin: 0;
+  padding: 12px 16px;
+  background: #f5f7fa;
+  color: #333;
+  border-bottom: 1px solid #e4e7ed;
+}
+
+.day-courses {
+  padding: 16px;
+}
+
+.course-list-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.course-list-item:last-child {
+  border-bottom: none;
+}
+
+.course-content {
+  flex: 1;
+  margin: 0 16px;
+}
+
+.course-content h5 {
+  margin: 0 0 4px 0;
+  color: #333;
+}
+
+.course-content p {
+  margin: 0;
+  font-size: 12px;
+  color: #999;
+}
+
+/* 图表和分析 */
+.trend-chart-card {
+  max-width: 1200px;
+  margin: 0 auto 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.chart-container {
+  padding: 20px 0;
+  background: #fafafa;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.chart-container h4 {
+  margin: 0 0 16px 0;
+  color: #333;
+  font-weight: 600;
+}
+
+.trend-chart,
+.chart {
+  height: 300px;
+}
+
+.chart.large {
+  height: 400px;
+}
+
+.full-width {
+  margin-top: 20px;
+}
+
+.grades-charts {
+  margin-top: 20px;
+}
+
+/* 详情对话框 */
+.course-detail-content,
+.grade-detail {
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.detail-section {
+  margin-bottom: 24px;
+}
+
+.detail-section h4 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e4e7ed;
+}
+
+.progress-detail {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.progress-stats {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.progress-stats .stat-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 6px;
+}
+
+.progress-stats .label {
+  color: #666;
+  font-size: 14px;
+}
+
+.progress-stats .value {
+  color: #333;
+  font-weight: 600;
+}
+
+.grade-analysis {
+  margin-top: 24px;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.grade-analysis h4 {
+  margin: 0 0 16px 0;
+  color: #333;
+  font-weight: 600;
+}
+
+.analysis-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.analysis-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: white;
+  border-radius: 4px;
+}
+
+.analysis-item .label {
+  color: #666;
+}
+
+.analysis-item .value {
+  color: #333;
+  font-weight: 600;
+}
+
+.teacher-comment {
+  margin-top: 24px;
+  padding: 16px;
+  background: #f0f9ff;
+  border-radius: 8px;
+  border-left: 4px solid #409eff;
+}
+
+.teacher-comment h4 {
+  margin: 0 0 12px 0;
+  color: #333;
+  font-weight: 600;
+}
+
+.comment-content {
+  color: #666;
+  line-height: 1.6;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+/* 工具类 */
+.text-muted {
+  color: #999;
+}
+
+.text-success {
+  color: #67c23a;
+}
+
+.text-warning {
+  color: #e6a23c;
+}
+
+.text-danger {
+  color: #f56c6c;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .page-header {
+    padding: 30px 15px;
+  }
+  
+  .header-content,
+  .banner-content {
+    flex-direction: column;
+    gap: 20px;
+    text-align: center;
+  }
+  
+  .title-section h1,
+  .welcome-text h1 {
+    font-size: 24px;
+  }
+  
+  .stats-section,
+  .stats-overview {
+    margin: -40px 15px 20px;
+  }
+  
+  .stat-card,
+  .stats-card {
+    padding: 16px;
+    height: auto;
+    flex-direction: column;
+    text-align: center;
+    gap: 12px;
+  }
+  
+  .main-content-section,
+  .bottom-section,
+  .filter-toolbar,
+  .courses-content,
+  .grades-content,
+  .trend-chart-card,
+  .filter-card {
+    margin-left: 15px;
+    margin-right: 15px;
+  }
+  
+  .courses-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+    padding: 15px 0;
+  }
+  
+  .course-card {
+    border-radius: 8px;
+  }
+  
+  .course-info {
+    padding: 15px;
+  }
+  
+  .content-header {
+    flex-direction: column;
+    gap: 15px;
+    align-items: stretch;
+  }
+  
+  .course-item,
+  .grade-item,
+  .notification-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .course-time,
+  .grade-score {
+    margin: 0;
+  }
+  
+  .progress-detail {
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+  
+  .progress-stats {
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+  
+  .analysis-content {
+    grid-template-columns: 1fr;
+  }
+  
+  .chart,
+  .trend-chart {
+    height: 250px;
+  }
+  
+  .chart.large {
+    height: 300px;
+  }
+}
+
+@media (max-width: 480px) {
+  .course-cover {
+    height: 100px;
+  }
+  
+  .course-title h3 {
+    font-size: 16px;
+  }
+  
+  .meta-item {
+    font-size: 12px;
+  }
+  
+  .header-stats {
+    flex-direction: column;
+    gap: 15px;
+  }
+}

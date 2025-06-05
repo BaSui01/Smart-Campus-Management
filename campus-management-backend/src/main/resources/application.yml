@@ -16,7 +16,7 @@ spring:
 
   # 数据源配置
   datasource:
-    url: jdbc:mysql://localhost:3306/campus_management?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://localhost:3306/campus_management_db?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: root
     password: xiaoxiao123
     driver-class-name: com.mysql.cj.jdbc.Driver

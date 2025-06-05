@@ -1,6 +1,5 @@
-# 智慧校园管理系统配置文件
+# 智慧校园管理系统 - 主配置文件
 server:
-  port: 8081
   servlet:
     encoding:
       charset: UTF-8
@@ -9,45 +8,10 @@ server:
 
 spring:
   application:
-    name: campus-management
+    name: smart-campus-management
 
   profiles:
     active: dev  # 默认激活开发环境
-
-  # 数据源配置
-  datasource:
-    url: jdbc:mysql://localhost:3306/campus_management_db?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
-    username: root
-    password: xiaoxiao123
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    # 连接池配置
-    hikari:
-      pool-name: CampusHikariCP
-      minimum-idle: 5
-      maximum-pool-size: 20
-      auto-commit: true
-      idle-timeout: 30000
-      connection-timeout: 30000
-      max-lifetime: 1800000
-
-  # JPA配置 - 默认最小日志输出
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: false
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.MySQLDialect
-        format_sql: false
-        use_sql_comments: false
-    open-in-view: false
-    defer-datasource-initialization: true
-
-  # SQL初始化配置
-  sql:
-    init:
-      mode: always
-      continue-on-error: true
 
   # Thymeleaf配置
   thymeleaf:
@@ -55,14 +19,11 @@ spring:
     suffix: .html
     mode: HTML
     encoding: UTF-8
-    cache: false
 
   # 静态资源配置
   web:
     resources:
       static-locations: classpath:/static/
-      cache:
-        period: 3600
 
   # 文件上传配置
   servlet:
@@ -74,42 +35,6 @@ spring:
   messages:
     basename: messages
     encoding: UTF-8
-
-# 默认日志配置 - 最小化输出
-logging:
-  level:
-    com.campus: WARN
-    org.springframework: ERROR
-    org.springframework.security: ERROR
-    org.hibernate: ERROR
-    com.zaxxer.hikari: ERROR
-    org.apache.catalina: ERROR
-    root: WARN
-  pattern:
-    console: "%d{HH:mm:ss} %-5level %logger{20} - %msg%n"
-
-# 管理端点配置
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info
-  endpoint:
-    health:
-      show-details: never
-
-# JWT配置 - 完整配置
-jwt:
-  secret: campus-management-jwt-secret-key-2024
-  expiration: 7200000        # 2小时 (2 * 60 * 60 * 1000)
-  refresh-expiration: 604800000  # 7天
-  header: Authorization
-  prefix: Bearer
-  # 管理后台专用配置
-  admin:
-    expiration: 14400000     # 4小时 (4 * 60 * 60 * 1000)
-    auto-refresh: true       # 自动刷新Token
-    refresh-threshold: 1800000  # 30分钟内自动刷新
 
 # 自定义配置
 campus:

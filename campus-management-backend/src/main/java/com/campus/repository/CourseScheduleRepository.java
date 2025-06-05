@@ -3,12 +3,11 @@ package com.campus.repository;
 import java.util.List;
 import java.util.Optional;
 
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.Select;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.campus.entity.CourseSchedule;
 
 /**
@@ -18,9 +17,8 @@ import com.campus.entity.CourseSchedule;
  * @version 1.0.0
  * @since 2025-06-03
  */
-@Mapper
 @Repository
-public interface CourseScheduleRepository extends BaseMapper<CourseSchedule> {
+public interface CourseScheduleRepository extends JpaRepository<CourseSchedule, Long> {
 
     /**
      * 根据课程ID查找课程表
@@ -28,8 +26,7 @@ public interface CourseScheduleRepository extends BaseMapper<CourseSchedule> {
      * @param courseId 课程ID
      * @return 课程表列表
      */
-    @Select("SELECT * FROM tb_course_schedule WHERE course_id = #{courseId} AND deleted = 0")
-    List<CourseSchedule> findByCourseId(@Param("courseId") Long courseId);
+    List<CourseSchedule> findByCourseIdAndDeleted(Long courseId, Integer deleted);
 
     /**
      * 根据教师ID查找课程表
@@ -37,8 +34,7 @@ public interface CourseScheduleRepository extends BaseMapper<CourseSchedule> {
      * @param teacherId 教师ID
      * @return 课程表列表
      */
-    @Select("SELECT * FROM tb_course_schedule WHERE teacher_id = #{teacherId} AND deleted = 0")
-    List<CourseSchedule> findByTeacherId(@Param("teacherId") Long teacherId);
+    List<CourseSchedule> findByTeacherIdAndDeleted(Long teacherId, Integer deleted);
 
     /**
      * 根据班级ID查找课程表
@@ -46,8 +42,7 @@ public interface CourseScheduleRepository extends BaseMapper<CourseSchedule> {
      * @param classId 班级ID
      * @return 课程表列表
      */
-    @Select("SELECT * FROM tb_course_schedule WHERE class_id = #{classId} AND deleted = 0")
-    List<CourseSchedule> findByClassId(@Param("classId") Long classId);
+    List<CourseSchedule> findByClassIdAndDeleted(Long classId, Integer deleted);
 
     /**
      * 根据学期查找课程表
@@ -55,8 +50,7 @@ public interface CourseScheduleRepository extends BaseMapper<CourseSchedule> {
      * @param semester 学期
      * @return 课程表列表
      */
-    @Select("SELECT * FROM tb_course_schedule WHERE semester = #{semester} AND deleted = 0")
-    List<CourseSchedule> findBySemester(@Param("semester") String semester);
+    List<CourseSchedule> findBySemesterAndDeleted(String semester, Integer deleted);
 
     /**
      * 根据教室查找课程表
@@ -64,20 +58,26 @@ public interface CourseScheduleRepository extends BaseMapper<CourseSchedule> {
      * @param classroom 教室
      * @return 课程表列表
      */
-    @Select("SELECT * FROM tb_course_schedule WHERE classroom = #{classroom} AND deleted = 0")
-    List<CourseSchedule> findByClassroom(@Param("classroom") String classroom);
+    List<CourseSchedule> findByClassroomAndDeleted(String classroom, Integer deleted);
+
+    /**
+     * 组合查询方法
+     */
+    List<CourseSchedule> findByCourseIdAndSemesterAndDeleted(Long courseId, String semester, Integer deleted);
+    List<CourseSchedule> findByTeacherIdAndSemesterAndDeleted(Long teacherId, String semester, Integer deleted);
+    List<CourseSchedule> findByClassIdAndSemesterAndDeleted(Long classId, String semester, Integer deleted);
 
     /**
      * 获取课程表详情（包含课程和教师信息）
      */
-    @Select("""
-        SELECT cs.*, c.course_name, c.course_code, t.real_name as teacher_name
-        FROM tb_course_schedule cs
-        LEFT JOIN tb_course c ON cs.course_id = c.id AND c.deleted = 0
-        LEFT JOIN tb_user t ON cs.teacher_id = t.id AND t.deleted = 0
-        WHERE cs.id = #{scheduleId} AND cs.deleted = 0
+    @Query("""
+        SELECT cs, c.courseName, c.courseCode, u.realName
+        FROM CourseSchedule cs
+        LEFT JOIN Course c ON cs.courseId = c.id AND c.deleted = 0
+        LEFT JOIN User u ON cs.teacherId = u.id AND u.deleted = 0
+        WHERE cs.id = :scheduleId AND cs.deleted = 0
         """)
-    Optional<ScheduleDetail> findScheduleDetailById(@Param("scheduleId") Long scheduleId);
+    Optional<Object[]> findScheduleDetailById(@Param("scheduleId") Long scheduleId);
 
     /**
      * 检查教室在指定时间是否被占用
@@ -90,18 +90,18 @@ public interface CourseScheduleRepository extends BaseMapper<CourseSchedule> {
      * @param excludeId 排除的课程表ID（用于更新时）
      * @return 是否被占用
      */
-    @Select("""
-        SELECT COUNT(*) > 0
-        FROM tb_course_schedule
-        WHERE classroom = #{classroom}
-        AND day_of_week = #{dayOfWeek}
-        AND semester = #{semester}
-        AND deleted = 0
-        AND id != #{excludeId}
+    @Query("""
+        SELECT COUNT(cs) > 0
+        FROM CourseSchedule cs
+        WHERE cs.classroom = :classroom
+        AND cs.dayOfWeek = :dayOfWeek
+        AND cs.semester = :semester
+        AND cs.deleted = 0
+        AND cs.id != :excludeId
         AND (
-            (start_time <= #{startTime} AND end_time > #{startTime})
-            OR (start_time < #{endTime} AND end_time >= #{endTime})
-            OR (start_time >= #{startTime} AND end_time <= #{endTime})
+            (cs.startTime <= :startTime AND cs.endTime > :startTime)
+            OR (cs.startTime < :endTime AND cs.endTime >= :endTime)
+            OR (cs.startTime >= :startTime AND cs.endTime <= :endTime)
         )
         """)
     boolean isClassroomOccupied(@Param("classroom") String classroom,
@@ -122,18 +122,18 @@ public interface CourseScheduleRepository extends BaseMapper<CourseSchedule> {
      * @param excludeId 排除的课程表ID（用于更新时）
      * @return 是否有冲突
      */
-    @Select("""
-        SELECT COUNT(*) > 0
-        FROM tb_course_schedule
-        WHERE teacher_id = #{teacherId}
-        AND day_of_week = #{dayOfWeek}
-        AND semester = #{semester}
-        AND deleted = 0
-        AND id != #{excludeId}
+    @Query("""
+        SELECT COUNT(cs) > 0
+        FROM CourseSchedule cs
+        WHERE cs.teacherId = :teacherId
+        AND cs.dayOfWeek = :dayOfWeek
+        AND cs.semester = :semester
+        AND cs.deleted = 0
+        AND cs.id != :excludeId
         AND (
-            (start_time <= #{startTime} AND end_time > #{startTime})
-            OR (start_time < #{endTime} AND end_time >= #{endTime})
-            OR (start_time >= #{startTime} AND end_time <= #{endTime})
+            (cs.startTime <= :startTime AND cs.endTime > :startTime)
+            OR (cs.startTime < :endTime AND cs.endTime >= :endTime)
+            OR (cs.startTime >= :startTime AND cs.endTime <= :endTime)
         )
         """)
     boolean isTeacherOccupied(@Param("teacherId") Long teacherId,
@@ -142,20 +142,4 @@ public interface CourseScheduleRepository extends BaseMapper<CourseSchedule> {
                              @Param("endTime") String endTime,
                              @Param("semester") String semester,
                              @Param("excludeId") Long excludeId);
-
-    /**
-     * 课程表详情内部类
-     */
-    class ScheduleDetail extends CourseSchedule {
-        private String courseName;
-        private String courseCode;
-        private String teacherName;
-
-        public String getCourseName() { return courseName; }
-        public void setCourseName(String courseName) { this.courseName = courseName; }
-        public String getCourseCode() { return courseCode; }
-        public void setCourseCode(String courseCode) { this.courseCode = courseCode; }
-        public String getTeacherName() { return teacherName; }
-        public void setTeacherName(String teacherName) { this.teacherName = teacherName; }
-    }
 }

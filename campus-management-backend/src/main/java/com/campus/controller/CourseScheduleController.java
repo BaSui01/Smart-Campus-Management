@@ -17,10 +17,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
+import org.springframework.data.domain.Page;
+
 import com.campus.common.ApiResponse;
 import com.campus.entity.CourseSchedule;
-import com.campus.repository.CourseScheduleRepository.ScheduleDetail;
 import com.campus.service.CourseScheduleService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -87,15 +87,15 @@ public class CourseScheduleController {
         }
 
         // 执行分页查询
-        IPage<CourseSchedule> pageResult = courseScheduleService.findSchedulesByPage(page, size, params);
+        Page<CourseSchedule> pageResult = courseScheduleService.findSchedulesByPage(page, size, params);
 
         // 构建返回结果
         Map<String, Object> result = new HashMap<>();
-        result.put("total", pageResult.getTotal());
-        result.put("pages", pageResult.getPages());
-        result.put("current", pageResult.getCurrent());
+        result.put("total", pageResult.getTotalElements());
+        result.put("pages", pageResult.getTotalPages());
+        result.put("current", pageResult.getNumber() + 1);
         result.put("size", pageResult.getSize());
-        result.put("records", pageResult.getRecords());
+        result.put("records", pageResult.getContent());
 
         return ApiResponse.success("获取课程表列表成功", result);
     }
@@ -106,8 +106,8 @@ public class CourseScheduleController {
     @GetMapping("/{id}")
     @Operation(summary = "获取课程表详情", description = "根据ID查询课程表详细信息")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
-    public ApiResponse<ScheduleDetail> getScheduleById(@Parameter(description = "课程表ID") @PathVariable Long id) {
-        Optional<ScheduleDetail> scheduleDetail = courseScheduleService.findScheduleDetailById(id);
+    public ApiResponse<Object[]> getScheduleById(@Parameter(description = "课程表ID") @PathVariable Long id) {
+        Optional<Object[]> scheduleDetail = courseScheduleService.findScheduleDetailById(id);
         if (scheduleDetail.isPresent()) {
             return ApiResponse.success(scheduleDetail.get());
         } else {

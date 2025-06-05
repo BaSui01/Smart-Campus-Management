@@ -105,8 +105,10 @@ public class GlobalExceptionHandler {
 
         logger.warn("参数类型不匹配: {}", ex.getMessage());
 
+        Class<?> requiredType = ex.getRequiredType();
+        String typeName = (requiredType != null) ? requiredType.getSimpleName() : "未知";
         String message = String.format("参数 '%s' 类型不匹配，期望类型: %s",
-                ex.getName(), ex.getRequiredType() != null ? ex.getRequiredType().getSimpleName() : "未知");
+                ex.getName(), typeName);
         ApiResponse<Object> response = ApiResponse.badRequest(message);
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);

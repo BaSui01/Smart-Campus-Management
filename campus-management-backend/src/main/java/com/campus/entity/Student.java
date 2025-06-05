@@ -3,13 +3,6 @@ package com.campus.entity;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-import com.baomidou.mybatisplus.annotation.FieldFill;
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableLogic;
-import com.baomidou.mybatisplus.annotation.TableName;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -18,6 +11,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -32,12 +27,10 @@ import jakarta.validation.constraints.Size;
  */
 @Entity
 @Table(name = "tb_student")
-@TableName("tb_student")
 public class Student {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @TableId(type = IdType.AUTO)
     private Long id;
 
     @NotNull(message = "用户ID不能为空")
@@ -70,17 +63,25 @@ public class Student {
     @Column(length = 500)
     private String remarks;
 
-    @TableField(fill = FieldFill.INSERT)
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    @TableField(fill = FieldFill.INSERT_UPDATE)
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @TableLogic
     @Column(name = "deleted", columnDefinition = "TINYINT DEFAULT 0")
     private Integer deleted = 0;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 
     // 关联关系
     @OneToOne(fetch = FetchType.LAZY)
@@ -213,6 +214,21 @@ public class Student {
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    // 便利方法 - 获取用户真实姓名
+    public String getRealName() {
+        return user != null ? user.getRealName() : null;
+    }
+
+    // 便利方法 - 获取用户邮箱
+    public String getEmail() {
+        return user != null ? user.getEmail() : null;
+    }
+
+    // 便利方法 - 获取年级作为专业信息
+    public String getMajor() {
+        return this.grade;
     }
 
     @Override

@@ -1,6 +1,5 @@
 package com.campus.entity;
 
-import com.baomidou.mybatisplus.annotation.*;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -17,12 +16,10 @@ import java.util.List;
  */
 @Entity
 @Table(name = "tb_role")
-@TableName("tb_role")
 public class Role {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @TableId(type = IdType.AUTO)
     private Long id;
 
     @NotBlank(message = "角色名不能为空")
@@ -54,17 +51,25 @@ public class Role {
     @Column(length = 500)
     private String remark;
 
-    @TableField(fill = FieldFill.INSERT)
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    @TableField(fill = FieldFill.INSERT_UPDATE)
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @TableLogic
     @Column(name = "deleted", columnDefinition = "TINYINT DEFAULT 0")
     private Integer deleted = 0;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 
     // 关联关系
     @OneToMany(mappedBy = "role", fetch = FetchType.LAZY)

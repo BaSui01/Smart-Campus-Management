@@ -17,7 +17,7 @@ public class CaptchaUtil {
     private static final int WIDTH = 150;
     private static final int HEIGHT = 40;
     private static final int CODE_LENGTH = 6;
-    private static final String CHARS = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
+    private static final String CHARS = "123456789ABCDEFGHJKLMNPQRSTUVWXYZ";
     
     private Random random = new Random();
     

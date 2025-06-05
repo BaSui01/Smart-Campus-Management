@@ -4,11 +4,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.service.IService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import com.campus.entity.SchoolClass;
-import com.campus.repository.SchoolClassRepository.ClassDetail;
-import com.campus.repository.SchoolClassRepository.ClassGradeCount;
 
 /**
  * 班级服务接口
@@ -17,7 +15,59 @@ import com.campus.repository.SchoolClassRepository.ClassGradeCount;
  * @version 1.0.0
  * @since 2025-06-03
  */
-public interface SchoolClassService extends IService<SchoolClass> {
+public interface SchoolClassService {
+
+    /**
+     * 保存班级
+     *
+     * @param schoolClass 班级
+     * @return 保存的班级
+     */
+    SchoolClass save(SchoolClass schoolClass);
+
+    /**
+     * 根据ID查找班级
+     *
+     * @param id 班级ID
+     * @return 班级
+     */
+    Optional<SchoolClass> findById(Long id);
+
+    /**
+     * 查找所有班级
+     *
+     * @return 班级列表
+     */
+    List<SchoolClass> findAll();
+
+    /**
+     * 分页查找所有班级
+     *
+     * @param pageable 分页参数
+     * @return 班级分页结果
+     */
+    Page<SchoolClass> findAll(Pageable pageable);
+
+    /**
+     * 根据ID删除班级
+     *
+     * @param id 班级ID
+     */
+    void deleteById(Long id);
+
+    /**
+     * 批量删除班级
+     *
+     * @param ids 班级ID列表
+     */
+    void deleteAllById(List<Long> ids);
+
+    /**
+     * 统计班级数量
+     *
+     * @return 总数量
+     */
+    long count();
 
     /**
      * 根据班级代码查找班级
@@ -60,29 +110,28 @@ public interface SchoolClassService extends IService<SchoolClass> {
     boolean existsByClassCode(String classCode);
 
     /**
-     * 获取班级详情
+     * 获取班级详情（使用Object[]返回）
      *
      * @param classId 班级ID
      * @return 班级详情
      */
-    Optional<ClassDetail> findClassDetailById(Long classId);
+    Optional<Object[]> findClassDetailById(Long classId);
 
     /**
-     * 统计班级数量按年级
+     * 统计班级数量按年级（使用Object[]返回）
      *
      * @return 统计结果
      */
-    List<ClassGradeCount> countClassesByGrade();
+    List<Object[]> countClassesByGrade();
 
     /**
      * 分页查询班级列表
      *
-     * @param page 页码
-     * @param size 每页大小
+     * @param pageable 分页参数
      * @param params 查询参数
      * @return 分页结果
      */
-    IPage<SchoolClass> findClassesByPage(int page, int size, Map<String, Object> params);
+    Page<SchoolClass> findClassesByPage(Pageable pageable, Map<String, Object> params);
 
     /**
      * 创建班级

@@ -15,7 +15,7 @@ import java.util.Optional;
  *
  * @author Campus Management Team
  * @version 1.0.0
- * @since 2025-01-20
+ * @since 2025-06-05
  */
 public interface FeeItemService {
 
@@ -161,12 +161,12 @@ public interface FeeItemService {
     boolean existsByItemCodeAndIdNot(String itemCode, Long excludeId);
 
     /**
-     * 获取缴费项目详情（包含缴费统计）
+     * 获取缴费项目详情（包含缴费统计）（使用Object[]返回）
      *
      * @param id 项目ID
      * @return 缴费项目详情
      */
-    Optional<FeeItemRepository.FeeItemDetail> findDetailById(Long id);
+    Optional<Object[]> findDetailById(Long id);
 
     /**
      * 缴费项目统计信息

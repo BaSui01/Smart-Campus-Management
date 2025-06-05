@@ -1,0 +1,216 @@
+# 生产环境配置
+server:
+  port: 8080
+  tomcat:
+    threads:
+      max: 200
+      min-spare: 10
+    max-connections: 8192
+    accept-count: 100
+    connection-timeout: 20000
+
+spring:
+  # 数据源配置 - 生产环境
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:campus_management_db}?useSSL=true&serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf8
+    username: ${DB_USERNAME:campus_user}
+    password: ${DB_PASSWORD:xiaoxiao123}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    
+    # Druid 连接池配置 - 生产环境优化
+    druid:
+      # 初始连接数
+      initial-size: 10
+      # 最小连接池数量
+      min-idle: 10
+      # 最大连接池数量
+      max-active: 50
+      # 配置获取连接等待超时的时间
+      max-wait: 60000
+      # 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒
+      time-between-eviction-runs-millis: 60000
+      # 配置一个连接在池中最小生存的时间，单位是毫秒
+      min-evictable-idle-time-millis: 300000
+      # 验证连接有效性的SQL
+      validation-query: SELECT 1
+      test-while-idle: true
+      test-on-borrow: false
+      test-on-return: false
+      # 打开PSCache，并且指定每个连接上PSCache的大小
+      pool-prepared-statements: true
+      max-pool-prepared-statement-per-connection-size: 20
+      # 配置监控统计拦截的filters
+      filters: stat,wall,slf4j
+      # 通过connectProperties属性来打开mergeSql功能；慢SQL记录
+      connection-properties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=2000
+
+  # Redis 配置 - 生产环境
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:}
+    database: 0
+    timeout: 3000ms
+    lettuce:
+      pool:
+        max-active: 50
+        max-wait: -1ms
+        max-idle: 20
+        min-idle: 10
+
+  # 缓存配置
+  cache:
+    type: redis
+    redis:
+      time-to-live: 1800000  # 30分钟默认过期时间
+
+  # 邮件配置 - 生产环境
+  mail:
+    host: ${MAIL_HOST:smtp.mxhichina.com}
+    port: ${MAIL_PORT:465}
+    username: ${MAIL_USERNAME:system@yourdomain.com}
+    password: ${MAIL_PASSWORD:your-mail-password}
+    protocol: smtp
+    default-encoding: UTF-8
+    properties:
+      mail:
+        smtp:
+          auth: true
+          ssl:
+            enable: true
+          socketFactory:
+            class: javax.net.ssl.SSLSocketFactory
+            port: 465
+
+  # JPA配置 - 生产环境
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: false
+        use_sql_comments: false
+    open-in-view: false
+
+  # Thymeleaf配置 - 生产环境
+  thymeleaf:
+    cache: true
+
+  # Quartz 配置 - 生产环境
+  quartz:
+    job-store-type: jdbc
+    properties:
+      org:
+        quartz:
+          threadPool:
+            threadCount: 10
+            threadPriority: 5
+          jobStore:
+            class: org.quartz.impl.jdbcjobstore.JobStoreTX
+            driverDelegateClass: org.quartz.impl.jdbcjobstore.StdJDBCDelegate
+            tablePrefix: QRTZ_
+            dataSource: quartzDataSource
+            isClustered: true
+            clusterCheckinInterval: 20000
+          scheduler:
+            instanceName: CampusScheduler-Prod
+            instanceId: AUTO
+
+# MyBatis Plus 配置
+mybatis-plus:
+  configuration:
+    # 开启驼峰命名转换
+    map-underscore-to-camel-case: true
+    # 开启二级缓存
+    cache-enabled: true
+    # 延迟加载
+    lazy-loading-enabled: true
+    aggressive-lazy-loading: false
+    # 查询超时时间
+    default-statement-timeout: 30
+  global-config:
+    db-config:
+      # 逻辑删除配置
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+      # ID 生成策略
+      id-type: ASSIGN_ID
+
+# JWT配置 - 生产环境
+jwt:
+  secret: ${JWT_SECRET:campus-management-jwt-secret-key-prod-2024-very-long-secret}
+  expiration: 7200000        # 2小时
+  refresh-expiration: 604800000  # 7天
+  header: Authorization
+  prefix: Bearer
+  redis:
+    prefix: "jwt:token:"
+    refresh-prefix: "jwt:refresh:"
+
+# 日志配置 - 生产环境
+logging:
+  level:
+    com.campus: INFO
+    org.springframework: WARN
+    org.springframework.security: WARN
+    com.alibaba.druid: WARN
+    root: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/smart-campus.log
+    max-size: 100MB
+    max-history: 30
+
+# 管理端点配置 - 生产环境
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: smart-campus-management
+      environment: prod
+
+
+
+# 自定义配置
+campus:
+  # 缓存配置
+  cache:
+    # 课程信息缓存 - 1小时
+    course-ttl: 3600
+    # 用户权限缓存 - 30分钟
+    permission-ttl: 1800
+    # 系统配置缓存 - 24小时
+    config-ttl: 86400
+    # 学生信息缓存 - 2小时
+    student-ttl: 7200
+    # 班级信息缓存 - 4小时
+    class-ttl: 14400
+
+  # 性能监控配置
+  monitor:
+    enabled: true
+    redis-monitor-interval: 300000  # Redis监控间隔 5分钟
+    performance-log: false
+
+  # 邮件模板配置
+  mail:
+    template-path: classpath:/templates/email/
+    from-name: 智慧校园管理系统
+
+# JVM 调优参数（在启动脚本中使用）
+# JAVA_OPTS: "-Xms512m -Xmx2g -XX:+UseG1GC -XX:+UseStringDeduplication -XX:MaxGCPauseMillis=200"

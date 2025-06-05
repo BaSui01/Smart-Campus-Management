@@ -1,4 +1,4 @@
-package com.campus.utils;
+package com.campus.util;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Date;

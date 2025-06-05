@@ -4,10 +4,13 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -23,6 +26,7 @@ import com.campus.entity.User;
 import com.campus.entity.UserRole;
 import com.campus.repository.UserRepository;
 import com.campus.service.UserService;
+import com.campus.service.UserService.UserStatistics;
 
 /**
  * 用户服务实现类
@@ -264,6 +268,50 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     @Transactional(readOnly = true)
     public Page<User> findUsersByStatus(Integer status, Pageable pageable) {
         return userRepository.findByStatus(status, pageable);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<User> findUsersByPage(Pageable pageable, Map<String, Object> params) {
+        Page<User> jpaPage;
+
+        // 根据查询条件执行不同的查询
+        if (params != null && params.containsKey("status")) {
+            Object statusObj = params.get("status");
+            Integer status = null;
+            if (statusObj instanceof String) {
+                status = Integer.parseInt((String) statusObj);
+            } else if (statusObj instanceof Integer) {
+                status = (Integer) statusObj;
+            }
+            if (status != null) {
+                jpaPage = userRepository.findByStatus(status, pageable);
+            } else {
+                jpaPage = userRepository.findAll(pageable);
+            }
+        } else if (params != null && (params.containsKey("search") || params.containsKey("keyword"))) {
+            String keyword = (String) params.getOrDefault("search", params.get("keyword"));
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                // 使用简化的查询，先获取所有匹配的用户，然后手动分页
+                List<User> allMatchingUsers = userRepository.findByUsernameContainingOrRealNameContainingOrEmailContaining(
+                    keyword, keyword, keyword);
+
+                // 手动分页
+                int start = (int) (pageable.getOffset());
+                int end = Math.min(start + pageable.getPageSize(), allMatchingUsers.size());
+                List<User> pageContent = start < allMatchingUsers.size() ?
+                    allMatchingUsers.subList(start, end) : new ArrayList<>();
+
+                // 创建分页对象
+                jpaPage = new PageImpl<>(pageContent, pageable, allMatchingUsers.size());
+            } else {
+                jpaPage = userRepository.findAll(pageable);
+            }
+        } else {
+            jpaPage = userRepository.findAll(pageable);
+        }
+
+        return jpaPage;
     }
 
     @Override

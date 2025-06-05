@@ -2,18 +2,13 @@ package com.campus.entity;
 
 import java.time.LocalDateTime;
 
-import com.baomidou.mybatisplus.annotation.FieldFill;
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableLogic;
-import com.baomidou.mybatisplus.annotation.TableName;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 
@@ -26,12 +21,10 @@ import jakarta.validation.constraints.NotNull;
  */
 @Entity
 @Table(name = "tb_course_selection")
-@TableName("tb_course_selection")
 public class CourseSelection {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @TableId(type = IdType.AUTO)
     private Long id;
 
     @NotNull(message = "学生ID不能为空")
@@ -58,17 +51,25 @@ public class CourseSelection {
     @Column(name = "remarks", length = 500)
     private String remarks;
 
-    @TableField(fill = FieldFill.INSERT)
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    @TableField(fill = FieldFill.INSERT_UPDATE)
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @TableLogic
     @Column(name = "deleted", columnDefinition = "TINYINT DEFAULT 0")
     private Integer deleted = 0;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 
     // 构造函数
     public CourseSelection() {}

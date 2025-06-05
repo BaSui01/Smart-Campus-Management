@@ -1,6 +1,5 @@
 package com.campus.entity;
 
-import com.baomidou.mybatisplus.annotation.*;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
@@ -12,16 +11,14 @@ import java.time.LocalDateTime;
  *
  * @author Campus Management Team
  * @version 1.0.0
- * @since 2025-01-20
+ * @since 2025-06-05
  */
 @Entity
 @Table(name = "tb_payment_record")
-@TableName("tb_payment_record")
 public class PaymentRecord {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @TableId(type = IdType.AUTO)
     private Long id;
 
     @NotNull(message = "学生ID不能为空")
@@ -59,19 +56,27 @@ public class PaymentRecord {
     @Column(nullable = false, columnDefinition = "TINYINT DEFAULT 1")
     private Integer status = 1;
 
-    @TableField(fill = FieldFill.INSERT)
     @Column(name = "created_time", updatable = false)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdTime;
 
-    @TableField(fill = FieldFill.INSERT_UPDATE)
     @Column(name = "updated_time")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updatedTime;
 
-    @TableLogic
     @Column(name = "deleted", columnDefinition = "TINYINT DEFAULT 0")
     private Integer deleted = 0;
+
+    @PrePersist
+    protected void onCreate() {
+        createdTime = LocalDateTime.now();
+        updatedTime = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedTime = LocalDateTime.now();
+    }
 
     // 关联关系
     @ManyToOne(fetch = FetchType.LAZY)

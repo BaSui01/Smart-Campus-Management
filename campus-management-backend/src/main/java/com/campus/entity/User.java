@@ -1,6 +1,5 @@
 package com.campus.entity;
 
-import com.baomidou.mybatisplus.annotation.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
@@ -19,12 +18,10 @@ import java.util.List;
  */
 @Entity
 @Table(name = "tb_user")
-@TableName("tb_user")
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @TableId(type = IdType.AUTO)
     private Long id;
 
     @NotBlank(message = "用户名不能为空")
@@ -64,17 +61,25 @@ public class User {
     @Column(name = "login_count", columnDefinition = "INT DEFAULT 0")
     private Integer loginCount = 0;
 
-    @TableField(fill = FieldFill.INSERT)
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    @TableField(fill = FieldFill.INSERT_UPDATE)
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @TableLogic
     @Column(name = "deleted", columnDefinition = "TINYINT DEFAULT 0")
     private Integer deleted = 0;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 
     // 关联关系 - 用户角色
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)

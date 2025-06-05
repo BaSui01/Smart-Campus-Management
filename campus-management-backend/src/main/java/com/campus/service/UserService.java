@@ -1,6 +1,7 @@
 package com.campus.service;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -115,6 +116,11 @@ public interface UserService {
      * 根据状态分页查询用户
      */
     Page<User> findUsersByStatus(Integer status, Pageable pageable);
+
+    /**
+     * 分页查询用户列表
+     */
+    Page<User> findUsersByPage(Pageable pageable, Map<String, Object> params);
 
     /**
      * 检查用户名是否存在

@@ -18,7 +18,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.campus.entity.User;
 import com.campus.service.UserService;
 import com.campus.util.CaptchaUtil;
-import com.campus.utils.JwtUtil;
+import com.campus.util.JwtUtil;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -235,6 +235,56 @@ public class AuthController {
     }
 
     /**
+     * 系统健康检查API
+     */
+    @GetMapping("/admin/api/health")
+    @ResponseBody
+    public Map<String, Object> healthCheck() {
+        Map<String, Object> result = new HashMap<>();
+        result.put("status", "UP");
+        result.put("timestamp", System.currentTimeMillis());
+        result.put("service", "Campus Management Backend");
+        result.put("version", "1.0.0");
+        result.put("message", "系统运行正常");
+        return result;
+    }
+
+    /**
+     * 系统版本信息API
+     */
+    @GetMapping("/admin/api/version")
+    @ResponseBody
+    public Map<String, Object> versionInfo() {
+        Map<String, Object> result = new HashMap<>();
+        result.put("name", "智慧校园管理平台");
+        result.put("version", "1.0.0");
+        result.put("buildTime", "2025-06-03");
+        result.put("author", "Campus Management Team");
+        return result;
+    }
+
+    /**
+     * 数据库连接测试API
+     */
+    @GetMapping("/admin/api/database")
+    @ResponseBody
+    public Map<String, Object> databaseTest() {
+        Map<String, Object> result = new HashMap<>();
+        try {
+            // 简单的数据库连接测试
+            userService.findByUsername("admin"); // 尝试查询一个用户
+            result.put("database", "MySQL 8.0");
+            result.put("status", "连接正常");
+            result.put("message", "数据库服务运行正常");
+        } catch (Exception e) {
+            result.put("database", "MySQL 8.0");
+            result.put("status", "连接异常");
+            result.put("message", "数据库连接失败: " + e.getMessage());
+        }
+        return result;
+    }
+
+    /**
      * 检查登录状态
      */
     @GetMapping("/admin/check-login")
@@ -424,7 +474,7 @@ public class AuthController {
     }
 
     /**
-     * 根路径重定向（已移至HomeController）
+     * 管理后台根路径重定向
      */
     @GetMapping("/admin")
     public String adminIndex() {

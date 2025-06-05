@@ -18,11 +18,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+
 import com.campus.common.ApiResponse;
 import com.campus.entity.Course;
-import com.campus.repository.CourseRepository.CourseDetail;
-import com.campus.repository.CourseRepository.CourseTypeCount;
 import com.campus.service.CourseService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -94,15 +95,16 @@ public class CourseController {
         }
 
         // 执行分页查询
-        IPage<Course> pageResult = courseService.findCoursesByPage(page, size, params);
+        Pageable pageable = PageRequest.of(page - 1, size);
+        Page<Course> pageResult = courseService.findCoursesByPage(pageable, params);
 
         // 构建返回结果
         Map<String, Object> result = new HashMap<>();
-        result.put("total", pageResult.getTotal());
-        result.put("pages", pageResult.getPages());
-        result.put("current", pageResult.getCurrent());
+        result.put("total", pageResult.getTotalElements());
+        result.put("pages", pageResult.getTotalPages());
+        result.put("current", pageResult.getNumber() + 1);
         result.put("size", pageResult.getSize());
-        result.put("records", pageResult.getRecords());
+        result.put("records", pageResult.getContent());
 
         return ApiResponse.success("获取课程列表成功", result);
     }
@@ -113,10 +115,10 @@ public class CourseController {
     @GetMapping("/{id}")
     @Operation(summary = "获取课程详情", description = "根据ID查询课程详细信息")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
-    public ApiResponse<CourseDetail> getCourseById(@Parameter(description = "课程ID") @PathVariable Long id) {
-        Optional<CourseDetail> courseDetail = courseService.findCourseDetailById(id);
-        if (courseDetail.isPresent()) {
-            return ApiResponse.success(courseDetail.get());
+    public ApiResponse<Course> getCourseById(@Parameter(description = "课程ID") @PathVariable Long id) {
+        Optional<Course> course = courseService.findById(id);
+        if (course.isPresent()) {
+            return ApiResponse.success(course.get());
         } else {
             return ApiResponse.error(404, "课程不存在");
         }
@@ -198,8 +200,8 @@ public class CourseController {
     @GetMapping("/stats/type")
     @Operation(summary = "统计课程数量按类型", description = "按类型统计课程数量")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
-    public ApiResponse<List<CourseTypeCount>> countCoursesByType() {
-        List<CourseTypeCount> stats = courseService.countCoursesByType();
+    public ApiResponse<Map<String, Long>> countCoursesByType() {
+        Map<String, Long> stats = courseService.countCoursesByType();
         return ApiResponse.success(stats);
     }
 
@@ -222,7 +224,7 @@ public class CourseController {
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<Course> createCourse(@Parameter(description = "课程信息") @Valid @RequestBody Course course) {
         try {
-            Course createdCourse = courseService.createCourse(course);
+            Course createdCourse = courseService.save(course);
             return ApiResponse.success("创建课程成功", createdCourse);
         } catch (IllegalArgumentException e) {
             return ApiResponse.error(400, e.getMessage());
@@ -242,8 +244,8 @@ public class CourseController {
             @Parameter(description = "课程信息") @Valid @RequestBody Course course) {
         try {
             course.setId(id);
-            boolean result = courseService.updateCourse(course);
-            if (result) {
+            Course savedCourse = courseService.save(course);
+            if (savedCourse != null) {
                 return ApiResponse.success("更新课程信息成功");
             } else {
                 return ApiResponse.error(404, "课程不存在");
@@ -263,12 +265,8 @@ public class CourseController {
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<Void> deleteCourse(@Parameter(description = "课程ID") @PathVariable Long id) {
         try {
-            boolean result = courseService.deleteCourse(id);
-            if (result) {
-                return ApiResponse.success("删除课程成功");
-            } else {
-                return ApiResponse.error(404, "课程不存在");
-            }
+            courseService.deleteById(id);
+            return ApiResponse.success("删除课程成功");
         } catch (IllegalStateException e) {
             return ApiResponse.error(400, e.getMessage());
         } catch (Exception e) {
@@ -284,12 +282,8 @@ public class CourseController {
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<Void> batchDeleteCourses(@Parameter(description = "课程ID列表") @RequestBody List<Long> ids) {
         try {
-            boolean result = courseService.batchDeleteCourses(ids);
-            if (result) {
-                return ApiResponse.success("批量删除课程成功");
-            } else {
-                return ApiResponse.error(500, "批量删除课程失败");
-            }
+            courseService.deleteAllById(ids);
+            return ApiResponse.success("批量删除课程成功");
         } catch (IllegalStateException e) {
             return ApiResponse.error(400, e.getMessage());
         } catch (Exception e) {

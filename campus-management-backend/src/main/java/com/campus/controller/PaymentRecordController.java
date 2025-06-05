@@ -2,7 +2,6 @@ package com.campus.controller;
 
 import com.campus.common.ApiResponse;
 import com.campus.entity.PaymentRecord;
-import com.campus.repository.PaymentRecordRepository;
 import com.campus.service.PaymentRecordService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -29,7 +28,7 @@ import java.util.Optional;
  *
  * @author Campus Management Team
  * @version 1.0.0
- * @since 2025-01-20
+ * @since 2025-06-05
  */
 @RestController
 @RequestMapping("/api/payment-records")
@@ -333,12 +332,12 @@ public class PaymentRecordController {
      */
     @GetMapping("/{id}/detail")
     @Operation(summary = "获取详情", description = "获取缴费记录详情，包含学生和缴费项目信息")
-    public ResponseEntity<ApiResponse<PaymentRecordRepository.PaymentRecordDetail>> getPaymentRecordDetail(
+    public ResponseEntity<ApiResponse<PaymentRecord>> getPaymentRecordDetail(
             @Parameter(description = "缴费记录ID") @PathVariable Long id) {
         try {
-            Optional<PaymentRecordRepository.PaymentRecordDetail> detail = paymentRecordService.findDetailById(id);
-            if (detail.isPresent()) {
-                return ResponseEntity.ok(ApiResponse.success(detail.get()));
+            Optional<PaymentRecord> record = paymentRecordService.findById(id);
+            if (record.isPresent()) {
+                return ResponseEntity.ok(ApiResponse.success(record.get()));
             } else {
                 return ResponseEntity.notFound().build();
             }
@@ -348,24 +347,7 @@ public class PaymentRecordController {
         }
     }
 
-    /**
-     * 分页查询缴费记录详情
-     */
-    @GetMapping("/details")
-    @Operation(summary = "分页查询详情", description = "分页查询缴费记录详情列表")
-    public ResponseEntity<ApiResponse<List<PaymentRecordRepository.PaymentRecordDetail>>> getPaymentRecordDetails(
-            @Parameter(description = "页码，从0开始") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") int size) {
-        try {
-            int offset = page * size;
-            List<PaymentRecordRepository.PaymentRecordDetail> details = 
-                paymentRecordService.findDetailsWithPagination(offset, size);
-            return ResponseEntity.ok(ApiResponse.success(details));
-        } catch (Exception e) {
-            logger.error("分页查询缴费记录详情失败", e);
-            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
-        }
-    }
+
 
     /**
      * 获取统计信息

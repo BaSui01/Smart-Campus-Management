@@ -1,6 +1,5 @@
 package com.campus.entity;
 
-import com.baomidou.mybatisplus.annotation.*;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -14,12 +13,10 @@ import java.time.LocalDateTime;
  */
 @Entity
 @Table(name = "tb_user_role")
-@TableName("tb_user_role")
 public class UserRole {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @TableId(type = IdType.AUTO)
     private Long id;
 
     @Column(name = "user_id", nullable = false)
@@ -28,9 +25,13 @@ public class UserRole {
     @Column(name = "role_id", nullable = false)
     private Long roleId;
 
-    @TableField(fill = FieldFill.INSERT)
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+    }
 
     // 关联关系
     @ManyToOne(fetch = FetchType.LAZY)

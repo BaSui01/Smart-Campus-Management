@@ -3,7 +3,6 @@ package com.campus.dto;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 
 /**
  * 仪表盘统计数据传输对象

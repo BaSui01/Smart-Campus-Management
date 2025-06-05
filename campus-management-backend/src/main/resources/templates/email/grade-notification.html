@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>成绩通知</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 300;
+        }
+        .header h2 {
+            margin: 10px 0 0 0;
+            font-size: 18px;
+            font-weight: 300;
+            opacity: 0.9;
+        }
+        .content {
+            padding: 30px 20px;
+        }
+        .greeting {
+            font-size: 16px;
+            margin-bottom: 20px;
+            color: #555;
+        }
+        .student-info {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border-left: 4px solid #4CAF50;
+        }
+        .grade-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background-color: #fff;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .grade-table th {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 500;
+        }
+        .grade-table td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+        .grade-table tr:hover {
+            background-color: #f5f5f5;
+        }
+        .grade-excellent {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+        .grade-good {
+            color: #2196F3;
+            font-weight: bold;
+        }
+        .grade-average {
+            color: #FF9800;
+            font-weight: bold;
+        }
+        .grade-poor {
+            color: #f44336;
+            font-weight: bold;
+        }
+        .summary {
+            background-color: #e8f5e8;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border-left: 4px solid #4CAF50;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            border-top: 1px solid #eee;
+        }
+        .footer p {
+            margin: 5px 0;
+        }
+        .logo {
+            width: 40px;
+            height: 40px;
+            background-color: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🎓</div>
+            <h1 th:text="${systemName}">智慧校园管理系统</h1>
+            <h2>成绩通知</h2>
+        </div>
+        
+        <div class="content">
+            <div class="greeting">
+                <p>亲爱的 <strong th:text="${student.realName}">学生姓名</strong> 同学：</p>
+                <p>您好！以下是您本学期的成绩信息，请查收。</p>
+            </div>
+            
+            <div class="student-info">
+                <p><strong>学号：</strong><span th:text="${student.studentNo}">学号</span></p>
+                <p><strong>姓名：</strong><span th:text="${student.realName}">姓名</span></p>
+                <p><strong>年级：</strong><span th:text="${student.grade}">年级</span></p>
+                <p><strong>专业：</strong><span th:text="${student.major}">专业</span></p>
+            </div>
+            
+            <table class="grade-table">
+                <thead>
+                    <tr>
+                        <th>课程名称</th>
+                        <th>课程代码</th>
+                        <th>学分</th>
+                        <th>成绩</th>
+                        <th>绩点</th>
+                        <th>等级</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="grade : ${grades}">
+                        <td th:text="${grade.courseName}">课程名称</td>
+                        <td th:text="${grade.courseCode}">课程代码</td>
+                        <td th:text="${grade.credits}">学分</td>
+                        <td th:text="${grade.score}" 
+                            th:class="${grade.score >= 90} ? 'grade-excellent' : 
+                                     (${grade.score >= 80} ? 'grade-good' : 
+                                     (${grade.score >= 70} ? 'grade-average' : 'grade-poor'))">成绩</td>
+                        <td th:text="${grade.gradePoint}">绩点</td>
+                        <td th:text="${grade.level}" 
+                            th:class="${grade.level == '优秀'} ? 'grade-excellent' : 
+                                     (${grade.level == '良好'} ? 'grade-good' : 
+                                     (${grade.level == '中等'} ? 'grade-average' : 'grade-poor'))">等级</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div class="summary">
+                <h3>📊 成绩总结</h3>
+                <p><strong>总课程数：</strong><span th:text="${#lists.size(grades)}">课程数</span> 门</p>
+                <p><strong>平均成绩：</strong><span th:text="${#aggregates.avg(grades.![score])}">平均成绩</span> 分</p>
+                <p><strong>平均绩点：</strong><span th:text="${#aggregates.avg(grades.![gradePoint])}">平均绩点</span></p>
+            </div>
+            
+            <div style="margin-top: 30px; padding: 15px; background-color: #fff3cd; border-radius: 5px; border-left: 4px solid #ffc107;">
+                <p><strong>📝 温馨提示：</strong></p>
+                <ul style="margin: 10px 0; padding-left: 20px;">
+                    <li>如对成绩有疑问，请在规定时间内联系任课教师或教务处</li>
+                    <li>请妥善保管成绩单，作为学业记录的重要凭证</li>
+                    <li>继续努力学习，争取更好的成绩！</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>此邮件由系统自动发送，请勿回复</p>
+            <p th:text="${systemName}">智慧校园管理系统</p>
+            <p>&copy; 2024 版权所有</p>
+        </div>
+    </div>
+</body>
+</html>

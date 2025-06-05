@@ -3,7 +3,9 @@ package com.campus.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.campus.common.ApiResponse;
 import com.campus.entity.User;
 import com.campus.service.UserService;
-import com.campus.utils.JwtUtil;
+import com.campus.util.JwtUtil;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -191,6 +193,72 @@ public class UserController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("刷新Token失败：" + e.getMessage()));
+        }
+    }
+
+    // ========== 管理员用户管理功能 ==========
+
+    /**
+     * 获取用户详情（管理员功能）
+     */
+    @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<User>> getUserDetail(@PathVariable Long id) {
+        try {
+            User user = userService.getUserById(id);
+            if (user != null) {
+                return ResponseEntity.ok(ApiResponse.success(user));
+            } else {
+                return ResponseEntity.ok(ApiResponse.error("用户不存在"));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("获取用户详情失败：" + e.getMessage()));
+        }
+    }
+
+    /**
+     * 重置用户密码（管理员功能）
+     */
+    @PostMapping("/{id}/reset-password")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<String>> resetUserPassword(@PathVariable Long id) {
+        try {
+            userService.resetPassword(id);
+            return ResponseEntity.ok(ApiResponse.success("密码重置成功，新密码为：123456"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("密码重置失败：" + e.getMessage()));
+        }
+    }
+
+    /**
+     * 切换用户状态（管理员功能）
+     */
+    @PostMapping("/{id}/toggle-status")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<String>> toggleUserStatus(@PathVariable Long id) {
+        try {
+            userService.toggleUserStatus(id);
+            return ResponseEntity.ok(ApiResponse.success("状态切换成功"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("状态切换失败：" + e.getMessage()));
+        }
+    }
+
+    /**
+     * 删除用户（管理员功能）
+     */
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<String>> deleteUser(@PathVariable Long id) {
+        try {
+            userService.deleteUser(id);
+            return ResponseEntity.ok(ApiResponse.success("用户删除成功"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("用户删除失败：" + e.getMessage()));
         }
     }
 

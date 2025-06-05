@@ -1,7 +1,8 @@
 package com.campus.service;
 
 import com.campus.entity.PaymentRecord;
-import com.campus.repository.PaymentRecordRepository;
+import com.campus.entity.Student;
+import com.campus.entity.FeeItem;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -15,7 +16,7 @@ import java.util.Optional;
  *
  * @author Campus Management Team
  * @version 1.0.0
- * @since 2025-01-20
+ * @since 2025-06-05
  */
 public interface PaymentRecordService {
 
@@ -159,22 +160,7 @@ public interface PaymentRecordService {
      */
     boolean refundPayment(Long id, String refundReason, Long operatorId);
 
-    /**
-     * 获取缴费记录详情（包含学生和缴费项目信息）
-     *
-     * @param id 记录ID
-     * @return 缴费记录详情
-     */
-    Optional<PaymentRecordRepository.PaymentRecordDetail> findDetailById(Long id);
 
-    /**
-     * 分页查询缴费记录详情
-     *
-     * @param offset 偏移量
-     * @param limit 限制数量
-     * @return 缴费记录详情列表
-     */
-    List<PaymentRecordRepository.PaymentRecordDetail> findDetailsWithPagination(int offset, int limit);
 
     /**
      * 生成交易流水号
@@ -247,4 +233,19 @@ public interface PaymentRecordService {
      * @return 统计信息
      */
     PaymentStatistics getStatistics(LocalDateTime startTime, LocalDateTime endTime);
+
+    /**
+     * 查找未缴费的学生
+     *
+     * @return 未缴费学生列表
+     */
+    List<Student> findUnpaidStudents();
+
+    /**
+     * 获取学生的未缴费项目
+     *
+     * @param studentId 学生ID
+     * @return 未缴费项目列表
+     */
+    List<FeeItem> getUnpaidFeeItems(Long studentId);
 }

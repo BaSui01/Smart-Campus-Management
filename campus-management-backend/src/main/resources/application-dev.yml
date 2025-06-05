@@ -1,0 +1,187 @@
+# 开发环境配置
+server:
+  port: 8081
+
+spring:
+  # 数据源配置 - 开发环境
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    url: jdbc:mysql://localhost:3306/campus_management_db?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: xiaoxiao123
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    
+    # Druid 连接池配置
+    druid:
+      # 初始连接数
+      initial-size: 5
+      # 最小连接池数量
+      min-idle: 5
+      # 最大连接池数量
+      max-active: 20
+      # 配置获取连接等待超时的时间
+      max-wait: 60000
+      # 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒
+      time-between-eviction-runs-millis: 60000
+      # 配置一个连接在池中最小生存的时间，单位是毫秒
+      min-evictable-idle-time-millis: 300000
+      # 验证连接有效性的SQL
+      validation-query: SELECT 1
+      test-while-idle: true
+      test-on-borrow: false
+      test-on-return: false
+      # 打开PSCache，并且指定每个连接上PSCache的大小
+      pool-prepared-statements: true
+      max-pool-prepared-statement-per-connection-size: 20
+      # 配置监控统计拦截的filters
+      filters: stat,wall,slf4j
+      # 通过connectProperties属性来打开mergeSql功能；慢SQL记录
+      connection-properties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=5000
+
+  # Redis 配置 - 开发环境
+  redis:
+    host: localhost
+    port: 6379
+    database: 0
+    timeout: 3000ms
+    lettuce:
+      pool:
+        max-active: 20
+        max-wait: -1ms
+        max-idle: 10
+        min-idle: 5
+
+  # 缓存配置
+  cache:
+    type: redis
+    redis:
+      time-to-live: 1800000  # 30分钟默认过期时间
+
+  # 邮件配置 - 开发环境（使用测试邮箱）
+  mail:
+    host: smtp.qq.com
+    port: 587
+    username: test@qq.com
+    password: test-password
+    protocol: smtp
+    default-encoding: UTF-8
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+  # JPA配置 - 开发环境
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
+        use_sql_comments: true
+    open-in-view: false
+
+  # Quartz 配置 - 开发环境
+  quartz:
+    job-store-type: memory
+    properties:
+      org:
+        quartz:
+          threadPool:
+            threadCount: 5
+            threadPriority: 5
+          scheduler:
+            instanceName: CampusScheduler-Dev
+            instanceId: AUTO
+
+# MyBatis Plus 配置
+mybatis-plus:
+  configuration:
+    # 开启驼峰命名转换
+    map-underscore-to-camel-case: true
+    # 开启二级缓存
+    cache-enabled: true
+    # 延迟加载
+    lazy-loading-enabled: true
+    aggressive-lazy-loading: false
+    # 查询超时时间
+    default-statement-timeout: 30
+  global-config:
+    db-config:
+      # 逻辑删除配置
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+      # ID 生成策略
+      id-type: ASSIGN_ID
+
+# JWT配置 - 开发环境
+jwt:
+  secret: campus-management-jwt-secret-key-dev-2024
+  expiration: 7200000        # 2小时
+  refresh-expiration: 604800000  # 7天
+  header: Authorization
+  prefix: Bearer
+  redis:
+    prefix: "jwt:token:"
+    refresh-prefix: "jwt:refresh:"
+
+# 日志配置 - 开发环境
+logging:
+  level:
+    com.campus: DEBUG
+    org.springframework.cache: DEBUG
+    org.springframework.data.redis: DEBUG
+    org.springframework.security: DEBUG
+    com.alibaba.druid: DEBUG
+    root: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# 管理端点配置 - 开发环境
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,redis,druid
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: smart-campus-management
+      environment: dev
+
+
+
+# 自定义配置
+campus:
+  # 缓存配置
+  cache:
+    # 课程信息缓存 - 30分钟
+    course-ttl: 1800
+    # 用户权限缓存 - 15分钟
+    permission-ttl: 900
+    # 系统配置缓存 - 1小时
+    config-ttl: 3600
+    # 学生信息缓存 - 30分钟
+    student-ttl: 1800
+    # 班级信息缓存 - 1小时
+    class-ttl: 3600
+
+  # 性能监控配置
+  monitor:
+    enabled: true
+    redis-monitor-interval: 60000  # Redis监控间隔 1分钟
+    performance-log: true
+
+  # 邮件模板配置
+  mail:
+    template-path: classpath:/templates/email/
+    from-name: 智慧校园管理系统

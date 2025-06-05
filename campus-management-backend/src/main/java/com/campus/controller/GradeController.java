@@ -17,12 +17,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+
 import com.campus.common.ApiResponse;
 import com.campus.entity.Grade;
-import com.campus.repository.GradeRepository.CourseGradeDetail;
-import com.campus.repository.GradeRepository.GradeDetail;
-import com.campus.repository.GradeRepository.StudentGradeDetail;
 import com.campus.service.GradeService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -97,15 +97,16 @@ public class GradeController {
         }
 
         // 执行分页查询
-        IPage<Grade> pageResult = gradeService.findGradesByPage(page, size, params);
+        Pageable pageable = PageRequest.of(page - 1, size);
+        Page<Grade> pageResult = gradeService.findGradesByPage(pageable, params);
 
         // 构建返回结果
         Map<String, Object> result = new HashMap<>();
-        result.put("total", pageResult.getTotal());
-        result.put("pages", pageResult.getPages());
-        result.put("current", pageResult.getCurrent());
+        result.put("total", pageResult.getTotalElements());
+        result.put("pages", pageResult.getTotalPages());
+        result.put("current", pageResult.getNumber() + 1);
         result.put("size", pageResult.getSize());
-        result.put("records", pageResult.getRecords());
+        result.put("records", pageResult.getContent());
 
         return ApiResponse.success("获取成绩列表成功", result);
     }
@@ -116,8 +117,8 @@ public class GradeController {
     @GetMapping("/{id}")
     @Operation(summary = "获取成绩详情", description = "根据ID查询成绩详细信息")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
-    public ApiResponse<GradeDetail> getGradeById(@Parameter(description = "成绩ID") @PathVariable Long id) {
-        Optional<GradeDetail> gradeDetail = gradeService.findGradeDetailById(id);
+    public ApiResponse<Object[]> getGradeById(@Parameter(description = "成绩ID") @PathVariable Long id) {
+        Optional<Object[]> gradeDetail = gradeService.findGradeDetailById(id);
         if (gradeDetail.isPresent()) {
             return ApiResponse.success(gradeDetail.get());
         } else {

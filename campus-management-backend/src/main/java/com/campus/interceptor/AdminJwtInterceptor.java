@@ -2,7 +2,8 @@ package com.campus.interceptor;
 
 import com.campus.entity.User;
 import com.campus.service.UserService;
-import com.campus.utils.JwtUtil;
+import com.campus.util.JwtUtil;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -10,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.lang.NonNull;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 /**
@@ -28,7 +30,7 @@ public class AdminJwtInterceptor implements HandlerInterceptor {
     private UserService userService;
     
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+    public boolean preHandle(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull Object handler) throws Exception {
         String requestURI = request.getRequestURI();
         
         // 排除不需要认证的路径

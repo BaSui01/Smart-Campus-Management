@@ -4,12 +4,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.service.IService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import com.campus.entity.Grade;
-import com.campus.repository.GradeRepository.CourseGradeDetail;
-import com.campus.repository.GradeRepository.GradeDetail;
-import com.campus.repository.GradeRepository.StudentGradeDetail;
 
 /**
  * 成绩服务接口
@@ -18,7 +15,59 @@ import com.campus.repository.GradeRepository.StudentGradeDetail;
  * @version 1.0.0
  * @since 2025-06-03
  */
-public interface GradeService extends IService<Grade> {
+public interface GradeService {
+
+    /**
+     * 保存成绩记录
+     *
+     * @param grade 成绩记录
+     * @return 保存的成绩记录
+     */
+    Grade save(Grade grade);
+
+    /**
+     * 根据ID查找成绩记录
+     *
+     * @param id 成绩ID
+     * @return 成绩记录
+     */
+    Optional<Grade> findById(Long id);
+
+    /**
+     * 查找所有成绩记录
+     *
+     * @return 成绩记录列表
+     */
+    List<Grade> findAll();
+
+    /**
+     * 分页查找所有成绩记录
+     *
+     * @param pageable 分页参数
+     * @return 成绩记录分页结果
+     */
+    Page<Grade> findAll(Pageable pageable);
+
+    /**
+     * 根据ID删除成绩记录
+     *
+     * @param id 成绩ID
+     */
+    void deleteById(Long id);
+
+    /**
+     * 批量删除成绩记录
+     *
+     * @param ids 成绩ID列表
+     */
+    void deleteAllById(List<Long> ids);
+
+    /**
+     * 统计成绩记录数量
+     *
+     * @return 总数量
+     */
+    long count();
 
     /**
      * 根据学生ID查找成绩记录
@@ -79,30 +128,30 @@ public interface GradeService extends IService<Grade> {
     List<Grade> findByStudentIdAndSemester(Long studentId, String semester);
 
     /**
-     * 获取成绩详情
+     * 获取成绩详情（使用Object[]返回）
      *
      * @param gradeId 成绩ID
      * @return 成绩详情
      */
-    Optional<GradeDetail> findGradeDetailById(Long gradeId);
+    Optional<Object[]> findGradeDetailById(Long gradeId);
 
     /**
-     * 获取学生的成绩详情列表
+     * 获取学生的成绩详情列表（使用Object[]返回）
      *
      * @param studentId 学生ID
      * @param semester 学期
      * @return 成绩详情列表
      */
-    List<StudentGradeDetail> findStudentGradeDetails(Long studentId, String semester);
+    List<Object[]> findStudentGradeDetails(Long studentId, String semester);
 
     /**
-     * 获取课程的学生成绩列表
+     * 获取课程的学生成绩列表（使用Object[]返回）
      *
      * @param courseId 课程ID
      * @param scheduleId 课程表ID
      * @return 成绩详情列表
      */
-    List<CourseGradeDetail> findCourseGradeDetails(Long courseId, Long scheduleId);
+    List<Object[]> findCourseGradeDetails(Long courseId, Long scheduleId);
 
     /**
      * 计算学生的平均绩点
@@ -125,12 +174,11 @@ public interface GradeService extends IService<Grade> {
     /**
      * 分页查询成绩列表
      *
-     * @param page 页码
-     * @param size 每页大小
+     * @param pageable 分页参数
      * @param params 查询参数
      * @return 分页结果
      */
-    IPage<Grade> findGradesByPage(int page, int size, Map<String, Object> params);
+    Page<Grade> findGradesByPage(Pageable pageable, Map<String, Object> params);
 
     /**
      * 创建成绩
@@ -205,4 +253,11 @@ public interface GradeService extends IService<Grade> {
      * @return 创建的成绩记录数量
      */
     int batchCreateGradesFromSchedule(Long scheduleId);
+
+    /**
+     * 生成综合统计报告
+     *
+     * @return 统计报告数据
+     */
+    Map<String, Object> generateComprehensiveStatistics();
 }

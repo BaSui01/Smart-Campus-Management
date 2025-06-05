@@ -1,7 +1,8 @@
 package com.campus.repository;
 
 import com.campus.entity.PaymentRecord;
-import org.apache.ibatis.annotations.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -17,11 +18,27 @@ import java.util.Optional;
  *
  * @author Campus Management Team
  * @version 1.0.0
- * @since 2025-01-20
+ * @since 2025-06-05
  */
 @Repository
-@Mapper
 public interface PaymentRecordRepository extends JpaRepository<PaymentRecord, Long> {
+
+    /**
+     * 查找所有未删除的缴费记录
+     *
+     * @return 缴费记录列表
+     */
+    @Query("SELECT p FROM PaymentRecord p WHERE p.deleted = 0 ORDER BY p.paymentTime DESC")
+    List<PaymentRecord> findAllActive();
+
+    /**
+     * 分页查询所有未删除的缴费记录
+     *
+     * @param pageable 分页参数
+     * @return 缴费记录分页结果
+     */
+    @Query("SELECT p FROM PaymentRecord p WHERE p.deleted = 0 ORDER BY p.paymentTime DESC")
+    Page<PaymentRecord> findAllActive(Pageable pageable);
 
     /**
      * 根据学生ID查找缴费记录
@@ -29,7 +46,7 @@ public interface PaymentRecordRepository extends JpaRepository<PaymentRecord, Lo
      * @param studentId 学生ID
      * @return 缴费记录列表
      */
-    @Select("SELECT * FROM tb_payment_record WHERE student_id = #{studentId} AND deleted = 0 ORDER BY payment_time DESC")
+    @Query("SELECT p FROM PaymentRecord p WHERE p.studentId = :studentId AND p.deleted = 0 ORDER BY p.paymentTime DESC")
     List<PaymentRecord> findByStudentId(@Param("studentId") Long studentId);
 
     /**
@@ -38,7 +55,7 @@ public interface PaymentRecordRepository extends JpaRepository<PaymentRecord, Lo
      * @param feeItemId 缴费项目ID
      * @return 缴费记录列表
      */
-    @Select("SELECT * FROM tb_payment_record WHERE fee_item_id = #{feeItemId} AND deleted = 0 ORDER BY payment_time DESC")
+    @Query("SELECT p FROM PaymentRecord p WHERE p.feeItemId = :feeItemId AND p.deleted = 0 ORDER BY p.paymentTime DESC")
     List<PaymentRecord> findByFeeItemId(@Param("feeItemId") Long feeItemId);
 
     /**
@@ -47,7 +64,7 @@ public interface PaymentRecordRepository extends JpaRepository<PaymentRecord, Lo
      * @param transactionNo 交易流水号
      * @return 缴费记录
      */
-    @Select("SELECT * FROM tb_payment_record WHERE transaction_no = #{transactionNo} AND deleted = 0")
+    @Query("SELECT p FROM PaymentRecord p WHERE p.transactionNo = :transactionNo AND p.deleted = 0")
     Optional<PaymentRecord> findByTransactionNo(@Param("transactionNo") String transactionNo);
 
     /**
@@ -56,7 +73,7 @@ public interface PaymentRecordRepository extends JpaRepository<PaymentRecord, Lo
      * @param paymentMethod 缴费方式
      * @return 缴费记录列表
      */
-    @Select("SELECT * FROM tb_payment_record WHERE payment_method = #{paymentMethod} AND deleted = 0 ORDER BY payment_time DESC")
+    @Query("SELECT p FROM PaymentRecord p WHERE p.paymentMethod = :paymentMethod AND p.deleted = 0 ORDER BY p.paymentTime DESC")
     List<PaymentRecord> findByPaymentMethod(@Param("paymentMethod") String paymentMethod);
 
     /**
@@ -65,7 +82,7 @@ public interface PaymentRecordRepository extends JpaRepository<PaymentRecord, Lo
      * @param status 状态
      * @return 缴费记录列表
      */
-    @Select("SELECT * FROM tb_payment_record WHERE status = #{status} AND deleted = 0 ORDER BY payment_time DESC")
+    @Query("SELECT p FROM PaymentRecord p WHERE p.status = :status AND p.deleted = 0 ORDER BY p.paymentTime DESC")
     List<PaymentRecord> findByStatus(@Param("status") Integer status);
 
     /**
@@ -75,7 +92,7 @@ public interface PaymentRecordRepository extends JpaRepository<PaymentRecord, Lo
      * @param endTime 结束时间
      * @return 缴费记录列表
      */
-    @Select("SELECT * FROM tb_payment_record WHERE payment_time BETWEEN #{startTime} AND #{endTime} AND deleted = 0 ORDER BY payment_time DESC")
+    @Query("SELECT p FROM PaymentRecord p WHERE p.paymentTime BETWEEN :startTime AND :endTime AND p.deleted = 0 ORDER BY p.paymentTime DESC")
     List<PaymentRecord> findByPaymentTimeBetween(@Param("startTime") LocalDateTime startTime, @Param("endTime") LocalDateTime endTime);
 
     /**
@@ -94,7 +111,7 @@ public interface PaymentRecordRepository extends JpaRepository<PaymentRecord, Lo
      *
      * @return 总数
      */
-    @Query(value = "SELECT COUNT(*) FROM tb_payment_record WHERE deleted = 0", nativeQuery = true)
+    @Query("SELECT COUNT(p) FROM PaymentRecord p WHERE p.deleted = 0")
     long countTotal();
 
     /**
@@ -103,9 +120,8 @@ public interface PaymentRecordRepository extends JpaRepository<PaymentRecord, Lo
      * @param studentId 学生ID
      * @return 总金额
      */
-   
-    // @Select("SELECT COALESCE(SUM(amount), 0) FROM tb_payment_record WHERE student_id = #{studentId} AND status = 1 AND deleted = 0")
-    // BigDecimal sumAmountByStudentId(@Param("studentId") Long studentId);
+    @Query("SELECT COALESCE(SUM(p.amount), 0) FROM PaymentRecord p WHERE p.studentId = :studentId AND p.status = 1 AND p.deleted = 0")
+    BigDecimal sumAmountByStudentId(@Param("studentId") Long studentId);
 
     /**
      * 统计缴费项目收费总金额
@@ -113,9 +129,8 @@ public interface PaymentRecordRepository extends JpaRepository<PaymentRecord, Lo
      * @param feeItemId 缴费项目ID
      * @return 总金额
      */
-    // TODO: 暂时注释掉，解决Spring Data JPA冲突问题
-    // @Select("SELECT COALESCE(SUM(amount), 0) FROM tb_payment_record WHERE fee_item_id = #{feeItemId} AND status = 1 AND deleted = 0")
-    // BigDecimal sumAmountByFeeItemId(@Param("feeItemId") Long feeItemId);
+    @Query("SELECT COALESCE(SUM(p.amount), 0) FROM PaymentRecord p WHERE p.feeItemId = :feeItemId AND p.status = 1 AND p.deleted = 0")
+    BigDecimal sumAmountByFeeItemId(@Param("feeItemId") Long feeItemId);
 
     /**
      * 统计时间范围内的缴费总金额
@@ -124,118 +139,55 @@ public interface PaymentRecordRepository extends JpaRepository<PaymentRecord, Lo
      * @param endTime 结束时间
      * @return 总金额
      */
-  
-    // @Select("SELECT COALESCE(SUM(amount), 0) FROM tb_payment_record WHERE payment_time BETWEEN #{startTime} AND #{endTime} AND status = 1 AND deleted = 0")
-    // BigDecimal sumAmountByTimeRange(@Param("startTime") LocalDateTime startTime, @Param("endTime") LocalDateTime endTime);
+    @Query("SELECT COALESCE(SUM(p.amount), 0) FROM PaymentRecord p WHERE p.paymentTime BETWEEN :startTime AND :endTime AND p.status = 1 AND p.deleted = 0")
+    BigDecimal sumAmountByTimeRange(@Param("startTime") LocalDateTime startTime, @Param("endTime") LocalDateTime endTime);
 
     /**
-     * 缴费记录详情DTO
-     */
-    class PaymentRecordDetail {
-        private Long id;
-        private Long studentId;
-        private String studentName;
-        private String studentNo;
-        private Long feeItemId;
-        private String itemName;
-        private String itemCode;
-        private BigDecimal amount;
-        private String paymentMethod;
-        private LocalDateTime paymentTime;
-        private String transactionNo;
-        private Long operatorId;
-        private String operatorName;
-        private String remarks;
-        private Integer status;
-
-        // Getter 和 Setter 方法
-        public Long getId() { return id; }
-        public void setId(Long id) { this.id = id; }
-        
-        public Long getStudentId() { return studentId; }
-        public void setStudentId(Long studentId) { this.studentId = studentId; }
-        
-        public String getStudentName() { return studentName; }
-        public void setStudentName(String studentName) { this.studentName = studentName; }
-        
-        public String getStudentNo() { return studentNo; }
-        public void setStudentNo(String studentNo) { this.studentNo = studentNo; }
-        
-        public Long getFeeItemId() { return feeItemId; }
-        public void setFeeItemId(Long feeItemId) { this.feeItemId = feeItemId; }
-        
-        public String getItemName() { return itemName; }
-        public void setItemName(String itemName) { this.itemName = itemName; }
-        
-        public String getItemCode() { return itemCode; }
-        public void setItemCode(String itemCode) { this.itemCode = itemCode; }
-        
-        public BigDecimal getAmount() { return amount; }
-        public void setAmount(BigDecimal amount) { this.amount = amount; }
-        
-        public String getPaymentMethod() { return paymentMethod; }
-        public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
-        
-        public LocalDateTime getPaymentTime() { return paymentTime; }
-        public void setPaymentTime(LocalDateTime paymentTime) { this.paymentTime = paymentTime; }
-        
-        public String getTransactionNo() { return transactionNo; }
-        public void setTransactionNo(String transactionNo) { this.transactionNo = transactionNo; }
-        
-        public Long getOperatorId() { return operatorId; }
-        public void setOperatorId(Long operatorId) { this.operatorId = operatorId; }
-        
-        public String getOperatorName() { return operatorName; }
-        public void setOperatorName(String operatorName) { this.operatorName = operatorName; }
-        
-        public String getRemarks() { return remarks; }
-        public void setRemarks(String remarks) { this.remarks = remarks; }
-        
-        public Integer getStatus() { return status; }
-        public void setStatus(Integer status) { this.status = status; }
-    }
-
-    /**
-     * 获取缴费记录详情（包含学生和缴费项目信息）
+     * 统计学生在指定缴费项目的缴费次数
      *
-     * @param id 记录ID
-     * @return 缴费记录详情
+     * @param studentId 学生ID
+     * @param feeItemId 缴费项目ID
+     * @return 缴费次数
      */
-    @Select("""
-        SELECT p.*, 
-               u.real_name as student_name, s.student_no,
-               f.item_name, f.item_code,
-               o.real_name as operator_name
-        FROM tb_payment_record p
-        LEFT JOIN tb_student s ON p.student_id = s.id AND s.deleted = 0
-        LEFT JOIN tb_user u ON s.user_id = u.id AND u.deleted = 0
-        LEFT JOIN tb_fee_item f ON p.fee_item_id = f.id AND f.deleted = 0
-        LEFT JOIN tb_user o ON p.operator_id = o.id AND o.deleted = 0
-        WHERE p.id = #{id} AND p.deleted = 0
-        """)
-    Optional<PaymentRecordDetail> findDetailById(@Param("id") Long id);
+    @Query("SELECT COUNT(p) FROM PaymentRecord p WHERE p.studentId = :studentId AND p.feeItemId = :feeItemId AND p.status = 1 AND p.deleted = 0")
+    long countByStudentIdAndFeeItemId(@Param("studentId") Long studentId, @Param("feeItemId") Long feeItemId);
 
     /**
-     * 分页查询缴费记录详情
+     * 检查学生是否已缴费指定项目
      *
-     * @param offset 偏移量
-     * @param limit 限制数量
-     * @return 缴费记录详情列表
+     * @param studentId 学生ID
+     * @param feeItemId 缴费项目ID
+     * @return 是否已缴费
      */
+    @Query("SELECT COUNT(p) > 0 FROM PaymentRecord p WHERE p.studentId = :studentId AND p.feeItemId = :feeItemId AND p.status = 1 AND p.deleted = 0")
+    boolean existsByStudentIdAndFeeItemId(@Param("studentId") Long studentId, @Param("feeItemId") Long feeItemId);
 
-    // @Select("""
-    //     SELECT p.*,
-    //            u.real_name as student_name, s.student_no,
-    //            f.item_name, f.item_code,
-    //            o.real_name as operator_name
-    //     FROM tb_payment_record p
-    //     LEFT JOIN tb_student s ON p.student_id = s.id AND s.deleted = 0
-    //     LEFT JOIN tb_user u ON s.user_id = u.id AND u.deleted = 0
-    //     LEFT JOIN tb_fee_item f ON p.fee_item_id = f.id AND f.deleted = 0
-    //     LEFT JOIN tb_user o ON p.operator_id = o.id AND o.deleted = 0
-    //     WHERE p.deleted = 0
-    //     ORDER BY p.payment_time DESC
-    //     LIMIT #{offset}, #{limit}
-    //     """)
-    // List<PaymentRecordDetail> findDetailsWithPagination(@Param("offset") int offset, @Param("limit") int limit);
+    /**
+     * 查找未缴费的学生
+     *
+     * @return 未缴费学生列表
+     */
+    @Query(value = """
+        SELECT DISTINCT s.* FROM tb_student s
+        LEFT JOIN tb_payment_record p ON s.id = p.student_id AND p.deleted = 0 AND p.status = 1
+        WHERE s.deleted = 0 AND p.id IS NULL
+        """, nativeQuery = true)
+    List<Object[]> findUnpaidStudents();
+
+    /**
+     * 根据学生ID查找未缴费项目
+     *
+     * @param studentId 学生ID
+     * @return 未缴费项目列表
+     */
+    @Query(value = """
+        SELECT f.* FROM tb_fee_item f
+        WHERE f.deleted = 0 AND f.status = 1
+        AND NOT EXISTS (
+            SELECT 1 FROM tb_payment_record p
+            WHERE p.student_id = :studentId AND p.fee_item_id = f.id
+            AND p.deleted = 0 AND p.status = 1
+        )
+        """, nativeQuery = true)
+    List<Object[]> findUnpaidFeeItemsByStudentId(@Param("studentId") Long studentId);
 }

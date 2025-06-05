@@ -4,19 +4,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.service.IService;
+import org.springframework.data.domain.Page;
 import com.campus.entity.CourseSchedule;
-import com.campus.repository.CourseScheduleRepository.ScheduleDetail;
+import com.campus.entity.Course;
 
 /**
- * 课程表服务接口
+ * 课程表服务接口 - JPA版本
  *
  * @author Campus Management Team
  * @version 1.0.0
  * @since 2025-06-03
  */
-public interface CourseScheduleService extends IService<CourseSchedule> {
+public interface CourseScheduleService {
 
     /**
      * 根据课程ID查找课程表
@@ -64,7 +63,7 @@ public interface CourseScheduleService extends IService<CourseSchedule> {
      * @param scheduleId 课程表ID
      * @return 课程表详情
      */
-    Optional<ScheduleDetail> findScheduleDetailById(Long scheduleId);
+    Optional<Object[]> findScheduleDetailById(Long scheduleId);
 
     /**
      * 检查教室在指定时间是否被占用
@@ -100,7 +99,7 @@ public interface CourseScheduleService extends IService<CourseSchedule> {
      * @param params 查询参数
      * @return 分页结果
      */
-    IPage<CourseSchedule> findSchedulesByPage(int page, int size, Map<String, Object> params);
+    Page<CourseSchedule> findSchedulesByPage(int page, int size, Map<String, Object> params);
 
     /**
      * 创建课程表
@@ -160,4 +159,26 @@ public interface CourseScheduleService extends IService<CourseSchedule> {
      * @return 课程表列表
      */
     List<CourseSchedule> findByClassIdAndSemester(Long classId, String semester);
+
+    /**
+     * 查找需要排课的课程
+     *
+     * @return 待排课程列表
+     */
+    List<Course> findPendingCourses();
+
+    /**
+     * 自动排课
+     *
+     * @param course 课程信息
+     * @return 排课是否成功
+     */
+    boolean autoScheduleCourse(Course course);
+
+    /**
+     * 统计课程表数量
+     *
+     * @return 总数量
+     */
+    long count();
 }

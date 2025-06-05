@@ -1,0 +1,287 @@
+<!-- 学生添加/编辑弹窗 -->
+<div class="modal fade" id="studentModal" tabindex="-1" aria-labelledby="studentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="studentModalLabel">
+                    <i class="fas fa-user-plus"></i> 添加学生
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- 填写说明 -->
+                <div class="alert alert-info mb-3" role="alert">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="alert-heading mb-2">
+                                <i class="fas fa-lightbulb"></i> 填写提示
+                            </h6>
+                            <ul class="mb-0 small">
+                                <li>标有 <span class="text-danger">*</span> 的字段为必填项</li>
+                                <li>学号必须唯一，建议按照规范格式填写</li>
+                                <li>选择专业后，班级列表会自动筛选</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="alert-heading mb-2">
+                                <i class="fas fa-exclamation-triangle"></i> 注意事项
+                            </h6>
+                            <ul class="mb-0 small">
+                                <li>学号一旦保存不可修改</li>
+                                <li>请确认学生信息准确无误</li>
+                                <li>保存后将自动生成学生账号</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <form id="studentModalForm" data-auto-save="student-modal-form">
+                    <!-- 基本信息 -->
+                    <h6 class="text-primary mb-3">
+                        <i class="fas fa-user"></i> 基本信息
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="modalStudentId" class="form-label">学号 <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="modalStudentId" name="studentId" 
+                                       placeholder="请输入学号" data-validate="studentId" required>
+                                <div class="form-text">格式：年份+专业代码+序号</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="modalName" class="form-label">姓名 <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="modalName" name="name" 
+                                       placeholder="请输入学生姓名" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="modalGender" class="form-label">性别 <span class="text-danger">*</span></label>
+                                <select class="form-select" id="modalGender" name="gender" required>
+                                    <option value="">请选择性别</option>
+                                    <option value="男">男</option>
+                                    <option value="女">女</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="modalBirthDate" class="form-label">出生日期</label>
+                                <input type="date" class="form-control" id="modalBirthDate" name="birthDate">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="modalIdCard" class="form-label">身份证号</label>
+                                <input type="text" class="form-control" id="modalIdCard" name="idCard" 
+                                       placeholder="请输入身份证号" data-validate="idCard" maxlength="18">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="modalPhone" class="form-label">联系电话</label>
+                                <input type="tel" class="form-control" id="modalPhone" name="phone" 
+                                       placeholder="请输入联系电话" data-validate="phone">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="modalEmail" class="form-label">邮箱地址</label>
+                                <input type="email" class="form-control" id="modalEmail" name="email" 
+                                       placeholder="请输入邮箱地址" data-validate="email">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="modalAddress" class="form-label">家庭住址</label>
+                                <input type="text" class="form-control" id="modalAddress" name="address" 
+                                       placeholder="请输入家庭住址">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 学籍信息 -->
+                    <hr>
+                    <h6 class="text-primary mb-3">
+                        <i class="fas fa-graduation-cap"></i> 学籍信息
+                    </h6>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="modalMajor" class="form-label">专业 <span class="text-danger">*</span></label>
+                                <select class="form-select" id="modalMajor" name="major" required>
+                                    <option value="">请选择专业</option>
+                                    <option value="计算机科学与技术">计算机科学与技术</option>
+                                    <option value="软件工程">软件工程</option>
+                                    <option value="信息安全">信息安全</option>
+                                    <option value="数据科学与大数据技术">数据科学与大数据技术</option>
+                                    <option value="人工智能">人工智能</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="modalClassId" class="form-label">班级 <span class="text-danger">*</span></label>
+                                <select class="form-select" id="modalClassId" name="classId" required>
+                                    <option value="">请选择班级</option>
+                                    <option value="1" data-major="计算机科学与技术">计算机科学2024-1班</option>
+                                    <option value="2" data-major="软件工程">软件工程2024-1班</option>
+                                    <option value="3" data-major="信息安全">信息安全2024-1班</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="modalEnrollmentYear" class="form-label">入学年份</label>
+                                <input type="number" class="form-control" id="modalEnrollmentYear" name="enrollmentYear" 
+                                       value="2024" min="2020" max="2030">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="modalStatus" class="form-label">学籍状态</label>
+                                <select class="form-select" id="modalStatus" name="status">
+                                    <option value="在读" selected>在读</option>
+                                    <option value="休学">休学</option>
+                                    <option value="退学">退学</option>
+                                    <option value="毕业">毕业</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="modalRemarks" class="form-label">备注</label>
+                        <textarea class="form-control" id="modalRemarks" name="remarks" rows="2" 
+                                  placeholder="请输入备注信息"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> 取消
+                </button>
+                <button type="button" class="btn btn-outline-secondary" id="resetStudentForm">
+                    <i class="fas fa-undo"></i> 重置
+                </button>
+                <button type="button" class="btn btn-primary" id="saveStudent">
+                    <i class="fas fa-save"></i> 保存学生
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// 学生弹窗相关功能
+document.addEventListener('DOMContentLoaded', function() {
+    const studentModal = document.getElementById('studentModal');
+    const studentForm = document.getElementById('studentModalForm');
+    const saveBtn = document.getElementById('saveStudent');
+    const resetBtn = document.getElementById('resetStudentForm');
+
+    // 专业和班级联动
+    document.getElementById('modalMajor').addEventListener('change', function() {
+        const selectedMajor = this.value;
+        const classSelect = document.getElementById('modalClassId');
+        const options = classSelect.querySelectorAll('option');
+        
+        classSelect.value = '';
+        
+        options.forEach(option => {
+            if (option.value === '') {
+                option.style.display = 'block';
+            } else {
+                const optionMajor = option.getAttribute('data-major');
+                option.style.display = (selectedMajor === '' || optionMajor === selectedMajor) ? 'block' : 'none';
+            }
+        });
+    });
+
+    // 保存按钮点击事件
+    saveBtn.addEventListener('click', function() {
+        if (!FormUtils.validateForm(studentForm)) {
+            return;
+        }
+
+        // 设置加载状态
+        this.disabled = true;
+        this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 保存中...';
+
+        // 模拟保存
+        setTimeout(() => {
+            this.disabled = false;
+            this.innerHTML = '<i class="fas fa-save"></i> 保存学生';
+            
+            FormUtils.showAlert('学生信息保存成功！', 'success');
+            FormUtils.clearSavedForm('student-modal-form');
+            
+            // 关闭弹窗
+            bootstrap.Modal.getInstance(studentModal).hide();
+            
+            // 重置表单
+            studentForm.reset();
+            FormUtils.resetFormValidation(studentForm);
+            
+            // 刷新学生列表（如果在学生管理页面）
+            if (typeof refreshStudentList === 'function') {
+                refreshStudentList();
+            }
+        }, 2000);
+    });
+
+    // 重置按钮点击事件
+    resetBtn.addEventListener('click', function() {
+        studentForm.reset();
+        FormUtils.resetFormValidation(studentForm);
+        FormUtils.clearSavedForm('student-modal-form');
+    });
+
+    // 弹窗关闭时重置表单
+    studentModal.addEventListener('hidden.bs.modal', function() {
+        studentForm.reset();
+        FormUtils.resetFormValidation(studentForm);
+    });
+});
+
+// 打开学生添加弹窗的函数
+function openStudentModal(studentData = null) {
+    const modal = new bootstrap.Modal(document.getElementById('studentModal'));
+    const form = document.getElementById('studentModalForm');
+    const title = document.getElementById('studentModalLabel');
+    
+    if (studentData) {
+        // 编辑模式
+        title.innerHTML = '<i class="fas fa-user-edit"></i> 编辑学生';
+        
+        // 填充表单数据
+        Object.keys(studentData).forEach(key => {
+            const field = form.querySelector(`[name="${key}"]`);
+            if (field) {
+                field.value = studentData[key];
+            }
+        });
+    } else {
+        // 添加模式
+        title.innerHTML = '<i class="fas fa-user-plus"></i> 添加学生';
+        form.reset();
+    }
+    
+    modal.show();
+}
+</script>

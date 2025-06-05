@@ -151,7 +151,8 @@ static/
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-
+    <!-- 退出登录确认模态框 -->
+    <th:block th:replace="~{components/topbar :: logout-modal}"></th:block>
     <!-- 引入侧边栏脚本 -->
     <th:block th:replace="~{components/sidebar :: sidebar-script}"></th:block>
 

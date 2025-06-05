@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>侧边栏测试 - 智慧校园管理系统</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- 引入组件样式 -->
+    <th:block th:replace="~{components/topbar :: topbar-style}"></th:block>
+    <!-- 侧边栏样式 -->
+    <link th:href="@{/css/sidebar.css}" rel="stylesheet">
+    <!-- 自定义样式 -->
+    <link href="/css/admin.css" rel="stylesheet">
+</head>
+<body>
+    <div class="wrapper">
+        <!-- 左侧导航栏 -->
+        <th:block th:replace="~{components/sidebar :: sidebar}"></th:block>
+        
+        <!-- 主内容区域 -->
+        <div id="content" class="content">
+            <!-- 顶部导航栏 -->
+            <th:block th:replace="~{components/topbar :: topbar}"></th:block>
+
+            <!-- 页面内容 -->
+            <div class="content-wrapper">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1><i class="fas fa-test-tube"></i> 侧边栏切换测试</h1>
+                </div>
+
+                <!-- 测试内容 -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">侧边栏功能测试</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="alert alert-info">
+                                    <h6><i class="fas fa-info-circle"></i> 测试说明</h6>
+                                    <ul class="mb-0">
+                                        <li>点击顶部导航栏左侧的 <i class="fas fa-bars"></i> 按钮来切换侧边栏</li>
+                                        <li>侧边栏应该能够收起和展开</li>
+                                        <li>收起时显示图标，展开时显示完整菜单</li>
+                                        <li>状态会自动保存到本地存储</li>
+                                        <li>移动端会显示覆盖层效果</li>
+                                    </ul>
+                                </div>
+
+                                <div class="row mt-4">
+                                    <div class="col-md-6">
+                                        <h6>当前状态</h6>
+                                        <div id="statusInfo" class="border p-3 rounded bg-light">
+                                            <div>侧边栏状态: <span id="sidebarStatus">-</span></div>
+                                            <div>屏幕宽度: <span id="screenWidth">-</span></div>
+                                            <div>设备类型: <span id="deviceType">-</span></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>测试按钮</h6>
+                                        <div class="d-grid gap-2">
+                                            <button type="button" class="btn btn-primary" onclick="toggleSidebar()">
+                                                <i class="fas fa-bars"></i> 切换侧边栏
+                                            </button>
+                                            <button type="button" class="btn btn-outline-secondary" onclick="checkStatus()">
+                                                <i class="fas fa-sync"></i> 刷新状态
+                                            </button>
+                                            <button type="button" class="btn btn-outline-warning" onclick="clearStorage()">
+                                                <i class="fas fa-trash"></i> 清除存储
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-4">
+                                    <h6>功能特性</h6>
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="card border-primary">
+                                                <div class="card-body text-center">
+                                                    <i class="fas fa-desktop fa-2x text-primary mb-2"></i>
+                                                    <h6>桌面端</h6>
+                                                    <small>侧边栏收起/展开<br>状态持久化保存</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="card border-success">
+                                                <div class="card-body text-center">
+                                                    <i class="fas fa-mobile-alt fa-2x text-success mb-2"></i>
+                                                    <h6>移动端</h6>
+                                                    <small>覆盖层显示<br>点击外部关闭</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="card border-info">
+                                                <div class="card-body text-center">
+                                                    <i class="fas fa-mouse-pointer fa-2x text-info mb-2"></i>
+                                                    <h6>交互体验</h6>
+                                                    <small>平滑动画效果<br>工具提示显示</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 退出登录确认模态框 -->
+    <th:block th:replace="~{components/topbar :: logout-modal}"></th:block>
+    
+    <!-- 引入侧边栏脚本 -->
+    <th:block th:replace="~{components/sidebar :: sidebar-script}"></th:block>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            checkStatus();
+            
+            // 监听窗口大小变化
+            window.addEventListener('resize', checkStatus);
+            
+            // 定期更新状态
+            setInterval(checkStatus, 1000);
+        });
+
+        // 检查当前状态
+        function checkStatus() {
+            const sidebar = document.getElementById('sidebar');
+            const content = document.getElementById('content');
+            const screenWidth = window.innerWidth;
+            
+            // 更新侧边栏状态
+            let sidebarStatus = '正常';
+            if (sidebar) {
+                if (sidebar.classList.contains('collapsed')) {
+                    sidebarStatus = '已收起';
+                } else if (sidebar.classList.contains('mobile-hidden')) {
+                    sidebarStatus = '移动端隐藏';
+                } else {
+                    sidebarStatus = '已展开';
+                }
+            }
+            
+            // 更新设备类型
+            let deviceType = '桌面端';
+            if (screenWidth <= 768) {
+                deviceType = '移动端';
+            } else if (screenWidth <= 992) {
+                deviceType = '平板端';
+            }
+            
+            // 更新显示
+            document.getElementById('sidebarStatus').textContent = sidebarStatus;
+            document.getElementById('screenWidth').textContent = screenWidth + 'px';
+            document.getElementById('deviceType').textContent = deviceType;
+        }
+
+        // 清除本地存储
+        function clearStorage() {
+            localStorage.removeItem('sidebarCollapsed');
+            alert('本地存储已清除，页面将刷新');
+            window.location.reload();
+        }
+
+        // 显示调试信息
+        function showDebugInfo() {
+            const sidebar = document.getElementById('sidebar');
+            const content = document.getElementById('content');
+            
+            console.log('=== 侧边栏调试信息 ===');
+            console.log('侧边栏元素:', sidebar);
+            console.log('内容区域元素:', content);
+            console.log('侧边栏类名:', sidebar ? sidebar.className : 'null');
+            console.log('内容区域类名:', content ? content.className : 'null');
+            console.log('本地存储状态:', localStorage.getItem('sidebarCollapsed'));
+            console.log('屏幕宽度:', window.innerWidth);
+            console.log('========================');
+        }
+
+        // 添加键盘快捷键
+        document.addEventListener('keydown', function(e) {
+            // Ctrl + B 切换侧边栏
+            if (e.ctrlKey && e.key === 'b') {
+                e.preventDefault();
+                toggleSidebar();
+            }
+            
+            // F12 显示调试信息
+            if (e.key === 'F12') {
+                e.preventDefault();
+                showDebugInfo();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,166 @@
+/* 主布局样式 */
+.layout-container {
+  height: 100vh;
+}
+
+/* 侧边栏样式 */
+.sidebar {
+  height: 100vh;
+  background: #304156;
+  border-right: solid 1px #e6e6e6;
+}
+
+.logo {
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #263445;
+  color: white;
+}
+
+.logo h2 {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.sidebar-menu {
+  border: none;
+  height: calc(100vh - 60px);
+  background: #304156;
+}
+
+.sidebar-menu:not(.el-menu--collapse) {
+  width: 200px;
+}
+
+/* 菜单项样式 */
+.sidebar-menu .el-menu-item,
+.sidebar-menu .el-sub-menu__title {
+  color: #bfcbd9 !important;
+}
+
+.sidebar-menu .el-menu-item:hover,
+.sidebar-menu .el-sub-menu__title:hover {
+  background-color: #263445 !important;
+  color: #409eff !important;
+}
+
+.sidebar-menu .el-menu-item.is-active {
+  background-color: #409eff !important;
+  color: white !important;
+}
+
+/* 顶部导航样式 */
+.header {
+  background: white;
+  border-bottom: 1px solid #e6e6e6;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+  height: 60px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.header-right .user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.header-right .user-info:hover {
+  background-color: #f5f5f5;
+}
+
+.username {
+  font-size: 14px;
+  color: #333;
+}
+
+.arrow-down {
+  font-size: 12px;
+  color: #999;
+}
+
+/* 主内容区样式 */
+.main-content {
+  background: #f0f2f5;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 64px !important;
+  }
+  
+  .header-left .el-breadcrumb {
+    display: none;
+  }
+  
+  .main-content {
+    padding: 10px;
+  }
+}
+
+/* 面包屑样式 */
+.el-breadcrumb {
+  font-size: 14px;
+}
+
+.el-breadcrumb__inner {
+  color: #666;
+  transition: color 0.2s;
+}
+
+.el-breadcrumb__inner:hover {
+  color: #409eff;
+}
+
+/* 用户下拉菜单样式 */
+.el-dropdown-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.el-dropdown-menu__item .el-icon {
+  font-size: 16px;
+}
+
+/* 侧边栏展开/收起动画 */
+.sidebar {
+  transition: width 0.3s ease;
+}
+
+.sidebar-menu {
+  transition: width 0.3s ease;
+}
+
+/* 深色主题支持 */
+@media (prefers-color-scheme: dark) {
+  .header {
+    background: #2d3748;
+    border-bottom-color: #4a5568;
+  }
+  
+  .username {
+    color: #e2e8f0;
+  }
+  
+  .main-content {
+    background: #1a202c;
+  }
+}

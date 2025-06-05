@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="智慧校园管理平台 - 连接学习，成就未来" />
+    <meta name="keywords" content="智慧校园,教育管理,学生管理,在线学习" />
+    <meta name="author" content="智慧校园管理平台" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://campus.example.com/" />
+    <meta property="og:title" content="智慧校园管理平台" />
+    <meta property="og:description" content="连接学习，成就未来" />
+    <meta property="og:image" content="/og-image.png" />
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://campus.example.com/" />
+    <meta property="twitter:title" content="智慧校园管理平台" />
+    <meta property="twitter:description" content="连接学习，成就未来" />
+    <meta property="twitter:image" content="/twitter-image.png" />
+    
+    <title>智慧校园管理平台</title>
+    
+    <style>
+      /* 全局重置和基础样式 */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      
+      html {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        line-height: 1.6;
+        -webkit-text-size-adjust: 100%;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      
+      body {
+        margin: 0;
+        background: #f5f7fa;
+        color: #333;
+        overflow-x: hidden;
+      }
+      
+      /* 加载动画 */
+      #app {
+        min-height: 100vh;
+      }
+      
+      .loading-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        color: white;
+      }
+      
+      .loading-logo {
+        width: 80px;
+        height: 80px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 20px;
+        backdrop-filter: blur(10px);
+        animation: pulse 2s infinite;
+      }
+      
+      .loading-logo svg {
+        width: 40px;
+        height: 40px;
+        fill: white;
+      }
+      
+      .loading-text {
+        font-size: 24px;
+        font-weight: 600;
+        margin-bottom: 12px;
+        animation: fadeInUp 1s ease-out;
+      }
+      
+      .loading-subtitle {
+        font-size: 16px;
+        opacity: 0.8;
+        margin-bottom: 30px;
+        animation: fadeInUp 1s ease-out 0.2s both;
+      }
+      
+      .loading-spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-top: 3px solid white;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      
+      @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+      }
+      
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      
+      /* 响应式设计 */
+      @media (max-width: 768px) {
+        .loading-text {
+          font-size: 20px;
+        }
+        
+        .loading-subtitle {
+          font-size: 14px;
+        }
+        
+        .loading-logo {
+          width: 60px;
+          height: 60px;
+        }
+        
+        .loading-logo svg {
+          width: 30px;
+          height: 30px;
+        }
+      }
+      
+      /* 隐藏加载画面 */
+      .loading-container.fade-out {
+        opacity: 0;
+        transition: opacity 0.5s ease-out;
+        pointer-events: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <!-- 初始加载动画 -->
+      <div id="loading" class="loading-container">
+        <div class="loading-logo">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z"/>
+          </svg>
+        </div>
+        <div class="loading-text">智慧校园管理平台</div>
+        <div class="loading-subtitle">连接学习，成就未来</div>
+        <div class="loading-spinner"></div>
+      </div>
+    </div>
+    
+    <script type="module" src="/src/main.js"></script>
+    
+    <script>
+      // 隐藏加载动画
+      window.addEventListener('load', function() {
+        setTimeout(function() {
+          const loading = document.getElementById('loading');
+          if (loading) {
+            loading.classList.add('fade-out');
+            setTimeout(function() {
+              loading.style.display = 'none';
+            }, 500);
+          }
+        }, 1000);
+      });
+      
+      // 错误处理
+      window.addEventListener('error', function(e) {
+        console.error('Global error:', e.error);
+      });
+      
+      // Promise 错误处理
+      window.addEventListener('unhandledrejection', function(e) {
+        console.error('Unhandled promise rejection:', e.reason);
+      });
+    </script>
+  </body>
+</html>

@@ -18,7 +18,7 @@
         <ul class="components">
             <!-- 仪表盘 -->
             <li th:classappend="${currentPage == 'dashboard'} ? 'active'">
-                <a th:href="@{/admin/dashboard}">
+                <a th:href="@{/admin/dashboard}" data-tooltip="仪表盘">
                     <i class="fas fa-tachometer-alt"></i>
                     <span>仪表盘</span>
                 </a>
@@ -26,30 +26,30 @@
 
             <!-- 系统管理分组 -->
             <li class="nav-section">系统管理</li>
-            
+
             <li th:classappend="${currentPage == 'users'} ? 'active'">
-                <a th:href="@{/admin/users}">
+                <a th:href="@{/admin/users}" data-tooltip="用户管理">
                     <i class="fas fa-users"></i>
                     <span>用户管理</span>
                 </a>
             </li>
 
             <li th:classappend="${currentPage == 'roles'} ? 'active'">
-                <a th:href="@{/admin/roles}">
+                <a th:href="@{/admin/roles}" data-tooltip="角色管理">
                     <i class="fas fa-user-tag"></i>
                     <span>角色管理</span>
                 </a>
             </li>
 
             <li th:classappend="${currentPage == 'permissions'} ? 'active'">
-                <a th:href="@{/admin/permissions}">
+                <a th:href="@{/admin/permissions}" data-tooltip="权限管理">
                     <i class="fas fa-key"></i>
                     <span>权限管理</span>
                 </a>
             </li>
 
             <li th:classappend="${currentPage == 'settings'} ? 'active'">
-                <a th:href="@{/admin/settings}">
+                <a th:href="@{/admin/settings}" data-tooltip="系统设置">
                     <i class="fas fa-cogs"></i>
                     <span>系统设置</span>
                 </a>
@@ -59,28 +59,28 @@
             <li class="nav-section">教务管理</li>
 
             <li th:classappend="${currentPage == 'courses'} ? 'active'">
-                <a th:href="@{/admin/courses}">
+                <a th:href="@{/admin/courses}" data-tooltip="课程管理">
                     <i class="fas fa-book"></i>
                     <span>课程管理</span>
                 </a>
             </li>
 
             <li th:classappend="${currentPage == 'classes'} ? 'active'">
-                <a th:href="@{/admin/classes}">
+                <a th:href="@{/admin/classes}" data-tooltip="班级管理">
                     <i class="fas fa-users-class"></i>
                     <span>班级管理</span>
                 </a>
             </li>
 
             <li th:classappend="${currentPage == 'schedules'} ? 'active'">
-                <a th:href="@{/admin/schedules}">
+                <a th:href="@{/admin/schedules}" data-tooltip="课程安排">
                     <i class="fas fa-calendar-alt"></i>
                     <span>课程安排</span>
                 </a>
             </li>
 
             <li th:classappend="${currentPage == 'students'} ? 'active'">
-                <a th:href="@{/admin/students}">
+                <a th:href="@{/admin/students}" data-tooltip="学生管理">
                     <i class="fas fa-user-graduate"></i>
                     <span>学生管理</span>
                 </a>
@@ -90,28 +90,28 @@
             <li class="nav-section">财务管理</li>
 
             <li th:classappend="${currentPage == 'fee-items'} ? 'active'">
-                <a th:href="@{/admin/fee-items}">
+                <a th:href="@{/admin/fee-items}" data-tooltip="收费项目">
                     <i class="fas fa-list-alt"></i>
                     <span>收费项目</span>
                 </a>
             </li>
 
             <li th:classappend="${currentPage == 'payments'} ? 'active'">
-                <a th:href="@{/admin/payments}">
+                <a th:href="@{/admin/payments}" data-tooltip="缴费管理">
                     <i class="fas fa-credit-card"></i>
                     <span>缴费管理</span>
                 </a>
             </li>
 
             <li th:classappend="${currentPage == 'payment-records'} ? 'active'">
-                <a th:href="@{/admin/payment-records}">
+                <a th:href="@{/admin/payment-records}" data-tooltip="缴费记录">
                     <i class="fas fa-receipt"></i>
                     <span>缴费记录</span>
                 </a>
             </li>
 
             <li th:classappend="${currentPage == 'reports'} ? 'active'">
-                <a th:href="@{/admin/reports}">
+                <a th:href="@{/admin/reports}" data-tooltip="财务报表">
                     <i class="fas fa-chart-bar"></i>
                     <span>财务报表</span>
                 </a>
@@ -121,14 +121,21 @@
             <li class="nav-section">其他功能</li>
 
             <li th:classappend="${currentPage == 'profile'} ? 'active'">
-                <a th:href="@{/admin/profile}">
+                <a th:href="@{/admin/profile}" data-tooltip="个人资料">
                     <i class="fas fa-user-circle"></i>
                     <span>个人资料</span>
                 </a>
             </li>
 
+            <li th:classappend="${currentPage == 'modal-demo'} ? 'active'">
+                <a th:href="@{/admin/modal-demo}" data-tooltip="弹窗演示">
+                    <i class="fas fa-window-restore"></i>
+                    <span>弹窗演示</span>
+                </a>
+            </li>
+
             <li th:classappend="${currentPage == 'test'} ? 'active'">
-                <a th:href="@{/admin/test}">
+                <a th:href="@{/admin/test}" data-tooltip="系统测试">
                     <i class="fas fa-flask"></i>
                     <span>系统测试</span>
                 </a>
@@ -138,73 +145,271 @@
 
     <!-- 侧边栏JavaScript -->
     <script th:fragment="sidebar-script">
+        // 全局侧边栏管理器，防止重复初始化
+        window.SidebarManager = window.SidebarManager || {
+            initialized: false,
+            toggleButtonCreated: false
+        };
+
         // 侧边栏切换功能
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const content = document.getElementById('content');
-            
+            const toggleBtn = document.querySelector('.sidebar-toggle-btn');
+
             if (sidebar && content) {
-                sidebar.classList.toggle('active');
-                content.classList.toggle('active');
+                const isCollapsed = sidebar.classList.contains('collapsed');
+
+                if (isCollapsed) {
+                    // 展开侧边栏
+                    sidebar.classList.remove('collapsed');
+                    content.classList.remove('sidebar-collapsed');
+                    if (toggleBtn) {
+                        toggleBtn.innerHTML = '<i class="fas fa-bars"></i>';
+                        toggleBtn.title = '收起导航栏';
+                    }
+                    // 保存状态到localStorage
+                    localStorage.setItem('sidebarCollapsed', 'false');
+                } else {
+                    // 收起侧边栏
+                    sidebar.classList.add('collapsed');
+                    content.classList.add('sidebar-collapsed');
+                    if (toggleBtn) {
+                        toggleBtn.innerHTML = '<i class="fas fa-indent"></i>';
+                        toggleBtn.title = '展开导航栏';
+                    }
+                    // 保存状态到localStorage
+                    localStorage.setItem('sidebarCollapsed', 'true');
+                }
+
+                // 触发窗口resize事件，让其他组件知道布局变化
+                window.dispatchEvent(new Event('resize'));
             }
         }
 
-        // 移动端自动收起侧边栏
+        // 初始化侧边栏状态
+        function initSidebarState() {
+            const sidebar = document.getElementById('sidebar');
+            const content = document.getElementById('content');
+            const toggleBtn = document.querySelector('.sidebar-toggle-btn');
+            const standaloneToggle = document.getElementById('sidebar-toggle-container');
+
+            // 从localStorage读取保存的状态
+            const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+
+            if (isCollapsed && sidebar && content) {
+                sidebar.classList.add('collapsed');
+                content.classList.add('sidebar-collapsed');
+                if (toggleBtn) {
+                    toggleBtn.innerHTML = '<i class="fas fa-bars"></i>';
+                    toggleBtn.title = '隐藏导航栏';
+                }
+                if (standaloneToggle) {
+                    standaloneToggle.classList.remove('hidden');
+                }
+            } else {
+                if (toggleBtn) {
+                    toggleBtn.innerHTML = '<i class="fas fa-bars"></i>';
+                    toggleBtn.title = '隐藏导航栏';
+                }
+                if (standaloneToggle) {
+                    standaloneToggle.classList.add('hidden');
+                }
+            }
+        }
+
+        // 移动端处理逻辑
         function handleResize() {
             const sidebar = document.getElementById('sidebar');
             const content = document.getElementById('content');
-            
+
             if (window.innerWidth <= 768) {
+                // 移动端：强制收起侧边栏
                 if (sidebar && content) {
-                    sidebar.classList.add('active');
-                    content.classList.add('active');
+                    sidebar.classList.add('mobile-hidden');
+                    content.classList.add('mobile-full');
                 }
             } else {
+                // 桌面端：恢复保存的状态
                 if (sidebar && content) {
-                    sidebar.classList.remove('active');
-                    content.classList.remove('active');
+                    sidebar.classList.remove('mobile-hidden');
+                    content.classList.remove('mobile-full');
+                    // 恢复桌面端的收起/展开状态
+                    initSidebarState();
                 }
             }
+        }
+
+        // 移动端侧边栏覆盖层
+        function createMobileOverlay() {
+            if (window.innerWidth <= 768) {
+                let overlay = document.getElementById('sidebar-overlay');
+                if (!overlay) {
+                    overlay = document.createElement('div');
+                    overlay.id = 'sidebar-overlay';
+                    overlay.className = 'sidebar-overlay';
+                    overlay.addEventListener('click', function() {
+                        const sidebar = document.getElementById('sidebar');
+                        if (sidebar) {
+                            sidebar.classList.add('mobile-hidden');
+                        }
+                        this.style.display = 'none';
+                    });
+                    document.body.appendChild(overlay);
+                }
+            }
+        }
+
+        // 移动端切换侧边栏
+        function toggleMobileSidebar() {
+            if (window.innerWidth <= 768) {
+                const sidebar = document.getElementById('sidebar');
+                const overlay = document.getElementById('sidebar-overlay');
+
+                if (sidebar) {
+                    const isHidden = sidebar.classList.contains('mobile-hidden');
+
+                    if (isHidden) {
+                        sidebar.classList.remove('mobile-hidden');
+                        if (overlay) overlay.style.display = 'block';
+                    } else {
+                        sidebar.classList.add('mobile-hidden');
+                        if (overlay) overlay.style.display = 'none';
+                    }
+                }
+            }
+        }
+
+        // 创建独立的切换按钮
+        function createToggleButton() {
+            // 使用全局管理器检查是否已创建
+            if (window.SidebarManager.toggleButtonCreated || document.getElementById('sidebar-toggle-container')) {
+                return;
+            }
+
+            const toggleContainer = document.createElement('div');
+            toggleContainer.id = 'sidebar-toggle-container';
+            toggleContainer.className = 'sidebar-toggle-container hidden'; // 默认隐藏
+
+            const toggleButton = document.createElement('button');
+            toggleButton.className = 'sidebar-toggle-standalone';
+            toggleButton.innerHTML = '<i class="fas fa-bars"></i>';
+            toggleButton.title = '显示导航栏';
+            toggleButton.onclick = function() {
+                toggleSidebar();
+            };
+
+            toggleContainer.appendChild(toggleButton);
+            document.body.appendChild(toggleContainer);
+
+            // 标记已创建
+            window.SidebarManager.toggleButtonCreated = true;
         }
 
         // 页面加载时执行
         document.addEventListener('DOMContentLoaded', function() {
+            // 防止重复初始化
+            if (window.SidebarManager.initialized) {
+                return;
+            }
+
+            // 延迟创建独立的切换按钮，避免重复创建
+            setTimeout(function() {
+                createToggleButton();
+            }, 100);
+
+            // 初始化侧边栏状态
+            initSidebarState();
+
+            // 处理响应式布局
             handleResize();
-            
+
+            // 创建移动端覆盖层
+            createMobileOverlay();
+
+            // 标记已初始化
+            window.SidebarManager.initialized = true;
+
             // 监听窗口大小变化
             window.addEventListener('resize', handleResize);
-            
+
             // 高亮当前页面菜单项
             const currentPath = window.location.pathname;
             const menuLinks = document.querySelectorAll('.sidebar ul li a');
-            
+
             menuLinks.forEach(link => {
                 if (link.getAttribute('href') === currentPath) {
                     link.parentElement.classList.add('active');
                 }
             });
-        });
 
-        // 移动端点击菜单项后自动收起侧边栏
-        document.addEventListener('DOMContentLoaded', function() {
-            const menuLinks = document.querySelectorAll('.sidebar ul li a');
-            
+            // 移动端点击菜单项后自动收起侧边栏
             menuLinks.forEach(link => {
                 link.addEventListener('click', function() {
                     if (window.innerWidth <= 768) {
                         setTimeout(() => {
                             const sidebar = document.getElementById('sidebar');
-                            const content = document.getElementById('content');
-                            
-                            if (sidebar && content) {
-                                sidebar.classList.add('active');
-                                content.classList.add('active');
+                            const overlay = document.getElementById('sidebar-overlay');
+
+                            if (sidebar) {
+                                sidebar.classList.add('mobile-hidden');
+                            }
+                            if (overlay) {
+                                overlay.style.display = 'none';
                             }
                         }, 100);
                     }
                 });
             });
+
+            // 重写toggleSidebar函数以支持新的切换逻辑
+            window.toggleSidebar = function() {
+                if (window.innerWidth <= 768) {
+                    toggleMobileSidebar();
+                } else {
+                    // 桌面端的新逻辑 - 完全隐藏/显示侧边栏
+                    const sidebar = document.getElementById('sidebar');
+                    const content = document.getElementById('content');
+                    const toggleBtn = document.querySelector('.sidebar-toggle-btn');
+                    const standaloneToggle = document.getElementById('sidebar-toggle-container');
+
+                    if (sidebar && content) {
+                        const isCollapsed = sidebar.classList.contains('collapsed');
+
+                        if (isCollapsed) {
+                            // 显示侧边栏
+                            sidebar.classList.remove('collapsed');
+                            content.classList.remove('sidebar-collapsed');
+                            if (toggleBtn) {
+                                toggleBtn.innerHTML = '<i class="fas fa-bars"></i>';
+                                toggleBtn.title = '隐藏导航栏';
+                            }
+                            if (standaloneToggle) {
+                                standaloneToggle.classList.add('hidden');
+                            }
+                            localStorage.setItem('sidebarCollapsed', 'false');
+                        } else {
+                            // 隐藏侧边栏
+                            sidebar.classList.add('collapsed');
+                            content.classList.add('sidebar-collapsed');
+                            if (toggleBtn) {
+                                toggleBtn.innerHTML = '<i class="fas fa-bars"></i>';
+                                toggleBtn.title = '隐藏导航栏';
+                            }
+                            if (standaloneToggle) {
+                                standaloneToggle.classList.remove('hidden');
+                            }
+                            localStorage.setItem('sidebarCollapsed', 'true');
+                        }
+
+                        window.dispatchEvent(new Event('resize'));
+                    }
+                }
+            };
         });
     </script>
+
+    <!-- 侧边栏样式 -->
+    <link th:fragment="sidebar-style" th:href="@{/css/sidebar.css}" rel="stylesheet">
 </body>
 </html>

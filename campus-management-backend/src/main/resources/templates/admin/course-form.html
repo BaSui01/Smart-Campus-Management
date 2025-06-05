@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle} + ' - 智慧校园管理系统'">添加课程 - 智慧校园管理系统</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- 引入组件样式 -->
+    <th:block th:replace="~{components/topbar :: topbar-style}"></th:block>
+    <!-- 侧边栏样式 -->
+    <link th:href="@{/css/sidebar.css}" rel="stylesheet">
+    <!-- 自定义样式 -->
+    <link href="/css/admin.css" rel="stylesheet">
+</head>
+<body>
+    <div id="wrapper">
+        <!-- 侧边栏 -->
+        <th:block th:replace="~{components/sidebar :: sidebar}"></th:block>
+
+        <!-- 内容包装器 -->
+        <div id="content-wrapper" class="d-flex flex-column">
+            <!-- 主要内容 -->
+            <div id="content">
+                <!-- 顶部导航栏 -->
+                <th:block th:replace="~{components/topbar :: topbar}"></th:block>
+
+                <!-- 页面内容开始 -->
+                <div class="container-fluid">
+                    <!-- 页面标题 -->
+                    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                        <h1 class="h3 mb-0 text-gray-800">
+                            <i class="fas fa-book-plus"></i> 添加课程
+                        </h1>
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb">
+                                <li class="breadcrumb-item"><a th:href="@{/admin/dashboard}">仪表盘</a></li>
+                                <li class="breadcrumb-item"><a th:href="@{/admin/courses}">课程管理</a></li>
+                                <li class="breadcrumb-item active">添加课程</li>
+                            </ol>
+                        </nav>
+                    </div>
+
+                    <!-- 课程表单 -->
+                    <div class="row">
+                        <div class="col-lg-8">
+                            <div class="card shadow">
+                                <div class="card-header py-3">
+                                    <h6 class="m-0 font-weight-bold text-primary">
+                                        <i class="fas fa-book-open"></i> 课程信息
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <form id="courseForm" method="post" th:action="@{/admin/courses}">
+                                        <div class="row">
+                                            <!-- 基本信息 -->
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="courseCode" class="form-label">课程代码 <span class="text-danger">*</span></label>
+                                                    <input type="text" class="form-control" id="courseCode" name="courseCode" 
+                                                           placeholder="如：CS101" required>
+                                                    <div class="form-text">课程代码必须唯一</div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="courseName" class="form-label">课程名称 <span class="text-danger">*</span></label>
+                                                    <input type="text" class="form-control" id="courseName" name="courseName" 
+                                                           placeholder="请输入课程名称" required>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="courseType" class="form-label">课程类型 <span class="text-danger">*</span></label>
+                                                    <select class="form-select" id="courseType" name="courseType" required>
+                                                        <option value="">请选择课程类型</option>
+                                                        <option th:each="type : ${courseTypes}" th:value="${type}" th:text="${type}"></option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="credits" class="form-label">学分 <span class="text-danger">*</span></label>
+                                                    <input type="number" class="form-control" id="credits" name="credits" 
+                                                           min="1" max="10" step="0.5" placeholder="如：3" required>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="totalHours" class="form-label">总学时</label>
+                                                    <input type="number" class="form-control" id="totalHours" name="totalHours" 
+                                                           min="16" max="200" placeholder="如：48">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="weeklyHours" class="form-label">周学时</label>
+                                                    <input type="number" class="form-control" id="weeklyHours" name="weeklyHours" 
+                                                           min="1" max="10" placeholder="如：3">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="semester" class="form-label">开课学期 <span class="text-danger">*</span></label>
+                                                    <select class="form-select" id="semester" name="semester" required>
+                                                        <option value="">请选择学期</option>
+                                                        <option th:each="semester : ${semesters}" th:value="${semester}" th:text="${semester}"></option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="teacherId" class="form-label">授课教师</label>
+                                                    <select class="form-select" id="teacherId" name="teacherId">
+                                                        <option value="">请选择教师</option>
+                                                        <option th:each="teacher : ${teachers}" th:value="${teacher.id}" 
+                                                                th:text="${teacher.name} + ' (' + ${teacher.title} + ')'"></option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="description" class="form-label">课程描述</label>
+                                            <textarea class="form-control" id="description" name="description" rows="4" 
+                                                      placeholder="请输入课程描述、教学目标、主要内容等"></textarea>
+                                        </div>
+
+                                        <!-- 课程设置 -->
+                                        <hr>
+                                        <h6 class="text-primary mb-3">
+                                            <i class="fas fa-cogs"></i> 课程设置
+                                        </h6>
+
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="maxStudents" class="form-label">最大选课人数</label>
+                                                    <input type="number" class="form-control" id="maxStudents" name="maxStudents" 
+                                                           min="1" max="200" placeholder="如：50">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="minStudents" class="form-label">最小开课人数</label>
+                                                    <input type="number" class="form-control" id="minStudents" name="minStudents" 
+                                                           min="1" max="50" placeholder="如：10">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="examType" class="form-label">考核方式</label>
+                                                    <select class="form-select" id="examType" name="examType">
+                                                        <option value="">请选择考核方式</option>
+                                                        <option value="考试">考试</option>
+                                                        <option value="考查">考查</option>
+                                                        <option value="实践">实践</option>
+                                                        <option value="论文">论文</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="status" class="form-label">课程状态</label>
+                                                    <select class="form-select" id="status" name="status">
+                                                        <option value="启用" selected>启用</option>
+                                                        <option value="停用">停用</option>
+                                                        <option value="筹备中">筹备中</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label">课程特性</label>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="isElective" name="isElective">
+                                                <label class="form-check-label" for="isElective">
+                                                    允许学生选课
+                                                </label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="hasPrerequisite" name="hasPrerequisite">
+                                                <label class="form-check-label" for="hasPrerequisite">
+                                                    有先修课程要求
+                                                </label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="isOnline" name="isOnline">
+                                                <label class="form-check-label" for="isOnline">
+                                                    支持在线学习
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="remarks" class="form-label">备注</label>
+                                            <textarea class="form-control" id="remarks" name="remarks" rows="2" 
+                                                      placeholder="请输入备注信息"></textarea>
+                                        </div>
+
+                                        <!-- 表单按钮 -->
+                                        <div class="d-flex justify-content-between">
+                                            <a th:href="@{/admin/courses}" class="btn btn-secondary">
+                                                <i class="fas fa-arrow-left"></i> 返回列表
+                                            </a>
+                                            <div>
+                                                <button type="reset" class="btn btn-outline-secondary me-2">
+                                                    <i class="fas fa-undo"></i> 重置
+                                                </button>
+                                                <button type="submit" class="btn btn-primary">
+                                                    <i class="fas fa-save"></i> 保存课程
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 右侧帮助信息 -->
+                        <div class="col-lg-4">
+                            <div class="card shadow">
+                                <div class="card-header py-3">
+                                    <h6 class="m-0 font-weight-bold text-info">
+                                        <i class="fas fa-info-circle"></i> 填写说明
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="alert alert-info">
+                                        <h6><i class="fas fa-lightbulb"></i> 温馨提示</h6>
+                                        <ul class="mb-0">
+                                            <li>标有 <span class="text-danger">*</span> 的字段为必填项</li>
+                                            <li>课程代码必须唯一，建议使用学科代码</li>
+                                            <li>学分通常为0.5的倍数</li>
+                                            <li>总学时 = 学分 × 16（一般情况）</li>
+                                            <li>可以先创建课程，后续再分配教师</li>
+                                        </ul>
+                                    </div>
+                                    
+                                    <div class="alert alert-success">
+                                        <h6><i class="fas fa-graduation-cap"></i> 课程代码规范</h6>
+                                        <ul class="mb-0">
+                                            <li><strong>CS</strong> - 计算机科学</li>
+                                            <li><strong>SE</strong> - 软件工程</li>
+                                            <li><strong>MATH</strong> - 数学</li>
+                                            <li><strong>ENG</strong> - 英语</li>
+                                            <li><strong>PHY</strong> - 物理</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- 页面内容结束 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 引入组件脚本 -->
+    <th:block th:replace="~{components/sidebar :: sidebar-script}"></th:block>
+    <th:block th:replace="~{components/topbar :: topbar-script}"></th:block>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // 学分和学时联动计算
+        document.getElementById('credits').addEventListener('input', function() {
+            const credits = parseFloat(this.value);
+            if (credits && !isNaN(credits)) {
+                const totalHours = credits * 16;
+                document.getElementById('totalHours').value = totalHours;
+            }
+        });
+
+        // 最小最大人数验证
+        document.getElementById('minStudents').addEventListener('input', function() {
+            const minStudents = parseInt(this.value);
+            const maxStudentsInput = document.getElementById('maxStudents');
+            const maxStudents = parseInt(maxStudentsInput.value);
+            
+            if (minStudents && maxStudents && minStudents > maxStudents) {
+                maxStudentsInput.value = minStudents;
+            }
+        });
+
+        // 表单验证
+        document.getElementById('courseForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // 基本验证
+            const courseCode = document.getElementById('courseCode').value.trim();
+            const courseName = document.getElementById('courseName').value.trim();
+            const courseType = document.getElementById('courseType').value;
+            const credits = document.getElementById('credits').value;
+            const semester = document.getElementById('semester').value;
+            
+            if (!courseCode || !courseName || !courseType || !credits || !semester) {
+                showAlert('请填写所有必填字段', 'danger');
+                return;
+            }
+            
+            // 课程代码格式验证
+            if (!/^[A-Z]{2,6}\d{3}$/.test(courseCode)) {
+                showAlert('课程代码格式不正确，应为字母+数字，如：CS101', 'danger');
+                return;
+            }
+            
+            // 学分验证
+            const creditsValue = parseFloat(credits);
+            if (creditsValue < 1 || creditsValue > 10) {
+                showAlert('学分应在1-10之间', 'danger');
+                return;
+            }
+            
+            // 人数验证
+            const minStudents = parseInt(document.getElementById('minStudents').value);
+            const maxStudents = parseInt(document.getElementById('maxStudents').value);
+            if (minStudents && maxStudents && minStudents > maxStudents) {
+                showAlert('最小开课人数不能大于最大选课人数', 'danger');
+                return;
+            }
+            
+            showAlert('课程信息保存成功！', 'success');
+            
+            // 模拟保存成功后跳转
+            setTimeout(() => {
+                window.location.href = '/admin/courses';
+            }, 1500);
+        });
+
+        // 页面加载完成后的初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 设置当前页面标识
+            document.body.setAttribute('data-current-page', 'courses');
+        });
+    </script>
+</body>
+</html>

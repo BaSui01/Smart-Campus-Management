@@ -1,6 +1,6 @@
 package com.campus.config;
 
-import com.campus.interceptor.AdminAuthInterceptor;
+import com.campus.interceptor.AdminJwtInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
@@ -14,14 +14,14 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  */
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
-    
+
     @Autowired
-    private AdminAuthInterceptor adminAuthInterceptor;
-    
+    private AdminJwtInterceptor adminJwtInterceptor;
+
     @Override
     public void addInterceptors(@org.springframework.lang.NonNull InterceptorRegistry registry) {
-        // 注册管理后台权限拦截器
-        registry.addInterceptor(adminAuthInterceptor)
+        // 注册管理后台JWT认证拦截器
+        registry.addInterceptor(adminJwtInterceptor)
                 .addPathPatterns("/admin/**")
                 .excludePathPatterns(
                     "/admin/login",
@@ -30,7 +30,9 @@ public class WebConfig implements WebMvcConfigurer {
                     "/admin/test",
                     "/admin/check-login",
                     "/admin/access-denied",
-                    "/admin/session-timeout"
+                    "/admin/session-timeout",
+                    "/admin/refresh-token",
+                    "/admin/token-status"
                 );
     }
     

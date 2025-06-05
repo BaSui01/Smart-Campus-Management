@@ -29,7 +29,7 @@ public class JwtUtil {
     @Value("${jwt.secret:campus-management-jwt-secret-key-2024}")
     private String jwtSecret;
 
-    @Value("${jwt.expiration:86400000}")
+    @Value("${jwt.expiration:7200000}")
     private Long jwtExpiration;
 
     @Value("${jwt.refresh-expiration:604800000}")
@@ -40,6 +40,16 @@ public class JwtUtil {
 
     @Value("${jwt.prefix:Bearer}")
     private String jwtPrefix;
+
+    // 管理后台专用配置
+    @Value("${jwt.admin.expiration:14400000}")
+    private Long adminExpiration;
+
+    @Value("${jwt.admin.auto-refresh:true}")
+    private Boolean adminAutoRefresh;
+
+    @Value("${jwt.admin.refresh-threshold:1800000}")
+    private Long adminRefreshThreshold;
 
     /**
      * 获取签名密钥
@@ -56,21 +66,7 @@ public class JwtUtil {
         return getClaimFromToken(token, Claims::getSubject);
     }
 
-    /**
-     * 从token中获取用户ID
-     */
-    public Long getUserIdFromToken(String token) {
-        Claims claims = getAllClaimsFromToken(token);
-        return Long.valueOf(claims.get("userId").toString());
-    }
 
-    /**
-     * 从token中获取用户角色
-     */
-    public String getRoleFromToken(String token) {
-        Claims claims = getAllClaimsFromToken(token);
-        return claims.get("role", String.class);
-    }
 
     /**
      * 从token中获取到期时间
@@ -117,6 +113,17 @@ public class JwtUtil {
     }
 
     /**
+     * 生成管理后台专用token
+     */
+    public String generateAdminToken(Long userId, String username, String role) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", userId);
+        claims.put("role", role);
+        claims.put("type", "admin");
+        return createAdminToken(claims, username);
+    }
+
+    /**
      * 生成refresh token
      */
     public String generateRefreshToken(String username) {
@@ -134,6 +141,19 @@ public class JwtUtil {
                 .setSubject(subject)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    /**
+     * 创建管理后台token
+     */
+    private String createAdminToken(Map<String, Object> claims, String subject) {
+        return Jwts.builder()
+                .setClaims(claims)
+                .setSubject(subject)
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + adminExpiration))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
@@ -205,10 +225,69 @@ public class JwtUtil {
             String username = claims.getSubject();
             Long userId = Long.valueOf(claims.get("userId").toString());
             String role = claims.get("role", String.class);
+            String type = claims.get("type", String.class);
 
-            return generateToken(userId, username, role);
+            // 根据token类型选择生成方法
+            if ("admin".equals(type)) {
+                return generateAdminToken(userId, username, role);
+            } else {
+                return generateToken(userId, username, role);
+            }
         } catch (Exception e) {
             throw new RuntimeException("无法刷新token", e);
+        }
+    }
+
+    /**
+     * 检查管理后台token是否需要刷新
+     */
+    public boolean shouldRefreshAdminToken(String token) {
+        if (!adminAutoRefresh) {
+            return false;
+        }
+
+        try {
+            Date expiration = getExpirationDateFromToken(token);
+            long timeUntilExpiration = expiration.getTime() - System.currentTimeMillis();
+            return timeUntilExpiration <= adminRefreshThreshold;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /**
+     * 检查是否为管理后台token
+     */
+    public boolean isAdminToken(String token) {
+        try {
+            Claims claims = getAllClaimsFromToken(token);
+            return "admin".equals(claims.get("type", String.class));
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /**
+     * 从token中获取用户ID
+     */
+    public Long getUserIdFromToken(String token) {
+        try {
+            Claims claims = getAllClaimsFromToken(token);
+            return Long.valueOf(claims.get("userId").toString());
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /**
+     * 从token中获取用户角色
+     */
+    public String getRoleFromToken(String token) {
+        try {
+            Claims claims = getAllClaimsFromToken(token);
+            return claims.get("role", String.class);
+        } catch (Exception e) {
+            return null;
         }
     }
 

@@ -21,10 +21,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.campus.common.ApiResponse;
+import com.campus.dto.DashboardStatsDTO;
 import com.campus.entity.Course;
 import com.campus.entity.SchoolClass;
 import com.campus.entity.Student;
 import com.campus.entity.User;
+import com.campus.service.DashboardService;
 import com.campus.service.UserService;
 
 /**
@@ -39,10 +41,12 @@ import com.campus.service.UserService;
 public class AdminController {
 
     private final UserService userService;
+    private final DashboardService dashboardService;
 
     @Autowired
-    public AdminController(UserService userService) {
+    public AdminController(UserService userService, DashboardService dashboardService) {
         this.userService = userService;
+        this.dashboardService = dashboardService;
     }
 
     /**
@@ -51,39 +55,10 @@ public class AdminController {
     @GetMapping({"/", "/dashboard"})
     public String dashboard(Model model) {
         try {
-            // 获取真实统计数据
-            Map<String, Object> stats = new HashMap<>();
+            // 获取仪表盘统计数据
+            DashboardStatsDTO dashboardStats = dashboardService.getDashboardStats();
 
-            // 用户统计
-            UserService.UserStatistics userStats = userService.getUserStatistics();
-            stats.put("totalUsers", userStats.getTotalUsers());
-            stats.put("activeUsers", userStats.getActiveUsers());
-
-            // 学生统计（使用模拟数据，待StudentService实现后替换）
-            long totalStudents = 450; // 模拟数据
-            long activeStudents = 420; // 模拟数据
-            stats.put("totalStudents", totalStudents);
-            stats.put("activeStudents", activeStudents);
-
-            // 课程统计（使用模拟数据，待CourseService实现后替换）
-            long totalCourses = 85; // 模拟数据
-            stats.put("totalCourses", totalCourses);
-
-            // 班级统计（使用模拟数据，待SchoolClassService实现后替换）
-            long totalClasses = 15; // 模拟数据
-            stats.put("totalClasses", totalClasses);
-
-            // 收费统计（使用模拟数据，待PaymentService实现后替换）
-            String monthlyRevenue = "¥235,680"; // 模拟数据
-            stats.put("monthlyRevenue", monthlyRevenue);
-
-            // 计算百分比增长（这里使用模拟数据，实际应该从历史数据计算）
-            stats.put("userGrowthPercent", 15.6);
-            stats.put("studentGrowthPercent", 8.3);
-            stats.put("courseGrowthPercent", 12.1);
-            stats.put("classGrowthPercent", 5.2);
-
-            model.addAttribute("stats", stats);
+            model.addAttribute("stats", dashboardStats);
             model.addAttribute("pageTitle", "仪表盘");
             model.addAttribute("currentPage", "dashboard");
 
@@ -487,7 +462,125 @@ public class AdminController {
         }
     }
 
+    /**
+     * 收费项目管理页面
+     */
+    @GetMapping("/fee-items")
+    public String feeItems(@RequestParam(defaultValue = "0") int page,
+                          @RequestParam(defaultValue = "20") int size,
+                          Model model) {
+        try {
+            // 获取收费项目统计（使用模拟数据）
+            Map<String, Object> stats = new HashMap<>();
+            stats.put("totalFeeItems", 12);
+            stats.put("activeFeeItems", 10);
+            stats.put("inactiveFeeItems", 2);
+            stats.put("totalAmount", "¥8,500");
+
+            // 模拟收费项目列表
+            List<Map<String, Object>> feeItems = new ArrayList<>();
+            feeItems.add(Map.of("id", 1, "name", "学费", "amount", 8000, "type", "必缴", "semester", "2024春季", "status", "启用"));
+            feeItems.add(Map.of("id", 2, "name", "住宿费", "amount", 1200, "type", "必缴", "semester", "2024春季", "status", "启用"));
+            feeItems.add(Map.of("id", 3, "name", "教材费", "amount", 300, "type", "必缴", "semester", "2024春季", "status", "启用"));
+            feeItems.add(Map.of("id", 4, "name", "实验费", "amount", 200, "type", "选缴", "semester", "2024春季", "status", "启用"));
+
+            model.addAttribute("feeItems", feeItems);
+            model.addAttribute("stats", stats);
+            model.addAttribute("pageTitle", "收费项目管理");
+            model.addAttribute("currentPage", "fee-items");
+            return "admin/fee-items";
+        } catch (Exception e) {
+            model.addAttribute("error", "加载收费项目失败：" + e.getMessage());
+            return "admin/fee-items";
+        }
+    }
+
+    /**
+     * 缴费记录管理页面
+     */
+    @GetMapping("/payment-records")
+    public String paymentRecords(@RequestParam(defaultValue = "0") int page,
+                                @RequestParam(defaultValue = "20") int size,
+                                Model model) {
+        try {
+            // 获取缴费记录统计（使用模拟数据）
+            Map<String, Object> stats = new HashMap<>();
+            stats.put("totalRecords", 3456);
+            stats.put("successfulPayments", 3398);
+            stats.put("todayRevenue", "¥125,000");
+            stats.put("refundRecords", 58);
+
+            // 模拟缴费记录列表
+            List<Map<String, Object>> paymentRecords = new ArrayList<>();
+            paymentRecords.add(Map.of("id", 1, "transactionId", "PAY20240120001", "studentName", "张三", "studentId", "2024001001",
+                                     "feeItem", "2024年春季学费", "amount", 5000, "paymentMethod", "支付宝", "paymentTime", "2024-01-20 14:30:25",
+                                     "operator", "财务老师", "status", "成功"));
+            paymentRecords.add(Map.of("id", 2, "transactionId", "PAY20240120002", "studentName", "李四", "studentId", "2024001002",
+                                     "feeItem", "教材费", "amount", 300, "paymentMethod", "微信", "paymentTime", "2024-01-20 15:15:10",
+                                     "operator", "财务老师", "status", "成功"));
+            paymentRecords.add(Map.of("id", 3, "transactionId", "PAY20240119001", "studentName", "王五", "studentId", "2023001001",
+                                     "feeItem", "住宿费", "amount", 1200, "paymentMethod", "银行卡", "paymentTime", "2024-01-19 10:20:45",
+                                     "operator", "财务老师", "status", "退款"));
+
+            model.addAttribute("paymentRecords", paymentRecords);
+            model.addAttribute("stats", stats);
+            model.addAttribute("pageTitle", "缴费记录管理");
+            model.addAttribute("currentPage", "payment-records");
+            return "admin/payment-records";
+        } catch (Exception e) {
+            model.addAttribute("error", "加载缴费记录失败：" + e.getMessage());
+            return "admin/payment-records";
+        }
+    }
+
     // AJAX API 接口
+
+    /**
+     * 获取仪表盘实时数据
+     */
+    @GetMapping("/api/dashboard/stats")
+    @ResponseBody
+    public ApiResponse<DashboardStatsDTO> getDashboardStats() {
+        try {
+            DashboardStatsDTO stats = dashboardService.getRealTimeStats();
+            return ApiResponse.success(stats);
+        } catch (Exception e) {
+            return ApiResponse.error("获取仪表盘数据失败：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 获取图表数据
+     */
+    @GetMapping("/api/dashboard/charts/{type}")
+    @ResponseBody
+    public ApiResponse<List<DashboardStatsDTO.ChartDataDTO>> getChartData(@PathVariable String type) {
+        try {
+            DashboardStatsDTO stats = dashboardService.getDashboardStats();
+            List<DashboardStatsDTO.ChartDataDTO> chartData = new ArrayList<>();
+
+            switch (type) {
+                case "student-trend":
+                    chartData = stats.getStudentTrendData();
+                    break;
+                case "course-distribution":
+                    chartData = stats.getCourseDistribution();
+                    break;
+                case "grade-distribution":
+                    chartData = stats.getGradeDistribution();
+                    break;
+                case "revenue-trend":
+                    chartData = stats.getRevenueTrendData();
+                    break;
+                default:
+                    return ApiResponse.error("不支持的图表类型：" + type);
+            }
+
+            return ApiResponse.success(chartData);
+        } catch (Exception e) {
+            return ApiResponse.error("获取图表数据失败：" + e.getMessage());
+        }
+    }
 
     /**
      * 获取用户详情
@@ -629,8 +722,163 @@ public class AdminController {
      */
     @GetMapping("/api/fees/export")
     public void exportFees() {
-   
+
     }
 
+
+
+    /**
+     * 侧边栏测试页面
+     */
+    @GetMapping("/sidebar-test")
+    public String sidebarTest(Model model) {
+        model.addAttribute("pageTitle", "侧边栏测试");
+        model.addAttribute("currentPage", "sidebar-test");
+        return "admin/sidebar-test";
+    }
+
+    // 快速操作页面
+
+    /**
+     * 添加学生页面
+     */
+    @GetMapping("/students/new")
+    public String newStudent(Model model) {
+        try {
+            // 获取班级列表供选择
+            List<Map<String, Object>> classes = new ArrayList<>();
+            classes.add(Map.of("id", 1, "name", "计算机科学2024-1班", "grade", "2024级", "major", "计算机科学与技术"));
+            classes.add(Map.of("id", 2, "name", "计算机科学2024-2班", "grade", "2024级", "major", "计算机科学与技术"));
+            classes.add(Map.of("id", 3, "name", "软件工程2024-1班", "grade", "2024级", "major", "软件工程"));
+            classes.add(Map.of("id", 4, "name", "信息安全2023-1班", "grade", "2023级", "major", "信息安全"));
+
+            // 获取专业列表
+            List<String> majors = List.of("计算机科学与技术", "软件工程", "信息安全", "数据科学与大数据技术", "人工智能");
+
+            model.addAttribute("classes", classes);
+            model.addAttribute("majors", majors);
+            model.addAttribute("pageTitle", "添加学生");
+            model.addAttribute("currentPage", "students");
+            return "admin/student-form";
+        } catch (Exception e) {
+            model.addAttribute("error", "加载添加学生页面失败：" + e.getMessage());
+            return "admin/students";
+        }
+    }
+
+    /**
+     * 添加课程页面
+     */
+    @GetMapping("/courses/new")
+    public String newCourse(Model model) {
+        try {
+            // 获取教师列表供选择
+            List<Map<String, Object>> teachers = new ArrayList<>();
+            teachers.add(Map.of("id", 1, "name", "张教授", "department", "计算机学院", "title", "教授"));
+            teachers.add(Map.of("id", 2, "name", "李教授", "department", "计算机学院", "title", "副教授"));
+            teachers.add(Map.of("id", 3, "name", "王老师", "department", "计算机学院", "title", "讲师"));
+            teachers.add(Map.of("id", 4, "name", "赵老师", "department", "计算机学院", "title", "助教"));
+
+            // 课程类型
+            List<String> courseTypes = List.of("必修课", "选修课", "实践课", "通识课");
+
+            // 学期列表
+            List<String> semesters = List.of("2024年春季", "2024年秋季", "2025年春季", "2025年秋季");
+
+            model.addAttribute("teachers", teachers);
+            model.addAttribute("courseTypes", courseTypes);
+            model.addAttribute("semesters", semesters);
+            model.addAttribute("pageTitle", "添加课程");
+            model.addAttribute("currentPage", "courses");
+            return "admin/course-form";
+        } catch (Exception e) {
+            model.addAttribute("error", "加载添加课程页面失败：" + e.getMessage());
+            return "admin/courses";
+        }
+    }
+
+    /**
+     * 添加班级页面
+     */
+    @GetMapping("/classes/new")
+    public String newClass(Model model) {
+        try {
+            // 获取专业列表
+            List<String> majors = List.of("计算机科学与技术", "软件工程", "信息安全", "数据科学与大数据技术", "人工智能");
+
+            // 年级列表
+            List<String> grades = List.of("2024级", "2023级", "2022级", "2021级");
+
+            // 班主任列表
+            List<Map<String, Object>> teachers = new ArrayList<>();
+            teachers.add(Map.of("id", 1, "name", "张老师", "department", "计算机学院"));
+            teachers.add(Map.of("id", 2, "name", "李老师", "department", "计算机学院"));
+            teachers.add(Map.of("id", 3, "name", "王老师", "department", "计算机学院"));
+            teachers.add(Map.of("id", 4, "name", "赵老师", "department", "计算机学院"));
+
+            model.addAttribute("majors", majors);
+            model.addAttribute("grades", grades);
+            model.addAttribute("teachers", teachers);
+            model.addAttribute("pageTitle", "添加班级");
+            model.addAttribute("currentPage", "classes");
+            return "admin/class-form";
+        } catch (Exception e) {
+            model.addAttribute("error", "加载添加班级页面失败：" + e.getMessage());
+            return "admin/classes";
+        }
+    }
+
+    /**
+     * 安排课程页面
+     */
+    @GetMapping("/schedules/new")
+    public String newSchedule(Model model) {
+        try {
+            // 获取课程列表
+            List<Map<String, Object>> courses = new ArrayList<>();
+            courses.add(Map.of("id", 1, "code", "CS101", "name", "计算机科学导论", "credits", 3));
+            courses.add(Map.of("id", 2, "code", "CS102", "name", "程序设计基础", "credits", 4));
+            courses.add(Map.of("id", 3, "code", "MATH101", "name", "高等数学", "credits", 4));
+            courses.add(Map.of("id", 4, "code", "ENG101", "name", "大学英语", "credits", 2));
+
+            // 获取班级列表
+            List<Map<String, Object>> classes = new ArrayList<>();
+            classes.add(Map.of("id", 1, "name", "计算机科学2024-1班"));
+            classes.add(Map.of("id", 2, "name", "计算机科学2024-2班"));
+            classes.add(Map.of("id", 3, "name", "软件工程2024-1班"));
+            classes.add(Map.of("id", 4, "name", "信息安全2023-1班"));
+
+            // 获取教师列表
+            List<Map<String, Object>> teachers = new ArrayList<>();
+            teachers.add(Map.of("id", 1, "name", "张教授"));
+            teachers.add(Map.of("id", 2, "name", "李教授"));
+            teachers.add(Map.of("id", 3, "name", "王老师"));
+            teachers.add(Map.of("id", 4, "name", "赵老师"));
+
+            // 教室列表
+            List<String> classrooms = List.of("A101", "A102", "A201", "A202", "B101", "B102", "B201", "B202");
+
+            // 时间段
+            List<String> timeSlots = List.of(
+                "周一 08:00-09:40", "周一 10:00-11:40", "周一 14:00-15:40", "周一 16:00-17:40",
+                "周二 08:00-09:40", "周二 10:00-11:40", "周二 14:00-15:40", "周二 16:00-17:40",
+                "周三 08:00-09:40", "周三 10:00-11:40", "周三 14:00-15:40", "周三 16:00-17:40",
+                "周四 08:00-09:40", "周四 10:00-11:40", "周四 14:00-15:40", "周四 16:00-17:40",
+                "周五 08:00-09:40", "周五 10:00-11:40", "周五 14:00-15:40", "周五 16:00-17:40"
+            );
+
+            model.addAttribute("courses", courses);
+            model.addAttribute("classes", classes);
+            model.addAttribute("teachers", teachers);
+            model.addAttribute("classrooms", classrooms);
+            model.addAttribute("timeSlots", timeSlots);
+            model.addAttribute("pageTitle", "安排课程");
+            model.addAttribute("currentPage", "schedules");
+            return "admin/schedule-form";
+        } catch (Exception e) {
+            model.addAttribute("error", "加载安排课程页面失败：" + e.getMessage());
+            return "admin/schedules";
+        }
+    }
 
 }

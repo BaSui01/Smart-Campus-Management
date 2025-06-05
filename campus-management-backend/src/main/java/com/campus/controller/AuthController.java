@@ -23,6 +23,9 @@ import com.campus.utils.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * 认证控制器
  * 处理用户登录、登出、验证码等认证相关功能
@@ -135,8 +138,8 @@ public class AuthController {
             session.setAttribute("currentUser", authenticatedUser);
             session.setAttribute("loginTime", System.currentTimeMillis());
 
-            // 生成JWT Token
-            String token = jwtUtil.generateToken(authenticatedUser.getId(), username, "ADMIN");
+            // 生成管理后台专用JWT Token
+            String token = jwtUtil.generateAdminToken(authenticatedUser.getId(), username, "ADMIN");
             session.setAttribute("accessToken", token);
 
             // 记录登录日志
@@ -252,12 +255,116 @@ public class AuthController {
     @GetMapping("/admin/current-user")
     @ResponseBody
     public User getCurrentUser(HttpServletRequest request) {
+        // 优先从请求属性获取（JWT认证设置的）
+        User user = (User) request.getAttribute("currentUser");
+        if (user != null) {
+            return user;
+        }
+
+        // 兼容session方式
         HttpSession session = request.getSession(false);
         if (session == null) {
             return null;
         }
 
         return (User) session.getAttribute("currentUser");
+    }
+
+    /**
+     * 刷新JWT Token
+     */
+    @PostMapping("/admin/refresh-token")
+    @ResponseBody
+    public Map<String, Object> refreshToken(HttpServletRequest request) {
+        Map<String, Object> result = new HashMap<>();
+
+        try {
+            HttpSession session = request.getSession(false);
+            String token = null;
+
+            // 从session或请求头获取token
+            if (session != null) {
+                token = (String) session.getAttribute("accessToken");
+            }
+
+            if (token == null) {
+                String authHeader = request.getHeader("Authorization");
+                token = jwtUtil.extractTokenFromHeader(authHeader);
+            }
+
+            if (token == null) {
+                result.put("success", false);
+                result.put("message", "未找到有效的Token");
+                return result;
+            }
+
+            // 验证并刷新token
+            if (jwtUtil.validateToken(token) && jwtUtil.isAdminToken(token)) {
+                String newToken = jwtUtil.refreshToken(token);
+
+                // 更新session中的token
+                if (session != null) {
+                    session.setAttribute("accessToken", newToken);
+                }
+
+                result.put("success", true);
+                result.put("token", newToken);
+                result.put("expiresIn", jwtUtil.getTokenRemainingTime(newToken));
+
+                logger.info("Token刷新成功: {}", jwtUtil.getUsernameFromToken(newToken));
+            } else {
+                result.put("success", false);
+                result.put("message", "Token无效或已过期");
+            }
+
+        } catch (Exception e) {
+            logger.error("Token刷新失败: {}", e.getMessage());
+            result.put("success", false);
+            result.put("message", "Token刷新失败: " + e.getMessage());
+        }
+
+        return result;
+    }
+
+    /**
+     * 获取Token状态信息
+     */
+    @GetMapping("/admin/token-status")
+    @ResponseBody
+    public Map<String, Object> getTokenStatus(HttpServletRequest request) {
+        Map<String, Object> result = new HashMap<>();
+
+        try {
+            HttpSession session = request.getSession(false);
+            String token = null;
+
+            if (session != null) {
+                token = (String) session.getAttribute("accessToken");
+            }
+
+            if (token == null) {
+                String authHeader = request.getHeader("Authorization");
+                token = jwtUtil.extractTokenFromHeader(authHeader);
+            }
+
+            if (token != null && jwtUtil.validateToken(token)) {
+                result.put("valid", true);
+                result.put("username", jwtUtil.getUsernameFromToken(token));
+                result.put("role", jwtUtil.getRoleFromToken(token));
+                result.put("expiresIn", jwtUtil.getTokenRemainingTime(token));
+                result.put("nearExpiry", jwtUtil.isTokenNearExpiry(token));
+                result.put("isAdminToken", jwtUtil.isAdminToken(token));
+            } else {
+                result.put("valid", false);
+                result.put("message", "Token无效或已过期");
+            }
+
+        } catch (Exception e) {
+            result.put("valid", false);
+            result.put("message", "Token验证失败: " + e.getMessage());
+        }
+
+        return result;
     }
 
     /**

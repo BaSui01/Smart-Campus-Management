@@ -1,37 +1,14 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>仪表盘 - 智慧校园管理系统</title>
-
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <!-- 自定义CSS -->
-    <link th:href="@{/css/admin.css}" rel="stylesheet">
-
-    <!-- 引入组件样式 -->
-    <th:block th:replace="~{components/topbar :: topbar-style}"></th:block>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: html}"
+      lang="zh-CN">
+<head th:replace="~{layout/base :: head}">
+    <th:block th:fragment="head-extra">
+        <title>仪表盘 - 智慧校园管理系统</title>
+    </th:block>
 </head>
 <body>
-    <!-- 布局容器 -->
-    <div class="wrapper">
-        <!-- 左侧导航栏 -->
-        <th:block th:replace="~{components/sidebar :: sidebar}"></th:block>
-
-        <!-- 主内容区域 -->
-        <div class="content" id="content">
-            <!-- 顶部导航栏 -->
-            <th:block th:replace="~{components/topbar :: topbar}"></th:block>
-
-            <!-- 页面内容包装器 -->
-            <div class="content-wrapper">
-                <!-- 页面标题 -->
-                <h1 class="h3 mb-4 text-gray-800">仪表盘</h1>
-
-                <!-- 页面内容开始 -->
+    <div th:fragment="content">
         <!-- 统计卡片 -->
         <div class="row mb-4">
             <div class="col-xl-3 col-md-6 mb-4">
@@ -179,40 +156,40 @@
                     <div class="card-body">
                         <div class="row">
                             <div class="col-6 mb-3">
-                                <a href="#" th:href="@{/admin/students/new}"
-                                   class="btn btn-primary btn-icon-split w-100">
+                                <button type="button" onclick="openStudentModal()"
+                                        class="btn btn-primary btn-icon-split w-100">
                                     <span class="icon text-white-50">
                                         <i class="fas fa-user-plus"></i>
                                     </span>
                                     <span class="text">添加学生</span>
-                                </a>
+                                </button>
                             </div>
                             <div class="col-6 mb-3">
-                                <a href="#" th:href="@{/admin/courses/new}"
-                                   class="btn btn-success btn-icon-split w-100">
+                                <button type="button" onclick="openCourseModal()"
+                                        class="btn btn-success btn-icon-split w-100">
                                     <span class="icon text-white-50">
                                         <i class="fas fa-book-plus"></i>
                                     </span>
                                     <span class="text">添加课程</span>
-                                </a>
+                                </button>
                             </div>
                             <div class="col-6 mb-3">
-                                <a href="#" th:href="@{/admin/classes/new}"
-                                   class="btn btn-info btn-icon-split w-100">
+                                <button type="button" onclick="openClassModal()"
+                                        class="btn btn-info btn-icon-split w-100">
                                     <span class="icon text-white-50">
                                         <i class="fas fa-users"></i>
                                     </span>
                                     <span class="text">添加班级</span>
-                                </a>
+                                </button>
                             </div>
                             <div class="col-6 mb-3">
-                                <a href="#" th:href="@{/admin/schedules/new}"
-                                   class="btn btn-warning btn-icon-split w-100">
+                                <button type="button" onclick="openScheduleModal()"
+                                        class="btn btn-warning btn-icon-split w-100">
                                     <span class="icon text-white-50">
                                         <i class="fas fa-calendar-plus"></i>
                                     </span>
                                     <span class="text">安排课程</span>
-                                </a>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -258,57 +235,19 @@
                     </div>
                 </div>
             </div>
-                </div>
-                <!-- 页面内容结束 -->
-            </div>
         </div>
     </div>
 
-    <!-- 退出登录确认模态框 -->
-    <th:block th:replace="~{components/topbar :: logout-modal}"></th:block>
+    <!-- 引入弹窗组件 -->
+    <div th:replace="~{admin/modals/student-modal :: }"></div>
+    <div th:replace="~{admin/modals/course-modal :: }"></div>
+    <div th:replace="~{admin/modals/class-modal :: }"></div>
+    <div th:replace="~{admin/modals/schedule-modal :: }"></div>
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-
-    <!-- 引入侧边栏脚本 -->
-    <th:block th:replace="~{components/sidebar :: sidebar-script}"></th:block>
-
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        // 全局AJAX错误处理
-        $(document).ajaxError(function(event, xhr, settings, thrownError) {
-            if (xhr.status === 401) {
-                window.location.href = '/admin/login';
-            } else if (xhr.status === 403) {
-                window.location.href = '/admin/access-denied';
-            }
-        });
-
-        // 全局提示函数
-        window.showAlert = function(message, type = 'info') {
-            const alertHtml = `
-                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-                    ${message}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            `;
-
-            $('.alert').remove();
-            $('.content-wrapper').prepend(alertHtml);
-
-            setTimeout(() => {
-                $('.alert').fadeOut();
-            }, 3000);
-        };
-
-        // 页面加载完成后的初始化
-        document.addEventListener('DOMContentLoaded', function() {
-            // 设置当前页面标识
-            document.body.setAttribute('data-current-page', 'dashboard');
-
+    <th:block th:fragment="scripts">
+        <!-- Chart.js -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
             // 学生统计图表
             const studentCtx = document.getElementById('studentChart').getContext('2d');
             const studentChart = new Chart(studentCtx, {
@@ -364,7 +303,7 @@
                     }
                 }
             });
-        });
-    </script>
+        </script>
+    </th:block>
 </body>
 </html>

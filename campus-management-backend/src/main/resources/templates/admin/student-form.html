@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle} + ' - 智慧校园管理系统'">添加学生 - 智慧校园管理系统</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- 引入组件样式 -->
+    <th:block th:replace="~{components/topbar :: topbar-style}"></th:block>
+    <!-- 侧边栏样式 -->
+    <link th:href="@{/css/sidebar.css}" rel="stylesheet">
+    <!-- 自定义样式 -->
+    <link href="/css/admin.css" rel="stylesheet">
+    <link href="/css/forms.css" rel="stylesheet">
+</head>
+<body>
+    <div id="wrapper">
+        <!-- 侧边栏 -->
+        <th:block th:replace="~{components/sidebar :: sidebar}"></th:block>
+
+        <!-- 内容包装器 -->
+        <div id="content-wrapper" class="d-flex flex-column">
+            <!-- 主要内容 -->
+            <div id="content">
+                <!-- 顶部导航栏 -->
+                <th:block th:replace="~{components/topbar :: topbar}"></th:block>
+
+                <!-- 页面内容开始 -->
+                <div class="container-fluid">
+                    <!-- 页面标题 -->
+                    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                        <h1 class="h3 mb-0 text-gray-800">
+                            <i class="fas fa-user-plus"></i> 添加学生
+                        </h1>
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb">
+                                <li class="breadcrumb-item"><a th:href="@{/admin/dashboard}">仪表盘</a></li>
+                                <li class="breadcrumb-item"><a th:href="@{/admin/students}">学生管理</a></li>
+                                <li class="breadcrumb-item active">添加学生</li>
+                            </ol>
+                        </nav>
+                    </div>
+
+                    <!-- 学生表单 -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card shadow">
+                                <div class="card-header py-3">
+                                    <h6 class="m-0 font-weight-bold text-primary">
+                                        <i class="fas fa-user-edit"></i> 学生信息
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <!-- 填写说明 -->
+                                    <div class="alert alert-info mb-4" role="alert">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <h6 class="alert-heading">
+                                                    <i class="fas fa-lightbulb"></i> 填写提示
+                                                </h6>
+                                                <ul class="mb-0 small">
+                                                    <li>标有 <span class="text-danger">*</span> 的字段为必填项</li>
+                                                    <li>学号必须唯一，建议按照规范格式填写</li>
+                                                    <li>选择专业后，班级列表会自动筛选</li>
+                                                </ul>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <h6 class="alert-heading">
+                                                    <i class="fas fa-exclamation-triangle"></i> 注意事项
+                                                </h6>
+                                                <ul class="mb-0 small">
+                                                    <li>学号一旦保存不可修改</li>
+                                                    <li>请确认学生信息准确无误</li>
+                                                    <li>保存后将自动生成学生账号</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <form id="studentForm" method="post" th:action="@{/admin/students}" data-auto-save="student-form">
+                                        <!-- 基本信息 -->
+                                        <h6 class="text-primary mb-3">
+                                            <i class="fas fa-user"></i> 基本信息
+                                        </h6>
+                                        <div class="row">
+                                            <!-- 基本信息 -->
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="studentId" class="form-label">学号 <span class="text-danger">*</span></label>
+                                                    <input type="text" class="form-control" id="studentId" name="studentId"
+                                                           placeholder="请输入学号" data-validate="studentId" required>
+                                                    <div class="form-text">学号格式：年份+专业代码+班级+序号，如：2024001001</div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="name" class="form-label">姓名 <span class="text-danger">*</span></label>
+                                                    <input type="text" class="form-control" id="name" name="name" 
+                                                           placeholder="请输入学生姓名" required>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="gender" class="form-label">性别 <span class="text-danger">*</span></label>
+                                                    <select class="form-select" id="gender" name="gender" required>
+                                                        <option value="">请选择性别</option>
+                                                        <option value="男">男</option>
+                                                        <option value="女">女</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="birthDate" class="form-label">出生日期</label>
+                                                    <input type="date" class="form-control" id="birthDate" name="birthDate">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="idCard" class="form-label">身份证号</label>
+                                                    <input type="text" class="form-control" id="idCard" name="idCard"
+                                                           placeholder="请输入身份证号" data-validate="idCard" maxlength="18">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="phone" class="form-label">联系电话</label>
+                                                    <input type="tel" class="form-control" id="phone" name="phone"
+                                                           placeholder="请输入联系电话" data-validate="phone">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="email" class="form-label">邮箱地址</label>
+                                            <input type="email" class="form-control" id="email" name="email"
+                                                   placeholder="请输入邮箱地址" data-validate="email">
+                                        </div>
+
+                                        <!-- 学籍信息 -->
+                                        <hr>
+                                        <h6 class="text-primary mb-3">
+                                            <i class="fas fa-graduation-cap"></i> 学籍信息
+                                        </h6>
+
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="major" class="form-label">专业 <span class="text-danger">*</span></label>
+                                                    <select class="form-select" id="major" name="major" required>
+                                                        <option value="">请选择专业</option>
+                                                        <option th:each="major : ${majors}" th:value="${major}" th:text="${major}"></option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="classId" class="form-label">班级 <span class="text-danger">*</span></label>
+                                                    <select class="form-select" id="classId" name="classId" required>
+                                                        <option value="">请选择班级</option>
+                                                        <option th:each="clazz : ${classes}" th:value="${clazz.id}" 
+                                                                th:text="${clazz.name}" th:data-major="${clazz.major}"></option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="enrollmentYear" class="form-label">入学年份</label>
+                                                    <input type="number" class="form-control" id="enrollmentYear" name="enrollmentYear" 
+                                                           th:value="${#dates.year(#dates.createNow())}" min="2020" max="2030">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="status" class="form-label">学籍状态</label>
+                                                    <select class="form-select" id="status" name="status">
+                                                        <option value="在读" selected>在读</option>
+                                                        <option value="休学">休学</option>
+                                                        <option value="退学">退学</option>
+                                                        <option value="毕业">毕业</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="address" class="form-label">家庭住址</label>
+                                            <textarea class="form-control" id="address" name="address" rows="2" 
+                                                      placeholder="请输入家庭住址"></textarea>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="remarks" class="form-label">备注</label>
+                                            <textarea class="form-control" id="remarks" name="remarks" rows="3" 
+                                                      placeholder="请输入备注信息"></textarea>
+                                        </div>
+
+                                        <!-- 表单按钮 -->
+                                        <div class="d-flex justify-content-between">
+                                            <a th:href="@{/admin/students}" class="btn btn-secondary">
+                                                <i class="fas fa-arrow-left"></i> 返回列表
+                                            </a>
+                                            <div>
+                                                <button type="reset" class="btn btn-outline-secondary me-2">
+                                                    <i class="fas fa-undo"></i> 重置
+                                                </button>
+                                                <button type="submit" class="btn btn-primary">
+                                                    <i class="fas fa-save"></i> 保存学生
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- 页面内容结束 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 引入组件脚本 -->
+    <th:block th:replace="~{components/sidebar :: sidebar-script}"></th:block>
+    <th:block th:replace="~{components/topbar :: topbar-script}"></th:block>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- 表单工具脚本 -->
+    <script src="/js/forms.js"></script>
+
+    <script>
+        // 专业和班级联动
+        document.getElementById('major').addEventListener('change', function() {
+            const selectedMajor = this.value;
+            const classSelect = document.getElementById('classId');
+            const options = classSelect.querySelectorAll('option');
+
+            // 重置班级选择
+            classSelect.value = '';
+
+            // 显示/隐藏班级选项
+            options.forEach(option => {
+                if (option.value === '') {
+                    option.style.display = 'block';
+                } else {
+                    const optionMajor = option.getAttribute('data-major');
+                    option.style.display = (selectedMajor === '' || optionMajor === selectedMajor) ? 'block' : 'none';
+                }
+            });
+        });
+
+        // 表单提交处理
+        document.getElementById('studentForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // 使用表单工具进行验证
+            if (!FormUtils.validateForm(this)) {
+                return;
+            }
+
+            // 设置加载状态
+            FormUtils.setFormLoading(this, true);
+
+            // 模拟保存
+            setTimeout(() => {
+                FormUtils.setFormLoading(this, false);
+                FormUtils.showAlert('学生信息保存成功！', 'success');
+
+                // 清除自动保存的数据
+                FormUtils.clearSavedForm('student-form');
+
+                // 跳转到列表页
+                setTimeout(() => {
+                    window.location.href = '/admin/students';
+                }, 1500);
+            }, 2000);
+        });
+
+        // 页面初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            document.body.setAttribute('data-current-page', 'students');
+
+            // 添加表单动画
+            document.querySelector('.card').classList.add('form-fade-in');
+        });
+    </script>
+</body>
+</html>

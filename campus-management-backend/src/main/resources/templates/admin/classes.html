@@ -9,10 +9,14 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <!-- 自定义样式 -->
-    <link href="/css/admin.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- 引入组件样式 -->
     <th:block th:replace="~{components/topbar :: topbar-style}"></th:block>
+    <!-- 侧边栏样式 -->
+    <link th:href="@{/css/sidebar.css}" rel="stylesheet">
+    <!-- 自定义样式 -->
+    <link href="/css/admin.css" rel="stylesheet">
 </head>
 <body>
     <div class="wrapper">
@@ -25,6 +29,7 @@
             <th:block th:replace="~{components/topbar :: topbar}"></th:block>
             <!-- 页面内容 -->
             <div class="content-wrapper">
+                 
                 <div class="d-sm-flex align-items-center justify-content-between mb-4">
                     <h1 class="h3 mb-0 text-gray-800">班级管理</h1>
                     <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addClassModal">
@@ -93,6 +98,127 @@
                                     <div class="col-auto">
                                         <i class="fas fa-users fa-2x text-gray-300"></i>
                                     </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 图表区域 -->
+                <div class="row mb-4">
+                    <!-- 班级分布饼图 -->
+                    <div class="col-xl-4 col-lg-6">
+                        <div class="card shadow mb-4">
+                            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                <h6 class="m-0 font-weight-bold text-primary">班级年级分布</h6>
+                                <div class="dropdown no-arrow">
+                                    <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown">
+                                        <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                                    </a>
+                                    <div class="dropdown-menu dropdown-menu-right shadow">
+                                        <div class="dropdown-header">操作:</div>
+                                        <a class="dropdown-item" href="#" onclick="exportChart('gradeChart')">导出图表</a>
+                                        <a class="dropdown-item" href="#" onclick="refreshChart('gradeChart')">刷新数据</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-pie pt-4 pb-2">
+                                    <canvas id="gradeChart"></canvas>
+                                </div>
+                                <div class="mt-4 text-center small">
+                                    <span class="mr-2">
+                                        <i class="fas fa-circle text-primary"></i> 2024级
+                                    </span>
+                                    <span class="mr-2">
+                                        <i class="fas fa-circle text-success"></i> 2023级
+                                    </span>
+                                    <span class="mr-2">
+                                        <i class="fas fa-circle text-info"></i> 2022级
+                                    </span>
+                                    <span class="mr-2">
+                                        <i class="fas fa-circle text-warning"></i> 2021级
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 学生人数柱状图 -->
+                    <div class="col-xl-8 col-lg-6">
+                        <div class="card shadow mb-4">
+                            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                <h6 class="m-0 font-weight-bold text-primary">各班级学生人数统计</h6>
+                                <div class="dropdown no-arrow">
+                                    <a class="dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                        <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                                    </a>
+                                    <div class="dropdown-menu dropdown-menu-right shadow">
+                                        <div class="dropdown-header">操作:</div>
+                                        <a class="dropdown-item" href="#" onclick="exportChart('studentChart')">导出图表</a>
+                                        <a class="dropdown-item" href="#" onclick="refreshChart('studentChart')">刷新数据</a>
+                                        <a class="dropdown-item" href="#" onclick="toggleChartType('studentChart')">切换图表类型</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-bar">
+                                    <canvas id="studentChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 专业分布和趋势图 -->
+                <div class="row mb-4">
+                    <!-- 专业分布环形图 -->
+                    <div class="col-xl-6 col-lg-6">
+                        <div class="card shadow mb-4">
+                            <div class="card-header py-3">
+                                <h6 class="m-0 font-weight-bold text-primary">专业分布统计</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-doughnut pt-4 pb-2">
+                                    <canvas id="majorChart"></canvas>
+                                </div>
+                                <div class="mt-4 text-center small">
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <span class="mr-2">
+                                                <i class="fas fa-circle text-primary"></i> 计算机科学
+                                            </span>
+                                        </div>
+                                        <div class="col-6">
+                                            <span class="mr-2">
+                                                <i class="fas fa-circle text-success"></i> 软件工程
+                                            </span>
+                                        </div>
+                                        <div class="col-6">
+                                            <span class="mr-2">
+                                                <i class="fas fa-circle text-info"></i> 数据科学
+                                            </span>
+                                        </div>
+                                        <div class="col-6">
+                                            <span class="mr-2">
+                                                <i class="fas fa-circle text-warning"></i> 人工智能
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 班级状态趋势图 -->
+                    <div class="col-xl-6 col-lg-6">
+                        <div class="card shadow mb-4">
+                            <div class="card-header py-3">
+                                <h6 class="m-0 font-weight-bold text-primary">班级状态趋势</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-line">
+                                    <canvas id="trendChart"></canvas>
                                 </div>
                             </div>
                         </div>
@@ -201,25 +327,292 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- 自定义脚本 -->
     <script src="/js/admin.js"></script>
+    <!-- 引入侧边栏脚本 -->
+    <th:block th:replace="~{components/sidebar :: sidebar-script}"></th:block>
     <script>
+        // 图表实例存储
+        let charts = {};
+
+        // 页面加载完成后初始化图表
+        document.addEventListener('DOMContentLoaded', function() {
+            initCharts();
+        });
+
+        // 初始化所有图表
+        function initCharts() {
+            initGradeChart();
+            initStudentChart();
+            initMajorChart();
+            initTrendChart();
+        }
+
+        // 年级分布饼图
+        function initGradeChart() {
+            const ctx = document.getElementById('gradeChart').getContext('2d');
+            charts.gradeChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['2024级', '2023级', '2022级', '2021级'],
+                    datasets: [{
+                        data: [15, 18, 12, 8],
+                        backgroundColor: [
+                            '#4e73df',
+                            '#1cc88a',
+                            '#36b9cc',
+                            '#f6c23e'
+                        ],
+                        hoverBackgroundColor: [
+                            '#2e59d9',
+                            '#17a673',
+                            '#2c9faf',
+                            '#dda20a'
+                        ],
+                        hoverBorderColor: "rgba(234, 236, 244, 1)",
+                    }],
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            backgroundColor: "rgb(255,255,255)",
+                            bodyColor: "#858796",
+                            borderColor: '#dddfeb',
+                            borderWidth: 1,
+                            displayColors: false,
+                            caretPadding: 10,
+                        },
+                        legend: {
+                            display: false
+                        }
+                    },
+                    cutout: 0,
+                },
+            });
+        }
+
+        // 学生人数柱状图
+        function initStudentChart() {
+            const ctx = document.getElementById('studentChart').getContext('2d');
+            charts.studentChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['计科2024-1', '计科2024-2', '软工2024-1', '软工2024-2', '数科2024-1', '人工智能2024-1'],
+                    datasets: [{
+                        label: '学生人数',
+                        data: [45, 42, 38, 40, 35, 33],
+                        backgroundColor: [
+                            '#4e73df',
+                            '#1cc88a',
+                            '#36b9cc',
+                            '#f6c23e',
+                            '#e74a3b',
+                            '#6f42c1'
+                        ],
+                        borderColor: [
+                            '#4e73df',
+                            '#1cc88a',
+                            '#36b9cc',
+                            '#f6c23e',
+                            '#e74a3b',
+                            '#6f42c1'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 10
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: "rgb(255,255,255)",
+                            bodyColor: "#858796",
+                            borderColor: '#dddfeb',
+                            borderWidth: 1,
+                            displayColors: false,
+                            caretPadding: 10,
+                        }
+                    }
+                }
+            });
+        }
+
+        // 专业分布环形图
+        function initMajorChart() {
+            const ctx = document.getElementById('majorChart').getContext('2d');
+            charts.majorChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['计算机科学与技术', '软件工程', '数据科学与大数据', '人工智能'],
+                    datasets: [{
+                        data: [30, 25, 20, 15],
+                        backgroundColor: [
+                            '#4e73df',
+                            '#1cc88a',
+                            '#36b9cc',
+                            '#f6c23e'
+                        ],
+                        hoverBackgroundColor: [
+                            '#2e59d9',
+                            '#17a673',
+                            '#2c9faf',
+                            '#dda20a'
+                        ],
+                        hoverBorderColor: "rgba(234, 236, 244, 1)",
+                    }],
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            backgroundColor: "rgb(255,255,255)",
+                            bodyColor: "#858796",
+                            borderColor: '#dddfeb',
+                            borderWidth: 1,
+                            displayColors: false,
+                            caretPadding: 10,
+                        },
+                        legend: {
+                            display: false
+                        }
+                    },
+                    cutout: '60%',
+                },
+            });
+        }
+
+        // 班级状态趋势图
+        function initTrendChart() {
+            const ctx = document.getElementById('trendChart').getContext('2d');
+            charts.trendChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['1月', '2月', '3月', '4月', '5月', '6月'],
+                    datasets: [{
+                        label: '新增班级',
+                        data: [2, 3, 1, 4, 2, 3],
+                        borderColor: '#4e73df',
+                        backgroundColor: 'rgba(78, 115, 223, 0.1)',
+                        tension: 0.3,
+                        fill: true
+                    }, {
+                        label: '毕业班级',
+                        data: [0, 0, 0, 0, 5, 8],
+                        borderColor: '#1cc88a',
+                        backgroundColor: 'rgba(28, 200, 138, 0.1)',
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            backgroundColor: "rgb(255,255,255)",
+                            bodyColor: "#858796",
+                            borderColor: '#dddfeb',
+                            borderWidth: 1,
+                            caretPadding: 10,
+                        }
+                    }
+                }
+            });
+        }
+
+        // 导出图表
+        function exportChart(chartId) {
+            const chart = charts[chartId];
+            if (chart) {
+                const url = chart.toBase64Image();
+                const link = document.createElement('a');
+                link.download = chartId + '_chart.png';
+                link.href = url;
+                link.click();
+            }
+        }
+
+        // 刷新图表数据
+        function refreshChart(chartId) {
+            const chart = charts[chartId];
+            if (chart) {
+                // 模拟数据刷新
+                chart.data.datasets.forEach((dataset) => {
+                    dataset.data = dataset.data.map(() => Math.floor(Math.random() * 50) + 10);
+                });
+                chart.update();
+
+                // 显示刷新成功提示
+                showToast('图表数据已刷新', 'success');
+            }
+        }
+
+        // 切换图表类型
+        function toggleChartType(chartId) {
+            const chart = charts[chartId];
+            if (chart && chartId === 'studentChart') {
+                chart.config.type = chart.config.type === 'bar' ? 'line' : 'bar';
+                chart.update();
+
+                showToast('图表类型已切换', 'info');
+            }
+        }
+
+        // 显示提示消息
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+            toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            toast.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+
+            document.body.appendChild(toast);
+
+            // 3秒后自动消失
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.remove();
+                }
+            }, 3000);
+        }
+
+        // 班级管理功能
         function editClass(id) {
             alert('编辑班级功能开发中，班级ID: ' + id);
         }
-        
+
         function viewStudents(id) {
             window.location.href = '/admin/students?classId=' + id;
         }
-        
+
         function viewSchedule(id) {
             window.location.href = '/admin/schedules?classId=' + id;
         }
-        
+
         function deleteClass(id) {
             if (confirm('确定要删除这个班级吗？')) {
                 alert('删除班级功能开发中，班级ID: ' + id);
             }
         }
-        
+
         function saveClass() {
             alert('保存班级功能开发中');
         }

@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle} + ' - 智慧校园管理系统'">添加班级 - 智慧校园管理系统</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- 引入组件样式 -->
+    <th:block th:replace="~{components/topbar :: topbar-style}"></th:block>
+    <!-- 侧边栏样式 -->
+    <link th:href="@{/css/sidebar.css}" rel="stylesheet">
+    <!-- 自定义样式 -->
+    <link href="/css/admin.css" rel="stylesheet">
+    <link href="/css/forms.css" rel="stylesheet">
+</head>
+<body>
+    <div id="wrapper">
+        <!-- 侧边栏 -->
+        <th:block th:replace="~{components/sidebar :: sidebar}"></th:block>
+
+        <!-- 内容包装器 -->
+        <div id="content-wrapper" class="d-flex flex-column">
+            <!-- 主要内容 -->
+            <div id="content">
+                <!-- 顶部导航栏 -->
+                <th:block th:replace="~{components/topbar :: topbar}"></th:block>
+
+                <!-- 页面内容开始 -->
+                <div class="container-fluid">
+                    <!-- 页面标题 -->
+                    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                        <h1 class="h3 mb-0 text-gray-800">
+                            <i class="fas fa-users"></i> 添加班级
+                        </h1>
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb">
+                                <li class="breadcrumb-item"><a th:href="@{/admin/dashboard}">仪表盘</a></li>
+                                <li class="breadcrumb-item"><a th:href="@{/admin/classes}">班级管理</a></li>
+                                <li class="breadcrumb-item active">添加班级</li>
+                            </ol>
+                        </nav>
+                    </div>
+
+                    <!-- 班级表单 -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card shadow">
+                                <div class="card-header py-3">
+                                    <h6 class="m-0 font-weight-bold text-primary">
+                                        <i class="fas fa-users-cog"></i> 班级信息
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <!-- 填写说明 -->
+                                    <div class="alert alert-info mb-4" role="alert">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <h6 class="alert-heading">
+                                                    <i class="fas fa-lightbulb"></i> 填写提示
+                                                </h6>
+                                                <ul class="mb-0 small">
+                                                    <li>班级名称建议格式：专业名称+年级+班级序号</li>
+                                                    <li>选择专业和年级后可自动生成班级代码</li>
+                                                    <li>班级容量建议设置为20-60人</li>
+                                                </ul>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <h6 class="alert-heading">
+                                                    <i class="fas fa-exclamation-triangle"></i> 注意事项
+                                                </h6>
+                                                <ul class="mb-0 small">
+                                                    <li>班级代码一旦确定不可修改</li>
+                                                    <li>请确保班级信息准确无误</li>
+                                                    <li>班主任可以后续指定</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <form id="classForm" method="post" th:action="@{/admin/classes}">
+                                        <!-- 基本信息 -->
+                                        <h6 class="text-primary mb-3">
+                                            <i class="fas fa-info-circle"></i> 基本信息
+                                        </h6>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="className" class="form-label">班级名称 <span class="text-danger">*</span></label>
+                                                    <input type="text" class="form-control" id="className" name="className"
+                                                           placeholder="如：计算机科学2024-1班" required>
+                                                    <div class="form-text">建议格式：专业名称+年级+班级序号</div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="classCode" class="form-label">班级代码</label>
+                                                    <input type="text" class="form-control" id="classCode" name="classCode" 
+                                                           placeholder="如：CS2024-01">
+                                                    <div class="form-text">用于系统内部标识，可自动生成</div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- 学籍信息 -->
+                                        <hr>
+                                        <h6 class="text-primary mb-3">
+                                            <i class="fas fa-graduation-cap"></i> 学籍信息
+                                        </h6>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="major" class="form-label">专业 <span class="text-danger">*</span></label>
+                                                    <select class="form-select" id="major" name="major" required>
+                                                        <option value="">请选择专业</option>
+                                                        <option th:each="major : ${majors}" th:value="${major}" th:text="${major}"></option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="grade" class="form-label">年级 <span class="text-danger">*</span></label>
+                                                    <select class="form-select" id="grade" name="grade" required>
+                                                        <option value="">请选择年级</option>
+                                                        <option th:each="grade : ${grades}" th:value="${grade}" th:text="${grade}"></option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="maxStudents" class="form-label">班级容量</label>
+                                                    <input type="number" class="form-control" id="maxStudents" name="maxStudents" 
+                                                           min="20" max="60" placeholder="如：40" value="40">
+                                                    <div class="form-text">建议20-60人</div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="currentStudents" class="form-label">当前人数</label>
+                                                    <input type="number" class="form-control" id="currentStudents" name="currentStudents" 
+                                                           min="0" placeholder="0" value="0" readonly>
+                                                    <div class="form-text">系统自动统计</div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- 管理信息 -->
+                                        <hr>
+                                        <h6 class="text-primary mb-3">
+                                            <i class="fas fa-user-tie"></i> 管理信息
+                                        </h6>
+
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="headTeacherId" class="form-label">班主任</label>
+                                                    <select class="form-select" id="headTeacherId" name="headTeacherId">
+                                                        <option value="">请选择班主任</option>
+                                                        <option th:each="teacher : ${teachers}" th:value="${teacher.id}" 
+                                                                th:text="${teacher.name} + ' (' + ${teacher.department} + ')'"></option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="counselorId" class="form-label">辅导员</label>
+                                                    <select class="form-select" id="counselorId" name="counselorId">
+                                                        <option value="">请选择辅导员</option>
+                                                        <option th:each="teacher : ${teachers}" th:value="${teacher.id}" 
+                                                                th:text="${teacher.name} + ' (' + ${teacher.department} + ')'"></option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="classroom" class="form-label">固定教室</label>
+                                                    <input type="text" class="form-control" id="classroom" name="classroom" 
+                                                           placeholder="如：A101">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="status" class="form-label">班级状态</label>
+                                                    <select class="form-select" id="status" name="status">
+                                                        <option value="正常" selected>正常</option>
+                                                        <option value="筹建中">筹建中</option>
+                                                        <option value="已毕业">已毕业</option>
+                                                        <option value="已解散">已解散</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- 时间信息 -->
+                                        <hr>
+                                        <h6 class="text-primary mb-3">
+                                            <i class="fas fa-calendar-alt"></i> 时间信息
+                                        </h6>
+
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="establishDate" class="form-label">成立日期</label>
+                                                    <input type="date" class="form-control" id="establishDate" name="establishDate" 
+                                                           th:value="${#dates.format(#dates.createNow(), 'yyyy-MM-dd')}">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="graduationDate" class="form-label">预计毕业日期</label>
+                                                    <input type="date" class="form-control" id="graduationDate" name="graduationDate">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="description" class="form-label">班级简介</label>
+                                            <textarea class="form-control" id="description" name="description" rows="3" 
+                                                      placeholder="请输入班级简介、特色、目标等"></textarea>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="remarks" class="form-label">备注</label>
+                                            <textarea class="form-control" id="remarks" name="remarks" rows="2" 
+                                                      placeholder="请输入备注信息"></textarea>
+                                        </div>
+
+                                        <!-- 表单按钮 -->
+                                        <div class="d-flex justify-content-between">
+                                            <a th:href="@{/admin/classes}" class="btn btn-secondary">
+                                                <i class="fas fa-arrow-left"></i> 返回列表
+                                            </a>
+                                            <div>
+                                                <button type="reset" class="btn btn-outline-secondary me-2">
+                                                    <i class="fas fa-undo"></i> 重置
+                                                </button>
+                                                <button type="submit" class="btn btn-primary">
+                                                    <i class="fas fa-save"></i> 保存班级
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- 页面内容结束 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 引入组件脚本 -->
+    <th:block th:replace="~{components/sidebar :: sidebar-script}"></th:block>
+    <th:block th:replace="~{components/topbar :: topbar-script}"></th:block>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- 表单工具脚本 -->
+    <script src="/js/forms.js"></script>
+
+    <script>
+        // 自动生成班级代码
+        function generateClassCode() {
+            const major = document.getElementById('major').value;
+            const grade = document.getElementById('grade').value;
+            
+            if (major && grade) {
+                // 专业代码映射
+                const majorCodes = {
+                    '计算机科学与技术': 'CS',
+                    '软件工程': 'SE',
+                    '信息安全': 'IS',
+                    '数据科学与大数据技术': 'DS',
+                    '人工智能': 'AI'
+                };
+                
+                const majorCode = majorCodes[major] || 'CS';
+                const year = grade.replace('级', '');
+                const classCode = `${majorCode}${year}-01`;
+                
+                document.getElementById('classCode').value = classCode;
+            }
+        }
+
+        // 自动生成班级名称
+        function generateClassName() {
+            const major = document.getElementById('major').value;
+            const grade = document.getElementById('grade').value;
+            
+            if (major && grade) {
+                const className = `${major}${grade}-1班`;
+                document.getElementById('className').value = className;
+            }
+        }
+
+        // 计算毕业日期
+        function calculateGraduationDate() {
+            const grade = document.getElementById('grade').value;
+            if (grade) {
+                const year = parseInt(grade.replace('级', ''));
+                const graduationYear = year + 4; // 假设4年制
+                const graduationDate = `${graduationYear}-06-30`;
+                document.getElementById('graduationDate').value = graduationDate;
+            }
+        }
+
+        // 监听专业和年级变化
+        document.getElementById('major').addEventListener('change', function() {
+            generateClassCode();
+            generateClassName();
+        });
+
+        document.getElementById('grade').addEventListener('change', function() {
+            generateClassCode();
+            generateClassName();
+            calculateGraduationDate();
+        });
+
+        // 表单验证
+        document.getElementById('classForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // 基本验证
+            const className = document.getElementById('className').value.trim();
+            const major = document.getElementById('major').value;
+            const grade = document.getElementById('grade').value;
+            
+            if (!className || !major || !grade) {
+                showAlert('请填写所有必填字段', 'danger');
+                return;
+            }
+            
+            // 班级容量验证
+            const maxStudents = parseInt(document.getElementById('maxStudents').value);
+            if (maxStudents && (maxStudents < 20 || maxStudents > 60)) {
+                showAlert('班级容量建议在20-60人之间', 'warning');
+            }
+            
+            // 日期验证
+            const establishDate = new Date(document.getElementById('establishDate').value);
+            const graduationDate = new Date(document.getElementById('graduationDate').value);
+            if (establishDate && graduationDate && establishDate >= graduationDate) {
+                showAlert('毕业日期应晚于成立日期', 'danger');
+                return;
+            }
+            
+            showAlert('班级信息保存成功！', 'success');
+            
+            // 模拟保存成功后跳转
+            setTimeout(() => {
+                window.location.href = '/admin/classes';
+            }, 1500);
+        });
+
+        // 页面加载完成后的初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 设置当前页面标识
+            document.body.setAttribute('data-current-page', 'classes');
+            
+            // 自动生成当前年份的年级选项
+            const currentYear = new Date().getFullYear();
+            const gradeSelect = document.getElementById('grade');
+            if (gradeSelect.children.length <= 1) {
+                for (let i = 0; i < 4; i++) {
+                    const year = currentYear - i;
+                    const option = document.createElement('option');
+                    option.value = `${year}级`;
+                    option.textContent = `${year}级`;
+                    gradeSelect.appendChild(option);
+                }
+            }
+        });
+    </script>
+</body>
+</html>

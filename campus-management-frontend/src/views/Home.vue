@@ -1,23 +1,7 @@
 <template>
   <div class="home-page">
     <!-- 导航栏 -->
-    <nav class="navbar">
-      <div class="nav-container">
-        <div class="nav-brand" @click="scrollToTop">
-          <div class="logo-wrapper">
-            <el-icon :size="32" class="logo-icon"><School /></el-icon>
-            <div class="logo-ripple"></div>
-          </div>
-          <span class="brand-text">智慧校园管理平台</span>
-        </div>
-        <div class="nav-actions">
-          <el-button type="primary" class="login-btn" @click="goToLogin">
-            <el-icon><User /></el-icon>
-            立即登录
-          </el-button>
-        </div>
-      </div>
-    </nav>
+    <NavigationBar />
 
     <!-- 主要内容 -->
     <main class="main-content">
@@ -482,9 +466,8 @@
 <script setup>
 import { useRouter } from 'vue-router'
 import { onMounted } from 'vue'
+import NavigationBar from '@/components/NavigationBar.vue'
 import {
-  School,
-  User,
   Star,
   Right,
   VideoPlay,
@@ -520,28 +503,12 @@ const goToLogin = () => {
 }
 
 const scrollToFeatures = () => {
-  document.getElementById('features')?.scrollIntoView({ 
-    behavior: 'smooth' 
+  document.getElementById('features')?.scrollIntoView({
+    behavior: 'smooth'
   })
 }
 
-const scrollToTop = () => {
-  window.scrollTo({ top: 0, behavior: 'smooth' })
-}
-
 onMounted(() => {
-  // 添加滚动监听，实现导航栏背景变化
-  const navbar = document.querySelector('.navbar')
-  const handleScroll = () => {
-    if (window.scrollY > 50) {
-      navbar?.classList.add('scrolled')
-    } else {
-      navbar?.classList.remove('scrolled')
-    }
-  }
-  
-  window.addEventListener('scroll', handleScroll)
-  
   // 添加数字动画
   const animateNumbers = () => {
     const numbers = document.querySelectorAll('.stat-number')
@@ -573,4 +540,5 @@ onMounted(() => {
 <style>
 /* 导入外部样式文件 */
 @import '@/styles/Home.css';
+@import '@/styles/NavigationBar.css';
 </style>

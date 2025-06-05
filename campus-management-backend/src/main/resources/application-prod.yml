@@ -151,21 +151,30 @@ jwt:
     prefix: "jwt:token:"
     refresh-prefix: "jwt:refresh:"
 
-# 日志配置 - 生产环境
+# 日志配置 - 生产环境（最小化输出）
 logging:
   level:
-    com.campus: INFO
-    org.springframework: WARN
-    org.springframework.security: WARN
-    com.alibaba.druid: WARN
-    root: WARN
+    com.campus: WARN
+    org.springframework: ERROR
+    org.springframework.security: ERROR
+    org.springframework.data: ERROR
+    org.springframework.boot: ERROR
+    org.springframework.web: ERROR
+    org.hibernate: ERROR
+    com.alibaba.druid: ERROR
+    org.apache.tomcat: ERROR
+    org.apache.catalina: ERROR
+    org.mybatis: ERROR
+    org.quartz: ERROR
+    io.lettuce: ERROR
+    root: ERROR
   pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
-    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    console: "%d{HH:mm:ss} %-5level %logger{15} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{30} - %msg%n"
   file:
     name: logs/smart-campus.log
-    max-size: 100MB
-    max-history: 30
+    max-size: 50MB
+    max-history: 15
 
 # 管理端点配置 - 生产环境
 management:

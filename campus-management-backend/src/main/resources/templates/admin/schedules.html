@@ -123,29 +123,43 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr th:each="schedule : ${schedules}">
-                                        <td th:text="${schedule.id}"></td>
-                                        <td th:text="${schedule.courseName}"></td>
-                                        <td th:text="${schedule.className}"></td>
-                                        <td th:text="${schedule.teacher}"></td>
-                                        <td th:text="${schedule.time}"></td>
-                                        <td th:text="${schedule.classroom}"></td>
-                                        <td th:text="${schedule.weeks}"></td>
+                                    <!-- 动态课程安排数据 -->
+                                    <tr th:each="schedule : ${schedules.content}" th:if="${schedules != null and !schedules.empty}">
+                                        <td th:text="${schedule.id}">ID</td>
+                                        <td th:text="${schedule.course != null ? schedule.course.courseName : '未分配'}">课程名称</td>
+                                        <td th:text="${schedule.schoolClass != null ? schedule.schoolClass.className : '未分配'}">班级</td>
+                                        <td th:text="${schedule.teacher != null ? schedule.teacher.realName : '未分配'}">授课教师</td>
+                                        <td th:text="${schedule.dayOfWeek + ' ' + schedule.timeSlot}">上课时间</td>
+                                        <td th:text="${schedule.classroom ?: '未分配'}">教室</td>
+                                        <td th:text="${schedule.weeks ?: '未设置'}">周次</td>
                                         <td>
-                                            <span class="badge bg-success" th:if="${schedule.status == '正常'}">正常</span>
-                                            <span class="badge bg-warning" th:if="${schedule.status == '冲突'}">冲突</span>
-                                            <span class="badge bg-danger" th:if="${schedule.status == '取消'}">取消</span>
+                                            <span class="badge"
+                                                  th:classappend="${schedule.status == 1} ? 'bg-success' : (${schedule.status == 2} ? 'bg-warning' : 'bg-danger')"
+                                                  th:text="${schedule.status == 1} ? '正常' : (${schedule.status == 2} ? '冲突' : '取消')">状态</span>
                                         </td>
                                         <td>
-                                            <button class="btn btn-sm btn-outline-primary" th:onclick="'editSchedule(' + ${schedule.id} + ')'">
-                                                <i class="fas fa-edit"></i> 编辑
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-info" th:onclick="'viewDetails(' + ${schedule.id} + ')'">
-                                                <i class="fas fa-eye"></i> 详情
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-danger" th:onclick="'deleteSchedule(' + ${schedule.id} + ')'">
-                                                <i class="fas fa-trash"></i> 删除
-                                            </button>
+                                            <div class="btn-group btn-group-sm">
+                                                <button class="btn btn-outline-primary" title="编辑"
+                                                        th:onclick="'editSchedule(' + ${schedule.id} + ')'">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button class="btn btn-outline-info" title="详情"
+                                                        th:onclick="'viewDetails(' + ${schedule.id} + ')'">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                <button class="btn btn-outline-danger" title="删除"
+                                                        th:onclick="'deleteSchedule(' + ${schedule.id} + ')'">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+
+                                    <!-- 无数据提示 -->
+                                    <tr th:if="${schedules == null or schedules.empty}">
+                                        <td colspan="9" class="text-center text-muted py-4">
+                                            <i class="fas fa-inbox fa-2x mb-2"></i>
+                                            <br>暂无课程安排数据
                                         </td>
                                     </tr>
                                 </tbody>

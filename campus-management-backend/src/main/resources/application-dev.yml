@@ -1,12 +1,12 @@
 # 开发环境配置
 server:
-  port: 8081
+  port: 8082
 
 spring:
   # 数据源配置 - 开发环境
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
-    url: jdbc:mysql://localhost:3306/campus_management_db?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://localhost:3306/campus_management_db?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&autoReconnect=true&failOverReadOnly=false&maxReconnects=3&useAffectedRows=true
     username: root
     password: xiaoxiao123
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -14,29 +14,41 @@ spring:
     # Druid 连接池配置
     druid:
       # 初始连接数
-      initial-size: 5
+      initial-size: 10
       # 最小连接池数量
-      min-idle: 5
+      min-idle: 2
       # 最大连接池数量
-      max-active: 20
-      # 配置获取连接等待超时的时间
-      max-wait: 60000
+      max-active: 50
+      # 配置获取连接等待超时的时间（减少到5秒）
+      max-wait: 5000
       # 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒
-      time-between-eviction-runs-millis: 60000
+      time-between-eviction-runs-millis: 30000
       # 配置一个连接在池中最小生存的时间，单位是毫秒
-      min-evictable-idle-time-millis: 300000
+      min-evictable-idle-time-millis: 60000
       # 验证连接有效性的SQL
       validation-query: SELECT 1
+      validation-query-timeout: 3
       test-while-idle: true
-      test-on-borrow: false
+      test-on-borrow: true
       test-on-return: false
       # 打开PSCache，并且指定每个连接上PSCache的大小
-      pool-prepared-statements: true
-      max-pool-prepared-statement-per-connection-size: 20
-      # 配置监控统计拦截的filters
-      filters: stat,wall,slf4j
+      pool-prepared-statements: false
+      # 配置监控统计拦截的filters（移除wall过滤器避免问题）
+      filters: stat,slf4j
       # 通过connectProperties属性来打开mergeSql功能；慢SQL记录
-      connection-properties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=5000
+      connection-properties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=2000
+      # 连接超时配置
+      query-timeout: 5
+      transaction-query-timeout: 5
+      # 自动提交配置
+      default-auto-commit: true
+      # 连接泄漏检测
+      remove-abandoned: true
+      remove-abandoned-timeout: 300
+      log-abandoned: false
+      # 连接错误重试
+      connection-error-retry-attempts: 3
+      break-after-acquire-failure: true
 
   # Redis 配置 - 开发环境
   redis:
@@ -75,14 +87,23 @@ spring:
   # JPA配置 - 开发环境
   jpa:
     hibernate:
-      ddl-auto: update
-    show-sql: true
+      ddl-auto: update  # 改回update，允许自动更新表结构
+    show-sql: false  # 关闭SQL日志减少输出
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MySQLDialect
-        format_sql: true
-        use_sql_comments: true
-    open-in-view: false
+        format_sql: false
+        use_sql_comments: false
+        # 查询超时配置
+        query.timeout: 5000
+        # 连接配置
+        connection.provider_disables_autocommit: false  # 启用自动提交
+        # 懒加载配置
+        enable_lazy_load_no_trans: false
+        # 事务配置
+        current_session_context_class: thread
+        # 连接释放模式
+        connection.release_mode: after_transaction
+    open-in-view: true  # 启用open-in-view解决懒加载问题
 
   # Quartz 配置 - 开发环境
   quartz:
@@ -129,17 +150,26 @@ jwt:
     prefix: "jwt:token:"
     refresh-prefix: "jwt:refresh:"
 
-# 日志配置 - 开发环境
+# 日志配置 - 开发环境（减少输出）
 logging:
   level:
-    com.campus: DEBUG
-    org.springframework.cache: DEBUG
-    org.springframework.data.redis: DEBUG
-    org.springframework.security: DEBUG
-    com.alibaba.druid: DEBUG
-    root: INFO
+    com.campus: INFO
+    org.springframework: WARN
+    org.springframework.security: WARN
+    org.springframework.data: WARN
+    org.springframework.cache: WARN
+    org.springframework.boot: WARN
+    org.springframework.web: WARN
+    org.hibernate: WARN
+    com.alibaba.druid: WARN
+    org.apache.tomcat: WARN
+    org.apache.catalina: WARN
+    org.mybatis: WARN
+    org.quartz: WARN
+    io.lettuce: WARN
+    root: WARN
   pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    console: "%d{HH:mm:ss} %-5level %logger{20} - %msg%n"
 
 # 管理端点配置 - 开发环境
 management:
@@ -177,9 +207,9 @@ campus:
 
   # 性能监控配置
   monitor:
-    enabled: true
+    enabled: false  # 临时禁用监控
     redis-monitor-interval: 60000  # Redis监控间隔 1分钟
-    performance-log: true
+    performance-log: false  # 临时禁用性能日志
 
   # 邮件模板配置
   mail:

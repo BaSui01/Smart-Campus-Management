@@ -4,15 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>用户管理 - 智慧校园管理系统</title>
-    
+
+    <!-- 网站图标 -->
+    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
+    <link rel="alternate icon" href="/favicon.ico">
+    <link rel="apple-touch-icon" href="/images/favicon.svg">
+
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <!-- 引入组件样式 -->
+    <th:block th:replace="~{components/sidebar :: sidebar-style}"></th:block>
     <th:block th:replace="~{components/topbar :: topbar-style}"></th:block>
-    <!-- 侧边栏样式 -->
-    <link th:href="@{/css/sidebar.css}" rel="stylesheet">
     <!-- 自定义样式 -->
     <link href="/css/admin.css" rel="stylesheet">
 </head>
@@ -34,230 +38,237 @@
                     </button>
                 </div>
 
-                <!-- 搜索和筛选 -->
-                <div class="card mb-4">
+                <!-- 统计卡片 - 简化版 -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <i class="fas fa-users text-primary fa-2x mb-2"></i>
+                                <h5 th:text="${stats != null ? stats.totalUsers : 0}">0</h5>
+                                <small class="text-muted">总用户数</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <i class="fas fa-user-check text-success fa-2x mb-2"></i>
+                                <h5 th:text="${stats != null ? stats.activeUsers : 0}">0</h5>
+                                <small class="text-muted">活跃用户</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <i class="fas fa-sign-in-alt text-warning fa-2x mb-2"></i>
+                                <h5 th:text="${stats != null ? stats.todayLogins : 0}">0</h5>
+                                <small class="text-muted">今日登录</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <i class="fas fa-user-slash text-danger fa-2x mb-2"></i>
+                                <h5 th:text="${stats != null ? stats.inactiveUsers : 0}">0</h5>
+                                <small class="text-muted">禁用用户</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 搜索和操作区域 -->
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-header bg-light">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0 text-primary">
+                                <i class="fas fa-filter me-2"></i>筛选与操作
+                            </h6>
+                            <!-- 移除按钮组 -->
+                        </div>
+                    </div>
                     <div class="card-body">
-                        <form class="row g-3">
-                            <div class="col-md-3">
-                                <label class="form-label">搜索关键词</label>
-                                <input type="text" class="form-control" placeholder="用户名、姓名、邮箱">
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label">用户角色</label>
-                                <select class="form-select">
-                                    <option value="">全部角色</option>
-                                    <option value="ADMIN">系统管理员</option>
-                                    <option value="TEACHER">教师</option>
-                                    <option value="STUDENT">学生</option>
-                                    <option value="FINANCE">财务人员</option>
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label">用户状态</label>
-                                <select class="form-select">
-                                    <option value="">全部状态</option>
-                                    <option value="1">正常</option>
-                                    <option value="0">禁用</option>
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label">注册时间</label>
-                                <input type="date" class="form-control">
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label">&nbsp;</label>
-                                <div class="d-flex gap-2">
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-search"></i> 搜索
-                                    </button>
-                                    <button type="reset" class="btn btn-outline-secondary">
-                                        <i class="fas fa-redo"></i> 重置
-                                    </button>
+                        <form id="searchForm" method="get" action="/admin/users">
+                            <div class="row g-3 align-items-end">
+                                <div class="col-md-5">
+                                    <label class="form-label fw-bold">
+                                        <i class="fas fa-search text-muted me-1"></i>搜索关键词
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light">
+                                            <i class="fas fa-search text-muted"></i>
+                                        </span>
+                                        <input type="text" class="form-control" placeholder="搜索用户名、姓名、邮箱"
+                                               th:value="${search}" name="search" id="searchInput">
+                                        <button class="btn btn-outline-primary" type="submit">
+                                            搜索
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label fw-bold">
+                                        <i class="fas fa-user-tag text-muted me-1"></i>角色
+                                    </label>
+                                    <select class="form-select" name="role" id="roleFilter" onchange="this.form.submit()">
+                                        <option value="">全部角色</option>
+                                        <option value="ADMIN" th:selected="${role == 'ADMIN'}">
+                                            <i class="fas fa-crown"></i> 管理员
+                                        </option>
+                                        <option value="TEACHER" th:selected="${role == 'TEACHER'}">
+                                            <i class="fas fa-chalkboard-teacher"></i> 教师
+                                        </option>
+                                        <option value="STUDENT" th:selected="${role == 'STUDENT'}">
+                                            <i class="fas fa-user-graduate"></i> 学生
+                                        </option>
+                                        <option value="FINANCE" th:selected="${role == 'FINANCE'}">
+                                            <i class="fas fa-calculator"></i> 财务
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label fw-bold">
+                                        <i class="fas fa-toggle-on text-muted me-1"></i>状态
+                                    </label>
+                                    <select class="form-select" name="status" id="statusFilter" onchange="this.form.submit()">
+                                        <option value="">全部状态</option>
+                                        <option value="1" th:selected="${status == '1'}">
+                                            <i class="fas fa-check-circle text-success"></i> 正常
+                                        </option>
+                                        <option value="0" th:selected="${status == '0'}">
+                                            <i class="fas fa-ban text-danger"></i> 禁用
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                        <button type="button" class="btn btn-outline-secondary" onclick="resetFilters()">
+                                            <i class="fas fa-undo me-1"></i>重置
+                                        </button>
+                                        <button type="button" class="btn btn-success" onclick="exportUsers()">
+                                            <i class="fas fa-file-excel me-1"></i>导出
+                                        </button>
+                                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                                            <i class="fas fa-plus me-1"></i>添加
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </form>
                     </div>
                 </div>
 
-                <!-- 统计卡片 -->
-                <div class="row mb-4">
-                    <div class="col-xl-3 col-md-6">
-                        <div class="card stat-card primary">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between">
-                                    <div>
-                                        <div class="stat-label">总用户数</div>
-                                        <div class="stat-number">1,567</div>
-                                    </div>
-                                    <div class="align-self-center">
-                                        <i class="fas fa-users fa-2x"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-xl-3 col-md-6">
-                        <div class="card stat-card success">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between">
-                                    <div>
-                                        <div class="stat-label">活跃用户</div>
-                                        <div class="stat-number">1,456</div>
-                                    </div>
-                                    <div class="align-self-center">
-                                        <i class="fas fa-user-check fa-2x"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-xl-3 col-md-6">
-                        <div class="card stat-card warning">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between">
-                                    <div>
-                                        <div class="stat-label">今日登录</div>
-                                        <div class="stat-number">234</div>
-                                    </div>
-                                    <div class="align-self-center">
-                                        <i class="fas fa-sign-in-alt fa-2x"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-xl-3 col-md-6">
-                        <div class="card stat-card danger">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between">
-                                    <div>
-                                        <div class="stat-label">禁用用户</div>
-                                        <div class="stat-number">111</div>
-                                    </div>
-                                    <div class="align-self-center">
-                                        <i class="fas fa-user-slash fa-2x"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- 用户列表 -->
-                <div class="card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h6 class="mb-0">用户列表</h6>
-                        <div class="d-flex gap-2">
-                            <button type="button" class="btn btn-outline-primary btn-sm">
-                                <i class="fas fa-download"></i> 导出
-                            </button>
-                            <button type="button" class="btn btn-outline-danger btn-sm">
-                                <i class="fas fa-trash"></i> 批量删除
-                            </button>
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white border-bottom">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <h5 class="mb-0 text-dark">
+                                    <i class="fas fa-users text-primary me-2"></i>用户列表
+                                </h5>
+                                <span class="badge bg-light text-dark ms-3">
+                                    共 <span th:text="${users != null ? users.totalElements : 0}" class="fw-bold text-primary">0</span> 条记录
+                                </span>
+                            </div>
+                            <!-- 移除操作按钮组 -->
                         </div>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body p-0">
                         <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
+                            <table class="table table-hover table-striped mb-0">
+                                <thead class="table-light">
                                     <tr>
-                                        <th><input type="checkbox" class="form-check-input"></th>
-                                        <th>头像</th>
-                                        <th>用户名</th>
-                                        <th>真实姓名</th>
-                                        <th>邮箱</th>
-                                        <th>手机号</th>
-                                        <th>角色</th>
-                                        <th>最后登录</th>
-                                        <th>状态</th>
-                                        <th>操作</th>
+                                        <!-- 移除全选复选框 -->
+                                        <th class="text-center" style="width: 80px;">
+                                            <i class="fas fa-user-circle text-muted me-1"></i>头像
+                                        </th>
+                                        <th>
+                                            <i class="fas fa-user text-muted me-1"></i>用户名
+                                        </th>
+                                        <th>
+                                            <i class="fas fa-id-card text-muted me-1"></i>真实姓名
+                                        </th>
+                                        <th>
+                                            <i class="fas fa-envelope text-muted me-1"></i>邮箱
+                                        </th>
+                                        <th>
+                                            <i class="fas fa-phone text-muted me-1"></i>手机号
+                                        </th>
+                                        <th class="text-center">
+                                            <i class="fas fa-user-tag text-muted me-1"></i>角色
+                                        </th>
+                                        <th class="text-center">
+                                            <i class="fas fa-clock text-muted me-1"></i>最后登录
+                                        </th>
+                                        <th class="text-center">
+                                            <i class="fas fa-toggle-on text-muted me-1"></i>状态
+                                        </th>
+                                        <th class="text-center" style="width: 200px;">
+                                            <i class="fas fa-cogs text-muted me-1"></i>操作
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr>
-                                        <td><input type="checkbox" class="form-check-input"></td>
-                                        <td>
+                                    <!-- 动态用户数据 -->
+                                    <tr th:each="user : ${users.content}" th:if="${users != null and !users.empty}" class="align-middle">
+                                        <!-- 移除复选框 -->
+                                        <td class="text-center">
                                             <img src="/images/default-avatar.svg" class="rounded-circle" width="40" height="40" alt="头像">
                                         </td>
-                                        <td>admin</td>
-                                        <td>系统管理员</td>
-                                        <td>admin@campus.edu</td>
-                                        <td>13800138000</td>
-                                        <td><span class="badge bg-danger">系统管理员</span></td>
-                                        <td>2024-01-20 15:30</td>
-                                        <td><span class="badge bg-success">正常</span></td>
                                         <td>
-                                            <div class="btn-group btn-group-sm">
-                                                <button type="button" class="btn btn-outline-primary" title="查看详情">
+                                            <strong th:text="${user.username}">用户名</strong>
+                                            <br><small class="text-muted" th:text="'ID: ' + ${user.id}">ID: 1</small>
+                                        </td>
+                                        <td th:text="${user.realName ?: '未设置'}">真实姓名</td>
+                                        <td th:text="${user.email ?: '-'}">邮箱</td>
+                                        <td th:text="${user.phone ?: '-'}">手机号</td>
+                                        <td class="text-center">
+                                            <span class="badge"
+                                                  th:classappend="${user.roleKey == 'ADMIN'} ? 'bg-danger' : (${user.roleKey == 'TEACHER'} ? 'bg-primary' : (${user.roleKey == 'STUDENT'} ? 'bg-info' : 'bg-warning'))"
+                                                  th:text="${user.roleName ?: '未分配'}">角色</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span th:text="${user.lastLoginTime != null ? #temporals.format(user.lastLoginTime, 'MM-dd HH:mm') : '从未登录'}">最后登录</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge"
+                                                  th:classappend="${user.status == 1} ? 'bg-success' : 'bg-danger'"
+                                                  th:text="${user.status == 1} ? '正常' : '禁用'">状态</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <button type="button" class="btn btn-outline-primary" title="查看详情"
+                                                        th:onclick="'viewUser(' + ${user.id} + ')'"
+                                                        data-bs-toggle="tooltip" data-bs-placement="top">
                                                     <i class="fas fa-eye"></i>
                                                 </button>
-                                                <button type="button" class="btn btn-outline-warning" title="编辑">
+                                                <button type="button" class="btn btn-outline-warning" title="编辑"
+                                                        th:onclick="'editUser(' + ${user.id} + ')'"
+                                                        data-bs-toggle="tooltip" data-bs-placement="top">
                                                     <i class="fas fa-edit"></i>
                                                 </button>
-                                                <button type="button" class="btn btn-outline-info" title="重置密码">
+                                                <button type="button" class="btn btn-outline-info" title="重置密码"
+                                                        th:onclick="'resetPassword(' + ${user.id} + ')'"
+                                                        data-bs-toggle="tooltip" data-bs-placement="top">
                                                     <i class="fas fa-key"></i>
                                                 </button>
-                                                <button type="button" class="btn btn-outline-secondary" title="禁用">
-                                                    <i class="fas fa-ban"></i>
+                                                <button type="button" class="btn btn-outline-secondary" title="切换状态"
+                                                        th:onclick="'toggleUserStatus(' + ${user.id} + ')'"
+                                                        data-bs-toggle="tooltip" data-bs-placement="top">
+                                                    <i class="fas fa-power-off"></i>
                                                 </button>
                                             </div>
                                         </td>
                                     </tr>
-                                    <tr>
-                                        <td><input type="checkbox" class="form-check-input"></td>
-                                        <td>
-                                            <img src="/images/default-avatar.svg" class="rounded-circle" width="40" height="40" alt="头像">
-                                        </td>
-                                        <td>teacher001</td>
-                                        <td>张教授</td>
-                                        <td>zhang@campus.edu</td>
-                                        <td>13800138001</td>
-                                        <td><span class="badge bg-primary">教师</span></td>
-                                        <td>2024-01-20 14:25</td>
-                                        <td><span class="badge bg-success">正常</span></td>
-                                        <td>
-                                            <div class="btn-group btn-group-sm">
-                                                <button type="button" class="btn btn-outline-primary" title="查看详情">
-                                                    <i class="fas fa-eye"></i>
-                                                </button>
-                                                <button type="button" class="btn btn-outline-warning" title="编辑">
-                                                    <i class="fas fa-edit"></i>
-                                                </button>
-                                                <button type="button" class="btn btn-outline-info" title="重置密码">
-                                                    <i class="fas fa-key"></i>
-                                                </button>
-                                                <button type="button" class="btn btn-outline-secondary" title="禁用">
-                                                    <i class="fas fa-ban"></i>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td><input type="checkbox" class="form-check-input"></td>
-                                        <td>
-                                            <img src="/images/default-avatar.svg" class="rounded-circle" width="40" height="40" alt="头像">
-                                        </td>
-                                        <td>student001</td>
-                                        <td>李同学</td>
-                                        <td>li@student.campus.edu</td>
-                                        <td>13800138002</td>
-                                        <td><span class="badge bg-info">学生</span></td>
-                                        <td>2024-01-20 13:45</td>
-                                        <td><span class="badge bg-success">正常</span></td>
-                                        <td>
-                                            <div class="btn-group btn-group-sm">
-                                                <button type="button" class="btn btn-outline-primary" title="查看详情">
-                                                    <i class="fas fa-eye"></i>
-                                                </button>
-                                                <button type="button" class="btn btn-outline-warning" title="编辑">
-                                                    <i class="fas fa-edit"></i>
-                                                </button>
-                                                <button type="button" class="btn btn-outline-info" title="重置密码">
-                                                    <i class="fas fa-key"></i>
-                                                </button>
-                                                <button type="button" class="btn btn-outline-secondary" title="禁用">
-                                                    <i class="fas fa-ban"></i>
-                                                </button>
+
+                                    <!-- 无数据提示 -->
+                                    <tr th:if="${users == null or users.empty}">
+                                        <td colspan="9" class="text-center py-5">
+                                            <div class="d-flex flex-column align-items-center text-muted">
+                                                <i class="fas fa-users fa-3x mb-3 opacity-50"></i>
+                                                <h5 class="mb-2">暂无用户数据</h5>
+                                                <p class="mb-3">还没有用户信息，点击下方按钮添加第一个用户</p>
+                                                <p class="text-muted">请联系管理员添加用户</p>
                                             </div>
                                         </td>
                                     </tr>
@@ -266,99 +277,79 @@
                         </div>
                         
                         <!-- 分页 -->
-                        <nav aria-label="用户列表分页">
-                            <ul class="pagination justify-content-center">
-                                <li class="page-item disabled">
-                                    <a class="page-link" href="#" tabindex="-1">上一页</a>
-                                </li>
-                                <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                                <li class="page-item"><a class="page-link" href="#">2</a></li>
-                                <li class="page-item"><a class="page-link" href="#">3</a></li>
-                                <li class="page-item">
-                                    <a class="page-link" href="#">下一页</a>
-                                </li>
-                            </ul>
-                        </nav>
+                        <div class="d-flex justify-content-between align-items-center mt-4 px-3 pb-3" th:if="${users != null and users.totalPages > 1}">
+                            <div class="d-flex align-items-center">
+                                <span class="text-muted me-3">
+                                    显示第 <span class="fw-bold text-primary" th:text="${users.number * users.size + 1}">1</span>
+                                    到 <span class="fw-bold text-primary" th:text="${users.number * users.size + users.numberOfElements}">20</span>
+                                    条，共 <span class="fw-bold text-primary" th:text="${users.totalElements}">100</span> 条记录
+                                </span>
+                                <div class="dropdown">
+                                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                        每页 <span th:text="${users.size}">20</span> 条
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" th:href="@{/admin/users(page=0, size=10, search=${search}, role=${role}, status=${status})}">每页 10 条</a></li>
+                                        <li><a class="dropdown-item" th:href="@{/admin/users(page=0, size=20, search=${search}, role=${role}, status=${status})}">每页 20 条</a></li>
+                                        <li><a class="dropdown-item" th:href="@{/admin/users(page=0, size=50, search=${search}, role=${role}, status=${status})}">每页 50 条</a></li>
+                                        <li><a class="dropdown-item" th:href="@{/admin/users(page=0, size=100, search=${search}, role=${role}, status=${status})}">每页 100 条</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <nav aria-label="用户列表分页">
+                                <ul class="pagination pagination-sm mb-0">
+                                    <!-- 首页 -->
+                                    <li class="page-item" th:classappend="${users.first} ? 'disabled' : ''">
+                                        <a class="page-link" th:href="${users.first} ? '#' : @{/admin/users(page=0, size=${users.size}, search=${search}, role=${role}, status=${status})}" title="首页">
+                                            <i class="fas fa-angle-double-left"></i>
+                                        </a>
+                                    </li>
+
+                                    <!-- 上一页 -->
+                                    <li class="page-item" th:classappend="${users.first} ? 'disabled' : ''">
+                                        <a class="page-link"
+                                           th:href="${users.first} ? '#' : @{/admin/users(page=${users.number - 1}, size=${users.size}, search=${search}, role=${role}, status=${status})}"
+                                           title="上一页">
+                                            <i class="fas fa-angle-left"></i>
+                                        </a>
+                                    </li>
+
+                                    <!-- 页码 -->
+                                    <th:block th:each="pageNum : ${#numbers.sequence(0, users.totalPages - 1)}">
+                                        <li class="page-item" th:classappend="${pageNum == users.number} ? 'active' : ''"
+                                            th:if="${pageNum >= users.number - 2 and pageNum <= users.number + 2}">
+                                            <a class="page-link"
+                                               th:href="@{/admin/users(page=${pageNum}, size=${users.size}, search=${search}, role=${role}, status=${status})}"
+                                               th:text="${pageNum + 1}">1</a>
+                                        </li>
+                                    </th:block>
+
+                                    <!-- 下一页 -->
+                                    <li class="page-item" th:classappend="${users.last} ? 'disabled' : ''">
+                                        <a class="page-link"
+                                           th:href="${users.last} ? '#' : @{/admin/users(page=${users.number + 1}, size=${users.size}, search=${search}, role=${role}, status=${status})}"
+                                           title="下一页">
+                                            <i class="fas fa-angle-right"></i>
+                                        </a>
+                                    </li>
+
+                                    <!-- 末页 -->
+                                    <li class="page-item" th:classappend="${users.last} ? 'disabled' : ''">
+                                        <a class="page-link" th:href="${users.last} ? '#' : @{/admin/users(page=${users.totalPages - 1}, size=${users.size}, search=${search}, role=${role}, status=${status})}" title="末页">
+                                            <i class="fas fa-angle-double-right"></i>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </nav>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 添加用户模态框 -->
-    <div class="modal fade" id="addUserModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">添加用户</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form class="needs-validation" novalidate>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <label class="form-label">用户名 *</label>
-                                <input type="text" class="form-control" required>
-                                <div class="invalid-feedback">请输入用户名</div>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">真实姓名 *</label>
-                                <input type="text" class="form-control" required>
-                                <div class="invalid-feedback">请输入真实姓名</div>
-                            </div>
-                        </div>
-                        <div class="row mt-3">
-                            <div class="col-md-6">
-                                <label class="form-label">邮箱 *</label>
-                                <input type="email" class="form-control" required>
-                                <div class="invalid-feedback">请输入有效的邮箱地址</div>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">手机号</label>
-                                <input type="tel" class="form-control">
-                            </div>
-                        </div>
-                        <div class="row mt-3">
-                            <div class="col-md-6">
-                                <label class="form-label">密码 *</label>
-                                <input type="password" class="form-control" required>
-                                <div class="invalid-feedback">请输入密码</div>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">确认密码 *</label>
-                                <input type="password" class="form-control" required>
-                                <div class="invalid-feedback">请确认密码</div>
-                            </div>
-                        </div>
-                        <div class="row mt-3">
-                            <div class="col-md-6">
-                                <label class="form-label">用户角色 *</label>
-                                <select class="form-select" required>
-                                    <option value="">请选择角色</option>
-                                    <option value="ADMIN">系统管理员</option>
-                                    <option value="TEACHER">教师</option>
-                                    <option value="STUDENT">学生</option>
-                                    <option value="FINANCE">财务人员</option>
-                                </select>
-                                <div class="invalid-feedback">请选择用户角色</div>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">用户状态</label>
-                                <select class="form-select">
-                                    <option value="1">正常</option>
-                                    <option value="0">禁用</option>
-                                </select>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                    <button type="button" class="btn btn-primary">保存</button>
-                </div>
-            </div>
-        </div>
-    </div>
+
       <!-- 退出登录确认模态框 -->
     <th:block th:replace="~{components/topbar :: logout-modal}"></th:block>
     <!-- 引入侧边栏脚本 -->
@@ -367,5 +358,614 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- 自定义脚本 -->
     <script src="/js/admin.js"></script>
+
+    <!-- 用户管理核心功能脚本 - 优先加载 -->
+    <script>
+        // 核心功能函数 - 立即定义
+        function resetFilters() {
+            try {
+                document.getElementById('searchInput').value = '';
+                document.getElementById('roleFilter').value = '';
+                document.getElementById('statusFilter').value = '';
+                document.getElementById('searchForm').submit();
+            } catch (e) {
+                console.error('重置筛选失败:', e);
+                window.location.href = '/admin/users';
+            }
+        }
+
+        function searchUsers() {
+            try {
+                document.getElementById('searchForm').submit();
+            } catch (e) {
+                console.error('搜索失败:', e);
+            }
+        }
+
+        function exportUsers() {
+            try {
+                const search = document.getElementById('searchInput').value;
+                const role = document.getElementById('roleFilter').value;
+                const status = document.getElementById('statusFilter').value;
+
+                let exportUrl = '/admin/users/export?';
+                const params = [];
+
+                if (search) params.push('search=' + encodeURIComponent(search));
+                if (role) params.push('role=' + encodeURIComponent(role));
+                if (status) params.push('status=' + encodeURIComponent(status));
+
+                exportUrl += params.join('&');
+
+                const link = document.createElement('a');
+                link.href = exportUrl;
+                link.download = '用户列表_' + new Date().toISOString().slice(0, 10) + '.xlsx';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            } catch (e) {
+                console.error('导出失败:', e);
+                alert('导出失败，请稍后重试');
+            }
+        }
+
+        function refreshUserList() {
+            window.location.reload();
+        }
+
+        // 用户操作函数
+        function viewUser(userId) {
+            // 查看用户详情
+            fetch(`/admin/users/${userId}/detail`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showUserDetailModal(data.user);
+                    } else {
+                        alert('获取用户详情失败：' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('获取用户详情失败，请稍后重试');
+                });
+        }
+
+        function editUser(userId) {
+            // 编辑用户
+            fetch(`/admin/users/${userId}/detail`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showEditUserModal(data.user);
+                    } else {
+                        alert('获取用户信息失败：' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('获取用户信息失败，请稍后重试');
+                });
+        }
+
+        function resetPassword(userId) {
+            if (confirm('确定要重置该用户的密码吗？重置后密码将变为默认密码。')) {
+                fetch(`/admin/users/${userId}/reset-password`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('密码重置成功！新密码为：' + data.newPassword);
+                    } else {
+                        alert('重置密码失败：' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('重置密码失败，请稍后重试');
+                });
+            }
+        }
+
+        function toggleUserStatus(userId) {
+            if (confirm('确定要切换该用户的状态吗？')) {
+                fetch(`/admin/users/${userId}/toggle-status`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('用户状态切换成功！');
+                        window.location.reload();
+                    } else {
+                        alert('切换用户状态失败：' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('切换用户状态失败，请稍后重试');
+                });
+            }
+        }
+
+        // 显示用户详情模态框
+        function showUserDetailModal(user) {
+            const modalHtml = `
+                <div class="modal fade" id="userDetailModal" tabindex="-1">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title"><i class="fas fa-user"></i> 用户详情</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>用户名：</strong> ${user.username}</p>
+                                        <p><strong>真实姓名：</strong> ${user.realName || '未设置'}</p>
+                                        <p><strong>邮箱：</strong> ${user.email || '未设置'}</p>
+                                        <p><strong>手机号：</strong> ${user.phone || '未设置'}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><strong>角色：</strong> ${user.roleName || '未分配'}</p>
+                                        <p><strong>状态：</strong> <span class="badge ${user.status == 1 ? 'bg-success' : 'bg-danger'}">${user.status == 1 ? '正常' : '禁用'}</span></p>
+                                        <p><strong>创建时间：</strong> ${user.createTime || '未知'}</p>
+                                        <p><strong>最后登录：</strong> ${user.lastLoginTime || '从未登录'}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // 移除已存在的模态框
+            const existingModal = document.getElementById('userDetailModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+
+            // 添加新模态框
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            const modal = new bootstrap.Modal(document.getElementById('userDetailModal'));
+            modal.show();
+        }
+
+        // 显示编辑用户模态框
+        function showEditUserModal(user) {
+            const modalHtml = `
+                <div class="modal fade" id="editUserModal" tabindex="-1">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title"><i class="fas fa-edit"></i> 编辑用户</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <form id="editUserForm" novalidate>
+                                    <input type="hidden" id="editUserId" value="${user.id}">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="editUsername" class="form-label">用户名</label>
+                                                <input type="text" class="form-control" id="editUsername" value="${user.username}" readonly>
+                                                <small class="text-muted">用户名不可修改</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="editRealName" class="form-label">真实姓名 <span class="text-danger">*</span></label>
+                                                <input type="text" class="form-control" id="editRealName" value="${user.realName || ''}" required>
+                                                <div class="invalid-feedback">请输入真实姓名</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="editEmail" class="form-label">邮箱 <span class="text-danger">*</span></label>
+                                                <input type="email" class="form-control" id="editEmail" value="${user.email || ''}" required>
+                                                <div class="invalid-feedback">请输入有效的邮箱地址</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="editPhone" class="form-label">手机号</label>
+                                                <input type="tel" class="form-control" id="editPhone" value="${user.phone || ''}">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="editStatus" class="form-label">状态</label>
+                                                <select class="form-select" id="editStatus">
+                                                    <option value="1" ${user.status == 1 ? 'selected' : ''}>正常</option>
+                                                    <option value="0" ${user.status == 0 ? 'selected' : ''}>禁用</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                                <button type="button" class="btn btn-primary" onclick="submitEditUserForm()">
+                                    <i class="fas fa-save"></i> 保存
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // 移除已存在的模态框
+            const existingModal = document.getElementById('editUserModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+
+            // 添加新模态框
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            const modal = new bootstrap.Modal(document.getElementById('editUserModal'));
+            modal.show();
+        }
+
+        // 提交编辑用户表单
+        function submitEditUserForm() {
+            const form = document.getElementById('editUserForm');
+            const userId = document.getElementById('editUserId').value;
+
+            // 验证表单
+            if (!form.checkValidity()) {
+                form.classList.add('was-validated');
+                return;
+            }
+
+            // 构建用户数据
+            const userData = {
+                realName: document.getElementById('editRealName').value,
+                email: document.getElementById('editEmail').value,
+                phone: document.getElementById('editPhone').value,
+                status: parseInt(document.getElementById('editStatus').value)
+            };
+
+            // 发送请求
+            fetch(`/admin/users/${userId}/edit`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(userData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('更新用户成功！');
+                    // 关闭模态框
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('editUserModal'));
+                    modal.hide();
+                    // 刷新页面
+                    window.location.reload();
+                } else {
+                    alert('更新用户失败：' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('更新用户失败，请稍后重试');
+            });
+        }
+    </script>
+
+    <!-- 页面自定义样式 -->
+    <style>
+        .table-hover tbody tr:hover {
+            background-color: rgba(0, 123, 255, 0.05);
+            transition: all 0.2s ease;
+        }
+
+        .btn-group-sm .btn {
+            border-radius: 4px !important;
+            margin: 0 1px;
+        }
+
+        .badge {
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        .input-group .form-control:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+        }
+
+        .pagination .page-link {
+            border-radius: 6px;
+            margin: 0 2px;
+            border: 1px solid #dee2e6;
+        }
+
+        .pagination .page-item.active .page-link {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+        }
+
+        .table thead th {
+            border-bottom: 2px solid #dee2e6;
+            font-weight: 600;
+            color: #495057;
+            background-color: #f8f9fa;
+        }
+
+        @media (max-width: 768px) {
+            .btn-group-sm .btn {
+                padding: 0.25rem 0.4rem;
+                font-size: 0.75rem;
+            }
+
+            .table-responsive {
+                font-size: 0.875rem;
+            }
+
+            .badge {
+                font-size: 0.7rem;
+            }
+        }
+    </style>
+
+    <!-- 用户管理功能脚本 -->
+    <script>
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化工具提示
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+
+            // 初始化表格行点击效果
+            initTableRowEffects();
+        });
+
+        // 初始化表格行效果
+        function initTableRowEffects() {
+            const tableRows = document.querySelectorAll('tbody tr');
+            tableRows.forEach(row => {
+                row.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-1px)';
+                    this.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                });
+
+                row.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                    this.style.boxShadow = 'none';
+                });
+            });
+        }
+
+        // 移除批量删除相关函数
+
+        // 刷新用户列表
+        function refreshUserList() {
+            window.location.reload();
+        }
+
+        // 这些函数已在页面顶部定义，此处不再重复
+
+        // 移除批量删除函数
+
+        // 导出Excel函数已在页面顶部定义
+
+        // 导出用户Excel
+        function exportUsers() {
+            // 获取当前筛选条件
+            const search = document.getElementById('searchInput').value;
+            const role = document.getElementById('roleFilter').value;
+            const status = document.getElementById('statusFilter').value;
+
+            // 构建查询参数
+            const params = new URLSearchParams();
+            if (search) params.append('search', search);
+            if (role) params.append('role', role);
+            if (status) params.append('status', status);
+
+            // 创建下载链接
+            const url = '/admin/users/export?' + params.toString();
+
+            // 创建隐藏的下载链接并点击
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = '用户列表.xlsx';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+
+    <!-- 添加用户模态框 -->
+    <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addUserModalLabel">
+                        <i class="fas fa-user-plus"></i> 添加用户
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addUserForm" novalidate>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="username" class="form-label">用户名 <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="username" name="username" required>
+                                    <div class="invalid-feedback">请输入用户名</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="realName" class="form-label">真实姓名 <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="realName" name="realName" required>
+                                    <div class="invalid-feedback">请输入真实姓名</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">邮箱 <span class="text-danger">*</span></label>
+                                    <input type="email" class="form-control" id="email" name="email" required>
+                                    <div class="invalid-feedback">请输入有效的邮箱地址</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="phone" class="form-label">手机号</label>
+                                    <input type="tel" class="form-control" id="phone" name="phone">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="password" class="form-label">密码 <span class="text-danger">*</span></label>
+                                    <input type="password" class="form-control" id="password" name="password" required minlength="6">
+                                    <div class="invalid-feedback">密码至少6位</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="confirmPassword" class="form-label">确认密码 <span class="text-danger">*</span></label>
+                                    <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+                                    <div class="invalid-feedback">密码不匹配</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="role" class="form-label">角色 <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="role" name="role" required>
+                                        <option value="">请选择角色</option>
+                                        <option value="STUDENT">学生</option>
+                                        <option value="TEACHER">教师</option>
+                                        <option value="FINANCE">财务</option>
+                                        <option value="ADMIN">管理员</option>
+                                    </select>
+                                    <div class="invalid-feedback">请选择角色</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="status" class="form-label">状态</label>
+                                    <select class="form-select" id="status" name="status">
+                                        <option value="1" selected>正常</option>
+                                        <option value="0">禁用</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="submitAddUserForm()">
+                        <i class="fas fa-save"></i> 保存
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加用户表单提交脚本 -->
+    <script>
+        function submitAddUserForm() {
+            const form = document.getElementById('addUserForm');
+            const formData = new FormData(form);
+
+            // 验证表单
+            if (!form.checkValidity()) {
+                form.classList.add('was-validated');
+                return;
+            }
+
+            // 验证密码匹配
+            const password = formData.get('password');
+            const confirmPassword = formData.get('confirmPassword');
+            if (password !== confirmPassword) {
+                document.getElementById('confirmPassword').setCustomValidity('密码不匹配');
+                form.classList.add('was-validated');
+                return;
+            }
+
+            // 构建用户数据
+            const userData = {
+                username: formData.get('username'),
+                realName: formData.get('realName'),
+                email: formData.get('email'),
+                phone: formData.get('phone'),
+                password: formData.get('password'),
+                role: formData.get('role'),
+                status: parseInt(formData.get('status'))
+            };
+
+            // 发送请求
+            fetch('/admin/users/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(userData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('添加用户成功！');
+                    // 关闭模态框
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('addUserModal'));
+                    modal.hide();
+                    // 重置表单
+                    form.reset();
+                    form.classList.remove('was-validated');
+                    // 刷新页面
+                    window.location.reload();
+                } else {
+                    alert('添加用户失败：' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('添加用户失败，请稍后重试');
+            });
+        }
+
+        // 密码确认验证
+        document.addEventListener('DOMContentLoaded', function() {
+            const confirmPasswordInput = document.getElementById('confirmPassword');
+            if (confirmPasswordInput) {
+                confirmPasswordInput.addEventListener('input', function() {
+                    const password = document.getElementById('password').value;
+                    const confirmPassword = this.value;
+
+                    if (password !== confirmPassword) {
+                        this.setCustomValidity('密码不匹配');
+                    } else {
+                        this.setCustomValidity('');
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>

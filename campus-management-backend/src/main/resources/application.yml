@@ -5,6 +5,22 @@ server:
       charset: UTF-8
       enabled: true
       force: true
+  # 响应压缩配置
+  compression:
+    enabled: true
+    mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
+    min-response-size: 1024
+  
+  # HTTP配置
+  tomcat:
+    connection-timeout: 20000  # 20秒连接超时
+    keep-alive-timeout: 60000  # 60秒保活超时
+    max-keep-alive-requests: 100
+    accept-count: 100
+    max-connections: 200
+    threads:
+      max: 200
+      min-spare: 10
 
 spring:
   application:
@@ -12,6 +28,10 @@ spring:
 
   profiles:
     active: dev  # 默认激活开发环境
+
+  # 启动横幅配置
+  main:
+    banner-mode: console
 
   # Thymeleaf配置
   thymeleaf:

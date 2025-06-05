@@ -181,76 +181,44 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr>
-                                        <td><input type="checkbox" class="form-check-input"></td>
-                                        <td>2024001001</td>
-                                        <td>张三</td>
-                                        <td>男</td>
-                                        <td>2024级</td>
-                                        <td>计算机科学2024-1班</td>
-                                        <td>13800138001</td>
-                                        <td>2024-09-01</td>
-                                        <td><span class="badge bg-success">在读</span></td>
+                                    <!-- 动态学生数据 -->
+                                    <tr th:each="student : ${students.content}" th:if="${students != null and !students.empty}">
+                                        <td><input type="checkbox" class="form-check-input" th:value="${student.id}"></td>
+                                        <td th:text="${student.studentNo}">学号</td>
+                                        <td th:text="${student.name}">姓名</td>
+                                        <td th:text="${student.gender ?: '未知'}">性别</td>
+                                        <td th:text="${student.grade}">年级</td>
+                                        <td th:text="${student.schoolClass != null ? student.schoolClass.className : '未分配'}">班级</td>
+                                        <td th:text="${student.phone ?: '-'}">手机号</td>
+                                        <td th:text="${student.enrollmentDate != null ? #temporals.format(student.enrollmentDate, 'yyyy-MM-dd') : '-'}">入学日期</td>
+                                        <td>
+                                            <span class="badge"
+                                                  th:classappend="${student.status == 1} ? 'bg-success' : (${student.status == 2} ? 'bg-warning' : (${student.status == 3} ? 'bg-info' : 'bg-danger'))"
+                                                  th:text="${student.status == 1} ? '在读' : (${student.status == 2} ? '休学' : (${student.status == 3} ? '毕业' : '退学'))">状态</span>
+                                        </td>
                                         <td>
                                             <div class="btn-group btn-group-sm">
-                                                <button type="button" class="btn btn-outline-primary" title="查看详情">
+                                                <button type="button" class="btn btn-outline-primary" title="查看详情"
+                                                        th:onclick="'viewStudent(' + ${student.id} + ')'">
                                                     <i class="fas fa-eye"></i>
                                                 </button>
-                                                <button type="button" class="btn btn-outline-warning" title="编辑">
+                                                <button type="button" class="btn btn-outline-warning" title="编辑"
+                                                        th:onclick="'editStudent(' + ${student.id} + ')'">
                                                     <i class="fas fa-edit"></i>
                                                 </button>
-                                                <button type="button" class="btn btn-outline-danger" title="删除">
+                                                <button type="button" class="btn btn-outline-danger" title="删除"
+                                                        th:onclick="'deleteStudent(' + ${student.id} + ')'">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             </div>
                                         </td>
                                     </tr>
-                                    <tr>
-                                        <td><input type="checkbox" class="form-check-input"></td>
-                                        <td>2024001002</td>
-                                        <td>李四</td>
-                                        <td>女</td>
-                                        <td>2024级</td>
-                                        <td>计算机科学2024-1班</td>
-                                        <td>13800138002</td>
-                                        <td>2024-09-01</td>
-                                        <td><span class="badge bg-success">在读</span></td>
-                                        <td>
-                                            <div class="btn-group btn-group-sm">
-                                                <button type="button" class="btn btn-outline-primary" title="查看详情">
-                                                    <i class="fas fa-eye"></i>
-                                                </button>
-                                                <button type="button" class="btn btn-outline-warning" title="编辑">
-                                                    <i class="fas fa-edit"></i>
-                                                </button>
-                                                <button type="button" class="btn btn-outline-danger" title="删除">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td><input type="checkbox" class="form-check-input"></td>
-                                        <td>2023001001</td>
-                                        <td>王五</td>
-                                        <td>男</td>
-                                        <td>2023级</td>
-                                        <td>软件工程2023-1班</td>
-                                        <td>13800138003</td>
-                                        <td>2023-09-01</td>
-                                        <td><span class="badge bg-warning">休学</span></td>
-                                        <td>
-                                            <div class="btn-group btn-group-sm">
-                                                <button type="button" class="btn btn-outline-primary" title="查看详情">
-                                                    <i class="fas fa-eye"></i>
-                                                </button>
-                                                <button type="button" class="btn btn-outline-warning" title="编辑">
-                                                    <i class="fas fa-edit"></i>
-                                                </button>
-                                                <button type="button" class="btn btn-outline-danger" title="删除">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </div>
+
+                                    <!-- 无数据提示 -->
+                                    <tr th:if="${students == null or students.empty}">
+                                        <td colspan="10" class="text-center text-muted py-4">
+                                            <i class="fas fa-inbox fa-2x mb-2"></i>
+                                            <br>暂无学生数据
                                         </td>
                                     </tr>
                                 </tbody>
@@ -258,18 +226,39 @@
                         </div>
                         
                         <!-- 分页 -->
-                        <nav aria-label="学生列表分页">
+                        <nav aria-label="学生列表分页" th:if="${students != null and students.totalPages > 1}">
                             <ul class="pagination justify-content-center">
-                                <li class="page-item disabled">
-                                    <a class="page-link" href="#" tabindex="-1">上一页</a>
+                                <!-- 上一页 -->
+                                <li class="page-item" th:classappend="${students.first} ? 'disabled' : ''">
+                                    <a class="page-link"
+                                       th:href="${students.first} ? '#' : @{/admin/students(page=${students.number - 1}, size=${students.size}, search=${search}, grade=${grade}, classId=${classId}, status=${status})}"
+                                       tabindex="-1">上一页</a>
                                 </li>
-                                <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                                <li class="page-item"><a class="page-link" href="#">2</a></li>
-                                <li class="page-item"><a class="page-link" href="#">3</a></li>
-                                <li class="page-item">
-                                    <a class="page-link" href="#">下一页</a>
+
+                                <!-- 页码 -->
+                                <th:block th:each="pageNum : ${#numbers.sequence(0, students.totalPages - 1)}">
+                                    <li class="page-item" th:classappend="${pageNum == students.number} ? 'active' : ''"
+                                        th:if="${pageNum >= students.number - 2 and pageNum <= students.number + 2}">
+                                        <a class="page-link"
+                                           th:href="@{/admin/students(page=${pageNum}, size=${students.size}, search=${search}, grade=${grade}, classId=${classId}, status=${status})}"
+                                           th:text="${pageNum + 1}">1</a>
+                                    </li>
+                                </th:block>
+
+                                <!-- 下一页 -->
+                                <li class="page-item" th:classappend="${students.last} ? 'disabled' : ''">
+                                    <a class="page-link"
+                                       th:href="${students.last} ? '#' : @{/admin/students(page=${students.number + 1}, size=${students.size}, search=${search}, grade=${grade}, classId=${classId}, status=${status})}">下一页</a>
                                 </li>
                             </ul>
+
+                            <!-- 分页信息 -->
+                            <div class="text-center mt-2">
+                                <small class="text-muted">
+                                    第 <span th:text="${students.number + 1}">1</span> 页，共 <span th:text="${students.totalPages}">1</span> 页，
+                                    总计 <span th:text="${students.totalElements}">0</span> 条记录
+                                </small>
+                            </div>
                         </nav>
                     </div>
                 </div>

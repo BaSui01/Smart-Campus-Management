@@ -51,6 +51,8 @@ const ParentProfile = () => import('@/views/parent/Profile.vue')
 const Features = () => import('@/views/about/Features.vue')
 const About = () => import('@/views/about/About.vue')
 const Privacy = () => import('@/views/legal/Privacy.vue')
+const Cases = () => import('@/views/about/Cases.vue')
+const Contact = () => import('@/views/about/Contact.vue')
 
 // 路由配置
 const routes = [
@@ -113,7 +115,7 @@ const routes = [
   {
     path: '/cases',
     name: 'Cases',
-    redirect: '/features',
+    component: Cases,
     meta: {
       title: '案例展示',
       requiresAuth: false
@@ -185,7 +187,7 @@ const routes = [
   {
     path: '/contact',
     name: 'Contact',
-    redirect: '/about',
+    component: Contact,
     meta: {
       title: '联系我们',
       requiresAuth: false

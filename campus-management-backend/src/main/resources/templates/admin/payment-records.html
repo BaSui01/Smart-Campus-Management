@@ -185,91 +185,59 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr>
-                                        <td><input type="checkbox" class="form-check-input"></td>
-                                        <td class="font-monospace">PAY20240120001</td>
+                                    <!-- 动态缴费记录数据 -->
+                                    <tr th:each="payment : ${paymentRecords.content}" th:if="${paymentRecords != null and !paymentRecords.empty}">
+                                        <td><input type="checkbox" class="form-check-input" th:value="${payment.id}"></td>
+                                        <td class="font-monospace" th:text="${payment.transactionNo}">流水号</td>
                                         <td>
                                             <div>
-                                                <strong>张三</strong><br>
-                                                <small class="text-muted">2024001001</small>
+                                                <strong th:text="${payment.student != null ? payment.student.name : '未知学生'}">学生姓名</strong><br>
+                                                <small class="text-muted" th:text="${payment.student != null ? payment.student.studentNo : ''}">学号</small>
                                             </div>
                                         </td>
-                                        <td>2024年春季学费</td>
-                                        <td class="text-danger fw-bold">¥5,000.00</td>
-                                        <td><span class="badge bg-info">支付宝</span></td>
-                                        <td>2024-01-20 14:30:25</td>
-                                        <td>财务老师</td>
-                                        <td><span class="badge bg-success">成功</span></td>
+                                        <td th:text="${payment.feeItem != null ? payment.feeItem.itemName : '未知项目'}">缴费项目</td>
+                                        <td class="text-danger fw-bold" th:text="'¥' + ${#numbers.formatDecimal(payment.amount, 1, 2)}">缴费金额</td>
+                                        <td>
+                                            <span class="badge"
+                                                  th:classappend="${payment.paymentMethod == '支付宝'} ? 'bg-info' : (${payment.paymentMethod == '微信'} ? 'bg-success' : (${payment.paymentMethod == '银行卡'} ? 'bg-primary' : (${payment.paymentMethod == '现金'} ? 'bg-warning' : 'bg-secondary')))"
+                                                  th:text="${payment.paymentMethod ?: '未知'}">缴费方式</span>
+                                        </td>
+                                        <td th:text="${payment.paymentTime != null ? #temporals.format(payment.paymentTime, 'yyyy-MM-dd HH:mm:ss') : ''}">缴费时间</td>
+                                        <td th:text="${payment.operator != null ? payment.operator.realName : '系统'}">操作员</td>
+                                        <td>
+                                            <span class="badge"
+                                                  th:classappend="${payment.status == 1} ? 'bg-success' : (${payment.status == 2} ? 'bg-warning' : (${payment.status == 3} ? 'bg-danger' : 'bg-secondary'))"
+                                                  th:text="${payment.status == 1} ? '成功' : (${payment.status == 2} ? '退款' : (${payment.status == 3} ? '失败' : '未知'))">状态</span>
+                                        </td>
                                         <td>
                                             <div class="btn-group btn-group-sm">
-                                                <button type="button" class="btn btn-outline-primary" title="查看详情">
+                                                <button type="button" class="btn btn-outline-primary" title="查看详情"
+                                                        th:onclick="'viewPayment(' + ${payment.id} + ')'">
                                                     <i class="fas fa-eye"></i>
                                                 </button>
-                                                <button type="button" class="btn btn-outline-warning" title="打印凭证">
+                                                <button type="button" class="btn btn-outline-warning" title="打印凭证"
+                                                        th:onclick="'printReceipt(' + ${payment.id} + ')'">
                                                     <i class="fas fa-print"></i>
                                                 </button>
-                                                <button type="button" class="btn btn-outline-danger" title="退款">
+                                                <button type="button" class="btn btn-outline-danger" title="退款"
+                                                        th:onclick="'refundPayment(' + ${payment.id} + ')'"
+                                                        th:if="${payment.status == 1}"
+                                                        th:disabled="${payment.status != 1}">
                                                     <i class="fas fa-undo"></i>
                                                 </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td><input type="checkbox" class="form-check-input"></td>
-                                        <td class="font-monospace">PAY20240120002</td>
-                                        <td>
-                                            <div>
-                                                <strong>李四</strong><br>
-                                                <small class="text-muted">2024001002</small>
-                                            </div>
-                                        </td>
-                                        <td>教材费</td>
-                                        <td class="text-danger fw-bold">¥300.00</td>
-                                        <td><span class="badge bg-success">微信</span></td>
-                                        <td>2024-01-20 15:15:10</td>
-                                        <td>财务老师</td>
-                                        <td><span class="badge bg-success">成功</span></td>
-                                        <td>
-                                            <div class="btn-group btn-group-sm">
-                                                <button type="button" class="btn btn-outline-primary" title="查看详情">
-                                                    <i class="fas fa-eye"></i>
-                                                </button>
-                                                <button type="button" class="btn btn-outline-warning" title="打印凭证">
-                                                    <i class="fas fa-print"></i>
-                                                </button>
-                                                <button type="button" class="btn btn-outline-danger" title="退款">
-                                                    <i class="fas fa-undo"></i>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td><input type="checkbox" class="form-check-input"></td>
-                                        <td class="font-monospace">PAY20240119001</td>
-                                        <td>
-                                            <div>
-                                                <strong>王五</strong><br>
-                                                <small class="text-muted">2023001001</small>
-                                            </div>
-                                        </td>
-                                        <td>住宿费</td>
-                                        <td class="text-danger fw-bold">¥1,200.00</td>
-                                        <td><span class="badge bg-primary">银行卡</span></td>
-                                        <td>2024-01-19 10:20:45</td>
-                                        <td>财务老师</td>
-                                        <td><span class="badge bg-warning">退款</span></td>
-                                        <td>
-                                            <div class="btn-group btn-group-sm">
-                                                <button type="button" class="btn btn-outline-primary" title="查看详情">
-                                                    <i class="fas fa-eye"></i>
-                                                </button>
-                                                <button type="button" class="btn btn-outline-warning" title="打印凭证">
-                                                    <i class="fas fa-print"></i>
-                                                </button>
-                                                <button type="button" class="btn btn-outline-secondary" title="已退款" disabled>
+                                                <button type="button" class="btn btn-outline-secondary" title="已退款" disabled
+                                                        th:if="${payment.status == 2}">
                                                     <i class="fas fa-check"></i>
                                                 </button>
                                             </div>
+                                        </td>
+                                    </tr>
+
+                                    <!-- 无数据提示 -->
+                                    <tr th:if="${paymentRecords == null or paymentRecords.empty}">
+                                        <td colspan="10" class="text-center text-muted py-4">
+                                            <i class="fas fa-inbox fa-2x mb-2"></i>
+                                            <br>暂无缴费记录数据
                                         </td>
                                     </tr>
                                 </tbody>
@@ -277,18 +245,39 @@
                         </div>
                         
                         <!-- 分页 -->
-                        <nav aria-label="缴费记录列表分页">
+                        <nav aria-label="缴费记录列表分页" th:if="${paymentRecords != null and paymentRecords.totalPages > 1}">
                             <ul class="pagination justify-content-center">
-                                <li class="page-item disabled">
-                                    <a class="page-link" href="#" tabindex="-1">上一页</a>
+                                <!-- 上一页 -->
+                                <li class="page-item" th:classappend="${paymentRecords.first} ? 'disabled' : ''">
+                                    <a class="page-link"
+                                       th:href="${paymentRecords.first} ? '#' : @{/admin/payment-records(page=${paymentRecords.number - 1}, size=${paymentRecords.size}, search=${search}, method=${method}, status=${status})}"
+                                       tabindex="-1">上一页</a>
                                 </li>
-                                <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                                <li class="page-item"><a class="page-link" href="#">2</a></li>
-                                <li class="page-item"><a class="page-link" href="#">3</a></li>
-                                <li class="page-item">
-                                    <a class="page-link" href="#">下一页</a>
+
+                                <!-- 页码 -->
+                                <th:block th:each="pageNum : ${#numbers.sequence(0, paymentRecords.totalPages - 1)}">
+                                    <li class="page-item" th:classappend="${pageNum == paymentRecords.number} ? 'active' : ''"
+                                        th:if="${pageNum >= paymentRecords.number - 2 and pageNum <= paymentRecords.number + 2}">
+                                        <a class="page-link"
+                                           th:href="@{/admin/payment-records(page=${pageNum}, size=${paymentRecords.size}, search=${search}, method=${method}, status=${status})}"
+                                           th:text="${pageNum + 1}">1</a>
+                                    </li>
+                                </th:block>
+
+                                <!-- 下一页 -->
+                                <li class="page-item" th:classappend="${paymentRecords.last} ? 'disabled' : ''">
+                                    <a class="page-link"
+                                       th:href="${paymentRecords.last} ? '#' : @{/admin/payment-records(page=${paymentRecords.number + 1}, size=${paymentRecords.size}, search=${search}, method=${method}, status=${status})}">下一页</a>
                                 </li>
                             </ul>
+
+                            <!-- 分页信息 -->
+                            <div class="text-center mt-2">
+                                <small class="text-muted">
+                                    第 <span th:text="${paymentRecords.number + 1}">1</span> 页，共 <span th:text="${paymentRecords.totalPages}">1</span> 页，
+                                    总计 <span th:text="${paymentRecords.totalElements}">0</span> 条记录
+                                </small>
+                            </div>
                         </nav>
                     </div>
                 </div>

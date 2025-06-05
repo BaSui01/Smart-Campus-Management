@@ -10,9 +10,8 @@
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <!-- 引入组件样式 -->
+    <th:block th:replace="~{components/sidebar :: sidebar-style}"></th:block>
     <th:block th:replace="~{components/topbar :: topbar-style}"></th:block>
-    <!-- 侧边栏样式 -->
-    <link th:href="@{/css/sidebar.css}" rel="stylesheet">
     <!-- 自定义样式 -->
     <link href="/css/admin.css" rel="stylesheet">
 </head>
@@ -121,19 +120,32 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr th:each="permission : ${permissions}">
-                                        <td th:text="${permission.id}"></td>
-                                        <td><code th:text="${permission.code}"></code></td>
-                                        <td th:text="${permission.name}"></td>
-                                        <td><span class="badge bg-info" th:text="${permission.module}"></span></td>
-                                        <td th:text="${permission.description}"></td>
+                                    <!-- 动态权限数据 -->
+                                    <tr th:each="permission : ${permissions}" th:if="${permissions != null and !permissions.empty}">
+                                        <td th:text="${permission.id}">ID</td>
+                                        <td><code th:text="${permission.permissionCode}">权限代码</code></td>
+                                        <td th:text="${permission.permissionName}">权限名称</td>
+                                        <td><span class="badge bg-info" th:text="${permission.resourceType ?: '系统'}">所属模块</span></td>
+                                        <td th:text="${permission.permissionDesc ?: '无描述'}">描述</td>
                                         <td>
-                                            <button class="btn btn-sm btn-outline-primary" th:onclick="'editPermission(' + ${permission.id} + ')'">
-                                                <i class="fas fa-edit"></i> 编辑
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-danger" th:onclick="'deletePermission(' + ${permission.id} + ')'">
-                                                <i class="fas fa-trash"></i> 删除
-                                            </button>
+                                            <div class="btn-group btn-group-sm">
+                                                <button class="btn btn-outline-primary" title="编辑"
+                                                        th:onclick="'editPermission(' + ${permission.id} + ')'">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button class="btn btn-outline-danger" title="删除"
+                                                        th:onclick="'deletePermission(' + ${permission.id} + ')'">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+
+                                    <!-- 无数据提示 -->
+                                    <tr th:if="${permissions == null or permissions.empty}">
+                                        <td colspan="6" class="text-center text-muted py-4">
+                                            <i class="fas fa-inbox fa-2x mb-2"></i>
+                                            <br>暂无权限数据
                                         </td>
                                     </tr>
                                 </tbody>
@@ -197,18 +209,171 @@
     <!-- 自定义脚本 -->
     <script src="/js/admin.js"></script>
     <script>
+        // 编辑权限模态框
+        let editPermissionModal;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            editPermissionModal = new bootstrap.Modal(document.getElementById('addPermissionModal'));
+        });
+        
         function editPermission(id) {
-            alert('编辑权限功能开发中，权限ID: ' + id);
+            fetch(`/admin/permissions/api/${id}`)
+                .then(response => response.json())
+                .then(permission => {
+                    if (permission) {
+                        // 填充表单数据
+                        document.getElementById('permissionCode').value = permission.permissionCode || '';
+                        document.getElementById('permissionName').value = permission.permissionName || '';
+                        document.getElementById('permissionModule').value = permission.resourceType || '';
+                        document.getElementById('permissionDescription').value = permission.permissionDesc || '';
+                        
+                        // 设置表单为编辑模式
+                        const form = document.getElementById('addPermissionForm');
+                        form.setAttribute('data-edit-id', id);
+                        
+                        // 更改模态框标题
+                        document.querySelector('#addPermissionModal .modal-title').textContent = '编辑权限';
+                        
+                        // 显示模态框
+                        editPermissionModal.show();
+                    }
+                })
+                .catch(error => {
+                    console.error('获取权限详情失败:', error);
+                    alert('获取权限详情失败');
+                });
         }
         
         function deletePermission(id) {
             if (confirm('确定要删除这个权限吗？')) {
-                alert('删除权限功能开发中，权限ID: ' + id);
+                fetch(`/admin/permissions/api/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        alert('权限删除成功');
+                        window.location.reload();
+                    } else {
+                        alert('删除失败: ' + result.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('删除权限失败:', error);
+                    alert('删除权限失败');
+                });
             }
         }
         
         function savePermission() {
-            alert('保存权限功能开发中');
+            const form = document.getElementById('addPermissionForm');
+            const editId = form.getAttribute('data-edit-id');
+            
+            // 获取表单数据
+            const permissionData = {
+                permissionCode: document.getElementById('permissionCode').value.trim(),
+                permissionName: document.getElementById('permissionName').value.trim(),
+                resourceType: document.getElementById('permissionModule').value,
+                permissionDesc: document.getElementById('permissionDescription').value.trim()
+            };
+            
+            // 验证必填字段
+            if (!permissionData.permissionCode) {
+                alert('权限代码不能为空');
+                return;
+            }
+            
+            if (!permissionData.permissionName) {
+                alert('权限名称不能为空');
+                return;
+            }
+            
+            if (!permissionData.resourceType) {
+                alert('请选择所属模块');
+                return;
+            }
+            
+            // 确定是新增还是编辑
+            const isEdit = editId && editId !== '';
+            const url = isEdit ? `/admin/permissions/api/${editId}` : '/admin/permissions/api';
+            const method = isEdit ? 'PUT' : 'POST';
+            
+            fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(permissionData)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    alert(isEdit ? '权限更新成功' : '权限创建成功');
+                    editPermissionModal.hide();
+                    window.location.reload();
+                } else {
+                    alert('操作失败: ' + result.message);
+                }
+            })
+            .catch(error => {
+                console.error('保存权限失败:', error);
+                alert('保存权限失败');
+            });
+        }
+        
+        // 重置表单（当模态框关闭时）
+        document.getElementById('addPermissionModal').addEventListener('hidden.bs.modal', function() {
+            const form = document.getElementById('addPermissionForm');
+            form.reset();
+            form.removeAttribute('data-edit-id');
+            document.querySelector('#addPermissionModal .modal-title').textContent = '添加权限';
+        });
+        
+        // 搜索权限功能
+        function searchPermissions() {
+            const keyword = document.getElementById('searchKeyword')?.value.trim();
+            if (keyword) {
+                window.location.href = `/admin/permissions?keyword=${encodeURIComponent(keyword)}`;
+            } else {
+                window.location.href = '/admin/permissions';
+            }
+        }
+        
+        // 批量删除功能
+        function batchDeletePermissions() {
+            const checkedBoxes = document.querySelectorAll('input[name="permissionIds"]:checked');
+            if (checkedBoxes.length === 0) {
+                alert('请选择要删除的权限');
+                return;
+            }
+            
+            const ids = Array.from(checkedBoxes).map(cb => parseInt(cb.value));
+            
+            if (confirm(`确定要删除选中的 ${ids.length} 个权限吗？`)) {
+                fetch('/admin/permissions/api/batch', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(ids)
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        alert(`成功删除 ${result.deletedCount} 个权限`);
+                        window.location.reload();
+                    } else {
+                        alert('批量删除失败: ' + result.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('批量删除失败:', error);
+                    alert('批量删除失败');
+                });
+            }
         }
     </script>
 </body>

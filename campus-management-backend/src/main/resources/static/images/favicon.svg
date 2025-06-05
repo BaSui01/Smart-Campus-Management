@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- 背景圆形 -->
+  <circle cx="16" cy="16" r="15" fill="#0d6efd" stroke="#ffffff" stroke-width="1"/>
+  
+  <!-- 校园建筑图标 -->
+  <g fill="#ffffff">
+    <!-- 主建筑 -->
+    <rect x="8" y="12" width="16" height="12" rx="1"/>
+    
+    <!-- 屋顶 -->
+    <polygon points="6,12 16,6 26,12" />
+    
+    <!-- 门 -->
+    <rect x="14" y="18" width="4" height="6" fill="#0d6efd"/>
+    
+    <!-- 窗户 -->
+    <rect x="10" y="14" width="2" height="2" fill="#0d6efd"/>
+    <rect x="20" y="14" width="2" height="2" fill="#0d6efd"/>
+    <rect x="10" y="17" width="2" height="2" fill="#0d6efd"/>
+    <rect x="20" y="17" width="2" height="2" fill="#0d6efd"/>
+    
+    <!-- 旗杆 -->
+    <rect x="15.5" y="4" width="1" height="8" fill="#ffffff"/>
+    
+    <!-- 旗帜 -->
+    <polygon points="16.5,4 16.5,7 20,6" fill="#dc3545"/>
+  </g>
+</svg>

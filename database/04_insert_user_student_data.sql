@@ -16,18 +16,18 @@ SET CHARACTER SET utf8mb4;
 -- 1. 插入教师用户数据 (tb_user)
 -- ================================================
 -- 插入50个教师用户
-INSERT INTO tb_user (username, password, email, real_name, phone, status) VALUES
+INSERT INTO tb_user (username, password, email, real_name, phone, gender, status) VALUES
 -- 计算机学院教师
-('teacher001', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8ioctKi85KQ9e1.dMjL6VJNlZLWsS', 'teacher001@campus.edu.cn', '张明华', '13901234001', 1),
-('teacher002', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8ioctKi85KQ9e1.dMjL6VJNlZLWsS', 'teacher002@campus.edu.cn', '李秀英', '13901234002', 1),
-('teacher003', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8ioctKi85KQ9e1.dMjL6VJNlZLWsS', 'teacher003@campus.edu.cn', '王建国', '13901234003', 1),
-('teacher004', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8ioctKi85KQ9e1.dMjL6VJNlZLWsS', 'teacher004@campus.edu.cn', '陈美丽', '13901234004', 1),
-('teacher005', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8ioctKi85KQ9e1.dMjL6VJNlZLWsS', 'teacher005@campus.edu.cn', '刘强', '13901234005', 1),
-('teacher006', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8ioctKi85KQ9e1.dMjL6VJNlZLWsS', 'teacher006@campus.edu.cn', '杨丽娜', '13901234006', 1),
-('teacher007', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8ioctKi85KQ9e1.dMjL6VJNlZLWsS', 'teacher007@campus.edu.cn', '赵志强', '13901234007', 1),
-('teacher008', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8ioctKi85KQ9e1.dMjL6VJNlZLWsS', 'teacher008@campus.edu.cn', '孙小红', '13901234008', 1),
-('teacher009', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8ioctKi85KQ9e1.dMjL6VJNlZLWsS', 'teacher009@campus.edu.cn', '周天明', '13901234009', 1),
-('teacher010', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8ioctKi85KQ9e1.dMjL6VJNlZLWsS', 'teacher010@campus.edu.cn', '吴雪梅', '13901234010', 1),
+('teacher001', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8ioctKi85KQ9e1.dMjL6VJNlZLWsS', 'teacher001@campus.edu.cn', '张明华', '13901234001', '男', 1),
+('teacher002', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8ioctKi85KQ9e1.dMjL6VJNlZLWsS', 'teacher002@campus.edu.cn', '李秀英', '13901234002', '女', 1),
+('teacher003', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8ioctKi85KQ9e1.dMjL6VJNlZLWsS', 'teacher003@campus.edu.cn', '王建国', '13901234003', '男', 1),
+('teacher004', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8ioctKi85KQ9e1.dMjL6VJNlZLWsS', 'teacher004@campus.edu.cn', '陈美丽', '13901234004', '女', 1),
+('teacher005', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8ioctKi85KQ9e1.dMjL6VJNlZLWsS', 'teacher005@campus.edu.cn', '刘强', '13901234005', '男', 1),
+('teacher006', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8ioctKi85KQ9e1.dMjL6VJNlZLWsS', 'teacher006@campus.edu.cn', '杨丽娜', '13901234006', '女', 1),
+('teacher007', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8ioctKi85KQ9e1.dMjL6VJNlZLWsS', 'teacher007@campus.edu.cn', '赵志强', '13901234007', '男', 1),
+('teacher008', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8ioctKi85KQ9e1.dMjL6VJNlZLWsS', 'teacher008@campus.edu.cn', '孙小红', '13901234008', '女', 1),
+('teacher009', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8ioctKi85KQ9e1.dMjL6VJNlZLWsS', 'teacher009@campus.edu.cn', '周天明', '13901234009', '男', 1),
+('teacher010', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8ioctKi85KQ9e1.dMjL6VJNlZLWsS', 'teacher010@campus.edu.cn', '吴雪梅', '13901234010', '女', 1),
 ('teacher011', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8ioctKi85KQ9e1.dMjL6VJNlZLWsS', 'teacher011@campus.edu.cn', '郑大伟', '13901234011', 1),
 ('teacher012', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8ioctKi85KQ9e1.dMjL6VJNlZLWsS', 'teacher012@campus.edu.cn', '马文静', '13901234012', 1),
 ('teacher013', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8ioctKi85KQ9e1.dMjL6VJNlZLWsS', 'teacher013@campus.edu.cn', '朱永辉', '13901234013', 1),
@@ -186,9 +186,36 @@ BEGIN
         -- 生成手机号
         SET phone = CONCAT('139', LPAD(FLOOR(RAND() * 100000000), 8, '0'));
         
-        -- 插入用户数据
-        INSERT INTO tb_user (username, password, email, real_name, phone, status) 
-        VALUES (username, '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8ioctKi85KQ9e1.dMjL6VJNlZLWsS', email, real_name, phone, 1);
+        -- 插入用户数据（包含性别字段）
+        INSERT INTO tb_user (username, password, email, real_name, phone, gender, status)
+        VALUES (username, '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8ioctKi85KQ9e1.dMjL6VJNlZLWsS', email, real_name, phone,
+                CASE
+                    WHEN real_name LIKE '%秀%' OR real_name LIKE '%丽%' OR real_name LIKE '%娜%' OR real_name LIKE '%芳%' OR
+                         real_name LIKE '%静%' OR real_name LIKE '%艳%' OR real_name LIKE '%娟%' OR real_name LIKE '%霞%' OR
+                         real_name LIKE '%华%' OR real_name LIKE '%玲%' OR real_name LIKE '%颖%' OR real_name LIKE '%红%' OR
+                         real_name LIKE '%慧%' OR real_name LIKE '%惠%' OR real_name LIKE '%雪%' OR real_name LIKE '%萍%' OR
+                         real_name LIKE '%婷%' OR real_name LIKE '%欣%' OR real_name LIKE '%怡%' OR real_name LIKE '%蕾%' OR
+                         real_name LIKE '%诗%' OR real_name LIKE '%梦%' OR real_name LIKE '%晴%' OR real_name LIKE '%语%' OR
+                         real_name LIKE '%雯%' OR real_name LIKE '%薇%' OR real_name LIKE '%琳%' OR real_name LIKE '%彤%' OR
+                         real_name LIKE '%妍%' OR real_name LIKE '%菲%' OR real_name LIKE '%嘉%' OR real_name LIKE '%思%' OR
+                         real_name LIKE '%雨%' OR real_name LIKE '%露%' OR real_name LIKE '%柔%' OR real_name LIKE '%媛%' OR
+                         real_name LIKE '%瑶%' OR real_name LIKE '%馨%' OR real_name LIKE '%琪%' OR real_name LIKE '%涵%' OR
+                         real_name LIKE '%轩%' OR real_name LIKE '%航%' OR real_name LIKE '%恒%' OR real_name LIKE '%瑞%' OR
+                         real_name LIKE '%希%' OR real_name LIKE '%佳%' OR real_name LIKE '%晨%' OR real_name LIKE '%悦%'
+                    THEN '女'
+                    WHEN real_name LIKE '%伟%' OR real_name LIKE '%强%' OR real_name LIKE '%磊%' OR real_name LIKE '%军%' OR
+                         real_name LIKE '%洋%' OR real_name LIKE '%勇%' OR real_name LIKE '%杰%' OR real_name LIKE '%涛%' OR
+                         real_name LIKE '%明%' OR real_name LIKE '%超%' OR real_name LIKE '%平%' OR real_name LIKE '%刚%' OR
+                         real_name LIKE '%辉%' OR real_name LIKE '%鹏%' OR real_name LIKE '%君%' OR real_name LIKE '%东%' OR
+                         real_name LIKE '%亮%' OR real_name LIKE '%凯%' OR real_name LIKE '%浩%' OR real_name LIKE '%宇%' OR
+                         real_name LIKE '%博%' OR real_name LIKE '%睿%' OR real_name LIKE '%哲%' OR real_name LIKE '%鸣%' OR
+                         real_name LIKE '%昊%' OR real_name LIKE '%俊%' OR real_name LIKE '%豪%' OR real_name LIKE '%然%' OR
+                         real_name LIKE '%天%' OR real_name LIKE '%远%' OR real_name LIKE '%文%' OR real_name LIKE '%智%' OR
+                         real_name LIKE '%安%' OR real_name LIKE '%成%' OR real_name LIKE '%国%' OR real_name LIKE '%建%' OR
+                         real_name LIKE '%志%' OR real_name LIKE '%华%' OR real_name LIKE '%德%' OR real_name LIKE '%庆%'
+                    THEN '男'
+                    ELSE CASE (i % 3) WHEN 0 THEN '女' WHEN 1 THEN '男' ELSE '其他' END
+                END, 1);
         
         -- 获取插入的用户ID
         SET user_id = LAST_INSERT_ID();

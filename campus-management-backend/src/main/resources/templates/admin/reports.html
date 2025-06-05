@@ -300,7 +300,22 @@
         }
         
         function exportReport(format) {
-            alert(`导出${format.toUpperCase()}报表功能开发中`);
+            const type = document.getElementById('reportType').value;
+            const year = document.getElementById('year').value;
+            const month = document.getElementById('month').value;
+            
+            let url = `/admin/reports/export?format=${format}&type=${type}&year=${year}`;
+            if (month && month !== '') {
+                url += `&month=${month}`;
+            }
+            
+            // 创建下载链接
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `财务报表_${type}_${year}${month ? '_' + month : ''}.${format === 'pdf' ? 'pdf' : 'xlsx'}`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
     </script>
 </body>

@@ -147,74 +147,66 @@
     <script th:fragment="sidebar-script">
         // 全局侧边栏管理器，防止重复初始化
         window.SidebarManager = window.SidebarManager || {
-            initialized: false,
-            toggleButtonCreated: false
+            initialized: false
         };
 
-        // 侧边栏切换功能
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const content = document.getElementById('content');
-            const toggleBtn = document.querySelector('.sidebar-toggle-btn');
+        // 立即定义全局toggleSidebar函数，确保按钮点击时可用
+        window.toggleSidebar = function() {
+            if (window.innerWidth <= 768) {
+                // 移动端切换逻辑
+                const sidebar = document.getElementById('sidebar');
+                const overlay = document.getElementById('sidebar-overlay');
 
-            if (sidebar && content) {
-                const isCollapsed = sidebar.classList.contains('collapsed');
+                if (sidebar) {
+                    const isHidden = sidebar.classList.contains('mobile-hidden');
 
-                if (isCollapsed) {
-                    // 展开侧边栏
-                    sidebar.classList.remove('collapsed');
-                    content.classList.remove('sidebar-collapsed');
-                    if (toggleBtn) {
-                        toggleBtn.innerHTML = '<i class="fas fa-bars"></i>';
-                        toggleBtn.title = '收起导航栏';
+                    if (isHidden) {
+                        sidebar.classList.remove('mobile-hidden');
+                        if (overlay) overlay.style.display = 'block';
+                    } else {
+                        sidebar.classList.add('mobile-hidden');
+                        if (overlay) overlay.style.display = 'none';
                     }
-                    // 保存状态到localStorage
-                    localStorage.setItem('sidebarCollapsed', 'false');
-                } else {
-                    // 收起侧边栏
-                    sidebar.classList.add('collapsed');
-                    content.classList.add('sidebar-collapsed');
-                    if (toggleBtn) {
-                        toggleBtn.innerHTML = '<i class="fas fa-indent"></i>';
-                        toggleBtn.title = '展开导航栏';
-                    }
-                    // 保存状态到localStorage
-                    localStorage.setItem('sidebarCollapsed', 'true');
                 }
+            } else {
+                // 桌面端：直接调用桌面端的切换逻辑
+                const sidebar = document.getElementById('sidebar');
+                const content = document.getElementById('content');
 
-                // 触发窗口resize事件，让其他组件知道布局变化
-                window.dispatchEvent(new Event('resize'));
+                if (sidebar && content) {
+                    const isHidden = sidebar.classList.contains('collapsed');
+
+                    if (isHidden) {
+                        // 显示侧边栏
+                        sidebar.classList.remove('collapsed');
+                        content.classList.remove('sidebar-collapsed');
+                        localStorage.setItem('sidebarCollapsed', 'false');
+                    } else {
+                        // 隐藏侧边栏
+                        sidebar.classList.add('collapsed');
+                        content.classList.add('sidebar-collapsed');
+                        localStorage.setItem('sidebarCollapsed', 'true');
+                    }
+
+                    // 触发窗口resize事件，让其他组件知道布局变化
+                    window.dispatchEvent(new Event('resize'));
+                }
             }
-        }
+        };
+
+        // 移除重复的本地toggleSidebar函数，只保留上面的全局函数定义
 
         // 初始化侧边栏状态
         function initSidebarState() {
             const sidebar = document.getElementById('sidebar');
             const content = document.getElementById('content');
-            const toggleBtn = document.querySelector('.sidebar-toggle-btn');
-            const standaloneToggle = document.getElementById('sidebar-toggle-container');
 
             // 从localStorage读取保存的状态
-            const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+            const isHidden = localStorage.getItem('sidebarCollapsed') === 'true';
 
-            if (isCollapsed && sidebar && content) {
+            if (isHidden && sidebar && content) {
                 sidebar.classList.add('collapsed');
                 content.classList.add('sidebar-collapsed');
-                if (toggleBtn) {
-                    toggleBtn.innerHTML = '<i class="fas fa-bars"></i>';
-                    toggleBtn.title = '隐藏导航栏';
-                }
-                if (standaloneToggle) {
-                    standaloneToggle.classList.remove('hidden');
-                }
-            } else {
-                if (toggleBtn) {
-                    toggleBtn.innerHTML = '<i class="fas fa-bars"></i>';
-                    toggleBtn.title = '隐藏导航栏';
-                }
-                if (standaloneToggle) {
-                    standaloneToggle.classList.add('hidden');
-                }
             }
         }
 
@@ -224,7 +216,7 @@
             const content = document.getElementById('content');
 
             if (window.innerWidth <= 768) {
-                // 移动端：强制收起侧边栏
+                // 移动端：强制隐藏侧边栏
                 if (sidebar && content) {
                     sidebar.classList.add('mobile-hidden');
                     content.classList.add('mobile-full');
@@ -234,7 +226,7 @@
                 if (sidebar && content) {
                     sidebar.classList.remove('mobile-hidden');
                     content.classList.remove('mobile-full');
-                    // 恢复桌面端的收起/展开状态
+                    // 恢复桌面端的隐藏/显示状态
                     initSidebarState();
                 }
             }
@@ -262,49 +254,23 @@
 
         // 移动端切换侧边栏
         function toggleMobileSidebar() {
-            if (window.innerWidth <= 768) {
-                const sidebar = document.getElementById('sidebar');
-                const overlay = document.getElementById('sidebar-overlay');
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
 
-                if (sidebar) {
-                    const isHidden = sidebar.classList.contains('mobile-hidden');
+            if (sidebar) {
+                const isHidden = sidebar.classList.contains('mobile-hidden');
 
-                    if (isHidden) {
-                        sidebar.classList.remove('mobile-hidden');
-                        if (overlay) overlay.style.display = 'block';
-                    } else {
-                        sidebar.classList.add('mobile-hidden');
-                        if (overlay) overlay.style.display = 'none';
-                    }
+                if (isHidden) {
+                    sidebar.classList.remove('mobile-hidden');
+                    if (overlay) overlay.style.display = 'block';
+                } else {
+                    sidebar.classList.add('mobile-hidden');
+                    if (overlay) overlay.style.display = 'none';
                 }
             }
         }
 
-        // 创建独立的切换按钮
-        function createToggleButton() {
-            // 使用全局管理器检查是否已创建
-            if (window.SidebarManager.toggleButtonCreated || document.getElementById('sidebar-toggle-container')) {
-                return;
-            }
-
-            const toggleContainer = document.createElement('div');
-            toggleContainer.id = 'sidebar-toggle-container';
-            toggleContainer.className = 'sidebar-toggle-container hidden'; // 默认隐藏
-
-            const toggleButton = document.createElement('button');
-            toggleButton.className = 'sidebar-toggle-standalone';
-            toggleButton.innerHTML = '<i class="fas fa-bars"></i>';
-            toggleButton.title = '显示导航栏';
-            toggleButton.onclick = function() {
-                toggleSidebar();
-            };
-
-            toggleContainer.appendChild(toggleButton);
-            document.body.appendChild(toggleContainer);
-
-            // 标记已创建
-            window.SidebarManager.toggleButtonCreated = true;
-        }
+        // 移除独立切换按钮功能，只保留顶部导航栏中的切换按钮
 
         // 页面加载时执行
         document.addEventListener('DOMContentLoaded', function() {
@@ -313,10 +279,7 @@
                 return;
             }
 
-            // 延迟创建独立的切换按钮，避免重复创建
-            setTimeout(function() {
-                createToggleButton();
-            }, 100);
+            // 移除独立切换按钮创建代码
 
             // 初始化侧边栏状态
             initSidebarState();
@@ -362,50 +325,7 @@
                 });
             });
 
-            // 重写toggleSidebar函数以支持新的切换逻辑
-            window.toggleSidebar = function() {
-                if (window.innerWidth <= 768) {
-                    toggleMobileSidebar();
-                } else {
-                    // 桌面端的新逻辑 - 完全隐藏/显示侧边栏
-                    const sidebar = document.getElementById('sidebar');
-                    const content = document.getElementById('content');
-                    const toggleBtn = document.querySelector('.sidebar-toggle-btn');
-                    const standaloneToggle = document.getElementById('sidebar-toggle-container');
-
-                    if (sidebar && content) {
-                        const isCollapsed = sidebar.classList.contains('collapsed');
-
-                        if (isCollapsed) {
-                            // 显示侧边栏
-                            sidebar.classList.remove('collapsed');
-                            content.classList.remove('sidebar-collapsed');
-                            if (toggleBtn) {
-                                toggleBtn.innerHTML = '<i class="fas fa-bars"></i>';
-                                toggleBtn.title = '隐藏导航栏';
-                            }
-                            if (standaloneToggle) {
-                                standaloneToggle.classList.add('hidden');
-                            }
-                            localStorage.setItem('sidebarCollapsed', 'false');
-                        } else {
-                            // 隐藏侧边栏
-                            sidebar.classList.add('collapsed');
-                            content.classList.add('sidebar-collapsed');
-                            if (toggleBtn) {
-                                toggleBtn.innerHTML = '<i class="fas fa-bars"></i>';
-                                toggleBtn.title = '隐藏导航栏';
-                            }
-                            if (standaloneToggle) {
-                                standaloneToggle.classList.remove('hidden');
-                            }
-                            localStorage.setItem('sidebarCollapsed', 'true');
-                        }
-
-                        window.dispatchEvent(new Event('resize'));
-                    }
-                }
-            };
+            // toggleSidebar函数已在脚本开头定义，这里不需要重复定义
         });
     </script>
 

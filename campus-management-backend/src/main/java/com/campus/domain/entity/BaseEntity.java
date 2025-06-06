@@ -1,0 +1,118 @@
+package com.campus.domain.entity;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.persistence.*;
+import lombok.Data;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
+import java.time.LocalDateTime;
+
+/**
+ * 基础实体类
+ * 提供公共字段和审计功能
+ *
+ * @author Campus Management Team
+ * @version 1.0.0
+ * @since 2025-06-06
+ */
+@Data
+@MappedSuperclass
+@EntityListeners(AuditingEntityListener.class)
+public abstract class BaseEntity {
+
+    /**
+     * 主键ID
+     */
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    /**
+     * 创建时间
+     */
+    @CreatedDate
+    @Column(name = "created_at", nullable = false, updatable = false)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime createdAt;
+
+    /**
+     * 更新时间
+     */
+    @LastModifiedDate
+    @Column(name = "updated_at", nullable = false)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime updatedAt;
+
+    /**
+     * 逻辑删除标志
+     * 0: 未删除, 1: 已删除
+     */
+    @Column(name = "deleted", nullable = false, columnDefinition = "TINYINT DEFAULT 0")
+    private Integer deleted = 0;
+
+    /**
+     * 状态字段
+     * 1: 正常/启用, 0: 禁用
+     */
+    @Column(name = "status", nullable = false, columnDefinition = "TINYINT DEFAULT 1")
+    private Integer status = 1;
+
+    @PrePersist
+    protected void onCreate() {
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+        if (updatedAt == null) {
+            updatedAt = LocalDateTime.now();
+        }
+        if (deleted == null) {
+            deleted = 0;
+        }
+        if (status == null) {
+            status = 1;
+        }
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
+
+    /**
+     * 判断是否被删除
+     */
+    public boolean isDeleted() {
+        return deleted != null && deleted == 1;
+    }
+
+    /**
+     * 判断是否启用
+     */
+    public boolean isEnabled() {
+        return status != null && status == 1;
+    }
+
+    /**
+     * 软删除
+     */
+    public void markAsDeleted() {
+        this.deleted = 1;
+        this.status = 0;
+    }
+
+    /**
+     * 启用
+     */
+    public void enable() {
+        this.status = 1;
+    }
+
+    /**
+     * 禁用
+     */
+    public void disable() {
+        this.status = 0;
+    }
+}

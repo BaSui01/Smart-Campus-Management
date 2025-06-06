@@ -15,9 +15,9 @@
     <description>智慧校园管理平台后端服务</description>
     <properties>
         <java.version>17</java.version>
-        <mybatis-plus.version>3.5.4</mybatis-plus.version>
         <jjwt.version>0.11.5</jjwt.version>
         <hutool.version>5.8.21</hutool.version>
+        <lombok.version>1.18.30</lombok.version>
     </properties>
     <dependencies>
         <!-- Spring Boot Starters -->
@@ -86,19 +86,8 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- Druid 连接池 -->
-        <dependency>
-            <groupId>com.alibaba</groupId>
-            <artifactId>druid-spring-boot-starter</artifactId>
-            <version>1.2.20</version>
-        </dependency>
-
-        <!-- MyBatis Plus -->
-        <dependency>
-            <groupId>com.baomidou</groupId>
-            <artifactId>mybatis-plus-boot-starter</artifactId>
-            <version>${mybatis-plus.version}</version>
-        </dependency>
+        <!-- 使用默认的HikariCP连接池，移除Druid以避免冲突 -->
+        <!-- 按照README要求使用HikariCP作为连接池 -->
 
         <!-- JWT - 使用JJWT库 -->
         <dependency>
@@ -156,6 +145,14 @@
         <dependency>
             <groupId>com.fasterxml.jackson.datatype</groupId>
             <artifactId>jackson-datatype-jsr310</artifactId>
+        </dependency>
+
+        <!-- Lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>${lombok.version}</version>
+            <scope>provided</scope>
         </dependency>
 
         <!-- 开发工具 -->

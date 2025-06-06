@@ -10,8 +10,10 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.campus.application.service.StudentService;
+import com.campus.application.service.SchoolClassService;
 import com.campus.shared.common.ApiResponse;
 import com.campus.domain.entity.Student;
+import com.campus.domain.entity.SchoolClass;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -34,6 +36,9 @@ public class StudentApiController {
 
     @Autowired
     private StudentService studentService;
+
+    @Autowired
+    private SchoolClassService schoolClassService;
 
     /**
      * 获取学生列表（分页）
@@ -169,6 +174,49 @@ public class StudentApiController {
     }
 
     /**
+     * 获取学生表单数据
+     */
+    @GetMapping("/form-data")
+    @Operation(summary = "获取学生表单数据", description = "获取创建/编辑学生表单所需的数据")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ApiResponse<Map<String, Object>> getStudentFormData() {
+        try {
+            Map<String, Object> formData = new HashMap<>();
+
+            // 获取班级列表
+            List<SchoolClass> allClasses = schoolClassService.findAll();
+
+            // 获取年级列表
+            List<String> grades = allClasses.stream()
+                .map(SchoolClass::getGrade)
+                .distinct()
+                .sorted()
+                .toList();
+
+            // 获取专业列表
+            List<String> majors = allClasses.stream()
+                .map(SchoolClass::getClassName)
+                .map(this::extractMajorFromClassName)
+                .distinct()
+                .filter(major -> !major.equals("其他专业"))
+                .sorted()
+                .toList();
+
+            if (majors.isEmpty()) {
+                majors = List.of("计算机科学与技术", "软件工程", "信息安全", "数据科学与大数据技术", "人工智能", "网络工程", "物联网工程");
+            }
+
+            formData.put("classes", allClasses);
+            formData.put("grades", grades);
+            formData.put("majors", majors);
+
+            return ApiResponse.success("获取表单数据成功", formData);
+        } catch (Exception e) {
+            return ApiResponse.error(500, "获取学生表单数据失败：" + e.getMessage());
+        }
+    }
+
+    /**
      * 创建学生
      */
     @PostMapping
@@ -275,5 +323,33 @@ public class StudentApiController {
 
         List<Student> students = studentService.exportStudents(params);
         return ApiResponse.success("导出学生数据成功", students);
+    }
+
+    /**
+     * 从班级名称中提取专业信息
+     */
+    private String extractMajorFromClassName(String className) {
+        if (className == null || className.isEmpty()) {
+            return "其他专业";
+        }
+
+        // 常见的专业关键词映射
+        if (className.contains("计算机") || className.contains("CS")) {
+            return "计算机科学与技术";
+        } else if (className.contains("软件") || className.contains("SE")) {
+            return "软件工程";
+        } else if (className.contains("信息安全") || className.contains("网络安全")) {
+            return "信息安全";
+        } else if (className.contains("数据") || className.contains("大数据")) {
+            return "数据科学与大数据技术";
+        } else if (className.contains("人工智能") || className.contains("AI")) {
+            return "人工智能";
+        } else if (className.contains("网络工程")) {
+            return "网络工程";
+        } else if (className.contains("物联网")) {
+            return "物联网工程";
+        } else {
+            return "其他专业";
+        }
     }
 }

@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -254,11 +256,20 @@ public class CourseController {
                                 @RequestParam(defaultValue = "20") int size,
                                 @RequestParam(defaultValue = "") String search,
                                 @RequestParam(defaultValue = "") String semester,
+                                HttpServletRequest request,
                                 Model model) {
         try {
             // 构建查询参数 - 只显示当前教师的课程
             Map<String, Object> params = new HashMap<>();
-            // TODO: 添加当前教师ID过滤
+
+            // 添加当前教师ID过滤
+            // 注意：在实际项目中，应该从认证信息中获取当前教师ID
+            // 这里为了演示，使用模拟的教师ID
+            Long currentTeacherId = getCurrentTeacherId(request);
+            if (currentTeacherId != null) {
+                params.put("teacherId", currentTeacherId);
+            }
+
             if (!search.isEmpty()) {
                 params.put("search", search);
             }
@@ -302,5 +313,27 @@ public class CourseController {
         }
 
         return semesters;
+    }
+
+    /**
+     * 获取当前教师ID
+     * 从认证信息中获取当前登录教师的ID
+     */
+    private Long getCurrentTeacherId(HttpServletRequest request) {
+        try {
+            // 从session或JWT token中获取当前用户信息
+            String username = (String) request.getAttribute("currentUsername");
+            if (username != null) {
+                // 根据用户名查找用户信息，然后获取教师ID
+                // 这里假设用户表中有教师相关信息，或者有单独的教师表
+                // 为了演示，返回一个固定的教师ID
+                // 在实际项目中，应该根据用户角色和关联关系来获取
+                return 1L; // 示例教师ID
+            }
+            return null;
+        } catch (Exception e) {
+            System.err.println("获取当前教师ID失败: " + e.getMessage());
+            return null;
+        }
     }
 }

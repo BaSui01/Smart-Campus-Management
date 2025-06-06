@@ -4,161 +4,37 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>缴费提醒</title>
-    <style>
-        body {
-            font-family: 'Microsoft YaHei', Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-        .container {
-            background-color: #ffffff;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
-        .header {
-            background: linear-gradient(135deg, #FF9800, #F57C00);
-            color: white;
-            padding: 30px 20px;
-            text-align: center;
-        }
-        .header h1 {
-            margin: 0;
-            font-size: 24px;
-            font-weight: 300;
-        }
-        .header h2 {
-            margin: 10px 0 0 0;
-            font-size: 18px;
-            font-weight: 300;
-            opacity: 0.9;
-        }
-        .content {
-            padding: 30px 20px;
-        }
-        .greeting {
-            font-size: 16px;
-            margin-bottom: 20px;
-            color: #555;
-        }
-        .student-info {
-            background-color: #f8f9fa;
-            padding: 15px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            border-left: 4px solid #FF9800;
-        }
-        .fee-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-            background-color: #fff;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-        .fee-table th {
-            background-color: #FF9800;
-            color: white;
-            padding: 12px;
-            text-align: left;
-            font-weight: 500;
-        }
-        .fee-table td {
-            padding: 12px;
-            border-bottom: 1px solid #eee;
-        }
-        .fee-table tr:hover {
-            background-color: #f5f5f5;
-        }
-        .amount {
-            font-weight: bold;
-            color: #d32f2f;
-        }
-        .total-amount {
-            background-color: #fff3e0;
-            padding: 15px;
-            border-radius: 5px;
-            margin: 20px 0;
-            border-left: 4px solid #FF9800;
-            text-align: center;
-        }
-        .total-amount .amount {
-            font-size: 24px;
-            color: #d32f2f;
-        }
-        .urgent-notice {
-            background-color: #ffebee;
-            padding: 15px;
-            border-radius: 5px;
-            margin: 20px 0;
-            border-left: 4px solid #f44336;
-        }
-        .payment-info {
-            background-color: #e8f5e8;
-            padding: 15px;
-            border-radius: 5px;
-            margin: 20px 0;
-            border-left: 4px solid #4CAF50;
-        }
-        .footer {
-            background-color: #f8f9fa;
-            padding: 20px;
-            text-align: center;
-            color: #666;
-            font-size: 14px;
-            border-top: 1px solid #eee;
-        }
-        .footer p {
-            margin: 5px 0;
-        }
-        .logo {
-            width: 40px;
-            height: 40px;
-            background-color: rgba(255,255,255,0.2);
-            border-radius: 50%;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 10px;
-            font-size: 20px;
-        }
-        .deadline {
-            color: #d32f2f;
-            font-weight: bold;
-        }
-    </style>
+    <!-- 邮件模板样式 -->
+    <link th:href="@{/css/email/email-templates.css}" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <div class="logo">💰</div>
+    <div class="email-container">
+        <div class="email-header payment-reminder">
+            <div class="email-logo">💰</div>
             <h1 th:text="${systemName}">智慧校园管理系统</h1>
             <h2>缴费提醒</h2>
         </div>
-        
-        <div class="content">
-            <div class="greeting">
+
+        <div class="email-content">
+            <div class="email-greeting">
                 <p>亲爱的 <strong th:text="${student.realName}">学生姓名</strong> 同学：</p>
                 <p>您好！系统检测到您有以下费用尚未缴纳，请及时处理。</p>
             </div>
-            
-            <div class="student-info">
+
+            <div class="info-card payment-info">
                 <p><strong>学号：</strong><span th:text="${student.studentNo}">学号</span></p>
                 <p><strong>姓名：</strong><span th:text="${student.realName}">姓名</span></p>
                 <p><strong>年级：</strong><span th:text="${student.grade}">年级</span></p>
                 <p><strong>专业：</strong><span th:text="${student.major}">专业</span></p>
             </div>
-            
-            <div class="urgent-notice">
+
+            <div class="notice-card urgent">
                 <h3>⚠️ 重要提醒</h3>
                 <p>请在规定时间内完成缴费，逾期可能影响您的学业进度和相关服务。</p>
             </div>
             
             <h3>📋 未缴费项目明细</h3>
-            <table class="fee-table">
+            <table class="email-table fee-table">
                 <thead>
                     <tr>
                         <th>缴费项目</th>
@@ -175,21 +51,21 @@
                         <td class="amount" th:text="'¥' + ${item.amount}">金额</td>
                         <td class="deadline" th:text="${#temporals.format(item.dueDate, 'yyyy-MM-dd')}">截止日期</td>
                         <td>
-                            <span style="color: #f44336; font-weight: bold;">未缴费</span>
+                            <span class="grade-poor">未缴费</span>
                         </td>
                     </tr>
                 </tbody>
             </table>
             
-            <div class="total-amount">
+            <div class="total-amount-card">
                 <h3>💸 应缴费总额</h3>
                 <div class="amount" th:text="'¥' + ${totalAmount}">总金额</div>
-                <p style="margin-top: 10px; color: #666;">请核对以上费用明细</p>
+                <p>请核对以上费用明细</p>
             </div>
-            
-            <div class="payment-info">
+
+            <div class="notice-card success">
                 <h3>💳 缴费方式</h3>
-                <ul style="margin: 10px 0; padding-left: 20px;">
+                <ul>
                     <li><strong>线上缴费：</strong>登录智慧校园管理系统，进入"缴费管理"模块</li>
                     <li><strong>银行转账：</strong>转账至学校指定账户（详询财务处）</li>
                     <li><strong>现场缴费：</strong>前往学校财务处现场办理</li>
@@ -197,17 +73,17 @@
                 </ul>
             </div>
             
-            <div style="margin-top: 30px; padding: 15px; background-color: #e3f2fd; border-radius: 5px; border-left: 4px solid #2196F3;">
+            <div class="notice-card info">
                 <h3>📞 联系方式</h3>
                 <p><strong>财务处电话：</strong>0571-12345678</p>
                 <p><strong>办公时间：</strong>周一至周五 8:30-17:00</p>
                 <p><strong>咨询邮箱：</strong>finance@campus.edu</p>
                 <p><strong>办公地址：</strong>行政楼2楼财务处</p>
             </div>
-            
-            <div style="margin-top: 30px; padding: 15px; background-color: #fff3cd; border-radius: 5px; border-left: 4px solid #ffc107;">
-                <p><strong>📝 温馨提示：</strong></p>
-                <ul style="margin: 10px 0; padding-left: 20px;">
+
+            <div class="notice-card warning">
+                <h3>📝 温馨提示</h3>
+                <ul>
                     <li>缴费后请保留相关凭证，以备查询</li>
                     <li>如有疑问，请及时联系财务处或辅导员</li>
                     <li>建议使用线上缴费方式，方便快捷</li>
@@ -216,7 +92,7 @@
             </div>
         </div>
         
-        <div class="footer">
+        <div class="email-footer">
             <p>此邮件由系统自动发送，请勿回复</p>
             <p th:text="${systemName}">智慧校园管理系统</p>
             <p>&copy; 2024 版权所有</p>

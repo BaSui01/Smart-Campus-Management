@@ -99,7 +99,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     /**
      * 获取最近注册的用户
      */
-    @Query("SELECT u FROM User u ORDER BY u.createdTime DESC")
+    @Query("SELECT u FROM User u ORDER BY u.createdAt DESC")
     List<User> findRecentUsers(Pageable pageable);
 
     /**
@@ -117,7 +117,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     /**
      * 统计今日新增用户数
      */
-    @Query("SELECT COUNT(u) FROM User u WHERE DATE(u.createdTime) = CURRENT_DATE")
+    @Query("SELECT COUNT(u) FROM User u WHERE DATE(u.createdAt) = CURRENT_DATE")
     long countTodayNewUsers();
 
     /**
@@ -145,4 +145,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
            "u.realName LIKE %:keyword% OR " +
            "u.email LIKE %:keyword%")
     List<User> findByUsernameContainingOrRealNameContainingOrEmailContaining(@Param("keyword") String keyword1, @Param("keyword") String keyword2, @Param("keyword") String keyword3);
+
+    /**
+     * 根据用户名和状态查找用户
+     */
+    Optional<User> findByUsernameAndStatus(String username, Integer status);
+
+
 }

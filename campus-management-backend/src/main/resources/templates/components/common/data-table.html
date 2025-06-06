@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+    <!-- 通用数据表格组件 -->
+    <div th:fragment="data-table(tableId, columns, data, actions)" class="table-responsive">
+        <table th:id="${tableId}" class="table table-bordered table-hover">
+            <thead class="table-light">
+                <tr>
+                    <!-- 复选框列 -->
+                    <th width="50" th:if="${actions?.showCheckbox}">
+                        <input type="checkbox" class="form-check-input" id="selectAll">
+                    </th>
+                    
+                    <!-- 数据列 -->
+                    <th th:each="column : ${columns}" 
+                        th:text="${column.title}"
+                        th:width="${column.width}"
+                        th:classappend="${column.sortable} ? 'sortable' : ''"
+                        th:data-field="${column.field}">
+                        列标题
+                    </th>
+                    
+                    <!-- 操作列 -->
+                    <th width="150" th:if="${actions?.showActions}">操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="row, iterStat : ${data}" th:data-id="${row.id}">
+                    <!-- 复选框 -->
+                    <td th:if="${actions?.showCheckbox}">
+                        <input type="checkbox" class="form-check-input row-checkbox" th:value="${row.id}">
+                    </td>
+                    
+                    <!-- 数据单元格 -->
+                    <td th:each="column : ${columns}">
+                        <!-- 根据列类型渲染不同内容 -->
+                        <span th:if="${column.type == 'text'}" th:text="${row[column.field]}">文本内容</span>
+                        
+                        <span th:if="${column.type == 'number'}" th:text="${#numbers.formatDecimal(row[column.field], 0, 2)}">数字</span>
+                        
+                        <span th:if="${column.type == 'date'}" th:text="${#dates.format(row[column.field], 'yyyy-MM-dd')}">日期</span>
+                        
+                        <span th:if="${column.type == 'datetime'}" th:text="${#dates.format(row[column.field], 'yyyy-MM-dd HH:mm')}">日期时间</span>
+                        
+                        <span th:if="${column.type == 'status'}" 
+                              th:class="'badge ' + (${row[column.field] == 1} ? 'bg-success' : 'bg-secondary')"
+                              th:text="${row[column.field] == 1} ? '启用' : '禁用'">状态</span>
+                        
+                        <span th:if="${column.type == 'currency'}" th:text="'¥' + ${#numbers.formatDecimal(row[column.field], 0, 2)}">金额</span>
+                        
+                        <!-- 自定义渲染 -->
+                        <span th:if="${column.type == 'custom'}" th:utext="${column.render != null ? column.render.apply(row) : row[column.field]}">自定义内容</span>
+                    </td>
+                    
+                    <!-- 操作按钮 -->
+                    <td th:if="${actions?.showActions}">
+                        <div class="btn-group btn-group-sm">
+                            <button th:if="${actions?.showView}" 
+                                    type="button" 
+                                    class="btn btn-outline-info btn-sm"
+                                    th:onclick="'viewRecord(' + ${row.id} + ')'"
+                                    title="查看">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            
+                            <button th:if="${actions?.showEdit}" 
+                                    type="button" 
+                                    class="btn btn-outline-primary btn-sm"
+                                    th:onclick="'editRecord(' + ${row.id} + ')'"
+                                    title="编辑">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            
+                            <button th:if="${actions?.showDelete}" 
+                                    type="button" 
+                                    class="btn btn-outline-danger btn-sm"
+                                    th:onclick="'deleteRecord(' + ${row.id} + ')'"
+                                    title="删除">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                
+                <!-- 空数据提示 -->
+                <tr th:if="${data == null or data.isEmpty()}">
+                    <td th:colspan="${columns.size() + (actions?.showCheckbox ? 1 : 0) + (actions?.showActions ? 1 : 0)}" 
+                        class="text-center py-4">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <p class="text-muted mb-0">暂无数据</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 分页组件 -->
+    <nav th:fragment="pagination(page)" th:if="${page != null and page.totalPages > 1}">
+        <ul class="pagination justify-content-center">
+            <!-- 首页 -->
+            <li class="page-item" th:classappend="${page.first} ? 'disabled'">
+                <a class="page-link" th:href="@{''(page=0)}" th:unless="${page.first}">
+                    <i class="fas fa-angle-double-left"></i>
+                </a>
+                <span class="page-link" th:if="${page.first}">
+                    <i class="fas fa-angle-double-left"></i>
+                </span>
+            </li>
+            
+            <!-- 上一页 -->
+            <li class="page-item" th:classappend="${page.first} ? 'disabled'">
+                <a class="page-link" th:href="@{''(page=${page.number - 1})}" th:unless="${page.first}">
+                    <i class="fas fa-angle-left"></i>
+                </a>
+                <span class="page-link" th:if="${page.first}">
+                    <i class="fas fa-angle-left"></i>
+                </span>
+            </li>
+            
+            <!-- 页码 -->
+            <li class="page-item" 
+                th:each="pageNum : ${#numbers.sequence(T(java.lang.Math).max(0, page.number - 2), T(java.lang.Math).min(page.totalPages - 1, page.number + 2))}"
+                th:classappend="${pageNum == page.number} ? 'active'">
+                <a class="page-link" th:href="@{''(page=${pageNum})}" th:text="${pageNum + 1}" th:unless="${pageNum == page.number}">1</a>
+                <span class="page-link" th:if="${pageNum == page.number}" th:text="${pageNum + 1}">1</span>
+            </li>
+            
+            <!-- 下一页 -->
+            <li class="page-item" th:classappend="${page.last} ? 'disabled'">
+                <a class="page-link" th:href="@{''(page=${page.number + 1})}" th:unless="${page.last}">
+                    <i class="fas fa-angle-right"></i>
+                </a>
+                <span class="page-link" th:if="${page.last}">
+                    <i class="fas fa-angle-right"></i>
+                </span>
+            </li>
+            
+            <!-- 末页 -->
+            <li class="page-item" th:classappend="${page.last} ? 'disabled'">
+                <a class="page-link" th:href="@{''(page=${page.totalPages - 1})}" th:unless="${page.last}">
+                    <i class="fas fa-angle-double-right"></i>
+                </a>
+                <span class="page-link" th:if="${page.last}">
+                    <i class="fas fa-angle-double-right"></i>
+                </span>
+            </li>
+        </ul>
+        
+        <!-- 分页信息 -->
+        <div class="text-center text-muted mt-2">
+            <small>
+                显示第 <span th:text="${page.number * page.size + 1}">1</span> 
+                到 <span th:text="${T(java.lang.Math).min((page.number + 1) * page.size, page.totalElements)}">10</span> 
+                条，共 <span th:text="${page.totalElements}">100</span> 条记录
+            </small>
+        </div>
+    </nav>
+
+    <!-- 表格样式引用 -->
+    <link th:fragment="table-style" th:href="@{/css/components/data-table.css}" rel="stylesheet">
+
+    <!-- 表格JavaScript -->
+    <script th:fragment="table-script">
+        // 表格功能初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 全选功能
+            const selectAllCheckbox = document.getElementById('selectAll');
+            if (selectAllCheckbox) {
+                selectAllCheckbox.addEventListener('change', function() {
+                    const rowCheckboxes = document.querySelectorAll('.row-checkbox');
+                    rowCheckboxes.forEach(checkbox => {
+                        checkbox.checked = this.checked;
+                    });
+                    updateBatchActions();
+                });
+            }
+
+            // 行选择功能
+            const rowCheckboxes = document.querySelectorAll('.row-checkbox');
+            rowCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    updateSelectAllState();
+                    updateBatchActions();
+                });
+            });
+
+            // 排序功能
+            const sortableHeaders = document.querySelectorAll('.sortable');
+            sortableHeaders.forEach(header => {
+                header.addEventListener('click', function() {
+                    const field = this.dataset.field;
+                    const currentSort = this.classList.contains('asc') ? 'asc' : 
+                                       this.classList.contains('desc') ? 'desc' : '';
+                    
+                    // 移除其他列的排序状态
+                    sortableHeaders.forEach(h => h.classList.remove('asc', 'desc'));
+                    
+                    // 设置当前列的排序状态
+                    if (currentSort === '') {
+                        this.classList.add('asc');
+                        sortTable(field, 'asc');
+                    } else if (currentSort === 'asc') {
+                        this.classList.add('desc');
+                        sortTable(field, 'desc');
+                    } else {
+                        sortTable(field, '');
+                    }
+                });
+            });
+        });
+
+        // 更新全选状态
+        function updateSelectAllState() {
+            const selectAllCheckbox = document.getElementById('selectAll');
+            const rowCheckboxes = document.querySelectorAll('.row-checkbox');
+            const checkedCount = document.querySelectorAll('.row-checkbox:checked').length;
+            
+            if (selectAllCheckbox) {
+                selectAllCheckbox.checked = checkedCount === rowCheckboxes.length;
+                selectAllCheckbox.indeterminate = checkedCount > 0 && checkedCount < rowCheckboxes.length;
+            }
+        }
+
+        // 更新批量操作按钮状态
+        function updateBatchActions() {
+            const checkedCount = document.querySelectorAll('.row-checkbox:checked').length;
+            const batchActionButtons = document.querySelectorAll('.batch-action');
+            
+            batchActionButtons.forEach(button => {
+                button.disabled = checkedCount === 0;
+            });
+        }
+
+        // 获取选中的行ID
+        function getSelectedIds() {
+            const checkedBoxes = document.querySelectorAll('.row-checkbox:checked');
+            return Array.from(checkedBoxes).map(checkbox => checkbox.value);
+        }
+
+        // 排序表格
+        function sortTable(field, direction) {
+            const url = new URL(window.location);
+            if (direction) {
+                url.searchParams.set('sort', field);
+                url.searchParams.set('direction', direction);
+            } else {
+                url.searchParams.delete('sort');
+                url.searchParams.delete('direction');
+            }
+            window.location.href = url.toString();
+        }
+    </script>
+</body>
+</html>

@@ -72,7 +72,7 @@ public interface UserService {
     /**
      * 删除用户（软删除）
      */
-    void deleteUser(Long id);
+    boolean deleteUser(Long id);
 
     /**
      * 重置用户密码
@@ -82,7 +82,7 @@ public interface UserService {
     /**
      * 重置用户密码为默认密码
      */
-    void resetPassword(Long userId);
+    boolean resetPassword(Long userId);
 
     /**
      * 修改用户密码（返回boolean）
@@ -92,7 +92,7 @@ public interface UserService {
     /**
      * 切换用户状态
      */
-    void toggleUserStatus(Long userId);
+    boolean toggleUserStatus(Long userId);
 
     /**
      * 获取用户统计信息
@@ -187,7 +187,7 @@ public interface UserService {
     /**
      * 更新用户信息（直接传入User对象）
      */
-    User updateUser(User user);
+    boolean updateUser(User user);
 
     /**
      * 验证用户密码
@@ -223,6 +223,8 @@ public interface UserService {
      * 移除用户角色
      */
     boolean removeRoleFromUser(Long userId, Long roleId);
+
+
 
     /**
      * 用户统计信息类

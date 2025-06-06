@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * 管理后台系统管理控制器
@@ -65,7 +66,8 @@ public class AdminSystemController {
             if (currentUser == null) {
                 String username = (String) request.getAttribute("currentUsername");
                 if (username != null) {
-                    currentUser = userService.findByUsername(username);
+                    Optional<User> userOpt = userService.findByUsername(username);
+                    currentUser = userOpt.orElse(null);
                 }
             }
             
@@ -220,7 +222,7 @@ public class AdminSystemController {
 
             System.out.println("系统设置页面加载成功");
 
-            return "admin/settings";
+            return "admin/system/settings";
         } catch (Exception e) {
             System.err.println("系统设置页面加载失败: " + e.getMessage());
             e.printStackTrace();
@@ -250,7 +252,7 @@ public class AdminSystemController {
             model.addAttribute("pageTitle", "系统设置");
             model.addAttribute("currentPage", "settings");
             model.addAttribute("error", "加载系统设置失败：" + e.getMessage());
-            return "admin/settings";
+            return "admin/system/settings";
         }
     }
 
@@ -291,10 +293,10 @@ public class AdminSystemController {
             model.addAttribute("status", status);
             model.addAttribute("pageTitle", "用户管理");
             model.addAttribute("currentPage", "users");
-            return "admin/users";
+            return "admin/system/users";
         } catch (Exception e) {
             model.addAttribute("error", "加载用户列表失败：" + e.getMessage());
-            return "admin/users";
+            return "admin/system/users";
         }
     }
 
@@ -314,10 +316,10 @@ public class AdminSystemController {
             model.addAttribute("roles", roles);
             model.addAttribute("pageTitle", "角色管理");
             model.addAttribute("currentPage", "roles");
-            return "admin/roles";
+            return "admin/system/roles";
         } catch (Exception e) {
             model.addAttribute("error", "加载角色列表失败：" + e.getMessage());
-            return "admin/roles";
+            return "admin/system/roles";
         }
     }
 
@@ -337,10 +339,10 @@ public class AdminSystemController {
             model.addAttribute("permissions", permissions);
             model.addAttribute("pageTitle", "权限管理");
             model.addAttribute("currentPage", "permissions");
-            return "admin/permissions";
+            return "admin/system/permissions";
         } catch (Exception e) {
             model.addAttribute("error", "加载权限列表失败：" + e.getMessage());
-            return "admin/permissions";
+            return "admin/system/permissions";
         }
     }
 
@@ -359,10 +361,10 @@ public class AdminSystemController {
             model.addAttribute("feeItems", feeItems);
             model.addAttribute("pageTitle", "缴费项目管理");
             model.addAttribute("currentPage", "fee-items");
-            return "admin/fee-items";
+            return "admin/finance/fee-items";
         } catch (Exception e) {
             model.addAttribute("error", "加载缴费项目失败：" + e.getMessage());
-            return "admin/fee-items";
+            return "admin/finance/fee-items";
         }
     }
 
@@ -378,10 +380,10 @@ public class AdminSystemController {
             model.addAttribute("payments", payments);
             model.addAttribute("pageTitle", "缴费记录管理");
             model.addAttribute("currentPage", "payments");
-            return "admin/payments";
+            return "admin/finance/payments";
         } catch (Exception e) {
             model.addAttribute("error", "加载缴费记录失败：" + e.getMessage());
-            return "admin/payments";
+            return "admin/finance/payments";
         }
     }
 
@@ -393,10 +395,10 @@ public class AdminSystemController {
         try {
             model.addAttribute("pageTitle", "报表管理");
             model.addAttribute("currentPage", "reports");
-            return "admin/reports";
+            return "admin/finance/reports";
         } catch (Exception e) {
             model.addAttribute("error", "加载报表页面失败：" + e.getMessage());
-            return "admin/reports";
+            return "admin/finance/reports";
         }
     }
 
@@ -527,10 +529,11 @@ public class AdminSystemController {
             }
 
             // 验证旧密码并更新新密码
-            User adminUser = userService.findByUsername(currentUser.getUsername());
-            if (adminUser == null) {
+            Optional<User> adminUserOpt = userService.findByUsername(currentUser.getUsername());
+            if (adminUserOpt.isEmpty()) {
                 return ApiResponse.error("用户不存在");
             }
+            User adminUser = adminUserOpt.get();
 
             // 验证旧密码（简化实现，实际应该使用加密验证）
             if (!adminUser.getPassword().equals(oldPassword)) {

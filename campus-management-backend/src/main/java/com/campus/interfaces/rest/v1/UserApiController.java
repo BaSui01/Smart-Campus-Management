@@ -86,9 +86,9 @@ public class UserApiController {
     @Operation(summary = "获取用户详情", description = "根据ID查询用户详细信息")
     @PreAuthorize("hasRole('ADMIN') or @userService.isCurrentUser(#id)")
     public ApiResponse<User> getUserById(@Parameter(description = "用户ID") @PathVariable Long id) {
-        Optional<User> user = userService.findById(id);
-        if (user.isPresent()) {
-            return ApiResponse.success(user.get());
+        User user = userService.findById(id);
+        if (user != null) {
+            return ApiResponse.success(user);
         } else {
             return ApiResponse.error(404, "用户不存在");
         }

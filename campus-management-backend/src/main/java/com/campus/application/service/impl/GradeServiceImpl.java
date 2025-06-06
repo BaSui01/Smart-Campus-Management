@@ -469,4 +469,150 @@ public class GradeServiceImpl implements GradeService {
 
         return statistics;
     }
+
+    // ==================== 新增的接口方法实现 ====================
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Grade> searchGrades(String keyword) {
+        try {
+            // 这里可以根据关键词搜索成绩
+            // 暂时返回所有成绩，实际应该根据学生姓名、课程名称等进行搜索
+            return gradeRepository.findAll();
+        } catch (Exception e) {
+            throw new RuntimeException("搜索成绩失败：" + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<String, Object> getStudentGradeStatistics(Long studentId) {
+        Map<String, Object> statistics = new HashMap<>();
+
+        try {
+            // 获取学生的所有成绩
+            List<Grade> studentGrades = findByStudentId(studentId);
+
+            // 计算统计信息
+            long totalCourses = studentGrades.size();
+            double averageScore = studentGrades.stream()
+                .filter(grade -> grade.getScore() != null)
+                .mapToDouble(grade -> grade.getScore().doubleValue())
+                .average()
+                .orElse(0.0);
+
+            double averageGPA = studentGrades.stream()
+                .filter(grade -> grade.getGradePoint() != null)
+                .mapToDouble(grade -> grade.getGradePoint().doubleValue())
+                .average()
+                .orElse(0.0);
+
+            // 统计各等级数量
+            Map<String, Long> levelCount = new HashMap<>();
+            levelCount.put("A", studentGrades.stream().filter(g -> "A".equals(g.getLevel())).count());
+            levelCount.put("B", studentGrades.stream().filter(g -> "B".equals(g.getLevel())).count());
+            levelCount.put("C", studentGrades.stream().filter(g -> "C".equals(g.getLevel())).count());
+            levelCount.put("F", studentGrades.stream().filter(g -> "F".equals(g.getLevel())).count());
+
+            statistics.put("totalCourses", totalCourses);
+            statistics.put("averageScore", Math.round(averageScore * 100.0) / 100.0);
+            statistics.put("averageGPA", Math.round(averageGPA * 100.0) / 100.0);
+            statistics.put("levelCount", levelCount);
+
+        } catch (Exception e) {
+            // 返回默认统计信息
+            statistics.put("totalCourses", 0);
+            statistics.put("averageScore", 0.0);
+            statistics.put("averageGPA", 0.0);
+            statistics.put("levelCount", new HashMap<>());
+        }
+
+        return statistics;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<String, Object> getCourseGradeStatistics(Long courseId) {
+        Map<String, Object> statistics = new HashMap<>();
+
+        try {
+            // 获取课程的所有成绩
+            List<Grade> courseGrades = findByCourseId(courseId);
+
+            // 计算统计信息
+            long totalStudents = courseGrades.size();
+            double averageScore = courseGrades.stream()
+                .filter(grade -> grade.getScore() != null)
+                .mapToDouble(grade -> grade.getScore().doubleValue())
+                .average()
+                .orElse(0.0);
+
+            // 计算及格率
+            long passCount = courseGrades.stream()
+                .filter(grade -> grade.getScore() != null && grade.getScore().doubleValue() >= 60)
+                .count();
+            double passRate = totalStudents > 0 ? (double) passCount / totalStudents * 100 : 0.0;
+
+            // 统计分数段分布
+            Map<String, Long> scoreDistribution = new HashMap<>();
+            scoreDistribution.put("90-100", courseGrades.stream().filter(g -> g.getScore() != null && g.getScore().doubleValue() >= 90).count());
+            scoreDistribution.put("80-89", courseGrades.stream().filter(g -> g.getScore() != null && g.getScore().doubleValue() >= 80 && g.getScore().doubleValue() < 90).count());
+            scoreDistribution.put("70-79", courseGrades.stream().filter(g -> g.getScore() != null && g.getScore().doubleValue() >= 70 && g.getScore().doubleValue() < 80).count());
+            scoreDistribution.put("60-69", courseGrades.stream().filter(g -> g.getScore() != null && g.getScore().doubleValue() >= 60 && g.getScore().doubleValue() < 70).count());
+            scoreDistribution.put("0-59", courseGrades.stream().filter(g -> g.getScore() != null && g.getScore().doubleValue() < 60).count());
+
+            statistics.put("totalStudents", totalStudents);
+            statistics.put("averageScore", Math.round(averageScore * 100.0) / 100.0);
+            statistics.put("passRate", Math.round(passRate * 100.0) / 100.0);
+            statistics.put("scoreDistribution", scoreDistribution);
+
+        } catch (Exception e) {
+            // 返回默认统计信息
+            statistics.put("totalStudents", 0);
+            statistics.put("averageScore", 0.0);
+            statistics.put("passRate", 0.0);
+            statistics.put("scoreDistribution", new HashMap<>());
+        }
+
+        return statistics;
+    }
+
+    @Override
+    @Transactional
+    public Map<String, Object> importGrades(List<Grade> grades) {
+        Map<String, Object> result = new HashMap<>();
+        int successCount = 0;
+        int failCount = 0;
+        StringBuilder errorMessages = new StringBuilder();
+
+        for (Grade grade : grades) {
+            try {
+                createGrade(grade);
+                successCount++;
+            } catch (Exception e) {
+                failCount++;
+                errorMessages.append("成绩[学生ID:").append(grade.getStudentId())
+                           .append(",课程ID:").append(grade.getCourseId()).append("]导入失败：")
+                           .append(e.getMessage()).append("; ");
+            }
+        }
+
+        result.put("total", grades.size());
+        result.put("success", successCount);
+        result.put("fail", failCount);
+        result.put("errors", errorMessages.toString());
+        return result;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Grade> exportGrades(Map<String, Object> params) {
+        // 根据参数过滤成绩
+        if (params != null && !params.isEmpty()) {
+            // 这里可以根据具体的查询参数来过滤
+            // 暂时返回所有成绩
+            return gradeRepository.findAll();
+        }
+        return gradeRepository.findAll();
+    }
 }

@@ -98,8 +98,9 @@ public class ReportServiceImpl implements ReportService {
         BigDecimal totalAmount = BigDecimal.ZERO;
         Map<String, BigDecimal> feeTypeAmounts = new HashMap<>();
         
-        // 计算时间范围
-        LocalDateTime startTime, endTime;
+        // 计算时间范围用于日志记录
+        LocalDateTime startTime;
+        LocalDateTime endTime;
         if (month != null) {
             YearMonth yearMonth = YearMonth.of(year != null ? year : LocalDateTime.now().getYear(), month);
             startTime = yearMonth.atDay(1).atStartOfDay();
@@ -109,6 +110,9 @@ public class ReportServiceImpl implements ReportService {
             startTime = LocalDateTime.of(currentYear, 1, 1, 0, 0, 0);
             endTime = LocalDateTime.of(currentYear, 12, 31, 23, 59, 59);
         }
+
+        // 记录查询时间范围（用于调试和日志）
+        System.out.println("费用类型统计查询时间范围: " + startTime + " 到 " + endTime);
         
         // 统计各费用类型的收入
         for (FeeItem feeItem : feeItems) {

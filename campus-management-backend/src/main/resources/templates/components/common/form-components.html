@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+    <!-- 通用表单输入组件 -->
+    <div th:fragment="form-input(field, label, type, placeholder, required, value)" class="mb-3">
+        <label th:for="${field}" class="form-label">
+            <span th:text="${label}">标签</span>
+            <span class="text-danger" th:if="${required}">*</span>
+        </label>
+        <input th:type="${type ?: 'text'}" 
+               th:id="${field}" 
+               th:name="${field}"
+               th:value="${value}"
+               th:placeholder="${placeholder}"
+               th:required="${required}"
+               class="form-control">
+        <div class="invalid-feedback" th:id="${field + '-error'}"></div>
+    </div>
+
+    <!-- 下拉选择组件 -->
+    <div th:fragment="form-select(field, label, options, required, value)" class="mb-3">
+        <label th:for="${field}" class="form-label">
+            <span th:text="${label}">标签</span>
+            <span class="text-danger" th:if="${required}">*</span>
+        </label>
+        <select th:id="${field}" 
+                th:name="${field}"
+                th:required="${required}"
+                class="form-select">
+            <option value="">请选择...</option>
+            <option th:each="option : ${options}" 
+                    th:value="${option.value}" 
+                    th:text="${option.text}"
+                    th:selected="${option.value == value}">选项</option>
+        </select>
+        <div class="invalid-feedback" th:id="${field + '-error'}"></div>
+    </div>
+
+    <!-- 文本域组件 -->
+    <div th:fragment="form-textarea(field, label, placeholder, required, value, rows)" class="mb-3">
+        <label th:for="${field}" class="form-label">
+            <span th:text="${label}">标签</span>
+            <span class="text-danger" th:if="${required}">*</span>
+        </label>
+        <textarea th:id="${field}" 
+                  th:name="${field}"
+                  th:placeholder="${placeholder}"
+                  th:required="${required}"
+                  th:rows="${rows ?: 3}"
+                  class="form-control" 
+                  th:text="${value}"></textarea>
+        <div class="invalid-feedback" th:id="${field + '-error'}"></div>
+    </div>
+
+    <!-- 复选框组件 -->
+    <div th:fragment="form-checkbox(field, label, checked, value)" class="mb-3">
+        <div class="form-check">
+            <input type="checkbox" 
+                   th:id="${field}" 
+                   th:name="${field}"
+                   th:value="${value ?: 1}"
+                   th:checked="${checked}"
+                   class="form-check-input">
+            <label th:for="${field}" class="form-check-label" th:text="${label}">复选框标签</label>
+        </div>
+    </div>
+
+    <!-- 单选按钮组组件 -->
+    <div th:fragment="form-radio-group(field, label, options, required, value)" class="mb-3">
+        <label class="form-label">
+            <span th:text="${label}">标签</span>
+            <span class="text-danger" th:if="${required}">*</span>
+        </label>
+        <div th:each="option, iterStat : ${options}" class="form-check">
+            <input type="radio" 
+                   th:id="${field + '_' + iterStat.index}" 
+                   th:name="${field}"
+                   th:value="${option.value}"
+                   th:checked="${option.value == value}"
+                   th:required="${required}"
+                   class="form-check-input">
+            <label th:for="${field + '_' + iterStat.index}" 
+                   class="form-check-label" 
+                   th:text="${option.text}">选项</label>
+        </div>
+        <div class="invalid-feedback" th:id="${field + '-error'}"></div>
+    </div>
+
+    <!-- 文件上传组件 -->
+    <div th:fragment="form-file(field, label, accept, required)" class="mb-3">
+        <label th:for="${field}" class="form-label">
+            <span th:text="${label}">标签</span>
+            <span class="text-danger" th:if="${required}">*</span>
+        </label>
+        <input type="file" 
+               th:id="${field}" 
+               th:name="${field}"
+               th:accept="${accept}"
+               th:required="${required}"
+               class="form-control">
+        <div class="form-text">
+            <small class="text-muted" th:if="${accept}">
+                支持的文件类型：<span th:text="${accept}"></span>
+            </small>
+        </div>
+        <div class="invalid-feedback" th:id="${field + '-error'}"></div>
+    </div>
+
+    <!-- 日期选择组件 -->
+    <div th:fragment="form-date(field, label, required, value)" class="mb-3">
+        <label th:for="${field}" class="form-label">
+            <span th:text="${label}">标签</span>
+            <span class="text-danger" th:if="${required}">*</span>
+        </label>
+        <input type="date" 
+               th:id="${field}" 
+               th:name="${field}"
+               th:value="${value}"
+               th:required="${required}"
+               class="form-control">
+        <div class="invalid-feedback" th:id="${field + '-error'}"></div>
+    </div>
+
+    <!-- 时间选择组件 -->
+    <div th:fragment="form-time(field, label, required, value)" class="mb-3">
+        <label th:for="${field}" class="form-label">
+            <span th:text="${label}">标签</span>
+            <span class="text-danger" th:if="${required}">*</span>
+        </label>
+        <input type="time" 
+               th:id="${field}" 
+               th:name="${field}"
+               th:value="${value}"
+               th:required="${required}"
+               class="form-control">
+        <div class="invalid-feedback" th:id="${field + '-error'}"></div>
+    </div>
+
+    <!-- 数字输入组件 -->
+    <div th:fragment="form-number(field, label, min, max, step, required, value)" class="mb-3">
+        <label th:for="${field}" class="form-label">
+            <span th:text="${label}">标签</span>
+            <span class="text-danger" th:if="${required}">*</span>
+        </label>
+        <input type="number" 
+               th:id="${field}" 
+               th:name="${field}"
+               th:value="${value}"
+               th:min="${min}"
+               th:max="${max}"
+               th:step="${step ?: 1}"
+               th:required="${required}"
+               class="form-control">
+        <div class="invalid-feedback" th:id="${field + '-error'}"></div>
+    </div>
+
+    <!-- 搜索框组件 -->
+    <div th:fragment="search-box(placeholder, value)" class="search-container">
+        <div class="input-group">
+            <input type="text" 
+                   name="search" 
+                   th:value="${value}"
+                   th:placeholder="${placeholder ?: '请输入搜索关键词...'}"
+                   class="form-control search-input">
+            <button class="btn btn-outline-secondary" type="submit">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- 表单按钮组 -->
+    <div th:fragment="form-buttons(showSave, showCancel, showReset, cancelUrl)" class="d-flex gap-2">
+        <button th:if="${showSave != false}" type="submit" class="btn btn-primary">
+            <i class="fas fa-save me-2"></i>保存
+        </button>
+        <button th:if="${showReset}" type="reset" class="btn btn-outline-secondary">
+            <i class="fas fa-undo me-2"></i>重置
+        </button>
+        <a th:if="${showCancel != false}" 
+           th:href="${cancelUrl ?: 'javascript:history.back()'}" 
+           class="btn btn-outline-secondary">
+            <i class="fas fa-times me-2"></i>取消
+        </a>
+    </div>
+
+    <!-- 表单样式引用 -->
+    <link th:fragment="form-style" th:href="@{/css/components/form-components.css}" rel="stylesheet">
+
+    <!-- 表单验证JavaScript -->
+    <script th:fragment="form-script">
+        // 表单验证功能
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取所有需要验证的表单
+            const forms = document.querySelectorAll('.needs-validation');
+            
+            forms.forEach(form => {
+                form.addEventListener('submit', function(event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                });
+
+                // 实时验证
+                const inputs = form.querySelectorAll('input, select, textarea');
+                inputs.forEach(input => {
+                    input.addEventListener('blur', function() {
+                        validateField(this);
+                    });
+
+                    input.addEventListener('input', function() {
+                        if (this.classList.contains('is-invalid')) {
+                            validateField(this);
+                        }
+                    });
+                });
+            });
+        });
+
+        // 验证单个字段
+        function validateField(field) {
+            const isValid = field.checkValidity();
+            const errorElement = document.getElementById(field.name + '-error');
+            
+            if (isValid) {
+                field.classList.remove('is-invalid');
+                field.classList.add('is-valid');
+                if (errorElement) {
+                    errorElement.textContent = '';
+                }
+            } else {
+                field.classList.remove('is-valid');
+                field.classList.add('is-invalid');
+                if (errorElement) {
+                    errorElement.textContent = field.validationMessage;
+                }
+            }
+        }
+
+        // 清除表单验证状态
+        function clearFormValidation(formId) {
+            const form = document.getElementById(formId);
+            if (form) {
+                form.classList.remove('was-validated');
+                const inputs = form.querySelectorAll('input, select, textarea');
+                inputs.forEach(input => {
+                    input.classList.remove('is-valid', 'is-invalid');
+                });
+                const errorElements = form.querySelectorAll('.invalid-feedback');
+                errorElements.forEach(element => {
+                    element.textContent = '';
+                });
+            }
+        }
+
+        // 设置字段错误
+        function setFieldError(fieldName, message) {
+            const field = document.querySelector(`[name="${fieldName}"]`);
+            const errorElement = document.getElementById(fieldName + '-error');
+            
+            if (field) {
+                field.classList.add('is-invalid');
+                field.classList.remove('is-valid');
+            }
+            
+            if (errorElement) {
+                errorElement.textContent = message;
+            }
+        }
+
+        // 显示表单成功消息
+        function showFormSuccess(message) {
+            showAlert(message, 'success');
+        }
+
+        // 显示表单错误消息
+        function showFormError(message) {
+            showAlert(message, 'danger');
+        }
+    </script>
+</body>
+</html>

@@ -1,6 +1,8 @@
 # 智慧校园管理系统 - 主配置文件
 server:
+  port: 8080
   servlet:
+    context-path: ''
     encoding:
       charset: UTF-8
       enabled: true
@@ -33,28 +35,112 @@ spring:
   main:
     banner-mode: console
 
+  # 数据源配置
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/campus_management_db?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8&allowPublicKeyRetrieval=true
+    username: root
+    password: xiaoxiao123
+    # HikariCP连接池配置
+    hikari:
+      pool-name: HikariCP
+      minimum-idle: 5
+      maximum-pool-size: 20
+      auto-commit: true
+      idle-timeout: 30000
+      connection-timeout: 30000
+      max-lifetime: 1800000
+      connection-test-query: SELECT 1
+
+  # JPA配置
+  jpa:
+    hibernate:
+      ddl-auto: update
+      naming:
+        physical-strategy: org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+    open-in-view: false
+
+  # Redis配置
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: ''
+      database: 0
+      timeout: 3000ms
+      jedis:
+        pool:
+          max-active: 20
+          max-wait: -1ms
+          max-idle: 10
+          min-idle: 0
+
+  # 缓存配置
+  cache:
+    type: redis
+    redis:
+      time-to-live: 1800000  # 30分钟
+      cache-null-values: false
+
+  # 邮件配置
+  mail:
+    host: smtp.qq.com
+    port: 587
+    username: your-email@qq.com
+    password: your-email-password
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+    test-connection: false
+
   # Thymeleaf配置
   thymeleaf:
     prefix: classpath:/templates/
     suffix: .html
     mode: HTML
     encoding: UTF-8
+    cache: false  # 开发环境禁用缓存
 
   # 静态资源配置
   web:
     resources:
       static-locations: classpath:/static/
+      cache:
+        period: 3600
 
   # 文件上传配置
   servlet:
     multipart:
       max-file-size: 10MB
       max-request-size: 100MB
+      enabled: true
 
   # 国际化配置
   messages:
     basename: messages
     encoding: UTF-8
+
+  # 安全配置
+  security:
+    oauth2:
+      client:
+        registration:
+          github:
+            client-id: your-github-client-id
+            client-secret: your-github-client-secret
 
 # 自定义配置
 campus:
@@ -63,17 +149,147 @@ campus:
     name: 智慧校园管理系统
     version: 1.0.0
     author: Campus Team
+    domain: localhost:8080
+
+  # JWT配置
+  jwt:
+    secret: SmartCampusManagementSystemJWTSecretKey2025
+    expiration: 86400000  # 24小时
+    refresh-expiration: 604800000  # 7天
+    header: Authorization
+    prefix: Bearer
 
   # 文件上传配置
   upload:
     path: uploads/
     max-size: 10MB
-    allowed-types: jpg,jpeg,png,gif,pdf,doc,docx,xls,xlsx
+    allowed-types: jpg,jpeg,png,gif,pdf,doc,docx,xls,xlsx,ppt,pptx,txt,zip,rar
 
   # 安全配置
   security:
     password:
       min-length: 6
       max-attempts: 5
+      strength-check: true
     session:
       timeout: 1800
+    captcha:
+      enabled: true
+      length: 4
+      expire: 300
+
+  # 业务配置
+  business:
+    # 选课配置
+    course-selection:
+      max-courses-per-student: 10
+      allow-drop-after-deadline: false
+    # 成绩配置
+    grade:
+      scale: 100
+      pass-score: 60
+      gpa-scale: 4.0
+    # 缴费配置
+    payment:
+      reminder-days: 7
+      late-fee-rate: 0.001
+
+# 监控配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# 日志配置
+logging:
+  level:
+    com.campus: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  pattern:
+    console: '%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n'
+    file: '%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n'
+  file:
+    name: logs/campus-management.log
+    max-size: 100MB
+    max-history: 30
+
+# SpringDoc OpenAPI配置
+springdoc:
+  api-docs:
+    path: /api/v3/api-docs
+  swagger-ui:
+    path: /api/swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha
+    disable-swagger-default-url: true
+  info:
+    title: 智慧校园管理系统API
+    description: 智慧校园管理系统的RESTful API文档
+    version: 1.0.0
+    contact:
+      name: Campus Management Team
+      email: support@campus.com
+    license:
+      name: MIT License
+      url: https://opensource.org/licenses/MIT
+
+---
+# 开发环境配置
+spring:
+  config:
+    activate:
+      on-profile: dev
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  thymeleaf:
+    cache: false
+
+logging:
+  level:
+    com.campus: DEBUG
+
+---
+# 测试环境配置
+spring:
+  config:
+    activate:
+      on-profile: test
+  datasource:
+    url: jdbc:mysql://localhost:3306/campus_management_test?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+
+---
+# 生产环境配置
+spring:
+  config:
+    activate:
+      on-profile: prod
+  jpa:
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+  thymeleaf:
+    cache: true
+
+logging:
+  level:
+    com.campus: INFO
+    org.springframework.security: WARN
+    org.hibernate.SQL: WARN

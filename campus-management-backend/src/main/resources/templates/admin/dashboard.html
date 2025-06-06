@@ -1,307 +1,37 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>仪表盘 - 智慧校园管理系统</title>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/admin :: html}"
+      lang="zh-CN">
+<head th:replace="~{layout/admin :: head}">
+    <th:block th:fragment="head-extra">
+        <title>仪表盘 - 智慧校园管理系统</title>
+        <!-- 网站图标 -->
+        <link rel="icon" type="image/svg+xml" th:href="@{/images/favicon.svg}">
+        <link rel="alternate icon" th:href="@{/favicon.ico}">
+        <link rel="apple-touch-icon" th:href="@{/images/favicon.svg}">
 
-    <!-- 网站图标 -->
-    <link rel="icon" type="image/svg+xml" th:href="@{/images/favicon.svg}">
-    <link rel="alternate icon" th:href="@{/favicon.ico}">
-    <link rel="apple-touch-icon" th:href="@{/images/favicon.svg}">
-
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <!-- 自定义CSS -->
-    <link th:href="@{/css/admin.css}" rel="stylesheet">
-
-    <!-- 引入组件样式 -->
-    <th:block th:replace="~{components/topbar :: topbar-style}"></th:block>
-
-    <!-- 仪表盘自定义样式 -->
-    <style>
-        .stats-card {
-            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-            border-radius: 0.5rem;
-            overflow: hidden;
-        }
-
-        .stats-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
-        }
-
-        .counter {
-            font-size: 2rem;
-            font-weight: 700;
-        }
-
-        .border-left-primary {
-            border-left: 0.25rem solid #4e73df !important;
-        }
-
-        .border-left-success {
-            border-left: 0.25rem solid #1cc88a !important;
-        }
-
-        .border-left-info {
-            border-left: 0.25rem solid #36b9cc !important;
-        }
-
-        .border-left-warning {
-            border-left: 0.25rem solid #f6c23e !important;
-        }
-
-        .border-left-danger {
-            border-left: 0.25rem solid #e74a3b !important;
-        }
-
-        .border-left-secondary {
-            border-left: 0.25rem solid #858796 !important;
-        }
-
-        .border-left-dark {
-            border-left: 0.25rem solid #5a5c69 !important;
-        }
-
-        .border-left-light {
-            border-left: 0.25rem solid #f8f9fc !important;
-        }
-
-        .chart-area, .chart-bar {
-            position: relative;
-            height: 320px;
-        }
-
-        .chart-pie {
-            position: relative;
-            height: 250px;
-        }
-
-        .btn-icon-split {
-            padding: 0;
-            overflow: hidden;
-            display: flex;
-            align-items: stretch;
-            justify-content: center;
-            border-radius: 0.35rem;
-            transition: all 0.2s ease-in-out;
-        }
-
-        .btn-icon-split:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
-        }
-
-        .btn-icon-split .icon {
-            background: rgba(0, 0, 0, 0.15);
-            display: inline-block;
-            padding: 0.5rem 0.75rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .btn-icon-split .text {
-            display: inline-block;
-            padding: 0.5rem 0.75rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 500;
-        }
-
-        .quick-action-btn {
-            margin-bottom: 0.5rem;
-        }
-
-        .list-group-item {
-            border: none;
-            border-bottom: 1px solid #e3e6f0;
-            transition: background-color 0.2s ease-in-out;
-        }
-
-        .list-group-item:hover {
-            background-color: #f8f9fc;
-        }
-
-        .list-group-item:last-child {
-            border-bottom: none;
-        }
-
-        /* 通知样式 */
-        .notification-item.unread {
-            background-color: #f8f9fc;
-            border-left: 3px solid #4e73df;
-        }
-
-        .notification-item.read {
-            background-color: transparent;
-            opacity: 0.8;
-        }
-
-        /* 时间线样式 */
-        .timeline {
-            position: relative;
-            padding-left: 2rem;
-        }
-
-        .timeline::before {
-            content: '';
-            position: absolute;
-            left: 0.75rem;
-            top: 0;
-            bottom: 0;
-            width: 2px;
-            background: linear-gradient(to bottom, #4e73df, #e3e6f0);
-        }
-
-        .timeline-item {
-            position: relative;
-            margin-bottom: 1.5rem;
-            padding-left: 1.5rem;
-        }
-
-        .timeline-item.timeline-item-last {
-            margin-bottom: 0;
-        }
-
-        .timeline-marker {
-            position: absolute;
-            left: -1.5rem;
-            top: 0.25rem;
-            width: 1.5rem;
-            height: 1.5rem;
-            background: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 0 0 3px white, 0 0 0 4px #e3e6f0;
-        }
-
-        .timeline-marker i {
-            font-size: 0.5rem;
-        }
-
-        .timeline-content {
-            background: white;
-            border: 1px solid #e3e6f0;
-            border-radius: 0.5rem;
-            padding: 1rem;
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-            transition: all 0.2s ease-in-out;
-        }
-
-        .timeline-content:hover {
-            box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
-            transform: translateY(-2px);
-        }
-
-        .activity-actions {
-            opacity: 0;
-            transition: opacity 0.2s ease-in-out;
-        }
-
-        .timeline-item:hover .activity-actions {
-            opacity: 1;
-        }
-
-        /* 响应式设计 */
-        @media (max-width: 768px) {
-            .counter {
-                font-size: 1.5rem;
-            }
-
-            .chart-area, .chart-bar {
-                height: 250px;
-            }
-
-            .chart-pie {
-                height: 200px;
-            }
-
-            .timeline {
-                padding-left: 1.5rem;
-            }
-
-            .timeline-item {
-                padding-left: 1rem;
-            }
-
-            .timeline-marker {
-                left: -1rem;
-                width: 1rem;
-                height: 1rem;
-            }
-
-            .btn-icon-split .text {
-                font-size: 0.875rem;
-            }
-        }
-    </style>
+    </th:block>
 </head>
 <body>
-    <!-- 布局容器 -->
-    <div class="wrapper">
-        <!-- 左侧导航栏 -->
-        <th:block th:replace="~{components/sidebar :: sidebar}"></th:block>
+    <div th:fragment="content">
+        <!-- 页面标题 -->
+        <div th:replace="~{components/admin/admin-components :: page-header(
+            title='仪表盘',
+            icon='fas fa-tachometer-alt',
+            showAddButton=false,
+            addButtonText='',
+            addButtonTarget=''
+        )}"></div>
 
-        <!-- 主内容区域 -->
-        <div class="content" id="content">
-            <!-- 顶部导航栏 -->
-            <th:block th:replace="~{components/topbar :: topbar}"></th:block>
-
-            <!-- 页面内容包装器 -->
-            <div class="content-wrapper">
-                <!-- 页面标题和操作按钮 -->
-                <div class="d-sm-flex align-items-center justify-content-between mb-4">
-                    <h1 class="h3 mb-0 text-gray-800">仪表盘</h1>
-                </div>
-
-                <!-- 页面具体内容 -->
         <!-- 错误提示 -->
         <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="fas fa-exclamation-triangle mr-2"></i>
+            <i class="fas fa-exclamation-triangle me-2"></i>
             <span th:text="${error}">加载数据时发生错误</span>
-            <button type="button" class="close" data-dismiss="alert">
-                <span>&times;</span>
-            </button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
 
         <!-- 统计卡片 -->
-        <div class="row mb-4">
-            <!-- 第一行统计卡片 -->
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="card border-left-primary shadow h-100 py-2 stats-card" data-aos="fade-up" data-aos-delay="100">
-                    <div class="card-body">
-                        <div class="row no-gutters align-items-center">
-                            <div class="col mr-2">
-                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                    在校学生总数
-                                </div>
-                                <div class="h5 mb-0 font-weight-bold text-gray-800 counter"
-                                     th:text="${stats?.totalStudents ?: 0}"
-                                     th:data-target="${stats?.totalStudents ?: 0}">
-                                    0
-                                </div>
-                                <div class="text-xs text-muted mt-1">
-                                    <span class="text-success mr-2">
-                                        <i class="fas fa-arrow-up"></i>
-                                        <span th:text="${stats?.quickStats?.todayNewStudents ?: 0}">0</span>
-                                    </span>
-                                    今日新增
-                                </div>
-                            </div>
-                            <div class="col-auto">
-                                <i class="fas fa-user-graduate fa-2x text-gray-300"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div th:replace="~{components/admin/admin-components :: stat-cards(${dashboardStats})}"></div>
 
             <div class="col-xl-3 col-md-6 mb-4">
                 <div class="card border-left-success shadow h-100 py-2 stats-card" data-aos="fade-up" data-aos-delay="200">

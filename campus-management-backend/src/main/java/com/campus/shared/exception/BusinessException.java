@@ -1,48 +1,55 @@
 package com.campus.shared.exception;
 
-import com.campus.shared.common.ResponseCode;
-
 /**
- * 业务异常
- * 
- * @author campus
- * @since 1.0.0
+ * 业务异常类
+ * 用于处理业务逻辑相关的异常
+ *
+ * @author Campus Management Team
+ * @version 1.0.0
+ * @since 2025-06-06
  */
 public class BusinessException extends RuntimeException {
-    
-    private final int code;
-    
+
+    private String errorCode;
+    private Object data;
+
     public BusinessException(String message) {
         super(message);
-        this.code = ResponseCode.ERROR.getCode();
     }
-    
-    public BusinessException(int code, String message) {
+
+    public BusinessException(String errorCode, String message) {
         super(message);
-        this.code = code;
+        this.errorCode = errorCode;
     }
-    
-    public BusinessException(ResponseCode responseCode) {
-        super(responseCode.getMessage());
-        this.code = responseCode.getCode();
-    }
-    
+
     public BusinessException(String message, Throwable cause) {
         super(message, cause);
-        this.code = ResponseCode.ERROR.getCode();
     }
-    
-    public BusinessException(int code, String message, Throwable cause) {
+
+    public BusinessException(String errorCode, String message, Throwable cause) {
         super(message, cause);
-        this.code = code;
+        this.errorCode = errorCode;
     }
-    
-    public BusinessException(ResponseCode responseCode, Throwable cause) {
-        super(responseCode.getMessage(), cause);
-        this.code = responseCode.getCode();
+
+    public BusinessException(String errorCode, String message, Object data) {
+        super(message);
+        this.errorCode = errorCode;
+        this.data = data;
     }
-    
-    public int getCode() {
-        return code;
+
+    public String getErrorCode() {
+        return errorCode;
+    }
+
+    public void setErrorCode(String errorCode) {
+        this.errorCode = errorCode;
+    }
+
+    public Object getData() {
+        return data;
+    }
+
+    public void setData(Object data) {
+        this.data = data;
     }
 }

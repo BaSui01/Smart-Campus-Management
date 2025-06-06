@@ -185,12 +185,17 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     }
 
     @Override
-    public void deleteUser(Long id) {
-        User user = findUserById(id);
-        // 软删除：设置状态为已删除
-        user.setStatus(0);
-        user.setUpdatedAt(LocalDateTime.now());
-        userRepository.save(user);
+    public boolean deleteUser(Long id) {
+        try {
+            User user = findUserById(id);
+            // 软删除：设置状态为已删除
+            user.setStatus(0);
+            user.setUpdatedAt(LocalDateTime.now());
+            userRepository.save(user);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     @Override
@@ -202,9 +207,14 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     }
 
     @Override
-    public void resetPassword(Long userId) {
-        // 重置为默认密码：123456
-        resetPassword(userId, "123456");
+    public boolean resetPassword(Long userId) {
+        try {
+            // 重置为默认密码：123456
+            resetPassword(userId, "123456");
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     @Override
@@ -228,11 +238,16 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     }
 
     @Override
-    public void toggleUserStatus(Long userId) {
-        User user = findUserById(userId);
-        user.setStatus(user.getStatus() == 1 ? 0 : 1);
-        user.setUpdatedAt(LocalDateTime.now());
-        userRepository.save(user);
+    public boolean toggleUserStatus(Long userId) {
+        try {
+            User user = findUserById(userId);
+            user.setStatus(user.getStatus() == 1 ? 0 : 1);
+            user.setUpdatedAt(LocalDateTime.now());
+            userRepository.save(user);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     @Override
@@ -631,13 +646,14 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     @Override
     @Transactional
-    public User updateUser(User user) {
+    public boolean updateUser(User user) {
         try {
             user.setUpdatedAt(LocalDateTime.now());
-            return userRepository.save(user);
+            userRepository.save(user);
+            return true;
         } catch (Exception e) {
             System.err.println("更新用户信息失败: " + e.getMessage());
-            throw new RuntimeException("更新用户信息失败", e);
+            return false;
         }
     }
 

@@ -1,6 +1,11 @@
 package com.campus.shared.config;
 
-import org.springframework.beans.factory.annotation.Value;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
@@ -9,107 +14,84 @@ import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
- * Redis 缓存配置类
- * 
- * @author Campus Team
- * @since 2025-06-05
+ * 缓存配置类
+ * 配置Redis缓存和缓存管理器
+ *
+ * @author Campus Management Team
+ * @version 1.0.0
+ * @since 2025-06-06
  */
 @Configuration
 @EnableCaching
 public class CacheConfig {
 
-    @Value("${campus.cache.course-ttl:3600}")
-    private int courseTtl;
-
-    @Value("${campus.cache.permission-ttl:1800}")
-    private int permissionTtl;
-
-    @Value("${campus.cache.config-ttl:86400}")
-    private int configTtl;
-
-    @Value("${campus.cache.student-ttl:7200}")
-    private int studentTtl;
-
-    @Value("${campus.cache.class-ttl:14400}")
-    private int classTtl;
-
     /**
-     * Redis 模板配置
+     * 配置缓存管理器
      */
     @Bean
-    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory factory) {
+    public CacheManager cacheManager(RedisConnectionFactory redisConnectionFactory) {
+        // 配置序列化器
+        Jackson2JsonRedisSerializer<Object> jackson2JsonRedisSerializer = createJacksonSerializer();
+
+        // 配置缓存
+        RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()
+                .entryTtl(Duration.ofMinutes(30)) // 缓存30分钟
+                .serializeKeysWith(RedisSerializationContext.SerializationPair
+                        .fromSerializer(new StringRedisSerializer()))
+                .serializeValuesWith(RedisSerializationContext.SerializationPair
+                        .fromSerializer(jackson2JsonRedisSerializer))
+                .disableCachingNullValues();
+
+        return RedisCacheManager.builder(redisConnectionFactory)
+                .cacheDefaults(config)
+                .build();
+    }
+
+    /**
+     * 配置Redis模板
+     */
+    @Bean
+    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory redisConnectionFactory) {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
-        template.setConnectionFactory(factory);
+        template.setConnectionFactory(redisConnectionFactory);
 
-        // 设置序列化器
-        StringRedisSerializer stringSerializer = new StringRedisSerializer();
-        GenericJackson2JsonRedisSerializer jsonSerializer = new GenericJackson2JsonRedisSerializer();
+        // 配置序列化器
+        Jackson2JsonRedisSerializer<Object> jackson2JsonRedisSerializer = createJacksonSerializer();
+        StringRedisSerializer stringRedisSerializer = new StringRedisSerializer();
 
-        // Key 序列化
-        template.setKeySerializer(stringSerializer);
-        template.setHashKeySerializer(stringSerializer);
+        // key序列化
+        template.setKeySerializer(stringRedisSerializer);
+        template.setHashKeySerializer(stringRedisSerializer);
 
-        // Value 序列化
-        template.setValueSerializer(jsonSerializer);
-        template.setHashValueSerializer(jsonSerializer);
+        // value序列化
+        template.setValueSerializer(jackson2JsonRedisSerializer);
+        template.setHashValueSerializer(jackson2JsonRedisSerializer);
 
         template.afterPropertiesSet();
         return template;
     }
 
     /**
-     * 缓存管理器配置
+     * 创建Jackson序列化器
      */
-    @Bean
-    public CacheManager cacheManager(RedisConnectionFactory factory) {
-        // 默认缓存配置
-        RedisCacheConfiguration defaultConfig = RedisCacheConfiguration.defaultCacheConfig()
-            .entryTtl(Duration.ofMinutes(30))  // 默认30分钟过期
-            .serializeKeysWith(RedisSerializationContext.SerializationPair
-                .fromSerializer(new StringRedisSerializer()))
-            .serializeValuesWith(RedisSerializationContext.SerializationPair
-                .fromSerializer(new GenericJackson2JsonRedisSerializer()))
-            .disableCachingNullValues();
+    private Jackson2JsonRedisSerializer<Object> createJacksonSerializer() {
+        Jackson2JsonRedisSerializer<Object> jackson2JsonRedisSerializer = 
+                new Jackson2JsonRedisSerializer<>(Object.class);
 
-        // 不同缓存的配置
-        Map<String, RedisCacheConfiguration> cacheConfigurations = new HashMap<>();
+        ObjectMapper om = new ObjectMapper();
+        om.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
+        om.activateDefaultTyping(LaissezFaireSubTypeValidator.instance,
+                ObjectMapper.DefaultTyping.NON_FINAL, JsonTypeInfo.As.PROPERTY);
+        om.registerModule(new JavaTimeModule());
 
-        // 课程信息缓存
-        cacheConfigurations.put("courses", defaultConfig.entryTtl(Duration.ofSeconds(courseTtl)));
-
-        // 用户权限缓存
-        cacheConfigurations.put("permissions", defaultConfig.entryTtl(Duration.ofSeconds(permissionTtl)));
-
-        // 系统配置缓存
-        cacheConfigurations.put("system-config", defaultConfig.entryTtl(Duration.ofSeconds(configTtl)));
-
-        // 学生信息缓存
-        cacheConfigurations.put("students", defaultConfig.entryTtl(Duration.ofSeconds(studentTtl)));
-
-        // 班级信息缓存
-        cacheConfigurations.put("classes", defaultConfig.entryTtl(Duration.ofSeconds(classTtl)));
-
-        // 实时数据缓存 - 5分钟
-        cacheConfigurations.put("realtime", defaultConfig.entryTtl(Duration.ofMinutes(5)));
-
-        // 统计数据缓存 - 15分钟
-        cacheConfigurations.put("statistics", defaultConfig.entryTtl(Duration.ofMinutes(15)));
-
-        // 热点数据缓存 - 1小时
-        cacheConfigurations.put("hotdata", defaultConfig.entryTtl(Duration.ofHours(1)));
-
-        return RedisCacheManager.builder(factory)
-            .cacheDefaults(defaultConfig)
-            .withInitialCacheConfigurations(cacheConfigurations)
-            .build();
+        jackson2JsonRedisSerializer.setObjectMapper(om);
+        return jackson2JsonRedisSerializer;
     }
 }

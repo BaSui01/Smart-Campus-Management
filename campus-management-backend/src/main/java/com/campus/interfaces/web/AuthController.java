@@ -25,6 +25,7 @@ import jakarta.servlet.http.HttpSession;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * 认证控制器
@@ -102,11 +103,12 @@ public class AuthController {
             }
 
             // 验证用户是否为系统管理员
-            User user = userService.findByUsername(username);
-            if (user == null) {
+            Optional<User> userOpt = userService.findByUsername(username);
+            if (userOpt.isEmpty()) {
                 redirectAttributes.addFlashAttribute("error", "用户不存在");
                 return "redirect:/admin/login?redirect=" + redirectUrl;
             }
+            User user = userOpt.get();
 
             // 检查用户状态
             if (user.getStatus() != 1) {

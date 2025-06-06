@@ -181,4 +181,13 @@ public interface CourseScheduleService {
      * @return 总数量
      */
     long count();
+
+    /**
+     * 根据学生ID查找课程表
+     *
+     * @param studentId 学生ID
+     * @param params 查询参数
+     * @return 课程表列表
+     */
+    List<CourseSchedule> findSchedulesByStudent(Long studentId, Map<String, Object> params);
 }

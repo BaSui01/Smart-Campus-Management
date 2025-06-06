@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/admin :: html}"
+      lang="zh-CN">
+<head th:replace="~{layout/admin :: head}">
+    <th:block th:fragment="head-extra">
+        <title>角色管理 - 智慧校园管理系统</title>
+        <!-- 网站图标 -->
+        <link rel="icon" type="image/svg+xml" th:href="@{/images/favicon.svg}">
+        <link rel="alternate icon" th:href="@{/favicon.ico}">
+        <link rel="apple-touch-icon" th:href="@{/images/favicon.svg}">
+
+        <!-- 权限管理样式 -->
+        <style>
+            .permission-module {
+                border: 1px solid #e9ecef;
+                border-radius: 8px;
+                padding: 15px;
+                background-color: #f8f9fa;
+            }
+            .permission-module h6 {
+                margin-bottom: 10px;
+                padding-bottom: 5px;
+                border-bottom: 2px solid #007bff;
+            }
+            .permission-items .form-check {
+                margin-bottom: 8px;
+                padding: 8px;
+                border-radius: 4px;
+                transition: background-color 0.2s;
+            }
+            .permission-items .form-check:hover {
+                background-color: #e9ecef;
+            }
+            .permission-items .form-check-label {
+                cursor: pointer;
+                width: 100%;
+            }
+            .permission-list {
+                border: 1px solid #dee2e6;
+                border-radius: 8px;
+                padding: 15px;
+                background-color: #ffffff;
+            }
+        </style>
+    </th:block>
+</head>
+<body>
+    <div th:fragment="content">
+        <!-- 页面标题 -->
+        <div th:replace="~{components/admin/admin-components :: page-header(
+            title='角色管理',
+            icon='fas fa-user-tag',
+            showAddButton=true,
+            addButtonText='添加角色',
+            addButtonTarget='#addRoleModal'
+        )}"></div>
+
+        <!-- 统计卡片 -->
+        <div th:replace="~{components/admin/admin-components :: stat-cards(${roleStats})}"></div>
+
+        <!-- 数据表格组件 -->
+        <div th:replace="~{components/admin/admin-components :: data-table(${roleTableConfig}, ${roles})}"></div>
+    </div>
+
+    <!-- 添加角色模态框 -->
+    <div class="modal fade" id="addRoleModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">添加角色</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addRoleForm">
+                        <div class="mb-3">
+                            <label for="roleName" class="form-label">角色名称 *</label>
+                            <input type="text" class="form-control" id="roleName" name="roleName" required>
+                            <div class="form-text">角色名称将自动转换为大写，如：CUSTOM_ROLE</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="roleDisplayName" class="form-label">显示名称 *</label>
+                            <input type="text" class="form-control" id="roleDisplayName" name="roleDisplayName" required>
+                            <div class="form-text">用于界面显示的友好名称</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="roleDescription" class="form-label">描述</label>
+                            <textarea class="form-control" id="roleDescription" name="roleDescription" rows="3" placeholder="角色功能描述（可选）"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="saveRole()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑角色模态框 -->
+    <div class="modal fade" id="editRoleModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">编辑角色</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editRoleForm">
+                        <input type="hidden" id="editRoleId">
+                        <div class="mb-3">
+                            <label for="editRoleName" class="form-label">角色名称</label>
+                            <input type="text" class="form-control" id="editRoleName" name="editRoleName">
+                            <div class="form-text">系统角色不允许修改名称</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editRoleDisplayName" class="form-label">显示名称</label>
+                            <input type="text" class="form-control" id="editRoleDisplayName" name="editRoleDisplayName">
+                            <div class="form-text">系统角色不允许修改显示名称</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editRoleDescription" class="form-label">描述</label>
+                            <textarea class="form-control" id="editRoleDescription" name="editRoleDescription" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="saveEditRole()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 权限管理模态框 -->
+    <div class="modal fade" id="permissionModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="permissionModalTitle">管理权限</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="permissionRoleId">
+
+                    <!-- 权限操作按钮 -->
+                    <div class="mb-3">
+                        <button type="button" class="btn btn-sm btn-outline-primary me-2" onclick="toggleAllPermissions(true)">
+                            <i class="fas fa-check-square"></i> 全选
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleAllPermissions(false)">
+                            <i class="fas fa-square"></i> 取消全选
+                        </button>
+                    </div>
+
+                    <!-- 权限列表 -->
+                    <div id="permissionList" class="permission-list" style="max-height: 400px; overflow-y: auto;">
+                        <!-- 权限列表将通过JavaScript动态生成 -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="savePermissions()">保存权限</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 引入admin组件样式和脚本 -->
+    <th:block th:replace="~{components/admin/admin-components :: admin-style}"></th:block>
+    <th:block th:replace="~{components/admin/admin-components :: admin-script}"></th:block>
+
+    <!-- 角色管理特定脚本 -->
+    <script th:fragment="page-script">
+        // 角色操作函数
+        function editRole(id) {
+            alert('编辑角色：' + id);
+        }
+
+        function viewPermissions(id) {
+            alert('查看权限：' + id);
+        }
+
+        function deleteRole(id) {
+            if (confirm('确定要删除这个角色吗？此操作不可恢复！')) {
+                alert('删除角色：' + id);
+            }
+        }
+
+        // 保存新角色
+        function saveRole() {
+            const form = document.getElementById('addRoleForm');
+            const formData = new FormData(form);
+
+            const roleData = {
+                name: formData.get('roleName'),
+                displayName: formData.get('roleDisplayName'),
+                description: formData.get('roleDescription')
+            };
+
+            // 验证必填字段
+            if (!roleData.name || !roleData.displayName) {
+                alert('请填写角色名称和显示名称');
+                return;
+            }
+
+            fetch('/admin/api/roles', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(roleData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('添加角色成功');
+                    bootstrap.Modal.getInstance(document.getElementById('addRoleModal')).hide();
+                    window.location.reload();
+                } else {
+                    alert('添加角色失败：' + (data.message || '未知错误'));
+                }
+            })
+            .catch(error => {
+                console.error('添加角色失败:', error);
+                alert('添加角色失败，请稍后重试');
+            });
+        }
+
+        // 权限管理相关函数（简化版）
+        function savePermissions() {
+            alert('权限保存功能待实现');
+        }
+
+        function toggleAllPermissions(checked) {
+            alert('全选/取消全选功能待实现');
+        }
+    </script>
+</body>
+</html>

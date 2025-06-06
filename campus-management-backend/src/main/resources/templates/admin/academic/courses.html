@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/admin :: html}"
+      lang="zh-CN">
+<head th:replace="~{layout/admin :: head}">
+    <th:block th:fragment="head-extra">
+        <title>课程管理 - 智慧校园管理系统</title>
+    </th:block>
+</head>
+<body>
+    <div th:fragment="content">
+        <!-- 页面标题 -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-book me-2 text-primary"></i>课程管理
+                </h1>
+                <p class="text-muted mb-0">管理学校的课程信息</p>
+            </div>
+            <button type="button" class="btn btn-primary" id="addCourseBtn">
+                <i class="fas fa-plus me-2"></i>添加课程
+            </button>
+        </div>
+
+        <!-- 统计卡片 -->
+        <div class="row mb-4">
+            <div class="col-xl-3 col-md-6">
+                <div class="card bg-primary text-white mb-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-white-75 small">总课程数</div>
+                                <div class="text-lg fw-bold" id="totalCourses">0</div>
+                            </div>
+                            <i class="fas fa-book fa-2x text-white-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card bg-success text-white mb-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-white-75 small">启用课程</div>
+                                <div class="text-lg fw-bold" id="activeCourses">0</div>
+                            </div>
+                            <i class="fas fa-check-circle fa-2x text-white-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card bg-info text-white mb-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-white-75 small">总学分</div>
+                                <div class="text-lg fw-bold" id="totalCredits">0</div>
+                            </div>
+                            <i class="fas fa-graduation-cap fa-2x text-white-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card bg-warning text-white mb-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-white-75 small">课程类型</div>
+                                <div class="text-lg fw-bold" id="courseTypes">0</div>
+                            </div>
+                            <i class="fas fa-tags fa-2x text-white-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 搜索筛选 -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-filter me-2"></i>筛选与操作
+                </h6>
+            </div>
+            <div class="card-body">
+                <form id="searchForm">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-3">
+                            <label class="form-label">搜索关键词</label>
+                            <input type="text" class="form-control" name="search" placeholder="课程名称或代码">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">课程类型</label>
+                            <select class="form-select" name="courseType">
+                                <option value="">全部类型</option>
+                                <option value="必修课">必修课</option>
+                                <option value="选修课">选修课</option>
+                                <option value="实践课">实践课</option>
+                                <option value="通识课">通识课</option>
+                                <option value="专业课">专业课</option>
+                                <option value="基础课">基础课</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">学期</label>
+                            <select class="form-select" name="semester">
+                                <option value="">全部学期</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">状态</label>
+                            <select class="form-select" name="status">
+                                <option value="">全部状态</option>
+                                <option value="1">启用</option>
+                                <option value="0">禁用</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="btn-group w-100">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search me-1"></i>搜索
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" id="resetBtn">
+                                    <i class="fas fa-undo me-1"></i>重置
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 课程列表 -->
+        <div class="card" id="courseTableContainer">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">
+                    <i class="fas fa-list me-2"></i>课程列表
+                </h6>
+                <div class="btn-group btn-group-sm">
+                    <button type="button" class="btn btn-outline-success" id="exportBtn">
+                        <i class="fas fa-download me-1"></i>导出
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="courseTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th width="50">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="selectAll">
+                                    </div>
+                                </th>
+                                <th>课程信息</th>
+                                <th>学分</th>
+                                <th>类型</th>
+                                <th>学期</th>
+                                <th>状态</th>
+                                <th>创建时间</th>
+                                <th width="120">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- 数据将通过JavaScript动态加载 -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 分页 -->
+                <nav aria-label="课程分页">
+                    <ul class="pagination justify-content-center mb-0" id="pagination">
+                        <!-- 分页按钮将通过JavaScript动态生成 -->
+                    </ul>
+                </nav>
+            </div>
+        </div>
+
+
+
+        <!-- 课程模态框 -->
+        <div class="modal fade" id="courseModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="courseModalLabel">
+                            <i class="fas fa-plus me-2"></i>添加课程
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="courseForm" class="needs-validation" novalidate>
+                            <input type="hidden" id="courseId" name="courseId">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="courseCode" class="form-label">课程代码 <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="courseCode" name="courseCode"
+                                               placeholder="请输入课程代码" required>
+                                        <div class="invalid-feedback">请输入课程代码</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="courseName" class="form-label">课程名称 <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="courseName" name="courseName"
+                                               placeholder="请输入课程名称" required>
+                                        <div class="invalid-feedback">请输入课程名称</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="courseType" class="form-label">课程类型 <span class="text-danger">*</span></label>
+                                        <select class="form-select" id="courseType" name="courseType" required>
+                                            <option value="">请选择课程类型</option>
+                                        </select>
+                                        <div class="invalid-feedback">请选择课程类型</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="teacherId" class="form-label">授课教师</label>
+                                        <select class="form-select" id="teacherId" name="teacherId">
+                                            <option value="">请选择教师</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="credits" class="form-label">学分 <span class="text-danger">*</span></label>
+                                        <input type="number" class="form-control" id="credits" name="credits"
+                                               min="0.5" max="10" step="0.5" placeholder="请输入学分" required>
+                                        <div class="invalid-feedback">请输入有效的学分(0.5-10)</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="semester" class="form-label">开课学期</label>
+                                        <select class="form-select" id="semester" name="semester">
+                                            <option value="">请选择学期</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="status" class="form-label">状态 <span class="text-danger">*</span></label>
+                                <select class="form-select" id="status" name="status" required>
+                                    <option value="1">启用</option>
+                                    <option value="0">禁用</option>
+                                </select>
+                                <div class="invalid-feedback">请选择状态</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="description" class="form-label">课程描述</label>
+                                <textarea class="form-control" id="description" name="description"
+                                          rows="3" placeholder="请输入课程描述"></textarea>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        <button type="button" class="btn btn-primary" id="saveCourseBtn">保存</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <th:block th:fragment="scripts">
+        <!-- 引入API客户端和工具类 -->
+        <script th:src="@{/js/api-client.js}"></script>
+        <!-- 引入课程管理模块 -->
+        <script th:src="@{/js/modules/course-management.js}"></script>
+    </th:block>
+</body>
+</html>

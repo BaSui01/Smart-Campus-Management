@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/admin :: html}"
+      lang="zh-CN">
+<head th:replace="~{layout/admin :: head}">
+    <th:block th:fragment="head-extra">
+        <title>权限管理 - 智慧校园管理系统</title>
+        <!-- 网站图标 -->
+        <link rel="icon" type="image/svg+xml" th:href="@{/images/favicon.svg}">
+        <link rel="alternate icon" th:href="@{/favicon.ico}">
+        <link rel="apple-touch-icon" th:href="@{/images/favicon.svg}">
+    </th:block>
+</head>
+<body>
+    <div th:fragment="content">
+        <!-- 页面标题 -->
+        <div th:replace="~{components/admin/admin-components :: page-header(
+            title='权限管理',
+            icon='fas fa-key',
+            showAddButton=true,
+            addButtonText='添加权限',
+            addButtonTarget='#addPermissionModal'
+        )}"></div>
+
+        <!-- 统计卡片 -->
+        <div th:replace="~{components/admin/admin-components :: stat-cards(${permissionStats})}"></div>
+
+        <!-- 数据表格组件 -->
+        <div th:replace="~{components/admin/admin-components :: data-table(${permissionTableConfig}, ${permissions})}"></div>
+    </div>
+
+    <!-- 引入admin组件样式和脚本 -->
+    <th:block th:replace="~{components/admin/admin-components :: admin-style}"></th:block>
+    <th:block th:replace="~{components/admin/admin-components :: admin-script}"></th:block>
+
+    <!-- 权限管理特定脚本 -->
+    <script th:fragment="page-script">
+        // 权限操作函数
+        function editPermission(permissionId) {
+            alert('编辑权限：' + permissionId);
+        }
+
+        function deletePermission(permissionId) {
+            if (confirm('确定要删除该权限吗？')) {
+                alert('删除权限：' + permissionId);
+            }
+        }
+    </script>
+
+    <!-- 添加权限模态框 -->
+    <div class="modal fade" id="addPermissionModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">添加权限</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addPermissionForm">
+                        <div class="mb-3">
+                            <label for="permissionCode" class="form-label">权限代码</label>
+                            <input type="text" class="form-control" id="permissionCode" name="permissionCode" placeholder="例如: user:view" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="permissionName" class="form-label">权限名称</label>
+                            <input type="text" class="form-control" id="permissionName" name="permissionName" placeholder="例如: 查看用户" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="permissionModule" class="form-label">所属模块</label>
+                            <select class="form-select" id="permissionModule" name="resourceType" required>
+                                <option value="">请选择模块</option>
+                                <option value="用户管理">用户管理</option>
+                                <option value="角色管理">角色管理</option>
+                                <option value="权限管理">权限管理</option>
+                                <option value="课程管理">课程管理</option>
+                                <option value="学生管理">学生管理</option>
+                                <option value="财务管理">财务管理</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="permissionDescription" class="form-label">描述</label>
+                            <textarea class="form-control" id="permissionDescription" name="permissionDesc" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="savePermission()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function savePermission() {
+            const form = document.getElementById('addPermissionForm');
+            const formData = new FormData(form);
+
+            const permissionData = {
+                permissionCode: formData.get('permissionCode'),
+                permissionName: formData.get('permissionName'),
+                resourceType: formData.get('resourceType'),
+                permissionDesc: formData.get('permissionDesc')
+            };
+
+            // 验证必填字段
+            if (!permissionData.permissionCode) {
+                alert('权限代码不能为空');
+                return;
+            }
+
+            if (!permissionData.permissionName) {
+                alert('权限名称不能为空');
+                return;
+            }
+
+            if (!permissionData.resourceType) {
+                alert('请选择所属模块');
+                return;
+            }
+
+            fetch('/admin/permissions/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(permissionData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('添加权限成功！');
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('addPermissionModal'));
+                    modal.hide();
+                    form.reset();
+                    window.location.reload();
+                } else {
+                    alert('添加权限失败：' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('添加权限失败，请稍后重试');
+            });
+        }
+    </script>
+</body>
+</html>

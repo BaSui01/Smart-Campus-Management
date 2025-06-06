@@ -1,53 +1,24 @@
 <!DOCTYPE html>
-<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${pageTitle} + ' - 智慧校园管理系统'">个人资料 - 智慧校园管理系统</title>
-    
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <!-- 引入组件样式 -->
-    <th:block th:replace="~{components/topbar :: topbar-style}"></th:block>
-    <!-- 侧边栏样式 -->
-    <link th:href="@{/css/sidebar.css}" rel="stylesheet">
-    <!-- 自定义样式 -->
-    <link href="/css/admin.css" rel="stylesheet">
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/admin :: html}"
+      lang="zh-CN">
+<head th:replace="~{layout/admin :: head}">
+    <th:block th:fragment="head-extra">
+        <title>个人资料 - 智慧校园管理系统</title>
+        <!-- 网站图标 -->
+        <link rel="icon" type="image/svg+xml" th:href="@{/images/favicon.svg}">
+        <link rel="alternate icon" th:href="@{/favicon.ico}">
+        <link rel="apple-touch-icon" th:href="@{/images/favicon.svg}">
+    </th:block>
 </head>
 <body>
-    <div class="wrapper">
-        <!-- 左侧导航栏 -->
-        <th:block th:replace="~{components/sidebar :: sidebar}"></th:block>
-
-        <!-- 主内容区域 -->
-        <div id="content" class="content">
-            <!-- 顶部导航栏 -->
-            <nav class="navbar navbar-expand-lg navbar-light bg-light">
-                <div class="container-fluid">
-                   
-                    
-                    <div class="navbar-nav ms-auto">
-                        <div class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-user"></i> 管理员
-                            </a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item active" href="/admin/profile"><i class="fas fa-user-circle"></i> 个人资料</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="/admin/logout"><i class="fas fa-sign-out-alt"></i> 退出登录</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </nav>
-
-            <!-- 页面内容 -->
-            <div class="content-wrapper">
-                <div class="d-sm-flex align-items-center justify-content-between mb-4">
-                    <h1 class="h3 mb-0 text-gray-800">个人资料</h1>
-                </div>
+    <div th:fragment="content">
+        <!-- 页面标题 -->
+        <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="fas fa-user-circle me-2"></i>个人资料
+            </h1>
+        </div>
 
                 <div class="row">
                     <!-- 个人信息卡片 -->
@@ -196,9 +167,41 @@
                         </div>
                     </div>
                 </div>
-            </div>
         </div>
     </div>
+
+    <!-- 引入admin组件样式和脚本 -->
+    <th:block th:replace="~{components/admin/admin-components :: admin-style}"></th:block>
+    <th:block th:replace="~{components/admin/admin-components :: admin-script}"></th:block>
+
+    <!-- 个人资料特定脚本 -->
+    <script th:fragment="page-script">
+        function saveProfile() {
+            alert('保存个人资料功能开发中');
+        }
+
+        function resetForm() {
+            document.getElementById('profileForm').reset();
+        }
+
+        function changePassword() {
+            alert('修改密码功能开发中');
+        }
+
+        function uploadAvatar() {
+            alert('上传头像功能开发中');
+        }
+
+        function previewAvatar(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('avatarPreview').src = e.target.result;
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+    </script>
 
     <!-- 更换头像模态框 -->
     <div class="modal fade" id="changeAvatarModal" tabindex="-1">
@@ -228,171 +231,5 @@
             </div>
         </div>
     </div>
-      <!-- 退出登录确认模态框 -->
-    <th:block th:replace="~{components/topbar :: logout-modal}"></th:block>
-    <!-- 引入侧边栏脚本 -->
-    <th:block th:replace="~{components/sidebar :: sidebar-script}"></th:block>
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- 自定义脚本 -->
-    <script src="/js/admin.js"></script>
-    <script>
-        function saveProfile() {
-            const formData = {
-                realName: document.getElementById('realName').value.trim(),
-                email: document.getElementById('email').value.trim(),
-                phone: document.getElementById('phone').value.trim()
-            };
-
-            // 验证必填字段
-            if (!formData.realName) {
-                showMessage('请输入真实姓名', 'error');
-                return;
-            }
-
-            if (!formData.email) {
-                showMessage('请输入邮箱地址', 'error');
-                return;
-            }
-
-            // 验证邮箱格式
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(formData.email)) {
-                showMessage('请输入有效的邮箱地址', 'error');
-                return;
-            }
-
-            // 发送AJAX请求到后端
-            fetch('/admin/api/profile', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(formData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showMessage('个人资料更新成功', 'success');
-                } else {
-                    showMessage(data.message || '个人资料更新失败', 'error');
-                }
-            })
-            .catch(error => {
-                console.error('更新个人资料失败:', error);
-                showMessage('个人资料更新失败', 'error');
-            });
-        }
-        
-        function resetForm() {
-            document.getElementById('profileForm').reset();
-        }
-        
-        function changePassword() {
-            const currentPassword = document.getElementById('currentPassword').value;
-            const newPassword = document.getElementById('newPassword').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-
-            if (!currentPassword || !newPassword || !confirmPassword) {
-                showMessage('请填写所有密码字段', 'error');
-                return;
-            }
-
-            if (newPassword !== confirmPassword) {
-                showMessage('新密码和确认密码不匹配', 'error');
-                return;
-            }
-
-            if (newPassword.length < 6) {
-                showMessage('新密码长度至少6位', 'error');
-                return;
-            }
-
-            // 发送AJAX请求到后端
-            fetch('/admin/api/change-password', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    currentPassword: currentPassword,
-                    newPassword: newPassword
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showMessage('密码修改成功', 'success');
-                    // 清空表单
-                    document.getElementById('passwordForm').reset();
-                } else {
-                    showMessage(data.message || '密码修改失败', 'error');
-                }
-            })
-            .catch(error => {
-                console.error('密码修改失败:', error);
-                showMessage('密码修改失败', 'error');
-            });
-        }
-        
-        function previewAvatar(input) {
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('avatarPreview').src = e.target.result;
-                };
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
-        
-        function uploadAvatar() {
-            const fileInput = document.getElementById('avatarFile');
-            if (!fileInput.files[0]) {
-                showMessage('请选择头像文件', 'error');
-                return;
-            }
-
-            const file = fileInput.files[0];
-
-            // 验证文件大小（2MB）
-            if (file.size > 2 * 1024 * 1024) {
-                showMessage('文件大小不能超过2MB', 'error');
-                return;
-            }
-
-            // 验证文件类型
-            if (!file.type.startsWith('image/')) {
-                showMessage('请选择图片文件', 'error');
-                return;
-            }
-
-            // TODO: 实现头像上传功能
-            showMessage('头像上传功能开发中', 'info');
-        }
-
-        // 显示消息提示
-        function showMessage(message, type = 'info') {
-            const alertClass = type === 'success' ? 'alert-success' :
-                              type === 'error' ? 'alert-danger' : 'alert-info';
-
-            const alertHtml = `
-                <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
-                    ${message}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            `;
-
-            const container = document.querySelector('.content-wrapper');
-            container.insertAdjacentHTML('afterbegin', alertHtml);
-
-            // 3秒后自动消失
-            setTimeout(() => {
-                const alert = container.querySelector('.alert');
-                if (alert) {
-                    alert.remove();
-                }
-            }, 3000);
-        }
-    </script>
 </body>
 </html>

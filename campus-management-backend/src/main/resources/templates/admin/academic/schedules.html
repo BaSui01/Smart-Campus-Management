@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/admin :: html}"
+      lang="zh-CN">
+<head th:replace="~{layout/admin :: head}">
+    <th:block th:fragment="head-extra">
+        <title>课程安排 - 智慧校园管理系统</title>
+        <!-- 网站图标 -->
+        <link rel="icon" type="image/svg+xml" th:href="@{/images/favicon.svg}">
+        <link rel="alternate icon" th:href="@{/favicon.ico}">
+        <link rel="apple-touch-icon" th:href="@{/images/favicon.svg}">
+    </th:block>
+</head>
+<body>
+    <div th:fragment="content">
+        <!-- 页面标题 -->
+        <div th:replace="~{components/admin/admin-components :: page-header(
+            title='课程安排',
+            icon='fas fa-calendar-alt',
+            showAddButton=true,
+            addButtonText='添加课程安排',
+            addButtonTarget='#addScheduleModal'
+        )}"></div>
+
+        <!-- 统计卡片 -->
+        <div th:replace="~{components/admin/admin-components :: stat-cards(${scheduleStats})}"></div>
+
+        <!-- 数据表格组件 -->
+        <div th:replace="~{components/admin/admin-components :: data-table(${scheduleTableConfig}, ${schedules})}"></div>
+    </div>
+
+    <!-- 引入admin组件样式和脚本 -->
+    <th:block th:replace="~{components/admin/admin-components :: admin-style}"></th:block>
+    <th:block th:replace="~{components/admin/admin-components :: admin-script}"></th:block>
+
+    <!-- 课程安排特定脚本 -->
+    <script th:fragment="page-script">
+        // 课程安排操作函数
+        function editSchedule(scheduleId) {
+            alert('编辑课程安排：' + scheduleId);
+        }
+
+        function viewDetails(scheduleId) {
+            alert('查看课程安排详情：' + scheduleId);
+        }
+
+        function deleteSchedule(scheduleId) {
+            if (confirm('确定要删除该课程安排吗？')) {
+                alert('删除课程安排：' + scheduleId);
+            }
+        }
+    </script>
+
+    <!-- 添加课程安排模态框 -->
+    <div class="modal fade" id="addScheduleModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">添加课程安排</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addScheduleForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="courseId" class="form-label">课程</label>
+                                    <select class="form-select" id="courseId" name="courseId" required>
+                                        <option value="">请选择课程</option>
+                                        <option th:each="course : ${courses}" th:value="${course.id}" th:text="${course.courseName}">课程名称</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="classId" class="form-label">班级</label>
+                                    <select class="form-select" id="classId" name="classId" required>
+                                        <option value="">请选择班级</option>
+                                        <option th:each="schoolClass : ${classes}" th:value="${schoolClass.id}" th:text="${schoolClass.className}">班级名称</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="teacherId" class="form-label">授课教师</label>
+                                    <select class="form-select" id="teacherId" name="teacherId" required>
+                                        <option value="">请选择教师</option>
+                                        <option th:each="teacher : ${teachers}" th:value="${teacher.id}" th:text="${teacher.realName}">教师姓名</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="classroom" class="form-label">教室</label>
+                                    <input type="text" class="form-control" id="classroom" name="classroom" placeholder="例如: A101" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="dayOfWeek" class="form-label">星期</label>
+                                    <select class="form-select" id="dayOfWeek" name="dayOfWeek" required>
+                                        <option value="">请选择星期</option>
+                                        <option value="周一">周一</option>
+                                        <option value="周二">周二</option>
+                                        <option value="周三">周三</option>
+                                        <option value="周四">周四</option>
+                                        <option value="周五">周五</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="timeSlot" class="form-label">时间段</label>
+                                    <select class="form-select" id="timeSlot" name="timeSlot" required>
+                                        <option value="">请选择时间段</option>
+                                        <option value="08:00-09:40">08:00-09:40</option>
+                                        <option value="10:00-11:40">10:00-11:40</option>
+                                        <option value="14:00-15:40">14:00-15:40</option>
+                                        <option value="16:00-17:40">16:00-17:40</option>
+                                        <option value="19:00-20:40">19:00-20:40</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="weeks" class="form-label">周次</label>
+                            <input type="text" class="form-control" id="weeks" name="weeks" placeholder="例如: 1-16周" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="saveSchedule()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function saveSchedule() {
+            const form = document.getElementById('addScheduleForm');
+            const formData = new FormData(form);
+
+            const scheduleData = {
+                courseId: formData.get('courseId'),
+                classId: formData.get('classId'),
+                teacherId: formData.get('teacherId'),
+                classroom: formData.get('classroom'),
+                dayOfWeek: formData.get('dayOfWeek'),
+                timeSlot: formData.get('timeSlot'),
+                weeks: formData.get('weeks')
+            };
+
+            fetch('/admin/schedules/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(scheduleData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('添加课程安排成功！');
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('addScheduleModal'));
+                    modal.hide();
+                    form.reset();
+                    window.location.reload();
+                } else {
+                    alert('添加课程安排失败：' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('添加课程安排失败，请稍后重试');
+            });
+        }
+    </script>
+</body>
+</html>

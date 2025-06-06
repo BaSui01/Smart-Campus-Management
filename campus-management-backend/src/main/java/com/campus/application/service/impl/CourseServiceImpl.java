@@ -202,4 +202,123 @@ public class CourseServiceImpl implements CourseService {
     public Optional<Object[]> findCourseDetailById(Long courseId) {
         return courseRepository.findCourseDetailById(courseId);
     }
+
+    // ==================== 新增的接口方法实现 ====================
+
+    @Override
+    @Transactional
+    public Course createCourse(Course course) {
+        try {
+            // 检查课程代码是否已存在
+            if (existsByCourseCode(course.getCourseCode())) {
+                throw new IllegalArgumentException("课程代码已存在");
+            }
+
+            // 设置默认值
+            if (course.getStatus() == null) {
+                course.setStatus(1); // 默认启用
+            }
+            if (course.getEnrolledStudents() == null) {
+                course.setEnrolledStudents(0); // 默认选课人数为0
+            }
+
+            return courseRepository.save(course);
+        } catch (Exception e) {
+            throw new RuntimeException("创建课程失败：" + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    @Transactional
+    public boolean updateCourse(Course course) {
+        try {
+            // 检查课程是否存在
+            Optional<Course> existingCourse = courseRepository.findById(course.getId());
+            if (existingCourse.isEmpty()) {
+                return false;
+            }
+
+            // 检查课程代码是否被其他课程使用
+            Optional<Course> courseWithSameCode = courseRepository.findByCourseCodeAndDeleted(course.getCourseCode(), 0);
+            if (courseWithSameCode.isPresent() && !courseWithSameCode.get().getId().equals(course.getId())) {
+                throw new IllegalArgumentException("课程代码已被其他课程使用");
+            }
+
+            courseRepository.save(course);
+            return true;
+        } catch (Exception e) {
+            throw new RuntimeException("更新课程失败：" + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    @Transactional
+    public boolean deleteCourse(Long courseId) {
+        try {
+            // 检查课程是否存在
+            Optional<Course> course = courseRepository.findById(courseId);
+            if (course.isEmpty()) {
+                return false;
+            }
+
+            // 软删除：设置deleted标志
+            Course courseEntity = course.get();
+            courseEntity.setDeleted(1);
+            courseRepository.save(courseEntity);
+            return true;
+        } catch (Exception e) {
+            throw new RuntimeException("删除课程失败：" + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    @Transactional
+    public boolean batchDeleteCourses(List<Long> courseIds) {
+        try {
+            for (Long courseId : courseIds) {
+                deleteCourse(courseId);
+            }
+            return true;
+        } catch (Exception e) {
+            throw new RuntimeException("批量删除课程失败：" + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    @Transactional
+    public Map<String, Object> importCourses(List<Course> courses) {
+        Map<String, Object> result = new HashMap<>();
+        int successCount = 0;
+        int failCount = 0;
+        StringBuilder errorMessages = new StringBuilder();
+
+        for (Course course : courses) {
+            try {
+                createCourse(course);
+                successCount++;
+            } catch (Exception e) {
+                failCount++;
+                errorMessages.append("课程[").append(course.getCourseCode()).append("]导入失败：")
+                           .append(e.getMessage()).append("; ");
+            }
+        }
+
+        result.put("total", courses.size());
+        result.put("success", successCount);
+        result.put("fail", failCount);
+        result.put("errors", errorMessages.toString());
+        return result;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Course> exportCourses(Map<String, Object> params) {
+        // 根据参数过滤课程
+        if (params != null && !params.isEmpty()) {
+            // 这里可以根据具体的查询参数来过滤
+            // 暂时返回所有课程
+            return courseRepository.findAll();
+        }
+        return courseRepository.findAll();
+    }
 }

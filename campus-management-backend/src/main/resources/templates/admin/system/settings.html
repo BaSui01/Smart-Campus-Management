@@ -1,39 +1,27 @@
 <!DOCTYPE html>
-<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${pageTitle} + ' - 智慧校园管理系统'">系统设置 - 智慧校园管理系统</title>
-    
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <!-- 引入组件样式 -->
-    <th:block th:replace="~{components/topbar :: topbar-style}"></th:block>
-    <!-- 侧边栏样式 -->
-    <link th:href="@{/css/sidebar.css}" rel="stylesheet">
-    <!-- 自定义样式 -->
-    <link href="/css/admin.css" rel="stylesheet">
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/admin :: html}"
+      lang="zh-CN">
+<head th:replace="~{layout/admin :: head}">
+    <th:block th:fragment="head-extra">
+        <title>系统设置 - 智慧校园管理系统</title>
+        <!-- 网站图标 -->
+        <link rel="icon" type="image/svg+xml" th:href="@{/images/favicon.svg}">
+        <link rel="alternate icon" th:href="@{/favicon.ico}">
+        <link rel="apple-touch-icon" th:href="@{/images/favicon.svg}">
+    </th:block>
 </head>
 <body>
-    <div class="wrapper">
-        <!-- 左侧导航栏 -->
-        <th:block th:replace="~{components/sidebar :: sidebar}"></th:block>
-
-        <!-- 主内容区域 -->
-        <div id="content" class="content">
-            <!-- 顶部导航栏 -->
-            <th:block th:replace="~{components/topbar :: topbar}"></th:block>
-
-            <!-- 页面内容 -->
-            <div class="content-wrapper">
-                <div class="d-sm-flex align-items-center justify-content-between mb-4">
-                    <h1 class="h3 mb-0 text-gray-800">系统设置</h1>
-                    <button class="btn btn-success" onclick="saveAllSettings()">
-                        <i class="fas fa-save"></i> 保存所有设置
-                    </button>
-                </div>
+    <div th:fragment="content">
+        <!-- 页面标题 -->
+        <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="fas fa-cogs me-2"></i>系统设置
+            </h1>
+            <button class="btn btn-success" onclick="saveAllSettings()">
+                <i class="fas fa-save"></i> 保存所有设置
+            </button>
+        </div>
 
                 <div class="row">
                     <!-- 基本设置 -->
@@ -236,180 +224,42 @@
                         </div>
                     </div>
                 </div>
-            </div>
         </div>
     </div>
-      <!-- 退出登录确认模态框 -->
-    <th:block th:replace="~{components/topbar :: logout-modal}"></th:block>
-    <!-- 引入侧边栏脚本 -->
-    <th:block th:replace="~{components/sidebar :: sidebar-script}"></th:block>
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- 自定义脚本 -->
-    <script src="/js/admin.js"></script>
-    <script>
+
+    <!-- 引入admin组件样式和脚本 -->
+    <th:block th:replace="~{components/admin/admin-components :: admin-style}"></th:block>
+    <th:block th:replace="~{components/admin/admin-components :: admin-script}"></th:block>
+
+    <!-- 系统设置特定脚本 -->
+    <script th:fragment="page-script">
         function saveAllSettings() {
-            const basicSettings = {
-                systemName: document.getElementById('systemName').value,
-                systemLogo: document.getElementById('systemLogo').value,
-                contactEmail: document.getElementById('contactEmail').value,
-                contactPhone: document.getElementById('contactPhone').value
-            };
-            
-            const securitySettings = {
-                maxLoginAttempts: document.getElementById('maxLoginAttempts').value,
-                sessionTimeout: document.getElementById('sessionTimeout').value,
-                passwordMinLength: document.getElementById('passwordMinLength').value,
-                enableCaptcha: document.getElementById('enableCaptcha').checked.toString()
-            };
-            
-            const notificationSettings = {
-                enableEmailNotification: document.getElementById('enableEmailNotification').checked.toString(),
-                enableSmsNotification: document.getElementById('enableSmsNotification').checked.toString(),
-                notificationEmail: document.getElementById('notificationEmail').value,
-                notificationPhone: document.getElementById('notificationPhone').value
-            };
-            
-            const allSettings = {
-                basicSettings: basicSettings,
-                securitySettings: securitySettings,
-                notificationSettings: notificationSettings
-            };
-            
-            // 发送AJAX请求到后端
-            fetch('/admin/settings/api/save-all', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(allSettings)
-            })
-            .then(response => response.json())
-            .then(result => {
-                if (result.success) {
-                    alert('系统设置保存成功');
-                } else {
-                    alert('保存失败: ' + result.message);
-                }
-            })
-            .catch(error => {
-                console.error('保存系统设置失败:', error);
-                alert('保存系统设置失败');
-            });
+            alert('保存系统设置功能开发中');
         }
-        
+
         function uploadLogo() {
-            // 创建文件输入元素
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = 'image/*';
-            input.onchange = function(e) {
-                const file = e.target.files[0];
-                if (file) {
-                    const formData = new FormData();
-                    formData.append('logo', file);
-                    
-                    fetch('/admin/settings/api/upload-logo', {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(response => response.json())
-                    .then(result => {
-                        if (result.success) {
-                            document.getElementById('systemLogo').value = result.logoUrl;
-                            alert('Logo上传成功');
-                        } else {
-                            alert('上传失败: ' + result.message);
-                        }
-                    })
-                    .catch(error => {
-                        console.error('上传Logo失败:', error);
-                        alert('上传Logo失败');
-                    });
-                }
-            };
-            input.click();
+            alert('上传Logo功能开发中');
         }
-        
+
         function backupData() {
             if (confirm('确定要进行数据备份吗？这可能需要几分钟时间。')) {
-                fetch('/admin/settings/api/backup', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(response => response.json())
-                .then(result => {
-                    if (result.success) {
-                        alert('数据备份成功');
-                    } else {
-                        alert('备份失败: ' + result.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('数据备份失败:', error);
-                    alert('数据备份失败');
-                });
+                alert('数据备份功能开发中');
             }
         }
-        
+
         function clearCache() {
             if (confirm('确定要清理系统缓存吗？')) {
-                fetch('/admin/settings/api/clear-cache', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(response => response.json())
-                .then(result => {
-                    if (result.success) {
-                        alert('缓存清理成功');
-                    } else {
-                        alert('清理失败: ' + result.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('清理缓存失败:', error);
-                    alert('清理缓存失败');
-                });
+                alert('清理缓存功能开发中');
             }
         }
-        
+
         function viewLogs() {
-            fetch('/admin/settings/api/logs')
-            .then(response => response.json())
-            .then(result => {
-                if (result.success) {
-                    // 可以打开一个新窗口或模态框显示日志
-                    alert('日志内容:\n' + result.logs);
-                } else {
-                    alert('获取日志失败: ' + result.message);
-                }
-            })
-            .catch(error => {
-                console.error('获取日志失败:', error);
-                alert('获取日志失败');
-            });
+            alert('查看日志功能开发中');
         }
-        
+
         function restartSystem() {
             if (confirm('确定要重启系统吗？这将中断所有用户的连接。')) {
-                fetch('/admin/settings/api/restart', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(response => response.json())
-                .then(result => {
-                    alert(result.message);
-                })
-                .catch(error => {
-                    console.error('系统重启失败:', error);
-                    alert('系统重启失败');
-                });
+                alert('系统重启功能开发中');
             }
         }
     </script>

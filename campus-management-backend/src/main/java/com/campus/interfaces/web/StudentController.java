@@ -4,12 +4,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -18,7 +20,13 @@ import org.springframework.data.domain.Pageable;
 import com.campus.domain.entity.Student;
 import com.campus.application.service.SchoolClassService;
 import com.campus.application.service.StudentService;
+import com.campus.application.service.GradeService;
+import com.campus.application.service.CourseScheduleService;
+import com.campus.application.service.UserService;
 import com.campus.domain.entity.SchoolClass;
+import com.campus.domain.entity.Grade;
+import com.campus.domain.entity.CourseSchedule;
+import com.campus.domain.entity.User;
 
 /**
  * 学生管理控制器 - 页面路由
@@ -35,6 +43,15 @@ public class StudentController {
 
     @Autowired
     private SchoolClassService schoolClassService;
+
+    @Autowired
+    private GradeService gradeService;
+
+    @Autowired
+    private CourseScheduleService courseScheduleService;
+
+    @Autowired
+    private UserService userService;
 
     // ========== 管理页面路由 ==========
 
@@ -88,10 +105,10 @@ public class StudentController {
             model.addAttribute("status", status);
             model.addAttribute("pageTitle", "学生管理");
             model.addAttribute("currentPage", "students");
-            return "admin/students";
+            return "admin/student/students";
         } catch (Exception e) {
             model.addAttribute("error", "加载学生列表失败：" + e.getMessage());
-            return "admin/students";
+            return "admin/student/students";
         }
     }
 
@@ -130,10 +147,10 @@ public class StudentController {
             model.addAttribute("majors", majors);
             model.addAttribute("pageTitle", "添加学生");
             model.addAttribute("currentPage", "students");
-            return "admin/student-form";
+            return "admin/student/students";
         } catch (Exception e) {
             model.addAttribute("error", "加载添加学生页面失败：" + e.getMessage());
-            return "admin/students";
+            return "admin/student/students";
         }
     }
 
@@ -147,7 +164,7 @@ public class StudentController {
             Student student = studentService.findById(id).orElse(null);
             if (student == null) {
                 model.addAttribute("error", "学生不存在");
-                return "admin/students";
+                return "admin/student/students";
             }
 
             // 获取班级列表
@@ -179,10 +196,10 @@ public class StudentController {
             model.addAttribute("majors", majors);
             model.addAttribute("pageTitle", "编辑学生");
             model.addAttribute("currentPage", "students");
-            return "admin/student-form";
+            return "admin/student/students";
         } catch (Exception e) {
             model.addAttribute("error", "加载编辑学生页面失败：" + e.getMessage());
-            return "admin/students";
+            return "admin/student/students";
         }
     }
 
@@ -196,18 +213,20 @@ public class StudentController {
             Student student = studentService.findById(id).orElse(null);
             if (student == null) {
                 model.addAttribute("error", "学生不存在");
-                return "admin/students";
+                return "admin/student/students";
             }
 
             model.addAttribute("student", student);
             model.addAttribute("pageTitle", "学生详情");
             model.addAttribute("currentPage", "students");
-            return "admin/student-detail";
+            return "admin/student/students";
         } catch (Exception e) {
             model.addAttribute("error", "加载学生详情失败：" + e.getMessage());
-            return "admin/students";
+            return "admin/student/students";
         }
     }
+
+    // ========== 辅助方法 ==========
 
     // ========== 学生端页面路由 ==========
 
@@ -215,11 +234,23 @@ public class StudentController {
      * 学生个人信息页面
      */
     @GetMapping("/student/profile")
-    public String studentProfile(Model model) {
+    public String studentProfile(HttpServletRequest request, Model model) {
         try {
-            // TODO: 获取当前登录学生的信息
-            // Student currentStudent = getCurrentStudent();
-            
+            // 获取当前登录学生的信息
+            Student currentStudent = getCurrentStudent(request);
+            if (currentStudent == null) {
+                model.addAttribute("error", "未找到学生信息，请重新登录");
+                return "student/profile";
+            }
+
+            // 获取学生所在班级信息
+            SchoolClass studentClass = null;
+            if (currentStudent.getClassId() != null) {
+                studentClass = schoolClassService.findById(currentStudent.getClassId()).orElse(null);
+            }
+
+            model.addAttribute("student", currentStudent);
+            model.addAttribute("studentClass", studentClass);
             model.addAttribute("pageTitle", "个人信息");
             model.addAttribute("currentPage", "profile");
             return "student/profile";
@@ -237,10 +268,41 @@ public class StudentController {
                                @RequestParam(defaultValue = "20") int size,
                                @RequestParam(defaultValue = "") String semester,
                                @RequestParam(defaultValue = "") String courseType,
+                               HttpServletRequest request,
                                Model model) {
         try {
-            // TODO: 获取当前登录学生的成绩
-            
+            // 获取当前登录学生的信息
+            Student currentStudent = getCurrentStudent(request);
+            if (currentStudent == null) {
+                model.addAttribute("error", "未找到学生信息，请重新登录");
+                return "student/grades";
+            }
+
+            // 构建查询参数
+            Map<String, Object> params = new HashMap<>();
+            params.put("studentId", currentStudent.getId());
+            if (!semester.isEmpty()) {
+                params.put("semester", semester);
+            }
+            if (!courseType.isEmpty()) {
+                params.put("courseType", courseType);
+            }
+
+            // 分页查询学生成绩
+            Pageable pageable = PageRequest.of(page, size);
+            Page<Grade> gradePage = gradeService.findGradesByPage(pageable, params);
+
+            // 获取学生成绩统计
+            Map<String, Object> gradeStats = gradeService.getStudentGradeStatistics(currentStudent.getId());
+
+            // 生成学期列表
+            List<String> semesters = generateSemesterList();
+
+            model.addAttribute("grades", gradePage);
+            model.addAttribute("gradeStats", gradeStats);
+            model.addAttribute("semesters", semesters);
+            model.addAttribute("semester", semester);
+            model.addAttribute("courseType", courseType);
             model.addAttribute("pageTitle", "成绩查询");
             model.addAttribute("currentPage", "grades");
             return "student/grades";
@@ -255,10 +317,32 @@ public class StudentController {
      */
     @GetMapping("/student/schedule")
     public String studentSchedule(@RequestParam(defaultValue = "") String semester,
+                                 HttpServletRequest request,
                                  Model model) {
         try {
-            // TODO: 获取当前登录学生的课程表
-            
+            // 获取当前登录学生的信息
+            Student currentStudent = getCurrentStudent(request);
+            if (currentStudent == null) {
+                model.addAttribute("error", "未找到学生信息，请重新登录");
+                return "student/schedule";
+            }
+
+            // 构建查询参数
+            Map<String, Object> params = new HashMap<>();
+            params.put("studentId", currentStudent.getId());
+            if (!semester.isEmpty()) {
+                params.put("semester", semester);
+            }
+
+            // 获取学生课程表
+            List<CourseSchedule> schedules = courseScheduleService.findSchedulesByStudent(currentStudent.getId(), params);
+
+            // 生成学期列表
+            List<String> semesters = generateSemesterList();
+
+            model.addAttribute("schedules", schedules);
+            model.addAttribute("semesters", semesters);
+            model.addAttribute("semester", semester);
             model.addAttribute("pageTitle", "课程表");
             model.addAttribute("currentPage", "schedule");
             return "student/schedule";
@@ -311,5 +395,45 @@ public class StudentController {
         } else {
             return "其他专业";
         }
+    }
+
+    /**
+     * 获取当前登录学生信息
+     */
+    private Student getCurrentStudent(HttpServletRequest request) {
+        try {
+            // 从session或JWT token中获取当前用户信息
+            String username = (String) request.getAttribute("currentUsername");
+            if (username != null) {
+                // 根据用户名查找用户信息
+                Optional<User> userOpt = userService.findByUsername(username);
+                if (userOpt.isPresent()) {
+                    User user = userOpt.get();
+                    // 根据用户ID查找对应的学生信息
+                    // 假设用户表和学生表通过某种方式关联（如用户名、邮箱等）
+                    return studentService.findByUserId(user.getId()).orElse(null);
+                }
+            }
+            return null;
+        } catch (Exception e) {
+            System.err.println("获取当前学生信息失败: " + e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * 生成学期列表
+     */
+    private List<String> generateSemesterList() {
+        List<String> semesters = new ArrayList<>();
+        int currentYear = java.time.LocalDate.now().getYear();
+
+        // 生成过去2年到未来1年的学期
+        for (int year = currentYear - 2; year <= currentYear + 1; year++) {
+            semesters.add(year + "春季学期");
+            semesters.add(year + "秋季学期");
+        }
+
+        return semesters;
     }
 }

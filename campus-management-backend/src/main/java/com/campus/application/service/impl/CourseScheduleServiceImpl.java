@@ -297,4 +297,44 @@ public class CourseScheduleServiceImpl implements CourseScheduleService {
         java.time.LocalTime end = start.plusHours(durationHours);
         return end.format(TIME_FORMATTER);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CourseSchedule> findSchedulesByStudent(Long studentId, Map<String, Object> params) {
+        try {
+            // 通过学生的选课记录查找课程表
+            List<CourseSelection> selections = courseSelectionRepository.findByStudentIdAndDeleted(studentId, 0);
+
+            // 获取学生选课的课程表ID列表
+            List<Long> scheduleIds = selections.stream()
+                .map(CourseSelection::getScheduleId)
+                .filter(scheduleId -> scheduleId != null)
+                .toList();
+
+            if (scheduleIds.isEmpty()) {
+                return List.of(); // 返回空列表
+            }
+
+            // 根据课程表ID查找课程表
+            List<CourseSchedule> schedules = courseScheduleRepository.findAllById(scheduleIds)
+                .stream()
+                .filter(schedule -> schedule.getDeleted() == 0)
+                .toList();
+
+            // 根据参数过滤
+            if (params != null && params.containsKey("semester")) {
+                String semester = (String) params.get("semester");
+                if (semester != null && !semester.isEmpty()) {
+                    schedules = schedules.stream()
+                        .filter(schedule -> semester.equals(schedule.getSemester()))
+                        .toList();
+                }
+            }
+
+            return schedules;
+        } catch (Exception e) {
+            System.err.println("查找学生课程表失败: " + e.getMessage());
+            return List.of(); // 返回空列表
+        }
+    }
 }

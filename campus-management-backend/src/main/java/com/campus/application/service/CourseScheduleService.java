@@ -190,4 +190,19 @@ public interface CourseScheduleService {
      * @return 课程表列表
      */
     List<CourseSchedule> findSchedulesByStudent(Long studentId, Map<String, Object> params);
+
+    /**
+     * 根据ID查找课程安排
+     *
+     * @param id 课程安排ID
+     * @return 课程安排
+     */
+    Optional<CourseSchedule> findById(Long id);
+
+    /**
+     * 获取所有课程安排
+     *
+     * @return 课程安排列表
+     */
+    List<CourseSchedule> findAll();
 }

@@ -349,3 +349,43 @@ function toggleFullscreen() {
         }
     }
 }
+
+/**
+ * 处理表格操作按钮点击
+ */
+function handleAction(button) {
+    const functionName = button.getAttribute('data-function');
+    const id = button.getAttribute('data-id');
+
+    if (functionName && id) {
+        // 动态调用函数
+        if (typeof window[functionName] === 'function') {
+            window[functionName](id);
+        } else {
+            console.error('Function not found:', functionName);
+            showErrorMessage('操作函数未找到：' + functionName);
+        }
+    }
+}
+
+/**
+ * 用户管理相关函数
+ */
+function editUser(id) {
+    console.log('编辑用户:', id);
+    showInfoMessage('编辑用户功能开发中...');
+}
+
+function deleteUser(id) {
+    if (confirm('确定要删除这个用户吗？')) {
+        console.log('删除用户:', id);
+        showInfoMessage('删除用户功能开发中...');
+    }
+}
+
+function resetPassword(id) {
+    if (confirm('确定要重置这个用户的密码吗？')) {
+        console.log('重置密码:', id);
+        showInfoMessage('重置密码功能开发中...');
+    }
+}

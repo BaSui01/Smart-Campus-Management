@@ -1,6 +1,7 @@
 package com.campus.domain.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -199,6 +200,7 @@ public class Student extends BaseEntity {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", insertable = false, updatable = false)
     @ToString.Exclude
+    @JsonIgnore
     private User user;
 
     /**
@@ -207,6 +209,7 @@ public class Student extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "class_id", insertable = false, updatable = false)
     @ToString.Exclude
+    @JsonIgnore
     private SchoolClass schoolClass;
 
     /**
@@ -215,6 +218,7 @@ public class Student extends BaseEntity {
     @OneToMany(fetch = FetchType.LAZY)
     @JoinColumn(name = "student_id")
     @ToString.Exclude
+    @JsonIgnore
     private List<CourseSelection> courseSelections;
 
     /**
@@ -223,6 +227,7 @@ public class Student extends BaseEntity {
     @OneToMany(fetch = FetchType.LAZY)
     @JoinColumn(name = "student_id")
     @ToString.Exclude
+    @JsonIgnore
     private List<Grade> grades;
 
     /**
@@ -231,6 +236,7 @@ public class Student extends BaseEntity {
     @OneToMany(fetch = FetchType.LAZY)
     @JoinColumn(name = "student_id")
     @ToString.Exclude
+    @JsonIgnore
     private List<PaymentRecord> paymentRecords;
 
     // ================================
@@ -416,5 +422,233 @@ public class Student extends BaseEntity {
             case 5 -> "转学";
             default -> "未知";
         };
+    }
+
+    // ================================
+    // Getter/Setter 方法 (手动添加以解决Lombok问题)
+    // ================================
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
+
+    public String getStudentNo() {
+        return studentNo;
+    }
+
+    public void setStudentNo(String studentNo) {
+        this.studentNo = studentNo;
+    }
+
+    public String getGrade() {
+        return grade;
+    }
+
+    public void setGrade(String grade) {
+        this.grade = grade;
+    }
+
+    public String getMajor() {
+        return major;
+    }
+
+    public void setMajor(String major) {
+        this.major = major;
+    }
+
+    public Long getClassId() {
+        return classId;
+    }
+
+    public void setClassId(Long classId) {
+        this.classId = classId;
+    }
+
+    public Integer getEnrollmentYear() {
+        return enrollmentYear;
+    }
+
+    public void setEnrollmentYear(Integer enrollmentYear) {
+        this.enrollmentYear = enrollmentYear;
+    }
+
+    public LocalDate getEnrollmentDate() {
+        return enrollmentDate;
+    }
+
+    public void setEnrollmentDate(LocalDate enrollmentDate) {
+        this.enrollmentDate = enrollmentDate;
+    }
+
+    public LocalDate getGraduationDate() {
+        return graduationDate;
+    }
+
+    public void setGraduationDate(LocalDate graduationDate) {
+        this.graduationDate = graduationDate;
+    }
+
+    public Integer getAcademicStatus() {
+        return academicStatus;
+    }
+
+    public void setAcademicStatus(Integer academicStatus) {
+        this.academicStatus = academicStatus;
+    }
+
+    public String getStudentType() {
+        return studentType;
+    }
+
+    public void setStudentType(String studentType) {
+        this.studentType = studentType;
+    }
+
+    public String getTrainingMode() {
+        return trainingMode;
+    }
+
+    public void setTrainingMode(String trainingMode) {
+        this.trainingMode = trainingMode;
+    }
+
+    public Integer getAcademicSystem() {
+        return academicSystem;
+    }
+
+    public void setAcademicSystem(Integer academicSystem) {
+        this.academicSystem = academicSystem;
+    }
+
+    public String getCurrentSemester() {
+        return currentSemester;
+    }
+
+    public void setCurrentSemester(String currentSemester) {
+        this.currentSemester = currentSemester;
+    }
+
+    public BigDecimal getTotalCredits() {
+        return totalCredits;
+    }
+
+    public void setTotalCredits(BigDecimal totalCredits) {
+        this.totalCredits = totalCredits;
+    }
+
+    public BigDecimal getEarnedCredits() {
+        return earnedCredits;
+    }
+
+    public void setEarnedCredits(BigDecimal earnedCredits) {
+        this.earnedCredits = earnedCredits;
+    }
+
+    public BigDecimal getGpa() {
+        return gpa;
+    }
+
+    public void setGpa(BigDecimal gpa) {
+        this.gpa = gpa;
+    }
+
+    public String getParentName() {
+        return parentName;
+    }
+
+    public void setParentName(String parentName) {
+        this.parentName = parentName;
+    }
+
+    public String getParentPhone() {
+        return parentPhone;
+    }
+
+    public void setParentPhone(String parentPhone) {
+        this.parentPhone = parentPhone;
+    }
+
+    public String getEmergencyContact() {
+        return emergencyContact;
+    }
+
+    public void setEmergencyContact(String emergencyContact) {
+        this.emergencyContact = emergencyContact;
+    }
+
+    public String getEmergencyPhone() {
+        return emergencyPhone;
+    }
+
+    public void setEmergencyPhone(String emergencyPhone) {
+        this.emergencyPhone = emergencyPhone;
+    }
+
+    public String getDormitory() {
+        return dormitory;
+    }
+
+    public void setDormitory(String dormitory) {
+        this.dormitory = dormitory;
+    }
+
+    public String getRemarks() {
+        return remarks;
+    }
+
+    public void setRemarks(String remarks) {
+        this.remarks = remarks;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public SchoolClass getSchoolClass() {
+        return schoolClass;
+    }
+
+    public void setSchoolClass(SchoolClass schoolClass) {
+        this.schoolClass = schoolClass;
+    }
+
+    public List<CourseSelection> getCourseSelections() {
+        return courseSelections;
+    }
+
+    public void setCourseSelections(List<CourseSelection> courseSelections) {
+        this.courseSelections = courseSelections;
+    }
+
+    public List<Grade> getGrades() {
+        return grades;
+    }
+
+    public void setGrades(List<Grade> grades) {
+        this.grades = grades;
+    }
+
+    public List<PaymentRecord> getPaymentRecords() {
+        return paymentRecords;
+    }
+
+    public void setPaymentRecords(List<PaymentRecord> paymentRecords) {
+        this.paymentRecords = paymentRecords;
     }
 }

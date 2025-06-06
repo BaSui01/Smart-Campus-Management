@@ -79,6 +79,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                     // 将认证信息设置到SecurityContext中
                     SecurityContextHolder.getContext().setAuthentication(authToken);
+
+                    logger.debug("JWT认证成功: " + username);
+                } else {
+                    logger.debug("JWT token验证失败: " + username);
                 }
             } catch (Exception e) {
                 logger.debug("用户认证失败: " + e.getMessage());
@@ -96,16 +100,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // 跳过不需要JWT验证的路径
         return path.startsWith("/admin/login") ||
                path.startsWith("/admin/captcha") ||
-               path.startsWith("/api/auth/") ||
-               path.startsWith("/api/users/login") ||
-               path.startsWith("/api/users/register") ||
-               path.startsWith("/api/test/") ||
+               path.startsWith("/api/") ||           // 所有API接口都不需要JWT认证
                path.startsWith("/swagger-ui/") ||
                path.startsWith("/v3/api-docs/") ||
+               path.startsWith("/v2/api-docs/") ||
+               path.startsWith("/swagger-resources/") ||
+               path.startsWith("/webjars/") ||
+               path.startsWith("/doc.html") ||
                path.startsWith("/static/") ||
                path.startsWith("/css/") ||
                path.startsWith("/js/") ||
                path.startsWith("/images/") ||
+               path.startsWith("/fonts/") ||
                path.equals("/favicon.ico") ||
                path.equals("/");
     }

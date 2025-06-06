@@ -4,7 +4,6 @@ import com.campus.application.service.CourseScheduleService;
 import com.campus.application.service.CourseService;
 import com.campus.application.service.SchoolClassService;
 import com.campus.application.service.StudentService;
-import com.campus.application.service.UserService;
 import com.campus.domain.entity.Course;
 import com.campus.domain.entity.SchoolClass;
 
@@ -16,8 +15,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,19 +33,16 @@ public class AdminAcademicController {
     private final CourseService courseService;
     private final SchoolClassService schoolClassService;
     private final CourseScheduleService courseScheduleService;
-    private final UserService userService;
     private final StudentService studentService;
 
     @Autowired
     public AdminAcademicController(CourseService courseService,
                                   SchoolClassService schoolClassService,
                                   CourseScheduleService courseScheduleService,
-                                  UserService userService,
                                   StudentService studentService) {
         this.courseService = courseService;
         this.schoolClassService = schoolClassService;
         this.courseScheduleService = courseScheduleService;
-        this.userService = userService;
         this.studentService = studentService;
     }
 
@@ -163,10 +157,10 @@ public class AdminAcademicController {
         try {
             // 构建查询参数
             Map<String, Object> params = new HashMap<>();
-            
+
             // 分页查询课程安排
             Page<com.campus.domain.entity.CourseSchedule> schedulePage = courseScheduleService.findSchedulesByPage(page, size, params);
-            
+
             // 获取课程安排统计
             long totalSchedules = courseScheduleService.count();
             // 今日课程安排（简化实现）
@@ -175,15 +169,60 @@ public class AdminAcademicController {
             long weekSchedules = Math.min(totalSchedules, 85);
             // 冲突课程（简化实现）
             long conflictSchedules = 0;
-            
-            Map<String, Object> stats = new HashMap<>();
-            stats.put("totalSchedules", totalSchedules);
-            stats.put("todaySchedules", todaySchedules);
-            stats.put("weekSchedules", weekSchedules);
-            stats.put("conflictSchedules", conflictSchedules);
+
+            // 构建课程安排统计数据
+            List<Map<String, Object>> scheduleStats = new java.util.ArrayList<>();
+            scheduleStats.add(Map.of(
+                "title", "总课程安排",
+                "value", totalSchedules,
+                "icon", "fas fa-calendar-alt",
+                "color", "primary"
+            ));
+            scheduleStats.add(Map.of(
+                "title", "今日课程",
+                "value", todaySchedules,
+                "icon", "fas fa-clock",
+                "color", "success"
+            ));
+            scheduleStats.add(Map.of(
+                "title", "本周课程",
+                "value", weekSchedules,
+                "icon", "fas fa-calendar-week",
+                "color", "info"
+            ));
+            scheduleStats.add(Map.of(
+                "title", "冲突课程",
+                "value", conflictSchedules,
+                "icon", "fas fa-exclamation-triangle",
+                "color", "warning"
+            ));
+
+            // 构建表格配置
+            Map<String, Object> scheduleTableConfig = new HashMap<>();
+            scheduleTableConfig.put("title", "课程安排列表");
+            scheduleTableConfig.put("icon", "fas fa-calendar-alt");
+
+            // 表格列配置
+            List<Map<String, Object>> columns = new java.util.ArrayList<>();
+            columns.add(Map.of("field", "id", "title", "ID", "class", "text-center"));
+            columns.add(Map.of("field", "courseName", "title", "课程名称", "class", ""));
+            columns.add(Map.of("field", "teacherName", "title", "授课教师", "class", ""));
+            columns.add(Map.of("field", "classroom", "title", "教室", "class", "text-center"));
+            columns.add(Map.of("field", "dayOfWeek", "title", "星期", "class", "text-center"));
+            columns.add(Map.of("field", "timeSlot", "title", "时间段", "class", "text-center"));
+            columns.add(Map.of("field", "status", "title", "状态", "class", "text-center"));
+            scheduleTableConfig.put("columns", columns);
+
+            // 操作按钮配置
+            List<Map<String, Object>> actions = new java.util.ArrayList<>();
+            actions.add(Map.of("function", "editSchedule", "title", "编辑", "icon", "fas fa-edit", "type", "primary"));
+            actions.add(Map.of("function", "viewDetails", "title", "详情", "icon", "fas fa-eye", "type", "info"));
+            actions.add(Map.of("function", "deleteSchedule", "title", "删除", "icon", "fas fa-trash", "type", "danger"));
+            scheduleTableConfig.put("actions", actions);
 
             model.addAttribute("schedules", schedulePage);
-            model.addAttribute("stats", stats);
+            model.addAttribute("scheduleStats", scheduleStats);
+            model.addAttribute("scheduleTableConfig", scheduleTableConfig);
             model.addAttribute("pageTitle", "课程安排");
             model.addAttribute("currentPage", "schedules");
             return "admin/academic/schedules";
@@ -191,15 +230,57 @@ public class AdminAcademicController {
             System.err.println("课程安排页面加载失败: " + e.getMessage());
             e.printStackTrace();
 
-            // 提供默认的空数据，避免模板渲染错误
-            Map<String, Object> defaultStats = new HashMap<>();
-            defaultStats.put("totalSchedules", 0);
-            defaultStats.put("todaySchedules", 0);
-            defaultStats.put("weekSchedules", 0);
-            defaultStats.put("conflictSchedules", 0);
+            // 构建默认统计数据
+            List<Map<String, Object>> defaultScheduleStats = new java.util.ArrayList<>();
+            defaultScheduleStats.add(Map.of(
+                "title", "总课程安排",
+                "value", 0,
+                "icon", "fas fa-calendar-alt",
+                "color", "primary"
+            ));
+            defaultScheduleStats.add(Map.of(
+                "title", "今日课程",
+                "value", 0,
+                "icon", "fas fa-clock",
+                "color", "success"
+            ));
+            defaultScheduleStats.add(Map.of(
+                "title", "本周课程",
+                "value", 0,
+                "icon", "fas fa-calendar-week",
+                "color", "info"
+            ));
+            defaultScheduleStats.add(Map.of(
+                "title", "冲突课程",
+                "value", 0,
+                "icon", "fas fa-exclamation-triangle",
+                "color", "warning"
+            ));
+
+            // 构建默认表格配置
+            Map<String, Object> defaultScheduleTableConfig = new HashMap<>();
+            defaultScheduleTableConfig.put("title", "课程安排列表");
+            defaultScheduleTableConfig.put("icon", "fas fa-calendar-alt");
+
+            List<Map<String, Object>> defaultColumns = new java.util.ArrayList<>();
+            defaultColumns.add(Map.of("field", "id", "title", "ID", "class", "text-center"));
+            defaultColumns.add(Map.of("field", "courseName", "title", "课程名称", "class", ""));
+            defaultColumns.add(Map.of("field", "teacherName", "title", "授课教师", "class", ""));
+            defaultColumns.add(Map.of("field", "classroom", "title", "教室", "class", "text-center"));
+            defaultColumns.add(Map.of("field", "dayOfWeek", "title", "星期", "class", "text-center"));
+            defaultColumns.add(Map.of("field", "timeSlot", "title", "时间段", "class", "text-center"));
+            defaultColumns.add(Map.of("field", "status", "title", "状态", "class", "text-center"));
+            defaultScheduleTableConfig.put("columns", defaultColumns);
+
+            List<Map<String, Object>> defaultActions = new java.util.ArrayList<>();
+            defaultActions.add(Map.of("function", "editSchedule", "title", "编辑", "icon", "fas fa-edit", "type", "primary"));
+            defaultActions.add(Map.of("function", "viewDetails", "title", "详情", "icon", "fas fa-eye", "type", "info"));
+            defaultActions.add(Map.of("function", "deleteSchedule", "title", "删除", "icon", "fas fa-trash", "type", "danger"));
+            defaultScheduleTableConfig.put("actions", defaultActions);
 
             model.addAttribute("schedules", Page.empty());
-            model.addAttribute("stats", defaultStats);
+            model.addAttribute("scheduleStats", defaultScheduleStats);
+            model.addAttribute("scheduleTableConfig", defaultScheduleTableConfig);
             model.addAttribute("pageTitle", "课程安排");
             model.addAttribute("currentPage", "schedules");
             model.addAttribute("error", "加载课程安排失败：" + e.getMessage());

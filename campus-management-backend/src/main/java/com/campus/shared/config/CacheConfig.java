@@ -82,16 +82,16 @@ public class CacheConfig {
      * 创建Jackson序列化器
      */
     private Jackson2JsonRedisSerializer<Object> createJacksonSerializer() {
-        Jackson2JsonRedisSerializer<Object> jackson2JsonRedisSerializer = 
-                new Jackson2JsonRedisSerializer<>(Object.class);
-
         ObjectMapper om = new ObjectMapper();
         om.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
         om.activateDefaultTyping(LaissezFaireSubTypeValidator.instance,
                 ObjectMapper.DefaultTyping.NON_FINAL, JsonTypeInfo.As.PROPERTY);
         om.registerModule(new JavaTimeModule());
 
-        jackson2JsonRedisSerializer.setObjectMapper(om);
+        // 使用新的构造函数方式，避免弃用的setObjectMapper方法
+        Jackson2JsonRedisSerializer<Object> jackson2JsonRedisSerializer =
+                new Jackson2JsonRedisSerializer<>(om, Object.class);
+
         return jackson2JsonRedisSerializer;
     }
 }

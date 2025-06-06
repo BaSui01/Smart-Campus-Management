@@ -70,6 +70,13 @@ public class AdminAuthInterceptor implements HandlerInterceptor {
             response.sendRedirect("/admin/access-denied");
             return false;
         }
+
+        // 检查具体页面权限
+        if (!userService.hasMenuPermission(currentUser.getId(), requestURI)) {
+            logger.warn("用户 {} 无权限访问页面: {}", currentUser.getUsername(), requestURI);
+            response.sendRedirect("/admin/access-denied");
+            return false;
+        }
         
         // 更新最后访问时间
         session.setAttribute("lastAccessTime", System.currentTimeMillis());

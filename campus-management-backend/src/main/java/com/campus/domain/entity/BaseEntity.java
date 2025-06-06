@@ -27,7 +27,7 @@ public abstract class BaseEntity {
      */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    protected Long id;
 
     /**
      * 创建时间
@@ -35,7 +35,7 @@ public abstract class BaseEntity {
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime createdAt;
+    protected LocalDateTime createdAt;
 
     /**
      * 更新时间
@@ -43,21 +43,21 @@ public abstract class BaseEntity {
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime updatedAt;
+    protected LocalDateTime updatedAt;
 
     /**
      * 逻辑删除标志
      * 0: 未删除, 1: 已删除
      */
     @Column(name = "deleted", nullable = false, columnDefinition = "TINYINT DEFAULT 0")
-    private Integer deleted = 0;
+    protected Integer deleted = 0;
 
     /**
      * 状态字段
      * 1: 正常/启用, 0: 禁用
      */
     @Column(name = "status", nullable = false, columnDefinition = "TINYINT DEFAULT 1")
-    private Integer status = 1;
+    protected Integer status = 1;
 
     @PrePersist
     protected void onCreate() {

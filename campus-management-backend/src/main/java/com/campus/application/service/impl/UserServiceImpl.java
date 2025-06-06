@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -131,6 +132,69 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         return user.getUserRoles().stream()
                 .map(UserRole::getRole)
                 .anyMatch(role -> role.getRoleKey().equals(roleName) || role.getRoleName().equals(roleName));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<String> getUserRoles(Long userId) {
+        User user = findUserById(userId);
+        return user.getUserRoles().stream()
+                .map(UserRole::getRole)
+                .map(Role::getRoleKey)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean hasMenuPermission(Long userId, String menuPath) {
+        List<String> userRoles = getUserRoles(userId);
+
+        // ADMIN角色拥有所有权限
+        if (userRoles.contains("ADMIN")) {
+            return true;
+        }
+
+        // 根据菜单路径和角色判断权限
+        return checkMenuPermissionByRole(userRoles, menuPath);
+    }
+
+    /**
+     * 根据角色检查菜单权限
+     */
+    private boolean checkMenuPermissionByRole(List<String> userRoles, String menuPath) {
+        // 所有角色都可以访问的页面
+        if (menuPath.equals("/admin/dashboard") ||
+            menuPath.equals("/admin/profile") ||
+            menuPath.equals("/admin/test-api")) {
+            return true;
+        }
+
+        // 系统管理页面 - 只有ADMIN和SYSTEM_ADMIN可以访问
+        if (menuPath.startsWith("/admin/users") ||
+            menuPath.startsWith("/admin/roles") ||
+            menuPath.startsWith("/admin/permissions") ||
+            menuPath.startsWith("/admin/settings")) {
+            return userRoles.contains("ADMIN") || userRoles.contains("SYSTEM_ADMIN");
+        }
+
+        // 教务管理页面 - ADMIN、ACADEMIC_ADMIN、TEACHER可以访问
+        if (menuPath.startsWith("/admin/academic/") ||
+            menuPath.startsWith("/admin/students")) {
+            return userRoles.contains("ADMIN") ||
+                   userRoles.contains("ACADEMIC_ADMIN") ||
+                   userRoles.contains("TEACHER");
+        }
+
+        // 财务管理页面 - ADMIN、FINANCE_ADMIN可以访问
+        if (menuPath.startsWith("/admin/fee-items") ||
+            menuPath.startsWith("/admin/payments") ||
+            menuPath.startsWith("/admin/payment-records") ||
+            menuPath.startsWith("/admin/reports")) {
+            return userRoles.contains("ADMIN") || userRoles.contains("FINANCE_ADMIN");
+        }
+
+        // 默认拒绝访问
+        return false;
     }
 
     @Override
@@ -482,10 +546,11 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     private Collection<? extends GrantedAuthority> getAuthorities(User user) {
         List<SimpleGrantedAuthority> authorities = new ArrayList<>();
 
-        // 添加角色权限
+        // 添加角色权限 - 注意：hasAnyRole()会自动添加ROLE_前缀，所以这里不要重复添加
         for (UserRole userRole : user.getUserRoles()) {
             Role role = userRole.getRole();
-            authorities.add(new SimpleGrantedAuthority("ROLE_" + role.getRoleName()));
+            // 使用roleKey而不是roleName，并且不添加ROLE_前缀
+            authorities.add(new SimpleGrantedAuthority("ROLE_" + role.getRoleKey()));
 
             // 添加角色对应的权限
             role.getRolePermissions().forEach(rolePermission ->

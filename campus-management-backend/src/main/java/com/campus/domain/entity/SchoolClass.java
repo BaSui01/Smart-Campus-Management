@@ -1,6 +1,7 @@
 package com.campus.domain.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.Data;
@@ -199,6 +200,7 @@ public class SchoolClass extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "department_id", insertable = false, updatable = false)
     @ToString.Exclude
+    @JsonIgnore
     private Department department;
 
     /**
@@ -207,6 +209,7 @@ public class SchoolClass extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "head_teacher_id", insertable = false, updatable = false)
     @ToString.Exclude
+    @JsonIgnore
     private User headTeacher;
 
     /**
@@ -215,6 +218,7 @@ public class SchoolClass extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "assistant_teacher_id", insertable = false, updatable = false)
     @ToString.Exclude
+    @JsonIgnore
     private User assistantTeacher;
 
     /**
@@ -222,6 +226,7 @@ public class SchoolClass extends BaseEntity {
      */
     @OneToMany(mappedBy = "schoolClass", fetch = FetchType.LAZY)
     @ToString.Exclude
+    @JsonIgnore
     private List<Student> students;
 
     /**
@@ -229,6 +234,7 @@ public class SchoolClass extends BaseEntity {
      */
     @OneToMany(mappedBy = "schoolClass", fetch = FetchType.LAZY)
     @ToString.Exclude
+    @JsonIgnore
     private List<CourseSchedule> schedules;
 
     // ================================
@@ -481,7 +487,7 @@ public class SchoolClass extends BaseEntity {
         if (major != null) {
             return major;
         }
-        
+
         if (className == null || className.isEmpty()) {
             return "未分配";
         }
@@ -502,5 +508,229 @@ public class SchoolClass extends BaseEntity {
         } else {
             return "其他专业";
         }
+    }
+
+    // ================================
+    // Getter/Setter 方法 (手动添加以解决Lombok问题)
+    // ================================
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Integer getStatus() {
+        return status;
+    }
+
+    public void setStatus(Integer status) {
+        this.status = status;
+    }
+
+    public String getClassName() {
+        return className;
+    }
+
+    public void setClassName(String className) {
+        this.className = className;
+    }
+
+    public String getClassCode() {
+        return classCode;
+    }
+
+    public void setClassCode(String classCode) {
+        this.classCode = classCode;
+    }
+
+    public String getGrade() {
+        return grade;
+    }
+
+    public void setGrade(String grade) {
+        this.grade = grade;
+    }
+
+    public void setMajor(String major) {
+        this.major = major;
+    }
+
+    public Long getDepartmentId() {
+        return departmentId;
+    }
+
+    public void setDepartmentId(Long departmentId) {
+        this.departmentId = departmentId;
+    }
+
+    public Long getHeadTeacherId() {
+        return headTeacherId;
+    }
+
+    public void setHeadTeacherId(Long headTeacherId) {
+        this.headTeacherId = headTeacherId;
+    }
+
+    public Long getAssistantTeacherId() {
+        return assistantTeacherId;
+    }
+
+    public void setAssistantTeacherId(Long assistantTeacherId) {
+        this.assistantTeacherId = assistantTeacherId;
+    }
+
+    public String getClassType() {
+        return classType;
+    }
+
+    public void setClassType(String classType) {
+        this.classType = classType;
+    }
+
+    public Integer getClassStatus() {
+        return classStatus;
+    }
+
+    public void setClassStatus(Integer classStatus) {
+        this.classStatus = classStatus;
+    }
+
+    public Integer getMaxStudents() {
+        return maxStudents;
+    }
+
+    public void setMaxStudents(Integer maxStudents) {
+        this.maxStudents = maxStudents;
+    }
+
+    public Integer getStudentCount() {
+        return studentCount;
+    }
+
+    public void setStudentCount(Integer studentCount) {
+        this.studentCount = studentCount;
+    }
+
+    public Integer getMaleCount() {
+        return maleCount;
+    }
+
+    public void setMaleCount(Integer maleCount) {
+        this.maleCount = maleCount;
+    }
+
+    public Integer getFemaleCount() {
+        return femaleCount;
+    }
+
+    public void setFemaleCount(Integer femaleCount) {
+        this.femaleCount = femaleCount;
+    }
+
+    public java.time.LocalDate getEnrollmentDate() {
+        return enrollmentDate;
+    }
+
+    public void setEnrollmentDate(java.time.LocalDate enrollmentDate) {
+        this.enrollmentDate = enrollmentDate;
+    }
+
+    public java.time.LocalDate getExpectedGraduationDate() {
+        return expectedGraduationDate;
+    }
+
+    public void setExpectedGraduationDate(java.time.LocalDate expectedGraduationDate) {
+        this.expectedGraduationDate = expectedGraduationDate;
+    }
+
+    public String getClassroom() {
+        return classroom;
+    }
+
+    public void setClassroom(String classroom) {
+        this.classroom = classroom;
+    }
+
+    public String getRemarks() {
+        return remarks;
+    }
+
+    public void setRemarks(String remarks) {
+        this.remarks = remarks;
+    }
+
+    public Department getDepartment() {
+        return department;
+    }
+
+    public void setDepartment(Department department) {
+        this.department = department;
+    }
+
+    public User getHeadTeacher() {
+        return headTeacher;
+    }
+
+    public void setHeadTeacher(User headTeacher) {
+        this.headTeacher = headTeacher;
+    }
+
+    public User getAssistantTeacher() {
+        return assistantTeacher;
+    }
+
+    public void setAssistantTeacher(User assistantTeacher) {
+        this.assistantTeacher = assistantTeacher;
+    }
+
+    public java.util.List<Student> getStudents() {
+        return students;
+    }
+
+    public void setStudents(java.util.List<Student> students) {
+        this.students = students;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getMotto() {
+        return motto;
+    }
+
+    public void setMotto(String motto) {
+        this.motto = motto;
+    }
+
+    public String getGoals() {
+        return goals;
+    }
+
+    public void setGoals(String goals) {
+        this.goals = goals;
+    }
+
+    public Integer getAcademicSystem() {
+        return academicSystem;
+    }
+
+    public void setAcademicSystem(Integer academicSystem) {
+        this.academicSystem = academicSystem;
+    }
+
+    public Integer getEnrollmentYear() {
+        return enrollmentYear;
+    }
+
+    public void setEnrollmentYear(Integer enrollmentYear) {
+        this.enrollmentYear = enrollmentYear;
     }
 }

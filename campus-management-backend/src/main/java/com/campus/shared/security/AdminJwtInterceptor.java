@@ -104,6 +104,13 @@ public class AdminJwtInterceptor implements HandlerInterceptor {
                 response.sendRedirect("/admin/access-denied");
                 return false;
             }
+
+            // 检查具体页面权限
+            if (!userService.hasMenuPermission(userId, requestURI)) {
+                logger.warn("用户 {} 无权限访问页面: {}", username, requestURI);
+                response.sendRedirect("/admin/access-denied");
+                return false;
+            }
             
             // 检查是否需要刷新token
             if (jwtUtil.shouldRefreshAdminToken(token)) {

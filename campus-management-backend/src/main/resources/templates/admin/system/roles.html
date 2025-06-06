@@ -5,10 +5,8 @@
 <head th:replace="~{layout/admin :: head}">
     <th:block th:fragment="head-extra">
         <title>角色管理 - 智慧校园管理系统</title>
-        <!-- 网站图标 -->
-        <link rel="icon" type="image/svg+xml" th:href="@{/images/favicon.svg}">
-        <link rel="alternate icon" th:href="@{/favicon.ico}">
-        <link rel="apple-touch-icon" th:href="@{/images/favicon.svg}">
+        <link th:href="@{/css/components/data-table.css}" rel="stylesheet">
+        <link th:href="@{/css/components/form-components.css}" rel="stylesheet">
 
         <!-- 权限管理样式 -->
         <style>
@@ -48,20 +46,133 @@
 <body>
     <div th:fragment="content">
         <!-- 页面标题 -->
-        <div th:replace="~{components/admin/admin-components :: page-header(
-            title='角色管理',
-            icon='fas fa-user-tag',
-            showAddButton=true,
-            addButtonText='添加角色',
-            addButtonTarget='#addRoleModal'
-        )}"></div>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-user-tag me-2 text-primary"></i>角色管理
+                </h1>
+                <p class="text-muted mb-0">管理系统角色和权限</p>
+            </div>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addRoleModal">
+                <i class="fas fa-plus me-2"></i>添加角色
+            </button>
+        </div>
 
         <!-- 统计卡片 -->
-        <div th:replace="~{components/admin/admin-components :: stat-cards(${roleStats})}"></div>
+        <div class="row mb-4">
+            <div class="col-xl-3 col-md-6">
+                <div class="card bg-primary text-white mb-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-white-75 small">总角色数</div>
+                                <div class="text-lg fw-bold" th:text="${roles?.totalElements ?: 0}">0</div>
+                            </div>
+                            <i class="fas fa-user-tag fa-2x text-white-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card bg-success text-white mb-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-white-75 small">系统角色</div>
+                                <div class="text-lg fw-bold" th:text="${roles?.totalElements ?: 0}">0</div>
+                            </div>
+                            <i class="fas fa-cog fa-2x text-white-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card bg-warning text-white mb-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-white-75 small">当前页数量</div>
+                                <div class="text-lg fw-bold" th:text="${roles?.numberOfElements ?: 0}">0</div>
+                            </div>
+                            <i class="fas fa-user-plus fa-2x text-white-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card bg-info text-white mb-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-white-75 small">总页数</div>
+                                <div class="text-lg fw-bold" th:text="${roles?.totalPages ?: 0}">0</div>
+                            </div>
+                            <i class="fas fa-key fa-2x text-white-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-        <!-- 数据表格组件 -->
-        <div th:replace="~{components/admin/admin-components :: data-table(${roleTableConfig}, ${roles})}"></div>
-    </div>
+        <!-- 角色列表 -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">
+                    <i class="fas fa-list me-2"></i>角色列表
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="roleTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th>角色名称</th>
+                                <th>显示名称</th>
+                                <th>描述</th>
+                                <th>类型</th>
+                                <th>用户数量</th>
+                                <th>创建时间</th>
+                                <th width="150">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="role : ${roles.content}">
+                                <td>
+                                    <code th:text="${role.roleName}">ADMIN</code>
+                                </td>
+                                <td th:text="${role.roleDescription}">管理员</td>
+                                <td th:text="${role.roleDescription ?: '无描述'}">系统管理员角色</td>
+                                <td>
+                                    <span class="badge bg-primary">系统角色</span>
+                                </td>
+                                <td th:text="${role.userCount ?: 0}">0</td>
+                                <td>2024-01-01 00:00</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button type="button" class="btn btn-outline-primary"
+                                                th:data-role-id="${role.id}"
+                                                th:data-role-name="${role.roleDescription}"
+                                                onclick="managePermissions(this.dataset.roleId, this.dataset.roleName)">
+                                            <i class="fas fa-key"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-warning"
+                                                th:data-role-id="${role.id}"
+                                                onclick="editRole(this.dataset.roleId)">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-danger"
+                                                th:data-role-id="${role.id}"
+                                                onclick="deleteRole(this.dataset.roleId)">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
 
     <!-- 添加角色模态框 -->
     <div class="modal fade" id="addRoleModal" tabindex="-1">
@@ -166,75 +277,75 @@
         </div>
     </div>
 
-    <!-- 引入admin组件样式和脚本 -->
-    <th:block th:replace="~{components/admin/admin-components :: admin-style}"></th:block>
-    <th:block th:replace="~{components/admin/admin-components :: admin-script}"></th:block>
+    </div>
 
-    <!-- 角色管理特定脚本 -->
-    <script th:fragment="page-script">
-        // 角色操作函数
-        function editRole(id) {
-            alert('编辑角色：' + id);
-        }
-
-        function viewPermissions(id) {
-            alert('查看权限：' + id);
-        }
-
-        function deleteRole(id) {
-            if (confirm('确定要删除这个角色吗？此操作不可恢复！')) {
-                alert('删除角色：' + id);
-            }
-        }
-
-        // 保存新角色
-        function saveRole() {
-            const form = document.getElementById('addRoleForm');
-            const formData = new FormData(form);
-
-            const roleData = {
-                name: formData.get('roleName'),
-                displayName: formData.get('roleDisplayName'),
-                description: formData.get('roleDescription')
-            };
-
-            // 验证必填字段
-            if (!roleData.name || !roleData.displayName) {
-                alert('请填写角色名称和显示名称');
-                return;
+    <th:block th:fragment="scripts">
+        <!-- 角色管理特定脚本 -->
+        <script>
+            // 角色操作函数
+            function editRole(id) {
+                alert('编辑角色：' + id);
             }
 
-            fetch('/admin/api/roles', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(roleData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('添加角色成功');
-                    bootstrap.Modal.getInstance(document.getElementById('addRoleModal')).hide();
-                    window.location.reload();
-                } else {
-                    alert('添加角色失败：' + (data.message || '未知错误'));
+            function managePermissions(id, displayName) {
+                alert('管理权限：' + displayName + ' (ID: ' + id + ')');
+            }
+
+            function deleteRole(id) {
+                if (confirm('确定要删除这个角色吗？此操作不可恢复！')) {
+                    alert('删除角色：' + id);
                 }
-            })
-            .catch(error => {
-                console.error('添加角色失败:', error);
-                alert('添加角色失败，请稍后重试');
-            });
-        }
+            }
 
-        // 权限管理相关函数（简化版）
-        function savePermissions() {
-            alert('权限保存功能待实现');
-        }
+            // 保存新角色
+            function saveRole() {
+                const form = document.getElementById('addRoleForm');
+                const formData = new FormData(form);
 
-        function toggleAllPermissions(checked) {
-            alert('全选/取消全选功能待实现');
-        }
-    </script>
+                const roleData = {
+                    name: formData.get('roleName'),
+                    displayName: formData.get('roleDisplayName'),
+                    description: formData.get('roleDescription')
+                };
+
+                // 验证必填字段
+                if (!roleData.name || !roleData.displayName) {
+                    alert('请填写角色名称和显示名称');
+                    return;
+                }
+
+                fetch('/admin/api/roles', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(roleData)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('添加角色成功');
+                        bootstrap.Modal.getInstance(document.getElementById('addRoleModal')).hide();
+                        window.location.reload();
+                    } else {
+                        alert('添加角色失败：' + (data.message || '未知错误'));
+                    }
+                })
+                .catch(error => {
+                    console.error('添加角色失败:', error);
+                    alert('添加角色失败，请稍后重试');
+                });
+            }
+
+            // 权限管理相关函数（简化版）
+            function savePermissions() {
+                alert('权限保存功能待实现');
+            }
+
+            function toggleAllPermissions(checked) {
+                alert('全选/取消全选功能待实现');
+            }
+        </script>
+    </th:block>
 </body>
 </html>

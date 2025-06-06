@@ -5,160 +5,338 @@
 <head th:replace="~{layout/admin :: head}">
     <th:block th:fragment="head-extra">
         <title>用户管理 - 智慧校园管理系统</title>
-        <!-- 网站图标 -->
-        <link rel="icon" type="image/svg+xml" th:href="@{/images/favicon.svg}">
-        <link rel="alternate icon" th:href="@{/favicon.ico}">
-        <link rel="apple-touch-icon" th:href="@{/images/favicon.svg}">
+        <link th:href="@{/css/components/data-table.css}" rel="stylesheet">
+        <link th:href="@{/css/components/form-components.css}" rel="stylesheet">
     </th:block>
 </head>
 <body>
     <div th:fragment="content">
         <!-- 页面标题 -->
-        <div th:replace="~{components/admin/admin-components :: page-header(
-            title='用户管理',
-            icon='fas fa-users',
-            showAddButton=true,
-            addButtonText='添加用户',
-            addButtonTarget='#addUserModal'
-        )}"></div>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-users me-2 text-primary"></i>用户管理
+                </h1>
+                <p class="text-muted mb-0">管理系统用户信息</p>
+            </div>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                <i class="fas fa-plus me-2"></i>添加用户
+            </button>
+        </div>
 
         <!-- 统计卡片 -->
-        <div th:replace="~{components/admin/admin-components :: stat-cards(${userStats})}"></div>
+        <div class="row mb-4">
+            <div class="col-xl-3 col-md-6">
+                <div class="card bg-primary text-white mb-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-white-75 small">总用户数</div>
+                                <div class="text-lg fw-bold" th:text="${users?.totalElements ?: 0}">0</div>
+                            </div>
+                            <i class="fas fa-users fa-2x text-white-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card bg-success text-white mb-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-white-75 small">总用户数</div>
+                                <div class="text-lg fw-bold" th:text="${users?.totalElements ?: 0}">0</div>
+                            </div>
+                            <i class="fas fa-user-check fa-2x text-white-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card bg-warning text-white mb-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-white-75 small">当前页数量</div>
+                                <div class="text-lg fw-bold" th:text="${users?.numberOfElements ?: 0}">0</div>
+                            </div>
+                            <i class="fas fa-user-shield fa-2x text-white-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card bg-info text-white mb-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-white-75 small">总页数</div>
+                                <div class="text-lg fw-bold" th:text="${users?.totalPages ?: 0}">0</div>
+                            </div>
+                            <i class="fas fa-sign-in-alt fa-2x text-white-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-        <!-- 搜索筛选组件 -->
-        <div th:replace="~{components/admin/admin-components :: search-filter('/admin/users', ${userFilters})}"></div>
+        <!-- 搜索筛选 -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-filter me-2"></i>筛选与操作
+                </h6>
+            </div>
+            <div class="card-body">
+                <form id="searchForm">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-3">
+                            <label class="form-label">搜索关键词</label>
+                            <input type="text" class="form-control" name="search" placeholder="用户名或真实姓名">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">角色</label>
+                            <select class="form-select" name="role">
+                                <option value="">全部角色</option>
+                                <option value="ADMIN">管理员</option>
+                                <option value="TEACHER">教师</option>
+                                <option value="STUDENT">学生</option>
+                                <option value="FINANCE">财务</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">状态</label>
+                            <select class="form-select" name="status">
+                                <option value="">全部状态</option>
+                                <option value="1">正常</option>
+                                <option value="0">禁用</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="btn-group w-100">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search me-1"></i>搜索
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" id="resetBtn">
+                                    <i class="fas fa-undo me-1"></i>重置
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-success w-100" id="exportBtn">
+                                <i class="fas fa-download me-1"></i>导出
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
 
-        <!-- 数据表格组件 -->
-        <div th:replace="~{components/admin/admin-components :: data-table(${userTableConfig}, ${users})}"></div>
+        <!-- 用户列表 -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">
+                    <i class="fas fa-list me-2"></i>用户列表
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="userTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th width="50">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="selectAll">
+                                    </div>
+                                </th>
+                                <th>用户名</th>
+                                <th>真实姓名</th>
+                                <th>邮箱</th>
+                                <th>手机号</th>
+                                <th>角色</th>
+                                <th>状态</th>
+                                <th>创建时间</th>
+                                <th width="120">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="user : ${users.content}">
+                                <td>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" th:value="${user.id}">
+                                    </div>
+                                </td>
+                                <td th:text="${user.username}">admin</td>
+                                <td th:text="${user.realName ?: '未设置'}">系统管理员</td>
+                                <td th:text="${user.email ?: '未设置'}">admin@campus.edu.cn</td>
+                                <td th:text="${user.phone ?: '未设置'}">13800138000</td>
+                                <td>
+                                    <span class="badge bg-primary"
+                                          th:text="${user.userRoles != null && !user.userRoles.isEmpty()} ? ${user.userRoles[0].role.roleName} : '未分配'">管理员</span>
+                                </td>
+                                <td>
+                                    <span class="badge"
+                                          th:classappend="${user.status == 1} ? 'bg-success' : 'bg-secondary'"
+                                          th:text="${user.status == 1} ? '正常' : '禁用'">正常</span>
+                                </td>
+                                <td th:text="${user.createdAt != null ? #temporals.format(user.createdAt, 'yyyy-MM-dd HH:mm') : '未设置'}">2024-01-01 00:00</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button type="button" class="btn btn-outline-primary"
+                                                th:data-user-id="${user.id}"
+                                                onclick="viewUser(this.dataset.userId)">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-warning"
+                                                th:data-user-id="${user.id}"
+                                                onclick="editUser(this.dataset.userId)">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-info"
+                                                th:data-user-id="${user.id}"
+                                                onclick="resetPassword(this.dataset.userId)">
+                                            <i class="fas fa-key"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary"
+                                                th:data-user-id="${user.id}"
+                                                onclick="toggleUserStatus(this.dataset.userId)">
+                                            <i class="fas fa-power-off"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
     </div>
 
-    <!-- 引入admin组件样式和脚本 -->
-    <th:block th:replace="~{components/admin/admin-components :: admin-style}"></th:block>
-    <th:block th:replace="~{components/admin/admin-components :: admin-script}"></th:block>
-
-    <!-- 用户管理特定脚本 -->
-    <script th:fragment="page-script">
-        // 用户操作函数
-        function viewUser(userId) {
-            fetch(`/admin/users/${userId}/detail`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        showUserDetailModal(data.user);
-                    } else {
-                        alert('获取用户详情失败：' + data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('获取用户详情失败，请稍后重试');
-                });
-        }
-
-        function editUser(userId) {
-            fetch(`/admin/users/${userId}/detail`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        showEditUserModal(data.user);
-                    } else {
-                        alert('获取用户信息失败：' + data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('获取用户信息失败，请稍后重试');
-                });
-        }
-
-        function resetPassword(userId) {
-            if (confirm('确定要重置该用户的密码吗？重置后密码将变为默认密码。')) {
-                fetch(`/admin/users/${userId}/reset-password`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('密码重置成功！新密码为：' + data.newPassword);
-                    } else {
-                        alert('重置密码失败：' + data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('重置密码失败，请稍后重试');
-                });
+    <th:block th:fragment="scripts">
+        <!-- 用户管理特定脚本 -->
+        <script>
+            // 用户操作函数
+            function viewUser(userId) {
+                fetch(`/admin/users/${userId}/detail`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showUserDetailModal(data.user);
+                        } else {
+                            alert('获取用户详情失败：' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('获取用户详情失败，请稍后重试');
+                    });
             }
-        }
 
-        function toggleUserStatus(userId) {
-            if (confirm('确定要切换该用户的状态吗？')) {
-                fetch(`/admin/users/${userId}/toggle-status`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('用户状态切换成功！');
-                        window.location.reload();
-                    } else {
-                        alert('切换用户状态失败：' + data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('切换用户状态失败，请稍后重试');
-                });
+            function editUser(userId) {
+                fetch(`/admin/users/${userId}/detail`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showEditUserModal(data.user);
+                        } else {
+                            alert('获取用户信息失败：' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('获取用户信息失败，请稍后重试');
+                    });
             }
-        }
 
-        // 显示用户详情模态框
-        function showUserDetailModal(user) {
-            // 简化的模态框实现
-            alert(`用户详情：\n用户名：${user.username}\n真实姓名：${user.realName || '未设置'}\n邮箱：${user.email || '未设置'}\n角色：${user.roleName || '未分配'}\n状态：${user.status == 1 ? '正常' : '禁用'}`);
-        }
-
-        // 显示编辑用户模态框
-        function showEditUserModal(user) {
-            // 简化的编辑实现
-            const newRealName = prompt('请输入新的真实姓名：', user.realName || '');
-            if (newRealName !== null) {
-                const userData = {
-                    realName: newRealName,
-                    email: user.email,
-                    phone: user.phone,
-                    status: user.status
-                };
-
-                fetch(`/admin/users/${user.id}/edit`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(userData)
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('更新用户成功！');
-                        window.location.reload();
-                    } else {
-                        alert('更新用户失败：' + data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('更新用户失败，请稍后重试');
-                });
+            function resetPassword(userId) {
+                if (confirm('确定要重置该用户的密码吗？重置后密码将变为默认密码。')) {
+                    fetch(`/admin/users/${userId}/reset-password`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('密码重置成功！新密码为：' + data.newPassword);
+                        } else {
+                            alert('重置密码失败：' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('重置密码失败，请稍后重试');
+                    });
+                }
             }
-        }
-    </script>
+
+            function toggleUserStatus(userId) {
+                if (confirm('确定要切换该用户的状态吗？')) {
+                    fetch(`/admin/users/${userId}/toggle-status`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('用户状态切换成功！');
+                            window.location.reload();
+                        } else {
+                            alert('切换用户状态失败：' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('切换用户状态失败，请稍后重试');
+                    });
+                }
+            }
+
+            // 显示用户详情模态框
+            function showUserDetailModal(user) {
+                // 简化的模态框实现
+                alert(`用户详情：\n用户名：${user.username}\n真实姓名：${user.realName || '未设置'}\n邮箱：${user.email || '未设置'}\n角色：${user.roleName || '未分配'}\n状态：${user.status == 1 ? '正常' : '禁用'}`);
+            }
+
+            // 显示编辑用户模态框
+            function showEditUserModal(user) {
+                // 简化的编辑实现
+                const newRealName = prompt('请输入新的真实姓名：', user.realName || '');
+                if (newRealName !== null) {
+                    const userData = {
+                        realName: newRealName,
+                        email: user.email,
+                        phone: user.phone,
+                        status: user.status
+                    };
+
+                    fetch(`/admin/users/${user.id}/edit`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(userData)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('更新用户成功！');
+                            window.location.reload();
+                        } else {
+                            alert('更新用户失败：' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('更新用户失败，请稍后重试');
+                    });
+                }
+            }
+        </script>
 
     <!-- 添加用户模态框 -->
     <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">

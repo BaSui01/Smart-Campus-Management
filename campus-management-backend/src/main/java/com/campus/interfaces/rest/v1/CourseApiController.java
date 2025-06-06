@@ -40,7 +40,7 @@ public class CourseApiController {
      */
     @GetMapping
     @Operation(summary = "获取课程列表", description = "分页查询课程信息")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ACADEMIC_ADMIN', 'TEACHER')")
     public ApiResponse<Map<String, Object>> getCourses(
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") int page,
             @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") int size,
@@ -84,7 +84,6 @@ public class CourseApiController {
      */
     @GetMapping("/{id}")
     @Operation(summary = "获取课程详情", description = "根据ID查询课程详细信息")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
     public ApiResponse<Course> getCourseById(@Parameter(description = "课程ID") @PathVariable Long id) {
         Optional<Course> course = courseService.findById(id);
         if (course.isPresent()) {
@@ -99,7 +98,6 @@ public class CourseApiController {
      */
     @GetMapping("/code/{courseCode}")
     @Operation(summary = "根据课程代码查询课程", description = "根据课程代码查询课程信息")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     public ApiResponse<Course> getCourseByCode(@Parameter(description = "课程代码") @PathVariable String courseCode) {
         Optional<Course> course = courseService.findByCourseCode(courseCode);
         if (course.isPresent()) {
@@ -114,7 +112,6 @@ public class CourseApiController {
      */
     @GetMapping("/semester/{semester}")
     @Operation(summary = "根据学期查询课程列表", description = "获取指定学期的所有课程")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
     public ApiResponse<List<Course>> getCoursesBySemester(@Parameter(description = "学期") @PathVariable String semester) {
         List<Course> courses = courseService.findBySemester(semester);
         return ApiResponse.success(courses);
@@ -125,7 +122,6 @@ public class CourseApiController {
      */
     @GetMapping("/type/{courseType}")
     @Operation(summary = "根据课程类型查询课程列表", description = "获取指定类型的所有课程")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
     public ApiResponse<List<Course>> getCoursesByType(@Parameter(description = "课程类型") @PathVariable String courseType) {
         List<Course> courses = courseService.findByCourseType(courseType);
         return ApiResponse.success(courses);
@@ -136,7 +132,6 @@ public class CourseApiController {
      */
     @GetMapping("/search")
     @Operation(summary = "搜索课程", description = "根据关键词搜索课程")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
     public ApiResponse<List<Course>> searchCourses(@Parameter(description = "关键词") @RequestParam String keyword) {
         List<Course> courses = courseService.searchCourses(keyword);
         return ApiResponse.success(courses);
@@ -147,10 +142,54 @@ public class CourseApiController {
      */
     @GetMapping("/stats/type")
     @Operation(summary = "统计课程数量按类型", description = "按课程类型统计课程数量")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     public ApiResponse<Map<String, Long>> countCoursesByType() {
         Map<String, Long> stats = courseService.countCoursesByType();
         return ApiResponse.success(stats);
+    }
+
+    /**
+     * 获取课程表单数据
+     */
+    @GetMapping("/form-data")
+    @Operation(summary = "获取课程表单数据", description = "获取创建/编辑课程表单所需的数据")
+    public ApiResponse<Map<String, Object>> getCourseFormData() {
+        Map<String, Object> formData = new HashMap<>();
+
+        // 课程类型选项
+        List<Map<String, String>> courseTypes = Arrays.asList(
+            Map.of("value", "REQUIRED", "label", "必修课"),
+            Map.of("value", "ELECTIVE", "label", "选修课"),
+            Map.of("value", "PUBLIC", "label", "公共课"),
+            Map.of("value", "PROFESSIONAL", "label", "专业课")
+        );
+
+        // 学期选项
+        List<Map<String, String>> semesters = Arrays.asList(
+            Map.of("value", "2024-1", "label", "2024年春季学期"),
+            Map.of("value", "2024-2", "label", "2024年秋季学期"),
+            Map.of("value", "2025-1", "label", "2025年春季学期"),
+            Map.of("value", "2025-2", "label", "2025年秋季学期")
+        );
+
+        // 学年选项
+        List<Map<String, Object>> academicYears = Arrays.asList(
+            Map.of("value", 2024, "label", "2024学年"),
+            Map.of("value", 2025, "label", "2025学年"),
+            Map.of("value", 2026, "label", "2026学年")
+        );
+
+        // 状态选项
+        List<Map<String, Object>> statusOptions = Arrays.asList(
+            Map.of("value", 1, "label", "启用"),
+            Map.of("value", 0, "label", "禁用")
+        );
+
+        formData.put("courseTypes", courseTypes);
+        formData.put("semesters", semesters);
+        formData.put("academicYears", academicYears);
+        formData.put("statusOptions", statusOptions);
+
+        return ApiResponse.success("获取课程表单数据成功", formData);
     }
 
     /**
@@ -158,7 +197,7 @@ public class CourseApiController {
      */
     @PostMapping
     @Operation(summary = "创建课程", description = "添加新课程信息")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ACADEMIC_ADMIN')")
     public ApiResponse<Course> createCourse(@Parameter(description = "课程信息") @Valid @RequestBody Course course) {
         try {
             Course createdCourse = courseService.createCourse(course);
@@ -175,7 +214,6 @@ public class CourseApiController {
      */
     @PutMapping("/{id}")
     @Operation(summary = "更新课程信息", description = "修改课程信息")
-    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<Void> updateCourse(
             @Parameter(description = "课程ID") @PathVariable Long id,
             @Parameter(description = "课程信息") @Valid @RequestBody Course course) {
@@ -199,7 +237,6 @@ public class CourseApiController {
      */
     @DeleteMapping("/{id}")
     @Operation(summary = "删除课程", description = "删除指定课程")
-    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<Void> deleteCourse(@Parameter(description = "课程ID") @PathVariable Long id) {
         boolean result = courseService.deleteCourse(id);
         if (result) {
@@ -214,7 +251,6 @@ public class CourseApiController {
      */
     @DeleteMapping("/batch")
     @Operation(summary = "批量删除课程", description = "批量删除多个课程")
-    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<Void> batchDeleteCourses(@Parameter(description = "课程ID列表") @RequestBody List<Long> ids) {
         boolean result = courseService.batchDeleteCourses(ids);
         if (result) {
@@ -229,7 +265,6 @@ public class CourseApiController {
      */
     @PostMapping("/import")
     @Operation(summary = "导入课程数据", description = "批量导入课程数据")
-    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<Map<String, Object>> importCourses(@Parameter(description = "课程列表") @RequestBody List<Course> courses) {
         Map<String, Object> result = courseService.importCourses(courses);
         return ApiResponse.success("导入课程数据完成", result);
@@ -240,7 +275,6 @@ public class CourseApiController {
      */
     @GetMapping("/export")
     @Operation(summary = "导出课程数据", description = "导出课程数据")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     public ApiResponse<List<Course>> exportCourses(
             @Parameter(description = "课程类型") @RequestParam(required = false) String courseType,
             @Parameter(description = "学期") @RequestParam(required = false) String semester,

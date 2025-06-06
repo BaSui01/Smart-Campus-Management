@@ -108,7 +108,7 @@ class CourseManagement {
                 ...this.searchParams
             };
 
-            const response = await apiClient.get('/admin/academic/courses', params);
+            const response = await apiClient.get('/api/courses', params);
             
             if (response.success) {
                 this.renderCourseTable(response.data.courses);

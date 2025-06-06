@@ -110,7 +110,7 @@ class ClassManagement {
                 ...this.searchParams
             };
 
-            const response = await apiClient.get('/admin/academic/classes', params);
+            const response = await apiClient.get('/api/classes', params);
             
             if (response.success) {
                 this.renderClassTable(response.data.classes);

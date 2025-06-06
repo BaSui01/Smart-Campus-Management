@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>访问被拒绝 - 智慧校园管理系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .access-denied-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 3rem;
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+        }
+        
+        .access-denied-icon {
+            font-size: 5rem;
+            color: #dc3545;
+            margin-bottom: 1.5rem;
+            animation: shake 0.5s ease-in-out;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        
+        .access-denied-title {
+            color: #333;
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        
+        .access-denied-message {
+            color: #666;
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+        
+        .btn-group-custom {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn-custom {
+            padding: 0.75rem 1.5rem;
+            border-radius: 10px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn-primary-custom {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+        }
+        
+        .btn-primary-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+        
+        .btn-secondary-custom {
+            background: #f8f9fa;
+            color: #666;
+            border: 2px solid #e9ecef;
+        }
+        
+        .btn-secondary-custom:hover {
+            background: #e9ecef;
+            color: #333;
+            transform: translateY(-2px);
+        }
+        
+        .user-info {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 2rem;
+            border-left: 4px solid #667eea;
+        }
+        
+        .user-info h6 {
+            margin: 0;
+            color: #333;
+            font-weight: 600;
+        }
+        
+        .user-info p {
+            margin: 0.5rem 0 0 0;
+            color: #666;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="access-denied-container">
+        <div class="access-denied-icon">
+            <i class="fas fa-ban"></i>
+        </div>
+        
+        <h1 class="access-denied-title">访问被拒绝</h1>
+        
+        <div class="user-info" th:if="${session.currentUser}">
+            <h6>当前用户信息</h6>
+            <p><strong>用户名：</strong><span th:text="${session.currentUser.username}">用户名</span></p>
+            <p><strong>角色：</strong><span th:text="${@permissionUtil.getCurrentUserRoles()}">角色</span></p>
+        </div>
+        
+        <div class="access-denied-message">
+            <p>抱歉，您没有权限访问此页面。</p>
+            <p>请联系系统管理员获取相应权限，或返回您有权限访问的页面。</p>
+        </div>
+        
+        <div class="btn-group-custom">
+            <a href="/admin/dashboard" class="btn-custom btn-primary-custom">
+                <i class="fas fa-home me-2"></i>返回首页
+            </a>
+            <button onclick="history.back()" class="btn-custom btn-secondary-custom">
+                <i class="fas fa-arrow-left me-2"></i>返回上页
+            </button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 3秒后自动跳转到首页（可选）
+        // setTimeout(() => {
+        //     window.location.href = '/admin/dashboard';
+        // }, 3000);
+    </script>
+</body>
+</html>

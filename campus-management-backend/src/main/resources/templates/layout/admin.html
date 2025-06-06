@@ -1,6 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="zh-CN">
-<head>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-CN" th:fragment="html">
+<head th:fragment="head">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="${pageTitle ?: '智慧校园管理系统'}">智慧校园管理系统</title>
@@ -43,8 +43,8 @@
                 </div>
 
                 <!-- 页面具体内容 -->
-                <div th:fragment="content">
-                    <!-- 页面具体内容 -->
+                <div th:insert="~{__${view}__ :: content}">
+                    <!-- 页面具体内容将在这里替换 -->
                 </div>
             </div>
         </div>

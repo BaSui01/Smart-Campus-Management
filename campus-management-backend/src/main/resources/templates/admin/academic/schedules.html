@@ -5,180 +5,285 @@
 <head th:replace="~{layout/admin :: head}">
     <th:block th:fragment="head-extra">
         <title>课程安排 - 智慧校园管理系统</title>
-        <!-- 网站图标 -->
-        <link rel="icon" type="image/svg+xml" th:href="@{/images/favicon.svg}">
-        <link rel="alternate icon" th:href="@{/favicon.ico}">
-        <link rel="apple-touch-icon" th:href="@{/images/favicon.svg}">
     </th:block>
 </head>
 <body>
     <div th:fragment="content">
         <!-- 页面标题 -->
-        <div th:replace="~{components/admin/admin-components :: page-header(
-            title='课程安排',
-            icon='fas fa-calendar-alt',
-            showAddButton=true,
-            addButtonText='添加课程安排',
-            addButtonTarget='#addScheduleModal'
-        )}"></div>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-calendar-alt me-2 text-primary"></i>课程安排
+                </h1>
+                <p class="text-muted mb-0">管理学校的课程安排信息</p>
+            </div>
+            <div class="btn-group">
+                <button type="button" class="btn btn-success" id="autoScheduleBtn">
+                    <i class="fas fa-magic me-2"></i>自动排课
+                </button>
+                <button type="button" class="btn btn-primary" id="addScheduleBtn">
+                    <i class="fas fa-plus me-2"></i>添加课程安排
+                </button>
+            </div>
+        </div>
 
         <!-- 统计卡片 -->
-        <div th:replace="~{components/admin/admin-components :: stat-cards(${scheduleStats})}"></div>
-
-        <!-- 数据表格组件 -->
-        <div th:replace="~{components/admin/admin-components :: data-table(${scheduleTableConfig}, ${schedules})}"></div>
-    </div>
-
-    <!-- 引入admin组件样式和脚本 -->
-    <th:block th:replace="~{components/admin/admin-components :: admin-style}"></th:block>
-    <th:block th:replace="~{components/admin/admin-components :: admin-script}"></th:block>
-
-    <!-- 课程安排特定脚本 -->
-    <script th:fragment="page-script">
-        // 课程安排操作函数
-        function editSchedule(scheduleId) {
-            alert('编辑课程安排：' + scheduleId);
-        }
-
-        function viewDetails(scheduleId) {
-            alert('查看课程安排详情：' + scheduleId);
-        }
-
-        function deleteSchedule(scheduleId) {
-            if (confirm('确定要删除该课程安排吗？')) {
-                alert('删除课程安排：' + scheduleId);
-            }
-        }
-    </script>
-
-    <!-- 添加课程安排模态框 -->
-    <div class="modal fade" id="addScheduleModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">添加课程安排</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <div class="row mb-4">
+            <div class="col-xl-3 col-md-6">
+                <div class="card bg-primary text-white mb-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-white-75 small">总课程安排</div>
+                                <div class="text-lg fw-bold" id="totalSchedules">0</div>
+                            </div>
+                            <i class="fas fa-calendar-alt fa-2x text-white-50"></i>
+                        </div>
+                    </div>
                 </div>
-                <div class="modal-body">
-                    <form id="addScheduleForm">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="courseId" class="form-label">课程</label>
-                                    <select class="form-select" id="courseId" name="courseId" required>
-                                        <option value="">请选择课程</option>
-                                        <option th:each="course : ${courses}" th:value="${course.id}" th:text="${course.courseName}">课程名称</option>
-                                    </select>
-                                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card bg-success text-white mb-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-white-75 small">今日课程</div>
+                                <div class="text-lg fw-bold" id="todaySchedules">0</div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="classId" class="form-label">班级</label>
-                                    <select class="form-select" id="classId" name="classId" required>
-                                        <option value="">请选择班级</option>
-                                        <option th:each="schoolClass : ${classes}" th:value="${schoolClass.id}" th:text="${schoolClass.className}">班级名称</option>
-                                    </select>
-                                </div>
-                            </div>
+                            <i class="fas fa-clock fa-2x text-white-50"></i>
                         </div>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="teacherId" class="form-label">授课教师</label>
-                                    <select class="form-select" id="teacherId" name="teacherId" required>
-                                        <option value="">请选择教师</option>
-                                        <option th:each="teacher : ${teachers}" th:value="${teacher.id}" th:text="${teacher.realName}">教师姓名</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="classroom" class="form-label">教室</label>
-                                    <input type="text" class="form-control" id="classroom" name="classroom" placeholder="例如: A101" required>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="dayOfWeek" class="form-label">星期</label>
-                                    <select class="form-select" id="dayOfWeek" name="dayOfWeek" required>
-                                        <option value="">请选择星期</option>
-                                        <option value="周一">周一</option>
-                                        <option value="周二">周二</option>
-                                        <option value="周三">周三</option>
-                                        <option value="周四">周四</option>
-                                        <option value="周五">周五</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="timeSlot" class="form-label">时间段</label>
-                                    <select class="form-select" id="timeSlot" name="timeSlot" required>
-                                        <option value="">请选择时间段</option>
-                                        <option value="08:00-09:40">08:00-09:40</option>
-                                        <option value="10:00-11:40">10:00-11:40</option>
-                                        <option value="14:00-15:40">14:00-15:40</option>
-                                        <option value="16:00-17:40">16:00-17:40</option>
-                                        <option value="19:00-20:40">19:00-20:40</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="weeks" class="form-label">周次</label>
-                            <input type="text" class="form-control" id="weeks" name="weeks" placeholder="例如: 1-16周" required>
-                        </div>
-                    </form>
+                    </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                    <button type="button" class="btn btn-primary" onclick="saveSchedule()">保存</button>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card bg-info text-white mb-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-white-75 small">本周课程</div>
+                                <div class="text-lg fw-bold" id="weekSchedules">0</div>
+                            </div>
+                            <i class="fas fa-calendar-week fa-2x text-white-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card bg-warning text-white mb-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-white-75 small">冲突课程</div>
+                                <div class="text-lg fw-bold" id="conflictSchedules">0</div>
+                            </div>
+                            <i class="fas fa-exclamation-triangle fa-2x text-white-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 搜索筛选 -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-filter me-2"></i>筛选与操作
+                </h6>
+            </div>
+            <div class="card-body">
+                <form id="searchForm">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-2">
+                            <label class="form-label">课程</label>
+                            <select class="form-select" name="courseId">
+                                <option value="">全部课程</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">班级</label>
+                            <select class="form-select" name="classId">
+                                <option value="">全部班级</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">星期</label>
+                            <select class="form-select" name="dayOfWeek">
+                                <option value="">全部星期</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">教室</label>
+                            <select class="form-select" name="classroom">
+                                <option value="">全部教室</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">学期</label>
+                            <select class="form-select" name="semester">
+                                <option value="">全部学期</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="btn-group w-100">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search me-1"></i>搜索
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" id="resetBtn">
+                                    <i class="fas fa-undo me-1"></i>重置
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 课程安排列表 -->
+        <div class="card" id="scheduleTableContainer">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">
+                    <i class="fas fa-list me-2"></i>课程安排列表
+                </h6>
+                <div class="btn-group btn-group-sm">
+                    <button type="button" class="btn btn-outline-success" id="exportBtn">
+                        <i class="fas fa-download me-1"></i>导出
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="scheduleTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th width="50">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="selectAll">
+                                    </div>
+                                </th>
+                                <th>课程信息</th>
+                                <th>班级</th>
+                                <th>授课教师</th>
+                                <th>星期</th>
+                                <th>时间</th>
+                                <th>教室</th>
+                                <th>学期</th>
+                                <th width="120">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- 数据将通过JavaScript动态加载 -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 分页 -->
+                <nav aria-label="课程安排分页">
+                    <ul class="pagination justify-content-center mb-0" id="pagination">
+                        <!-- 分页按钮将通过JavaScript动态生成 -->
+                    </ul>
+                </nav>
+            </div>
+        </div>
+
+        <!-- 课程安排模态框 -->
+        <div class="modal fade" id="scheduleModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="scheduleModalLabel">
+                            <i class="fas fa-plus me-2"></i>添加课程安排
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="scheduleForm" novalidate>
+                            <input type="hidden" id="scheduleId" name="scheduleId">
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="courseId" class="form-label">课程 <span class="text-danger">*</span></label>
+                                        <select class="form-select" id="courseId" name="courseId" required>
+                                            <option value="">请选择课程</option>
+                                        </select>
+                                        <div class="invalid-feedback">请选择课程</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="classId" class="form-label">班级</label>
+                                        <select class="form-select" id="classId" name="classId">
+                                            <option value="">请选择班级</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="dayOfWeek" class="form-label">星期 <span class="text-danger">*</span></label>
+                                        <select class="form-select" id="dayOfWeek" name="dayOfWeek" required>
+                                            <option value="">请选择星期</option>
+                                        </select>
+                                        <div class="invalid-feedback">请选择星期</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="classroom" class="form-label">教室 <span class="text-danger">*</span></label>
+                                        <select class="form-select" id="classroom" name="classroom" required>
+                                            <option value="">请选择教室</option>
+                                        </select>
+                                        <div class="invalid-feedback">请选择教室</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="startTime" class="form-label">开始时间 <span class="text-danger">*</span></label>
+                                        <input type="time" class="form-control" id="startTime" name="startTime" required>
+                                        <div class="invalid-feedback">请选择开始时间</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="endTime" class="form-label">结束时间 <span class="text-danger">*</span></label>
+                                        <input type="time" class="form-control" id="endTime" name="endTime" required>
+                                        <div class="invalid-feedback">请选择结束时间</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="semester" class="form-label">学期 <span class="text-danger">*</span></label>
+                                <select class="form-select" id="semester" name="semester" required>
+                                    <option value="">请选择学期</option>
+                                </select>
+                                <div class="invalid-feedback">请选择学期</div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        <button type="button" class="btn btn-primary" id="saveScheduleBtn">保存</button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <script>
-        function saveSchedule() {
-            const form = document.getElementById('addScheduleForm');
-            const formData = new FormData(form);
+    <th:block th:fragment="scripts">
+        <!-- 引入API客户端和工具类 -->
+        <script th:src="@{/js/api-client.js}"></script>
+        <!-- 引入课程安排管理模块 -->
+        <script th:src="@{/js/modules/schedule-management.js}"></script>
+    </th:block>
+</body>
+</html>
 
-            const scheduleData = {
-                courseId: formData.get('courseId'),
-                classId: formData.get('classId'),
-                teacherId: formData.get('teacherId'),
-                classroom: formData.get('classroom'),
-                dayOfWeek: formData.get('dayOfWeek'),
-                timeSlot: formData.get('timeSlot'),
-                weeks: formData.get('weeks')
-            };
 
-            fetch('/admin/schedules/add', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(scheduleData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('添加课程安排成功！');
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('addScheduleModal'));
-                    modal.hide();
-                    form.reset();
-                    window.location.reload();
-                } else {
-                    alert('添加课程安排失败：' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('添加课程安排失败，请稍后重试');
-            });
-        }
-    </script>
 </body>
 </html>

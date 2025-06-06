@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.campus.application.service.UserService;
@@ -40,7 +39,6 @@ public class UserApiController {
      */
     @GetMapping
     @Operation(summary = "获取用户列表", description = "分页查询用户信息")
-    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<Map<String, Object>> getUsers(
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") int page,
             @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") int size,
@@ -84,7 +82,6 @@ public class UserApiController {
      */
     @GetMapping("/{id}")
     @Operation(summary = "获取用户详情", description = "根据ID查询用户详细信息")
-    @PreAuthorize("hasRole('ADMIN') or @userService.isCurrentUser(#id)")
     public ApiResponse<User> getUserById(@Parameter(description = "用户ID") @PathVariable Long id) {
         User user = userService.findById(id);
         if (user != null) {
@@ -99,7 +96,6 @@ public class UserApiController {
      */
     @GetMapping("/username/{username}")
     @Operation(summary = "根据用户名查询用户", description = "根据用户名查询用户信息")
-    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<User> getUserByUsername(@Parameter(description = "用户名") @PathVariable String username) {
         Optional<User> user = userService.findByUsername(username);
         if (user.isPresent()) {
@@ -114,7 +110,6 @@ public class UserApiController {
      */
     @GetMapping("/email/{email}")
     @Operation(summary = "根据邮箱查询用户", description = "根据邮箱查询用户信息")
-    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<User> getUserByEmail(@Parameter(description = "邮箱") @PathVariable String email) {
         Optional<User> user = userService.findByEmail(email);
         if (user.isPresent()) {
@@ -129,8 +124,7 @@ public class UserApiController {
      */
     @GetMapping("/search")
     @Operation(summary = "搜索用户", description = "根据关键词搜索用户")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ApiResponse<List<User>> searchUsers(@Parameter(description = "关键词") @RequestParam String keyword) {
+    public ApiResponse<List<User>> searchUsers(@Parameter(description = "关键词") @RequestParam(required = false, defaultValue = "") String keyword) {
         List<User> users = userService.searchUsers(keyword);
         return ApiResponse.success(users);
     }
@@ -140,7 +134,6 @@ public class UserApiController {
      */
     @GetMapping("/stats")
     @Operation(summary = "获取用户统计信息", description = "获取用户统计数据")
-    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<UserService.UserStatistics> getUserStatistics() {
         UserService.UserStatistics stats = userService.getUserStatistics();
         return ApiResponse.success(stats);
@@ -151,7 +144,6 @@ public class UserApiController {
      */
     @PostMapping
     @Operation(summary = "创建用户", description = "添加新用户信息")
-    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<User> createUser(@Parameter(description = "用户信息") @Valid @RequestBody User user) {
         try {
             User createdUser = userService.createUser(user);
@@ -168,7 +160,6 @@ public class UserApiController {
      */
     @PutMapping("/{id}")
     @Operation(summary = "更新用户信息", description = "修改用户信息")
-    @PreAuthorize("hasRole('ADMIN') or @userService.isCurrentUser(#id)")
     public ApiResponse<Void> updateUser(
             @Parameter(description = "用户ID") @PathVariable Long id,
             @Parameter(description = "用户信息") @Valid @RequestBody User user) {
@@ -192,7 +183,6 @@ public class UserApiController {
      */
     @DeleteMapping("/{id}")
     @Operation(summary = "删除用户", description = "删除指定用户")
-    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<Void> deleteUser(@Parameter(description = "用户ID") @PathVariable Long id) {
         boolean result = userService.deleteUser(id);
         if (result) {
@@ -207,7 +197,6 @@ public class UserApiController {
      */
     @DeleteMapping("/batch")
     @Operation(summary = "批量删除用户", description = "批量删除多个用户")
-    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<Void> batchDeleteUsers(@Parameter(description = "用户ID列表") @RequestBody List<Long> ids) {
         boolean result = userService.batchDeleteUsers(ids);
         if (result) {
@@ -222,7 +211,6 @@ public class UserApiController {
      */
     @PostMapping("/{id}/reset-password")
     @Operation(summary = "重置用户密码", description = "重置指定用户的密码")
-    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<Void> resetPassword(@Parameter(description = "用户ID") @PathVariable Long id) {
         try {
             boolean result = userService.resetPassword(id);
@@ -241,7 +229,6 @@ public class UserApiController {
      */
     @PostMapping("/{id}/change-password")
     @Operation(summary = "修改用户密码", description = "修改用户密码")
-    @PreAuthorize("hasRole('ADMIN') or @userService.isCurrentUser(#id)")
     public ApiResponse<Void> changePassword(
             @Parameter(description = "用户ID") @PathVariable Long id,
             @Parameter(description = "旧密码") @RequestParam String oldPassword,
@@ -263,7 +250,6 @@ public class UserApiController {
      */
     @PostMapping("/{id}/toggle-status")
     @Operation(summary = "启用/禁用用户", description = "切换用户状态")
-    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<Void> toggleUserStatus(@Parameter(description = "用户ID") @PathVariable Long id) {
         try {
             boolean result = userService.toggleUserStatus(id);
@@ -282,7 +268,6 @@ public class UserApiController {
      */
     @GetMapping("/export")
     @Operation(summary = "导出用户数据", description = "导出用户数据")
-    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<List<User>> exportUsers(
             @Parameter(description = "角色") @RequestParam(required = false) String role,
             @Parameter(description = "状态") @RequestParam(required = false) Integer status) {

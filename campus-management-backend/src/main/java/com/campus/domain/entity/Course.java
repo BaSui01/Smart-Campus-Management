@@ -1,5 +1,6 @@
 package com.campus.domain.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.Data;
@@ -268,6 +269,7 @@ public class Course extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "department_id", insertable = false, updatable = false)
     @ToString.Exclude
+    @JsonIgnore
     private Department department;
 
     /**
@@ -276,6 +278,7 @@ public class Course extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "teacher_id", insertable = false, updatable = false)
     @ToString.Exclude
+    @JsonIgnore
     private User teacher;
 
     /**
@@ -284,6 +287,7 @@ public class Course extends BaseEntity {
     @OneToMany(fetch = FetchType.LAZY)
     @JoinColumn(name = "course_id")
     @ToString.Exclude
+    @JsonIgnore
     private List<CourseSchedule> schedules;
 
     /**
@@ -292,6 +296,7 @@ public class Course extends BaseEntity {
     @OneToMany(fetch = FetchType.LAZY)
     @JoinColumn(name = "course_id")
     @ToString.Exclude
+    @JsonIgnore
     private List<CourseSelection> selections;
 
     /**
@@ -300,6 +305,7 @@ public class Course extends BaseEntity {
     @OneToMany(fetch = FetchType.LAZY)
     @JoinColumn(name = "course_id")
     @ToString.Exclude
+    @JsonIgnore
     private List<Grade> grades;
 
     // ================================
@@ -478,5 +484,315 @@ public class Course extends BaseEntity {
             total = total.add(finalScoreRatio);
         }
         return total.compareTo(BigDecimal.ONE) == 0;
+    }
+
+    // ================================
+    // Getter/Setter 方法 (手动添加以解决Lombok问题)
+    // ================================
+
+    public String getCourseCode() {
+        return courseCode;
+    }
+
+    public void setCourseCode(String courseCode) {
+        this.courseCode = courseCode;
+    }
+
+    public String getCourseName() {
+        return courseName;
+    }
+
+    public void setCourseName(String courseName) {
+        this.courseName = courseName;
+    }
+
+    public String getCourseNameEn() {
+        return courseNameEn;
+    }
+
+    public void setCourseNameEn(String courseNameEn) {
+        this.courseNameEn = courseNameEn;
+    }
+
+    public BigDecimal getCredits() {
+        return credits;
+    }
+
+    public void setCredits(BigDecimal credits) {
+        this.credits = credits;
+    }
+
+    public Integer getHours() {
+        return hours;
+    }
+
+    public void setHours(Integer hours) {
+        this.hours = hours;
+    }
+
+    public String getCourseType() {
+        return courseType;
+    }
+
+    public void setCourseType(String courseType) {
+        this.courseType = courseType;
+    }
+
+    public String getCourseNature() {
+        return courseNature;
+    }
+
+    public void setCourseNature(String courseNature) {
+        this.courseNature = courseNature;
+    }
+
+    public String getSemester() {
+        return semester;
+    }
+
+    public void setSemester(String semester) {
+        this.semester = semester;
+    }
+
+    public Integer getAcademicYear() {
+        return academicYear;
+    }
+
+    public void setAcademicYear(Integer academicYear) {
+        this.academicYear = academicYear;
+    }
+
+    public Long getDepartmentId() {
+        return departmentId;
+    }
+
+    public void setDepartmentId(Long departmentId) {
+        this.departmentId = departmentId;
+    }
+
+    public Long getTeacherId() {
+        return teacherId;
+    }
+
+    public void setTeacherId(Long teacherId) {
+        this.teacherId = teacherId;
+    }
+
+    public String getClassroom() {
+        return classroom;
+    }
+
+    public void setClassroom(String classroom) {
+        this.classroom = classroom;
+    }
+
+    public String getClassTime() {
+        return classTime;
+    }
+
+    public void setClassTime(String classTime) {
+        this.classTime = classTime;
+    }
+
+    public Integer getMaxStudents() {
+        return maxStudents;
+    }
+
+    public void setMaxStudents(Integer maxStudents) {
+        this.maxStudents = maxStudents;
+    }
+
+    public Integer getEnrolledStudents() {
+        return enrolledStudents;
+    }
+
+    public void setEnrolledStudents(Integer enrolledStudents) {
+        this.enrolledStudents = enrolledStudents;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getObjectives() {
+        return objectives;
+    }
+
+    public void setObjectives(String objectives) {
+        this.objectives = objectives;
+    }
+
+    public String getTextbook() {
+        return textbook;
+    }
+
+    public void setTextbook(String textbook) {
+        this.textbook = textbook;
+    }
+
+    public String getReferences() {
+        return references;
+    }
+
+    public void setReferences(String references) {
+        this.references = references;
+    }
+
+    public String getAssessmentMethod() {
+        return assessmentMethod;
+    }
+
+    public void setAssessmentMethod(String assessmentMethod) {
+        this.assessmentMethod = assessmentMethod;
+    }
+
+    public BigDecimal getRegularScoreRatio() {
+        return regularScoreRatio;
+    }
+
+    public void setRegularScoreRatio(BigDecimal regularScoreRatio) {
+        this.regularScoreRatio = regularScoreRatio;
+    }
+
+    public BigDecimal getMidtermScoreRatio() {
+        return midtermScoreRatio;
+    }
+
+    public void setMidtermScoreRatio(BigDecimal midtermScoreRatio) {
+        this.midtermScoreRatio = midtermScoreRatio;
+    }
+
+    public BigDecimal getFinalScoreRatio() {
+        return finalScoreRatio;
+    }
+
+    public void setFinalScoreRatio(BigDecimal finalScoreRatio) {
+        this.finalScoreRatio = finalScoreRatio;
+    }
+
+    public String getPrerequisites() {
+        return prerequisites;
+    }
+
+    public void setPrerequisites(String prerequisites) {
+        this.prerequisites = prerequisites;
+    }
+
+    public java.time.LocalDateTime getSelectionStartTime() {
+        return selectionStartTime;
+    }
+
+    public void setSelectionStartTime(java.time.LocalDateTime selectionStartTime) {
+        this.selectionStartTime = selectionStartTime;
+    }
+
+    public java.time.LocalDateTime getSelectionEndTime() {
+        return selectionEndTime;
+    }
+
+    public void setSelectionEndTime(java.time.LocalDateTime selectionEndTime) {
+        this.selectionEndTime = selectionEndTime;
+    }
+
+    public String getRemarks() {
+        return remarks;
+    }
+
+    public void setRemarks(String remarks) {
+        this.remarks = remarks;
+    }
+
+    public Department getDepartment() {
+        return department;
+    }
+
+    public void setDepartment(Department department) {
+        this.department = department;
+    }
+
+    public User getTeacher() {
+        return teacher;
+    }
+
+    public void setTeacher(User teacher) {
+        this.teacher = teacher;
+    }
+
+    public List<CourseSchedule> getSchedules() {
+        return schedules;
+    }
+
+    public void setSchedules(List<CourseSchedule> schedules) {
+        this.schedules = schedules;
+    }
+
+    public List<CourseSelection> getSelections() {
+        return selections;
+    }
+
+    public void setSelections(List<CourseSelection> selections) {
+        this.selections = selections;
+    }
+
+    public List<Grade> getGrades() {
+        return grades;
+    }
+
+    public void setGrades(List<Grade> grades) {
+        this.grades = grades;
+    }
+
+    // 继续添加缺失的getter/setter方法
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Integer getStatus() {
+        return status;
+    }
+
+    public void setStatus(Integer status) {
+        this.status = status;
+    }
+
+    public void setStatus(int status) {
+        this.status = status;
+    }
+
+    public Integer getDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(Integer deleted) {
+        this.deleted = deleted;
+    }
+
+    public void setDeleted(int deleted) {
+        this.deleted = deleted;
+    }
+
+    public java.time.LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(java.time.LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public java.time.LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(java.time.LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

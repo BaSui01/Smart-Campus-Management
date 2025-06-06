@@ -408,6 +408,7 @@ public class AuthController {
 
             if (token != null && jwtUtil.validateToken(token)) {
                 result.put("valid", true);
+                result.put("token", token);  // 返回token供API测试使用
                 result.put("username", jwtUtil.getUsernameFromToken(token));
                 result.put("role", jwtUtil.getRoleFromToken(token));
                 result.put("expiresIn", jwtUtil.getTokenRemainingTime(token));

@@ -87,7 +87,7 @@ public class CourseScheduleServiceImpl implements CourseScheduleService {
 
     @Override
     public Page<CourseSchedule> findSchedulesByPage(int page, int size, Map<String, Object> params) {
-        Pageable pageable = PageRequest.of(page - 1, size, Sort.by("dayOfWeek").and(Sort.by("startTime")));
+        Pageable pageable = PageRequest.of(page, size, Sort.by("dayOfWeek").and(Sort.by("startTime")));
 
         // 简化实现，直接使用基础分页
         // 在实际项目中，可以根据params构建Specification进行条件查询
@@ -336,5 +336,17 @@ public class CourseScheduleServiceImpl implements CourseScheduleService {
             System.err.println("查找学生课程表失败: " + e.getMessage());
             return List.of(); // 返回空列表
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<CourseSchedule> findById(Long id) {
+        return courseScheduleRepository.findById(id);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CourseSchedule> findAll() {
+        return courseScheduleRepository.findAll();
     }
 }

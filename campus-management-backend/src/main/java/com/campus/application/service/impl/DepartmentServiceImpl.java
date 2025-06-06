@@ -3,10 +3,9 @@ package com.campus.application.service.impl;
 import com.campus.application.service.DepartmentService;
 import com.campus.domain.entity.Department;
 import com.campus.domain.repository.DepartmentRepository;
-import com.campus.shared.exception.BusinessException;
-import com.campus.shared.exception.ResourceNotFoundException;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
@@ -25,12 +24,17 @@ import java.util.Optional;
  * @version 1.0.0
  * @since 2025-06-06
  */
-@Slf4j
 @Service
-@RequiredArgsConstructor
 public class DepartmentServiceImpl implements DepartmentService {
 
+    private static final Logger log = LoggerFactory.getLogger(DepartmentServiceImpl.class);
+
     private final DepartmentRepository departmentRepository;
+
+    @Autowired
+    public DepartmentServiceImpl(DepartmentRepository departmentRepository) {
+        this.departmentRepository = departmentRepository;
+    }
 
     @Override
     @Transactional
@@ -40,18 +44,18 @@ public class DepartmentServiceImpl implements DepartmentService {
         
         // 验证院系代码唯一性
         if (existsByDeptCode(department.getDeptCode())) {
-            throw new BusinessException("院系代码已存在: " + department.getDeptCode());
+            throw new IllegalArgumentException("院系代码已存在: " + department.getDeptCode());
         }
-        
+
         // 验证院系名称唯一性
         if (existsByDeptName(department.getDeptName())) {
-            throw new BusinessException("院系名称已存在: " + department.getDeptName());
+            throw new IllegalArgumentException("院系名称已存在: " + department.getDeptName());
         }
-        
+
         // 验证上级院系是否存在
         if (department.getParentId() != null) {
             if (!departmentRepository.existsById(department.getParentId())) {
-                throw new BusinessException("上级院系不存在");
+                throw new IllegalArgumentException("上级院系不存在");
             }
         }
         
@@ -73,27 +77,27 @@ public class DepartmentServiceImpl implements DepartmentService {
         log.info("Updating department with ID: {}", id);
         
         Department existingDepartment = departmentRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("院系不存在，ID: " + id));
+                .orElseThrow(() -> new IllegalArgumentException("院系不存在，ID: " + id));
         
         // 验证院系代码唯一性（排除当前院系）
         if (StringUtils.hasText(department.getDeptCode()) && 
             !department.getDeptCode().equals(existingDepartment.getDeptCode())) {
             if (existsByDeptCodeExcludeId(department.getDeptCode(), id)) {
-                throw new BusinessException("院系代码已存在: " + department.getDeptCode());
+                throw new IllegalArgumentException("院系代码已存在: " + department.getDeptCode());
             }
         }
-        
+
         // 验证院系名称唯一性（排除当前院系）
-        if (StringUtils.hasText(department.getDeptName()) && 
+        if (StringUtils.hasText(department.getDeptName()) &&
             !department.getDeptName().equals(existingDepartment.getDeptName())) {
             if (existsByDeptNameExcludeId(department.getDeptName(), id)) {
-                throw new BusinessException("院系名称已存在: " + department.getDeptName());
+                throw new IllegalArgumentException("院系名称已存在: " + department.getDeptName());
             }
         }
-        
+
         // 验证不能将院系设置为自己的子院系
         if (department.getParentId() != null && department.getParentId().equals(id)) {
-            throw new BusinessException("不能将院系设置为自己的上级院系");
+            throw new IllegalArgumentException("不能将院系设置为自己的上级院系");
         }
         
         // 更新字段
@@ -206,12 +210,12 @@ public class DepartmentServiceImpl implements DepartmentService {
         log.info("Deleting department with ID: {}", id);
         
         Department department = departmentRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("院系不存在，ID: " + id));
-        
+                .orElseThrow(() -> new IllegalArgumentException("院系不存在，ID: " + id));
+
         // 检查是否有子院系
         long childCount = countChildDepartments(id);
         if (childCount > 0) {
-            throw new BusinessException("存在子院系，无法删除");
+            throw new IllegalArgumentException("存在子院系，无法删除");
         }
         
         // 软删除
@@ -241,7 +245,7 @@ public class DepartmentServiceImpl implements DepartmentService {
         log.info("Enabling department with ID: {}", id);
         
         Department department = departmentRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("院系不存在，ID: " + id));
+                .orElseThrow(() -> new IllegalArgumentException("院系不存在，ID: " + id));
         
         department.enable();
         departmentRepository.save(department);
@@ -256,7 +260,7 @@ public class DepartmentServiceImpl implements DepartmentService {
         log.info("Disabling department with ID: {}", id);
         
         Department department = departmentRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("院系不存在，ID: " + id));
+                .orElseThrow(() -> new IllegalArgumentException("院系不存在，ID: " + id));
         
         department.disable();
         departmentRepository.save(department);
@@ -301,7 +305,7 @@ public class DepartmentServiceImpl implements DepartmentService {
         log.info("Updating sort order for department {} to {}", id, sortOrder);
         
         Department department = departmentRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("院系不存在，ID: " + id));
+                .orElseThrow(() -> new IllegalArgumentException("院系不存在，ID: " + id));
         
         department.setSortOrder(sortOrder);
         departmentRepository.save(department);
@@ -316,7 +320,7 @@ public class DepartmentServiceImpl implements DepartmentService {
         log.info("Setting leader for department {} to user {}", id, leaderId);
         
         Department department = departmentRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("院系不存在，ID: " + id));
+                .orElseThrow(() -> new IllegalArgumentException("院系不存在，ID: " + id));
         
         department.setLeaderId(leaderId);
         departmentRepository.save(department);
@@ -331,16 +335,16 @@ public class DepartmentServiceImpl implements DepartmentService {
         log.info("Moving department {} to parent {}", id, newParentId);
         
         Department department = departmentRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("院系不存在，ID: " + id));
-        
+                .orElseThrow(() -> new IllegalArgumentException("院系不存在，ID: " + id));
+
         // 验证新上级院系是否存在
         if (newParentId != null && !departmentRepository.existsById(newParentId)) {
-            throw new BusinessException("新上级院系不存在");
+            throw new IllegalArgumentException("新上级院系不存在");
         }
-        
+
         // 验证不能移动到自己的子院系下
         if (newParentId != null && newParentId.equals(id)) {
-            throw new BusinessException("不能将院系移动到自己下面");
+            throw new IllegalArgumentException("不能将院系移动到自己下面");
         }
         
         department.setParentId(newParentId);

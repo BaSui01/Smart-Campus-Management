@@ -60,6 +60,16 @@ public interface UserService {
     boolean hasRole(Long userId, String roleName);
 
     /**
+     * 获取用户的所有角色
+     */
+    List<String> getUserRoles(Long userId);
+
+    /**
+     * 检查用户是否有权限访问指定菜单
+     */
+    boolean hasMenuPermission(Long userId, String menuPath);
+
+    /**
      * 创建新用户
      */
     User createUser(User user);

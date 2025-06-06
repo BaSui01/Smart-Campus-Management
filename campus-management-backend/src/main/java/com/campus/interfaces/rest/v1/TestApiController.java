@@ -30,34 +30,38 @@ public class TestApiController {
     }
 
     @GetMapping("/status")
-    @Operation(summary = "系统状态", description = "获取系统运行状态信息")
+    @Operation(summary = "系统状态接口", description = "获取系统运行状态信息")
     public Map<String, Object> status() {
         Map<String, Object> result = new HashMap<>();
         result.put("success", true);
         result.put("status", "running");
         result.put("uptime", System.currentTimeMillis());
+        result.put("memory", Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory());
         result.put("timestamp", LocalDateTime.now());
-        
-        // 系统信息
-        Map<String, Object> system = new HashMap<>();
-        system.put("java_version", System.getProperty("java.version"));
-        system.put("os_name", System.getProperty("os.name"));
-        system.put("available_processors", Runtime.getRuntime().availableProcessors());
-        system.put("max_memory", Runtime.getRuntime().maxMemory());
-        system.put("total_memory", Runtime.getRuntime().totalMemory());
-        system.put("free_memory", Runtime.getRuntime().freeMemory());
-        
-        result.put("system", system);
+        return result;
+    }
+
+    @GetMapping("/time")
+    @Operation(summary = "服务器时间接口", description = "获取服务器当前时间")
+    public Map<String, Object> time() {
+        Map<String, Object> result = new HashMap<>();
+        result.put("success", true);
+        result.put("serverTime", LocalDateTime.now());
+        result.put("timezone", java.time.ZoneId.systemDefault().toString());
+        result.put("timestamp", System.currentTimeMillis());
         return result;
     }
 
     @GetMapping("/ping")
-    @Operation(summary = "Ping接口", description = "简单的ping接口，用于健康检查")
+    @Operation(summary = "Ping接口", description = "简单的ping健康检查接口")
     public Map<String, Object> ping() {
         Map<String, Object> result = new HashMap<>();
         result.put("success", true);
         result.put("message", "pong");
         result.put("timestamp", LocalDateTime.now());
+        result.put("latency", "< 1ms");
         return result;
     }
+
+
 }

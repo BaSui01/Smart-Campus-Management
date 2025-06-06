@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Token测试页面</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+        }
+        .error {
+            border-left-color: #dc3545;
+            background: #f8d7da;
+        }
+        .success {
+            border-left-color: #28a745;
+            background: #d4edda;
+        }
+        pre {
+            background: #f1f1f1;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>JWT Token 测试页面</h1>
+        
+        <div>
+            <button class="btn" onclick="testTokenStatus()">获取Token状态</button>
+            <button class="btn" onclick="testApiCall()">测试API调用</button>
+            <button class="btn" onclick="clearResults()">清除结果</button>
+        </div>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        async function testTokenStatus() {
+            try {
+                const response = await fetch('/admin/token-status', {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                displayResult('Token状态', data, response.ok);
+                
+                // 如果获取到token，存储到localStorage
+                if (data.valid && data.token) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('tokenType', 'Bearer');
+                    localStorage.setItem('username', data.username);
+                    displayResult('Token存储', { message: 'Token已存储到localStorage' }, true);
+                }
+            } catch (error) {
+                displayResult('Token状态', { error: error.message }, false);
+            }
+        }
+
+        async function testApiCall() {
+            try {
+                // 获取token
+                let token = localStorage.getItem('token');
+                
+                if (!token) {
+                    // 尝试从服务器获取
+                    const tokenResponse = await fetch('/admin/token-status', {
+                        method: 'GET',
+                        credentials: 'include'
+                    });
+                    
+                    if (tokenResponse.ok) {
+                        const tokenData = await tokenResponse.json();
+                        if (tokenData.valid && tokenData.token) {
+                            token = tokenData.token;
+                            localStorage.setItem('token', token);
+                        }
+                    }
+                }
+                
+                if (!token) {
+                    displayResult('API调用', { error: '无法获取token，请先登录' }, false);
+                    return;
+                }
+                
+                // 测试API调用
+                const response = await fetch('/api/dashboard/stats', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                displayResult('API调用结果', data, response.ok);
+                
+            } catch (error) {
+                displayResult('API调用', { error: error.message }, false);
+            }
+        }
+
+        function displayResult(title, data, success) {
+            const resultsDiv = document.getElementById('results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `result ${success ? 'success' : 'error'}`;
+            
+            resultDiv.innerHTML = `
+                <h3>${title}</h3>
+                <pre>${JSON.stringify(data, null, 2)}</pre>
+                <small>时间: ${new Date().toLocaleString()}</small>
+            `;
+            
+            resultsDiv.appendChild(resultDiv);
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        // 页面加载时自动测试token状态
+        window.addEventListener('load', function() {
+            setTimeout(testTokenStatus, 1000);
+        });
+    </script>
+</body>
+</html>

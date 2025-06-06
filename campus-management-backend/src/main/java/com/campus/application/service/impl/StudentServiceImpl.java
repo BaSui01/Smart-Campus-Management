@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -62,6 +63,7 @@ public class StudentServiceImpl implements StudentService {
     }
 
     @Override
+    @Cacheable(value = "student:count", unless = "#result == null")
     public long count() {
         return studentRepository.count();
     }
@@ -104,6 +106,7 @@ public class StudentServiceImpl implements StudentService {
     }
 
     @Override
+    @Cacheable(value = "student:grade-stats", unless = "#result == null")
     public List<Object[]> countStudentsByGrade() {
         return studentRepository.countStudentsByGrade();
     }

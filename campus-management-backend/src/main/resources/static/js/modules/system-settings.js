@@ -168,22 +168,23 @@ class SystemSettingsManager {
     async loadSystemSettings() {
         try {
             LoadingManager.showPageLoading('.card-body');
-            
+
+            // 确保API客户端包含认证头
             const response = await apiClient.get('/api/system/settings');
-            
+
             if (response.success) {
                 this.currentSettings = response.data;
                 this.populateSettingsForms(response.data);
                 this.updateSettingsStatus('success');
-                MessageUtils.success('系统设置加载成功');
+                console.log('系统设置加载成功');
             } else {
                 this.updateSettingsStatus('error');
-                MessageUtils.error('加载系统设置失败：' + response.message);
+                showAlert('加载系统设置失败：' + response.message, 'error');
             }
         } catch (error) {
             console.error('加载系统设置失败:', error);
             this.updateSettingsStatus('error');
-            MessageUtils.error('加载系统设置失败：' + error.message);
+            showAlert('加载系统设置失败：' + error.message, 'error');
         } finally {
             LoadingManager.hidePageLoading('.card-body');
         }
@@ -319,35 +320,42 @@ class SystemSettingsManager {
 
         try {
             this.isLoading = true;
-            
+
             const formData = this.collectFormData();
             const errors = this.validateFormData(formData);
 
             if (errors.length > 0) {
-                MessageUtils.error('数据验证失败：\n' + errors.join('\n'));
+                showAlert('数据验证失败：\n' + errors.join('\n'), 'error');
                 return;
             }
 
-            const saveBtn = document.querySelector('[onclick="saveAllSettings()"]');
-            LoadingManager.showButtonLoading(saveBtn, '保存中...');
+            const saveBtn = document.querySelector('[onclick="saveAllSettings()"]') ||
+                           document.getElementById('saveSettingsBtn');
+            if (saveBtn) {
+                LoadingManager.showButtonLoading(saveBtn, '保存中...');
+            }
 
+            // 确保API客户端包含认证头
             const response = await apiClient.post('/api/system/settings', formData);
 
             if (response.success) {
                 this.currentSettings = { ...this.currentSettings, ...formData };
                 this.clearFormChangeMarks();
                 this.updateSettingsStatus('success');
-                MessageUtils.success('系统设置保存成功');
+                showAlert('系统设置保存成功', 'success');
             } else {
-                MessageUtils.error('保存系统设置失败：' + response.message);
+                showAlert('保存系统设置失败：' + response.message, 'error');
             }
         } catch (error) {
             console.error('保存系统设置失败:', error);
-            MessageUtils.error('保存系统设置失败：' + error.message);
+            showAlert('保存系统设置失败：' + error.message, 'error');
         } finally {
             this.isLoading = false;
-            const saveBtn = document.querySelector('[onclick="saveAllSettings()"]');
-            LoadingManager.hideButtonLoading(saveBtn);
+            const saveBtn = document.querySelector('[onclick="saveAllSettings()"]') ||
+                           document.getElementById('saveSettingsBtn');
+            if (saveBtn) {
+                LoadingManager.hideButtonLoading(saveBtn);
+            }
         }
     }
 

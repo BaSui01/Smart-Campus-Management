@@ -19,7 +19,7 @@
                 </h1>
                 <p class="text-muted mb-0">管理系统用户信息</p>
             </div>
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
+            <button type="button" class="btn btn-primary" id="addUserBtn">
                 <i class="fas fa-plus me-2"></i>添加用户
             </button>
         </div>
@@ -32,7 +32,7 @@
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
                                 <div class="text-white-75 small">总用户数</div>
-                                <div class="text-lg fw-bold" th:text="${users?.totalElements ?: 0}">0</div>
+                                <div class="text-lg fw-bold" id="totalUsers" th:text="${users?.totalElements ?: 0}">0</div>
                             </div>
                             <i class="fas fa-users fa-2x text-white-50"></i>
                         </div>
@@ -44,8 +44,8 @@
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <div class="text-white-75 small">总用户数</div>
-                                <div class="text-lg fw-bold" th:text="${users?.totalElements ?: 0}">0</div>
+                                <div class="text-white-75 small">活跃用户数</div>
+                                <div class="text-lg fw-bold" id="activeUsers" th:text="${users?.totalElements ?: 0}">0</div>
                             </div>
                             <i class="fas fa-user-check fa-2x text-white-50"></i>
                         </div>
@@ -92,11 +92,11 @@
                     <div class="row g-3 align-items-end">
                         <div class="col-md-3">
                             <label class="form-label">搜索关键词</label>
-                            <input type="text" class="form-control" name="search" placeholder="用户名或真实姓名">
+                            <input type="text" class="form-control" id="searchInput" placeholder="用户名或真实姓名">
                         </div>
                         <div class="col-md-2">
                             <label class="form-label">角色</label>
-                            <select class="form-select" name="role">
+                            <select class="form-select" id="roleFilter">
                                 <option value="">全部角色</option>
                                 <option value="ADMIN">管理员</option>
                                 <option value="TEACHER">教师</option>
@@ -106,7 +106,7 @@
                         </div>
                         <div class="col-md-2">
                             <label class="form-label">状态</label>
-                            <select class="form-select" name="status">
+                            <select class="form-select" id="statusFilter">
                                 <option value="">全部状态</option>
                                 <option value="1">正常</option>
                                 <option value="0">禁用</option>
@@ -114,7 +114,7 @@
                         </div>
                         <div class="col-md-3">
                             <div class="btn-group w-100">
-                                <button type="submit" class="btn btn-primary">
+                                <button type="button" class="btn btn-primary" id="searchBtn">
                                     <i class="fas fa-search me-1"></i>搜索
                                 </button>
                                 <button type="button" class="btn btn-outline-secondary" id="resetBtn">
@@ -138,6 +138,11 @@
                 <h6 class="mb-0">
                     <i class="fas fa-list me-2"></i>用户列表
                 </h6>
+                <div class="btn-group btn-group-sm">
+                    <button type="button" class="btn btn-outline-danger" id="batchDeleteBtn" disabled>
+                        <i class="fas fa-trash me-1"></i>批量删除
+                    </button>
+                </div>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
@@ -149,58 +154,69 @@
                                         <input class="form-check-input" type="checkbox" id="selectAll">
                                     </div>
                                 </th>
-                                <th>用户名</th>
-                                <th>真实姓名</th>
+                                <th>用户信息</th>
                                 <th>邮箱</th>
                                 <th>手机号</th>
-                                <th>角色</th>
                                 <th>状态</th>
-                                <th>创建时间</th>
-                                <th width="120">操作</th>
+                                <th>角色</th>
+                                <th>最后登录</th>
+                                <th width="200">操作</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="userTableBody">
                             <tr th:each="user : ${users.content}">
                                 <td>
                                     <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" th:value="${user.id}">
+                                        <input class="form-check-input user-checkbox" type="checkbox" th:value="${user.id}">
                                     </div>
                                 </td>
-                                <td th:text="${user.username}">admin</td>
-                                <td th:text="${user.realName ?: '未设置'}">系统管理员</td>
-                                <td th:text="${user.email ?: '未设置'}">admin@campus.edu.cn</td>
-                                <td th:text="${user.phone ?: '未设置'}">13800138000</td>
                                 <td>
-                                    <span class="badge bg-primary"
+                                    <div class="d-flex align-items-center">
+                                        <img th:src="${user.avatarUrl ?: '/images/default-avatar.svg'}"
+                                             alt="头像" class="rounded-circle me-2" width="32" height="32">
+                                        <div>
+                                            <div class="fw-bold" th:text="${user.realName ?: user.username}">系统管理员</div>
+                                            <small class="text-muted" th:text="${user.username}">admin</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td th:text="${user.email ?: '-'}">admin@campus.edu.cn</td>
+                                <td th:text="${user.phone ?: '-'}">13800138000</td>
+                                <td>
+                                    <span class="badge"
+                                          th:classappend="${user.status == 1} ? 'bg-success' : 'bg-danger'"
+                                          th:text="${user.status == 1} ? '正常' : '禁用'">正常</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info me-1"
                                           th:text="${user.userRoles != null && !user.userRoles.isEmpty()} ? ${user.userRoles[0].role.roleName} : '未分配'">管理员</span>
                                 </td>
                                 <td>
-                                    <span class="badge"
-                                          th:classappend="${user.status == 1} ? 'bg-success' : 'bg-secondary'"
-                                          th:text="${user.status == 1} ? '正常' : '禁用'">正常</span>
+                                    <small class="text-muted"
+                                           th:text="${user.lastLoginTime != null ? #temporals.format(user.lastLoginTime, 'yyyy-MM-dd HH:mm') : '从未登录'}">从未登录</small>
                                 </td>
-                                <td th:text="${user.createdAt != null ? #temporals.format(user.createdAt, 'yyyy-MM-dd HH:mm') : '未设置'}">2024-01-01 00:00</td>
                                 <td>
                                     <div class="btn-group btn-group-sm">
-                                        <button type="button" class="btn btn-outline-primary"
-                                                th:data-user-id="${user.id}"
-                                                onclick="viewUser(this.dataset.userId)">
+                                        <button class="btn btn-outline-primary"
+                                                th:onclick="|viewUser(${user.id})|"
+                                                title="详情">
                                             <i class="fas fa-eye"></i>
                                         </button>
-                                        <button type="button" class="btn btn-outline-warning"
-                                                th:data-user-id="${user.id}"
-                                                onclick="editUser(this.dataset.userId)">
+                                        <button class="btn btn-outline-warning"
+                                                th:onclick="|editUser(${user.id})|"
+                                                title="编辑">
                                             <i class="fas fa-edit"></i>
                                         </button>
-                                        <button type="button" class="btn btn-outline-info"
-                                                th:data-user-id="${user.id}"
-                                                onclick="resetPassword(this.dataset.userId)">
+                                        <button class="btn btn-outline-info"
+                                                th:onclick="|resetPassword(${user.id})|"
+                                                title="重置密码">
                                             <i class="fas fa-key"></i>
                                         </button>
-                                        <button type="button" class="btn btn-outline-secondary"
-                                                th:data-user-id="${user.id}"
-                                                onclick="toggleUserStatus(this.dataset.userId)">
-                                            <i class="fas fa-power-off"></i>
+                                        <button class="btn btn-outline-danger"
+                                                th:onclick="|deleteUser(${user.id})|"
+                                                title="删除"
+                                                th:disabled="${user.username == 'admin'}">
+                                            <i class="fas fa-trash"></i>
                                         </button>
                                     </div>
                                 </td>
@@ -208,160 +224,95 @@
                         </tbody>
                     </table>
                 </div>
+
+                <!-- 分页 -->
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <div class="text-muted">
+                        <small>显示第 <span id="currentPageInfo">1</span> 页，共 <span id="totalPagesInfo">1</span> 页</small>
+                    </div>
+                    <nav aria-label="用户列表分页">
+                        <ul class="pagination pagination-sm mb-0" id="userPagination">
+                            <!-- 分页按钮将由JavaScript动态生成 -->
+                        </ul>
+                    </nav>
+                </div>
             </div>
         </div>
 
     </div>
 
     <th:block th:fragment="scripts">
+        <!-- 引入API客户端 -->
+        <script th:src="@{/js/api-client.js}"></script>
+        <!-- 引入用户管理模块 -->
+        <script th:src="@{/js/modules/user-management.js}"></script>
+
         <!-- 用户管理特定脚本 -->
         <script>
-            // 用户操作函数
+            // 兼容旧的函数调用
             function viewUser(userId) {
-                fetch(`/admin/users/${userId}/detail`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            showUserDetailModal(data.user);
-                        } else {
-                            alert('获取用户详情失败：' + data.message);
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('获取用户详情失败，请稍后重试');
-                    });
+                if (window.userManagement) {
+                    userManagement.showUserDetail(userId);
+                }
             }
 
             function editUser(userId) {
-                fetch(`/admin/users/${userId}/detail`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            showEditUserModal(data.user);
-                        } else {
-                            alert('获取用户信息失败：' + data.message);
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('获取用户信息失败，请稍后重试');
-                    });
+                if (window.userManagement) {
+                    userManagement.showEditUserModal(userId);
+                }
             }
 
             function resetPassword(userId) {
-                if (confirm('确定要重置该用户的密码吗？重置后密码将变为默认密码。')) {
-                    fetch(`/admin/users/${userId}/reset-password`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            alert('密码重置成功！新密码为：' + data.newPassword);
-                        } else {
-                            alert('重置密码失败：' + data.message);
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('重置密码失败，请稍后重试');
-                    });
+                if (window.userManagement) {
+                    userManagement.resetPassword(userId);
                 }
             }
 
             function toggleUserStatus(userId) {
-                if (confirm('确定要切换该用户的状态吗？')) {
-                    fetch(`/admin/users/${userId}/toggle-status`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            alert('用户状态切换成功！');
-                            window.location.reload();
-                        } else {
-                            alert('切换用户状态失败：' + data.message);
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('切换用户状态失败，请稍后重试');
-                    });
+                if (window.userManagement) {
+                    userManagement.toggleUserStatus(userId);
                 }
             }
 
-            // 显示用户详情模态框
-            function showUserDetailModal(user) {
-                // 简化的模态框实现
-                alert(`用户详情：\n用户名：${user.username}\n真实姓名：${user.realName || '未设置'}\n邮箱：${user.email || '未设置'}\n角色：${user.roleName || '未分配'}\n状态：${user.status == 1 ? '正常' : '禁用'}`);
+            function deleteUser(userId) {
+                if (window.userManagement) {
+                    userManagement.deleteUser(userId);
+                }
             }
 
-            // 显示编辑用户模态框
-            function showEditUserModal(user) {
-                // 简化的编辑实现
-                const newRealName = prompt('请输入新的真实姓名：', user.realName || '');
-                if (newRealName !== null) {
-                    const userData = {
-                        realName: newRealName,
-                        email: user.email,
-                        phone: user.phone,
-                        status: user.status
-                    };
-
-                    fetch(`/admin/users/${user.id}/edit`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(userData)
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            alert('更新用户成功！');
-                            window.location.reload();
-                        } else {
-                            alert('更新用户失败：' + data.message);
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('更新用户失败，请稍后重试');
-                    });
+            // 添加用户函数
+            function submitAddUserForm() {
+                if (window.userManagement) {
+                    userManagement.handleSaveUser();
                 }
             }
         </script>
 
-    <!-- 添加用户模态框 -->
-    <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+    <!-- 用户模态框 -->
+    <div class="modal fade" id="userModal" tabindex="-1" aria-labelledby="userModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="addUserModalLabel">
+                    <h5 class="modal-title" id="userModalTitle">
                         <i class="fas fa-user-plus"></i> 添加用户
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="addUserForm" novalidate>
+                    <form id="userForm" novalidate>
+                        <input type="hidden" id="userId">
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="username" class="form-label">用户名 <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="username" name="username" required>
+                                    <input type="text" class="form-control" id="username" required>
                                     <div class="invalid-feedback">请输入用户名</div>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="realName" class="form-label">真实姓名 <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="realName" name="realName" required>
+                                    <input type="text" class="form-control" id="realName" required>
                                     <div class="invalid-feedback">请输入真实姓名</div>
                                 </div>
                             </div>
@@ -369,47 +320,77 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="email" class="form-label">邮箱 <span class="text-danger">*</span></label>
-                                    <input type="email" class="form-control" id="email" name="email" required>
+                                    <label for="email" class="form-label">邮箱</label>
+                                    <input type="email" class="form-control" id="email">
                                     <div class="invalid-feedback">请输入有效的邮箱地址</div>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="phone" class="form-label">手机号</label>
-                                    <input type="tel" class="form-control" id="phone" name="phone">
+                                    <input type="tel" class="form-control" id="phone">
                                 </div>
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="role" class="form-label">角色 <span class="text-danger">*</span></label>
-                                    <select class="form-select" id="role" name="role" required>
-                                        <option value="">请选择角色</option>
-                                        <option value="STUDENT">学生</option>
-                                        <option value="TEACHER">教师</option>
-                                        <option value="FINANCE">财务</option>
-                                        <option value="ADMIN">管理员</option>
+                                    <label for="gender" class="form-label">性别</label>
+                                    <select class="form-select" id="gender">
+                                        <option value="">请选择性别</option>
+                                        <option value="M">男</option>
+                                        <option value="F">女</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="idCard" class="form-label">身份证号</label>
+                                    <input type="text" class="form-control" id="idCard">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label for="address" class="form-label">地址</label>
+                                    <input type="text" class="form-control" id="address">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="userRoles" class="form-label">角色 <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="userRoles" multiple required>
+                                        <!-- 角色选项将由JavaScript动态加载 -->
                                     </select>
                                     <div class="invalid-feedback">请选择角色</div>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="status" class="form-label">状态</label>
-                                    <select class="form-select" id="status" name="status">
+                                    <label for="userStatus" class="form-label">状态</label>
+                                    <select class="form-select" id="userStatus">
                                         <option value="1" selected>正常</option>
                                         <option value="0">禁用</option>
                                     </select>
                                 </div>
                             </div>
                         </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label for="remarks" class="form-label">备注</label>
+                                    <textarea class="form-control" id="remarks" rows="3"></textarea>
+                                </div>
+                            </div>
+                        </div>
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                    <button type="button" class="btn btn-primary" onclick="submitAddUserForm()">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="saveUserBtn">
                         <i class="fas fa-save"></i> 保存
                     </button>
                 </div>
@@ -417,58 +398,35 @@
         </div>
     </div>
 
-    <!-- 添加用户表单提交脚本 -->
+    <!-- 用户详情模态框 -->
+    <div class="modal fade" id="userDetailModal" tabindex="-1" aria-labelledby="userDetailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="userDetailModalLabel">
+                        <i class="fas fa-user"></i> 用户详情
+                    </h5>
+                    <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="userDetailContent">
+                        <!-- 用户详情内容将由JavaScript动态生成 -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 用户管理初始化脚本 -->
     <script>
-        function submitAddUserForm() {
-            const form = document.getElementById('addUserForm');
-            const formData = new FormData(form);
-
-            // 验证表单
-            if (!form.checkValidity()) {
-                form.classList.add('was-validated');
-                return;
-            }
-
-            // 构建用户数据
-            const userData = {
-                username: formData.get('username'),
-                realName: formData.get('realName'),
-                email: formData.get('email'),
-                phone: formData.get('phone'),
-                password: '123456', // 默认密码
-                role: formData.get('role'),
-                status: parseInt(formData.get('status'))
-            };
-
-            // 发送请求
-            fetch('/admin/users/add', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(userData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('添加用户成功！默认密码：123456');
-                    // 关闭模态框
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('addUserModal'));
-                    modal.hide();
-                    // 重置表单
-                    form.reset();
-                    form.classList.remove('was-validated');
-                    // 刷新页面
-                    window.location.reload();
-                } else {
-                    alert('添加用户失败：' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('添加用户失败，请稍后重试');
-            });
-        }
+        // 页面加载完成后初始化用户管理模块
+        document.addEventListener('DOMContentLoaded', function() {
+            // 用户管理模块会自动初始化
+            console.log('用户管理页面加载完成');
+        });
     </script>
 </body>
 </html>

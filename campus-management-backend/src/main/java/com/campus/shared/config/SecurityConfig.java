@@ -87,9 +87,8 @@ public class SecurityConfig {
                     "/error"                // 错误页面
                 ).permitAll()
 
-                // API文档和接口完全开放，不需要认证
+                // API文档完全开放，不需要认证
                 .requestMatchers(
-                    "/api/**",              // 所有API接口
                     "/swagger-ui/**",       // Swagger UI
                     "/swagger-ui.html",     // Swagger UI首页
                     "/v3/api-docs/**",      // OpenAPI 3.0文档
@@ -99,6 +98,9 @@ public class SecurityConfig {
                     "/doc.html",            // Knife4j文档
                     "/favicon.ico"          // 图标
                 ).permitAll()
+
+                // API接口需要认证
+                .requestMatchers("/api/**").authenticated()
 
                 // 管理后台使用自定义拦截器认证，这里允许访问
                 .requestMatchers("/admin/**").permitAll()

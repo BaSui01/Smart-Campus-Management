@@ -11,6 +11,7 @@ import com.campus.domain.repository.FeeItemRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -252,6 +253,7 @@ public class PaymentRecordServiceImpl implements PaymentRecordService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "payment:stats", unless = "#result == null")
     public PaymentStatistics getStatistics() {
         // 实现基于真实数据的统计逻辑
         long totalRecords = paymentRecordRepository.countTotal();

@@ -100,7 +100,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // 跳过不需要JWT验证的路径
         return path.startsWith("/admin/login") ||
                path.startsWith("/admin/captcha") ||
-               path.startsWith("/api/") ||           // 所有API接口都不需要JWT认证
+               path.startsWith("/admin/token-status") ||  // 允许获取token状态
                path.startsWith("/swagger-ui/") ||
                path.startsWith("/v3/api-docs/") ||
                path.startsWith("/v2/api-docs/") ||

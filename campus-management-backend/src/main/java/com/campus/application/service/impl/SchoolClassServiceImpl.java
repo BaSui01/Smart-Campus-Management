@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -65,6 +66,7 @@ public class SchoolClassServiceImpl implements SchoolClassService {
     }
 
     @Override
+    @Cacheable(value = "class:count", unless = "#result == null")
     public long count() {
         return schoolClassRepository.count();
     }

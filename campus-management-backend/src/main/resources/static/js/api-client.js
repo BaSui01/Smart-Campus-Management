@@ -12,15 +12,93 @@ class ApiClient {
     }
 
     /**
+     * 获取JWT token
+     */
+    getToken() {
+        // 从localStorage获取token
+        let token = localStorage.getItem('token');
+
+        // 如果localStorage没有，尝试从sessionStorage获取
+        if (!token) {
+            token = sessionStorage.getItem('token');
+        }
+
+        // 如果还是没有，尝试从cookie获取
+        if (!token) {
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                const [name, value] = cookie.trim().split('=');
+                if (name === 'token' || name === 'jwt' || name === 'authToken') {
+                    token = value;
+                    break;
+                }
+            }
+        }
+
+        return token;
+    }
+
+    /**
+     * 从服务器获取当前session的JWT token
+     */
+    async fetchTokenFromServer() {
+        try {
+            const response = await fetch('/admin/token-status', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'include' // 包含session cookie
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.valid && data.token) {
+                    // 将token存储到localStorage以供后续使用
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('tokenType', 'Bearer');
+                    localStorage.setItem('username', data.username);
+                    return data.token;
+                }
+            }
+        } catch (error) {
+            console.warn('从服务器获取token失败:', error);
+        }
+        return null;
+    }
+
+    /**
+     * 获取请求头（包含认证信息）
+     */
+    async getHeaders(additionalHeaders = {}) {
+        const headers = { ...this.defaultHeaders, ...additionalHeaders };
+
+        // 添加JWT token
+        let token = this.getToken();
+
+        // 如果本地没有token，尝试从服务器获取
+        if (!token) {
+            token = await this.fetchTokenFromServer();
+        }
+
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        return headers;
+    }
+
+    /**
      * 发送GET请求
      */
     async get(url, params = {}) {
         const queryString = new URLSearchParams(params).toString();
         const fullUrl = queryString ? `${url}?${queryString}` : url;
-        
+
         return this.request(fullUrl, {
             method: 'GET',
-            headers: this.defaultHeaders
+            headers: await this.getHeaders()
         });
     }
 
@@ -30,7 +108,7 @@ class ApiClient {
     async post(url, data = {}) {
         return this.request(url, {
             method: 'POST',
-            headers: this.defaultHeaders,
+            headers: await this.getHeaders(),
             body: JSON.stringify(data)
         });
     }
@@ -41,7 +119,7 @@ class ApiClient {
     async put(url, data = {}) {
         return this.request(url, {
             method: 'PUT',
-            headers: this.defaultHeaders,
+            headers: await this.getHeaders(),
             body: JSON.stringify(data)
         });
     }
@@ -52,7 +130,7 @@ class ApiClient {
     async delete(url) {
         return this.request(url, {
             method: 'DELETE',
-            headers: this.defaultHeaders
+            headers: await this.getHeaders()
         });
     }
 
@@ -93,8 +171,22 @@ class ApiClient {
      */
     async upload(url, formData) {
         try {
+            // 获取认证头，但不包含Content-Type（让浏览器自动设置multipart/form-data）
+            const headers = {};
+            let token = this.getToken();
+
+            // 如果本地没有token，尝试从服务器获取
+            if (!token) {
+                token = await this.fetchTokenFromServer();
+            }
+
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+
             const response = await fetch(url, {
                 method: 'POST',
+                headers: headers,
                 body: formData
             });
 
@@ -112,6 +204,17 @@ class ApiClient {
 
 // 创建全局API客户端实例
 const apiClient = new ApiClient();
+
+// 页面加载时初始化token
+document.addEventListener('DOMContentLoaded', async function() {
+    try {
+        // 尝试从服务器获取token
+        await apiClient.fetchTokenFromServer();
+        console.log('API客户端初始化完成');
+    } catch (error) {
+        console.warn('API客户端初始化失败:', error);
+    }
+});
 
 /**
  * 消息提示工具类
@@ -390,3 +493,16 @@ class LoadingManager {
         }
     }
 }
+
+// 全局工具函数
+window.showLoading = function(message = '加载中...') {
+    LoadingManager.showPageLoading('.content-wrapper');
+};
+
+window.hideLoading = function() {
+    LoadingManager.hidePageLoading('.content-wrapper');
+};
+
+window.showAlert = function(message, type = 'info') {
+    MessageUtils[type] ? MessageUtils[type](message) : MessageUtils.info(message);
+};

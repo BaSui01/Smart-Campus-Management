@@ -8,6 +8,7 @@ import com.campus.application.dto.DashboardStatsDTO.SystemNotificationDTO;
 import com.campus.application.service.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -50,6 +51,7 @@ public class DashboardServiceImpl implements DashboardService {
      * 获取仪表盘统计数据 - 使用真实数据库数据
      */
     @Override
+    @Cacheable(value = "dashboard:service:stats", unless = "#result == null")
     public DashboardStatsDTO getDashboardStats() {
         DashboardStatsDTO stats = new DashboardStatsDTO();
 

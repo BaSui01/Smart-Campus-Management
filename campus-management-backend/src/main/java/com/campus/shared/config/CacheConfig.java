@@ -19,6 +19,8 @@ import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 缓存配置类
@@ -40,17 +42,59 @@ public class CacheConfig {
         // 配置序列化器
         Jackson2JsonRedisSerializer<Object> jackson2JsonRedisSerializer = createJacksonSerializer();
 
-        // 配置缓存
-        RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()
-                .entryTtl(Duration.ofMinutes(30)) // 缓存30分钟
+        // 默认配置缓存
+        RedisCacheConfiguration defaultConfig = RedisCacheConfiguration.defaultCacheConfig()
+                .entryTtl(Duration.ofMinutes(30)) // 默认缓存30分钟
                 .serializeKeysWith(RedisSerializationContext.SerializationPair
                         .fromSerializer(new StringRedisSerializer()))
                 .serializeValuesWith(RedisSerializationContext.SerializationPair
                         .fromSerializer(jackson2JsonRedisSerializer))
                 .disableCachingNullValues();
 
+        // 针对不同的缓存设置不同的过期时间
+        Map<String, RedisCacheConfiguration> cacheConfigurations = new HashMap<>();
+
+        // 仪表盘统计数据 - 缓存5分钟，频繁更新
+        cacheConfigurations.put("dashboard:stats", defaultConfig.entryTtl(Duration.ofMinutes(5)));
+        cacheConfigurations.put("dashboard:service:stats", defaultConfig.entryTtl(Duration.ofMinutes(5)));
+
+        // 图表数据 - 缓存10分钟，相对稳定
+        cacheConfigurations.put("dashboard:chart-data", defaultConfig.entryTtl(Duration.ofMinutes(10)));
+        cacheConfigurations.put("dashboard:charts", defaultConfig.entryTtl(Duration.ofMinutes(10)));
+
+        // 活动数据 - 缓存3分钟，实时性要求高
+        cacheConfigurations.put("dashboard:activities", defaultConfig.entryTtl(Duration.ofMinutes(3)));
+
+        // 通知数据 - 缓存2分钟，实时性要求很高
+        cacheConfigurations.put("dashboard:notifications", defaultConfig.entryTtl(Duration.ofMinutes(2)));
+
+        // 快速统计 - 缓存1分钟，实时性要求最高
+        cacheConfigurations.put("dashboard:quick-stats", defaultConfig.entryTtl(Duration.ofMinutes(1)));
+
+        // 用户相关缓存 - 缓存15分钟，相对稳定
+        cacheConfigurations.put("user:info", defaultConfig.entryTtl(Duration.ofMinutes(15)));
+        cacheConfigurations.put("user:permissions", defaultConfig.entryTtl(Duration.ofMinutes(15)));
+
+        // 学生数据缓存 - 缓存20分钟，变化不频繁
+        cacheConfigurations.put("student:list", defaultConfig.entryTtl(Duration.ofMinutes(20)));
+        cacheConfigurations.put("student:count", defaultConfig.entryTtl(Duration.ofMinutes(20)));
+        cacheConfigurations.put("student:grade-stats", defaultConfig.entryTtl(Duration.ofMinutes(20)));
+
+        // 课程数据缓存 - 缓存30分钟，相对稳定
+        cacheConfigurations.put("course:list", defaultConfig.entryTtl(Duration.ofMinutes(30)));
+        cacheConfigurations.put("course:count", defaultConfig.entryTtl(Duration.ofMinutes(30)));
+
+        // 班级数据缓存 - 缓存30分钟，相对稳定
+        cacheConfigurations.put("class:list", defaultConfig.entryTtl(Duration.ofMinutes(30)));
+        cacheConfigurations.put("class:count", defaultConfig.entryTtl(Duration.ofMinutes(30)));
+
+        // 缴费记录缓存 - 缓存10分钟，有一定变化
+        cacheConfigurations.put("payment:stats", defaultConfig.entryTtl(Duration.ofMinutes(10)));
+        cacheConfigurations.put("payment:records", defaultConfig.entryTtl(Duration.ofMinutes(10)));
+
         return RedisCacheManager.builder(redisConnectionFactory)
-                .cacheDefaults(config)
+                .cacheDefaults(defaultConfig)
+                .withInitialCacheConfigurations(cacheConfigurations)
                 .build();
     }
 

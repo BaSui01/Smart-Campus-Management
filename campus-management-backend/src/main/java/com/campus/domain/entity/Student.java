@@ -7,9 +7,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
+
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -21,11 +19,8 @@ import java.util.List;
  *
  * @author Campus Management Team
  * @version 1.0.0
- * @since 2025-06-06
+ * @since 2025-06-07
  */
-@Data
-@EqualsAndHashCode(callSuper = true)
-@ToString(callSuper = true)
 @Entity
 @Table(name = "tb_student", indexes = {
     @Index(name = "idx_user_id", columnList = "user_id"),
@@ -199,7 +194,6 @@ public class Student extends BaseEntity {
      */
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", insertable = false, updatable = false)
-    @ToString.Exclude
     @JsonIgnore
     private User user;
 
@@ -208,7 +202,6 @@ public class Student extends BaseEntity {
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "class_id", insertable = false, updatable = false)
-    @ToString.Exclude
     @JsonIgnore
     private SchoolClass schoolClass;
 
@@ -217,7 +210,6 @@ public class Student extends BaseEntity {
      */
     @OneToMany(fetch = FetchType.LAZY)
     @JoinColumn(name = "student_id")
-    @ToString.Exclude
     @JsonIgnore
     private List<CourseSelection> courseSelections;
 
@@ -226,7 +218,6 @@ public class Student extends BaseEntity {
      */
     @OneToMany(fetch = FetchType.LAZY)
     @JoinColumn(name = "student_id")
-    @ToString.Exclude
     @JsonIgnore
     private List<Grade> grades;
 
@@ -235,7 +226,6 @@ public class Student extends BaseEntity {
      */
     @OneToMany(fetch = FetchType.LAZY)
     @JoinColumn(name = "student_id")
-    @ToString.Exclude
     @JsonIgnore
     private List<PaymentRecord> paymentRecords;
 
@@ -450,6 +440,20 @@ public class Student extends BaseEntity {
 
     public void setStudentNo(String studentNo) {
         this.studentNo = studentNo;
+    }
+
+    /**
+     * 获取学号（兼容性方法）
+     */
+    public String getStudentNumber() {
+        return studentNo;
+    }
+
+    /**
+     * 设置学号（兼容性方法）
+     */
+    public void setStudentNumber(String studentNumber) {
+        this.studentNo = studentNumber;
     }
 
     public String getGrade() {

@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>脚本加载测试</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .test-result {
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #28a745;
+            background-color: #d4edda;
+        }
+        .test-error {
+            border-left-color: #dc3545;
+            background-color: #f8d7da;
+        }
+        .test-warning {
+            border-left-color: #ffc107;
+            background-color: #fff3cd;
+        }
+        .page-card {
+            margin-bottom: 20px;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+        }
+        .page-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px 10px 0 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid py-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="text-center mb-4">
+                    <h1><i class="fas fa-code me-2"></i>脚本加载测试</h1>
+                    <p class="text-muted">检查所有管理页面的JavaScript脚本加载情况</p>
+                </div>
+
+                <!-- 控制按钮 -->
+                <div class="text-center mb-4">
+                    <button class="btn btn-primary btn-lg me-2" onclick="startScriptTest()">
+                        <i class="fas fa-play me-2"></i>开始测试
+                    </button>
+                    <button class="btn btn-secondary btn-lg me-2" onclick="clearResults()">
+                        <i class="fas fa-broom me-2"></i>清空结果
+                    </button>
+                    <button class="btn btn-info btn-lg" onclick="testCurrentPage()">
+                        <i class="fas fa-search me-2"></i>测试当前页面
+                    </button>
+                </div>
+
+                <!-- 测试结果 -->
+                <div id="testResults"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 要测试的页面列表
+        const pagesToTest = [
+            {
+                name: '班级管理',
+                url: '/admin/academic/classes',
+                expectedGlobals: ['MessageUtils', 'CrudBase', 'ClassManagement'],
+                expectedScripts: ['class-management.js']
+            },
+            {
+                name: '学生管理',
+                url: '/admin/students',
+                expectedGlobals: ['MessageUtils', 'CrudBase', 'StudentManagement'],
+                expectedScripts: ['student-management.js']
+            },
+            {
+                name: '课程管理',
+                url: '/admin/academic/courses',
+                expectedGlobals: ['MessageUtils', 'CrudBase', 'CourseManagement'],
+                expectedScripts: ['course-management.js']
+            },
+            {
+                name: '财务管理',
+                url: '/admin/finance/payments',
+                expectedGlobals: ['MessageUtils', 'CrudBase', 'PaymentManagement'],
+                expectedScripts: ['payment-management.js']
+            },
+            {
+                name: '用户管理',
+                url: '/admin/users',
+                expectedGlobals: ['MessageUtils', 'CrudBase', 'UserManagement'],
+                expectedScripts: ['user-management.js']
+            },
+            {
+                name: '角色管理',
+                url: '/admin/system/roles',
+                expectedGlobals: ['MessageUtils', 'CrudBase', 'RoleManagement'],
+                expectedScripts: ['role-management.js']
+            },
+            {
+                name: '系统设置',
+                url: '/admin/system/settings',
+                expectedGlobals: ['MessageUtils', 'SystemSettingsManager'],
+                expectedScripts: ['system-settings.js']
+            }
+        ];
+
+        let testResults = [];
+
+        // 开始脚本测试
+        async function startScriptTest() {
+            clearResults();
+            const resultsContainer = document.getElementById('testResults');
+            resultsContainer.innerHTML = '<div class="text-center"><div class="spinner-border"></div><p class="mt-2">正在测试脚本加载...</p></div>';
+
+            for (let i = 0; i < pagesToTest.length; i++) {
+                await testPageScripts(pagesToTest[i]);
+            }
+
+            displaySummary();
+        }
+
+        // 测试单个页面的脚本
+        async function testPageScripts(pageInfo) {
+            const result = {
+                name: pageInfo.name,
+                url: pageInfo.url,
+                status: 'success',
+                errors: [],
+                warnings: [],
+                loadedScripts: [],
+                missingScripts: [],
+                loadedGlobals: [],
+                missingGlobals: []
+            };
+
+            try {
+                // 创建隐藏的iframe来测试页面
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.src = pageInfo.url;
+                document.body.appendChild(iframe);
+
+                // 等待iframe加载
+                await new Promise((resolve, reject) => {
+                    iframe.onload = resolve;
+                    iframe.onerror = reject;
+                    setTimeout(reject, 10000); // 10秒超时
+                });
+
+                // 检查iframe中的脚本和全局变量
+                const iframeWindow = iframe.contentWindow;
+                const iframeDocument = iframe.contentDocument;
+
+                // 检查脚本标签
+                const scriptTags = iframeDocument.querySelectorAll('script[src]');
+                const loadedScriptSrcs = Array.from(scriptTags).map(script => script.src);
+
+                pageInfo.expectedScripts.forEach(expectedScript => {
+                    const isLoaded = loadedScriptSrcs.some(src => src.includes(expectedScript));
+                    if (isLoaded) {
+                        result.loadedScripts.push(expectedScript);
+                    } else {
+                        result.missingScripts.push(expectedScript);
+                        result.warnings.push(`缺少脚本: ${expectedScript}`);
+                    }
+                });
+
+                // 等待脚本执行
+                await new Promise(resolve => setTimeout(resolve, 2000));
+
+                // 检查全局变量
+                pageInfo.expectedGlobals.forEach(globalVar => {
+                    if (typeof iframeWindow[globalVar] !== 'undefined') {
+                        result.loadedGlobals.push(globalVar);
+                    } else {
+                        result.missingGlobals.push(globalVar);
+                        result.errors.push(`全局变量未定义: ${globalVar}`);
+                    }
+                });
+
+                // 检查是否有重复声明错误
+                const consoleErrors = [];
+                const originalConsoleError = iframeWindow.console.error;
+                iframeWindow.console.error = function(...args) {
+                    consoleErrors.push(args.join(' '));
+                    originalConsoleError.apply(this, args);
+                };
+
+                // 检查控制台错误
+                if (consoleErrors.length > 0) {
+                    consoleErrors.forEach(error => {
+                        if (error.includes('already been declared')) {
+                            result.errors.push(`重复声明错误: ${error}`);
+                            result.status = 'error';
+                        }
+                    });
+                }
+
+                // 清理iframe
+                document.body.removeChild(iframe);
+
+                // 确定最终状态
+                if (result.errors.length > 0) {
+                    result.status = 'error';
+                } else if (result.warnings.length > 0) {
+                    result.status = 'warning';
+                }
+
+            } catch (error) {
+                result.status = 'error';
+                result.errors.push(`页面加载失败: ${error.message}`);
+            }
+
+            testResults.push(result);
+            displayPageResult(result);
+        }
+
+        // 显示单个页面结果
+        function displayPageResult(result) {
+            const resultsContainer = document.getElementById('testResults');
+            
+            let statusClass = 'test-result';
+            let statusIcon = 'fa-check-circle text-success';
+            let statusText = '正常';
+
+            if (result.status === 'warning') {
+                statusClass += ' test-warning';
+                statusIcon = 'fa-exclamation-triangle text-warning';
+                statusText = '警告';
+            } else if (result.status === 'error') {
+                statusClass += ' test-error';
+                statusIcon = 'fa-times-circle text-danger';
+                statusText = '错误';
+            }
+
+            const resultHtml = `
+                <div class="page-card">
+                    <div class="page-header">
+                        <h6 class="mb-0">
+                            <i class="fas ${statusIcon} me-2"></i>
+                            ${result.name} - ${statusText}
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <strong>已加载脚本:</strong>
+                                <div class="text-success">${result.loadedScripts.join(', ') || '无'}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <strong>已加载全局变量:</strong>
+                                <div class="text-success">${result.loadedGlobals.join(', ') || '无'}</div>
+                            </div>
+                        </div>
+                        
+                        ${result.missingScripts.length > 0 ? `
+                            <div class="mb-2">
+                                <strong class="text-warning">缺少脚本:</strong>
+                                <div class="text-warning">${result.missingScripts.join(', ')}</div>
+                            </div>
+                        ` : ''}
+                        
+                        ${result.missingGlobals.length > 0 ? `
+                            <div class="mb-2">
+                                <strong class="text-danger">缺少全局变量:</strong>
+                                <div class="text-danger">${result.missingGlobals.join(', ')}</div>
+                            </div>
+                        ` : ''}
+                        
+                        ${result.errors.length > 0 ? `
+                            <div class="mb-2">
+                                <strong class="text-danger">错误:</strong>
+                                <ul class="mb-0 text-danger">
+                                    ${result.errors.map(error => `<li>${error}</li>`).join('')}
+                                </ul>
+                            </div>
+                        ` : ''}
+                        
+                        ${result.warnings.length > 0 ? `
+                            <div class="mb-2">
+                                <strong class="text-warning">警告:</strong>
+                                <ul class="mb-0 text-warning">
+                                    ${result.warnings.map(warning => `<li>${warning}</li>`).join('')}
+                                </ul>
+                            </div>
+                        ` : ''}
+                        
+                        <div class="mt-2">
+                            <small class="text-muted">URL: ${result.url}</small>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            if (resultsContainer.innerHTML.includes('spinner-border')) {
+                resultsContainer.innerHTML = resultHtml;
+            } else {
+                resultsContainer.innerHTML += resultHtml;
+            }
+        }
+
+        // 显示测试总结
+        function displaySummary() {
+            const successCount = testResults.filter(r => r.status === 'success').length;
+            const warningCount = testResults.filter(r => r.status === 'warning').length;
+            const errorCount = testResults.filter(r => r.status === 'error').length;
+
+            let summaryClass = 'test-result';
+            let summaryText = '所有页面脚本加载测试完成！';
+
+            if (errorCount > 0) {
+                summaryClass += ' test-error';
+                summaryText = `测试完成，发现 ${errorCount} 个页面有脚本错误需要修复。`;
+            } else if (warningCount > 0) {
+                summaryClass += ' test-warning';
+                summaryText = `测试完成，发现 ${warningCount} 个页面有警告需要关注。`;
+            }
+
+            const summaryHtml = `
+                <div class="${summaryClass}">
+                    <h5><i class="fas fa-flag-checkered me-2"></i>测试完成</h5>
+                    <p class="mb-0">${summaryText}</p>
+                    <div class="mt-2">
+                        <strong>总结:</strong> 
+                        成功 ${successCount} 个，
+                        警告 ${warningCount} 个，
+                        错误 ${errorCount} 个
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('testResults').innerHTML += summaryHtml;
+        }
+
+        // 测试当前页面
+        function testCurrentPage() {
+            const result = {
+                name: '当前页面',
+                url: window.location.href,
+                status: 'success',
+                errors: [],
+                warnings: [],
+                loadedGlobals: [],
+                duplicateDeclarations: []
+            };
+
+            // 检查全局变量
+            const expectedGlobals = ['MessageUtils', 'CrudBase', 'LoadingManager', 'DataFormatter'];
+            expectedGlobals.forEach(globalVar => {
+                if (typeof window[globalVar] !== 'undefined') {
+                    result.loadedGlobals.push(globalVar);
+                } else {
+                    result.warnings.push(`全局变量未定义: ${globalVar}`);
+                }
+            });
+
+            // 检查是否有重复声明（通过检查控制台错误）
+            const originalConsoleError = console.error;
+            const consoleErrors = [];
+            console.error = function(...args) {
+                const errorMsg = args.join(' ');
+                if (errorMsg.includes('already been declared')) {
+                    result.duplicateDeclarations.push(errorMsg);
+                    result.errors.push(`重复声明: ${errorMsg}`);
+                }
+                consoleErrors.push(errorMsg);
+                originalConsoleError.apply(this, args);
+            };
+
+            // 确定状态
+            if (result.errors.length > 0) {
+                result.status = 'error';
+            } else if (result.warnings.length > 0) {
+                result.status = 'warning';
+            }
+
+            // 显示结果
+            clearResults();
+            displayPageResult(result);
+        }
+
+        // 清空结果
+        function clearResults() {
+            testResults = [];
+            document.getElementById('testResults').innerHTML = '';
+        }
+
+        // 页面加载时显示说明
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('testResults').innerHTML = `
+                <div class="text-center text-muted py-5">
+                    <i class="fas fa-info-circle fa-3x mb-3"></i>
+                    <h5>脚本加载测试工具</h5>
+                    <p>点击"开始测试"按钮来检查所有管理页面的JavaScript脚本加载情况</p>
+                    <p class="small">此工具将检查脚本重复加载、全局变量定义、模块加载等</p>
+                </div>
+            `;
+        });
+    </script>
+</body>
+</html>

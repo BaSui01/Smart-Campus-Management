@@ -29,11 +29,14 @@ import jakarta.servlet.http.HttpServletResponse;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+    // 服务器启动时间，用于检测重启前的Token
+    private static final long SERVER_START_TIME = System.currentTimeMillis();
+
     private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
 
     @Autowired
-    public JwtAuthenticationFilter(JwtUtil jwtUtil, UserDetailsService userDetailsService) {
+    public JwtAuthenticationFilter(JwtUtil jwtUtil, CustomUserDetailsService userDetailsService) {
         this.jwtUtil = jwtUtil;
         this.userDetailsService = userDetailsService;
     }
@@ -61,6 +64,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // 如果token中包含用户名且当前没有认证信息
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             try {
+                // 检查Token是否在服务器重启之前签发
+                if (isTokenIssuedBeforeRestart(token)) {
+                    logger.debug("检测到服务器重启前的Token，拒绝API认证");
+                    // 继续过滤器链，但不设置认证信息
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+
                 // 加载用户详细信息
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
@@ -114,5 +125,31 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                path.startsWith("/fonts/") ||
                path.equals("/favicon.ico") ||
                path.equals("/");
-    }
+   }
+   
+   /**
+    * 检查Token是否在服务器重启之前签发
+    */
+   private boolean isTokenIssuedBeforeRestart(String token) {
+       try {
+           // 从JWT Token中获取签发时间
+           java.util.Date issuedAt = jwtUtil.getClaimFromToken(token, io.jsonwebtoken.Claims::getIssuedAt);
+           if (issuedAt == null) {
+               logger.debug("无法获取API Token签发时间，为安全起见拒绝认证");
+               return true; // 无法确定签发时间，为安全起见认为无效
+           }
+           
+           // 如果Token签发时间早于服务器启动时间，则认为是重启前的Token
+           boolean isBeforeRestart = issuedAt.getTime() < SERVER_START_TIME;
+           if (isBeforeRestart) {
+               logger.debug("检测到重启前API Token: 签发时间=" + new java.util.Date(issuedAt.getTime()) +
+                   ", 服务器启动时间=" + new java.util.Date(SERVER_START_TIME));
+           }
+           
+           return isBeforeRestart;
+       } catch (Exception e) {
+           logger.debug("检查API Token签发时间时发生错误: " + e.getMessage());
+           return true; // 异常情况下为安全起见认为Token无效
+       }
+   }
 }

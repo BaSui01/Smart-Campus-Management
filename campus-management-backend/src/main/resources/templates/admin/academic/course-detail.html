@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle} + ' - 智慧校园管理系统'">课程详情 - 智慧校园管理系统</title>
+    
+    <!-- 引入组件样式 -->
+    <div th:replace="~{admin-components :: head}"></div>
+</head>
+<body>
+    <!-- 侧边栏 -->
+    <div th:replace="~{admin-components :: sidebar}"></div>
+
+    <!-- 主要内容区域 -->
+    <div class="content">
+        <!-- 顶部导航栏 -->
+        <div th:replace="~{admin-components :: topbar}"></div>
+
+        <!-- 页面内容 -->
+        <div class="content-wrapper">
+            <div class="container-fluid">
+                <!-- 页面标题 -->
+                <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                    <h1 class="h3 mb-0 text-gray-800" th:text="${pageTitle}">课程详情</h1>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="/admin/dashboard">首页</a></li>
+                            <li class="breadcrumb-item"><a href="/admin/courses">课程管理</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">课程详情</li>
+                        </ol>
+                    </nav>
+                </div>
+
+                <!-- 错误提示 -->
+                <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <span th:text="${error}">错误信息</span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+
+                <!-- 课程详情 -->
+                <div class="row" th:if="${course}">
+                    <div class="col-lg-8">
+                        <div class="card shadow">
+                            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                                <h6 class="m-0 font-weight-bold text-primary">
+                                    <i class="fas fa-book me-2"></i>
+                                    <span th:text="${course.courseName}">课程名称</span>
+                                </h6>
+                                <div>
+                                    <a th:href="@{/admin/courses/edit(id=${course.id})}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-edit me-1"></i>编辑
+                                    </a>
+                                    <a href="/admin/courses" class="btn btn-sm btn-secondary ms-2">
+                                        <i class="fas fa-arrow-left me-1"></i>返回
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <table class="table table-borderless">
+                                            <tr>
+                                                <td class="fw-bold text-muted">课程代码：</td>
+                                                <td th:text="${course.courseCode}">CS001</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-bold text-muted">课程类型：</td>
+                                                <td>
+                                                    <span class="badge" 
+                                                          th:classappend="${course.courseType == '必修' ? 'bg-primary' : 
+                                                                          course.courseType == '选修' ? 'bg-success' : 
+                                                                          course.courseType == '实践' ? 'bg-warning' : 'bg-info'}"
+                                                          th:text="${course.courseType}">必修</span>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-bold text-muted">学分：</td>
+                                                <td th:text="${course.credits}">3</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-bold text-muted">开课院系：</td>
+                                                <td th:text="${course.department}">计算机学院</td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <table class="table table-borderless">
+                                            <tr>
+                                                <td class="fw-bold text-muted">开课学期：</td>
+                                                <td th:text="${course.semester}">2024春季学期</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-bold text-muted">最大选课人数：</td>
+                                                <td th:text="${course.maxStudents ?: '无限制'}">50</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-bold text-muted">状态：</td>
+                                                <td>
+                                                    <span class="badge" 
+                                                          th:classappend="${course.status == 1 ? 'bg-success' : 'bg-danger'}"
+                                                          th:text="${course.status == 1 ? '启用' : '禁用'}">启用</span>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-bold text-muted">创建时间：</td>
+                                                <td th:text="${#temporals.format(course.createTime, 'yyyy-MM-dd HH:mm')}">2024-01-01 10:00</td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <div class="mt-4" th:if="${course.description}">
+                                    <h6 class="fw-bold text-muted">课程描述：</h6>
+                                    <p class="text-muted" th:text="${course.description}">课程描述内容</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4">
+                        <!-- 课程统计 -->
+                        <div class="card shadow mb-4">
+                            <div class="card-header py-3">
+                                <h6 class="m-0 font-weight-bold text-primary">
+                                    <i class="fas fa-chart-bar me-2"></i>课程统计
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row text-center">
+                                    <div class="col-6">
+                                        <div class="border-end">
+                                            <h4 class="text-primary mb-1">0</h4>
+                                            <small class="text-muted">已选学生</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <h4 class="text-success mb-1" th:text="${course.maxStudents ?: '∞'}">50</h4>
+                                        <small class="text-muted">最大容量</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 操作按钮 -->
+                        <div class="card shadow">
+                            <div class="card-header py-3">
+                                <h6 class="m-0 font-weight-bold text-primary">
+                                    <i class="fas fa-cogs me-2"></i>操作
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-grid gap-2">
+                                    <a th:href="@{/admin/courses/edit(id=${course.id})}" class="btn btn-primary">
+                                        <i class="fas fa-edit me-2"></i>编辑课程
+                                    </a>
+                                    <button class="btn btn-info" onclick="viewStudentList()">
+                                        <i class="fas fa-users me-2"></i>查看选课学生
+                                    </button>
+                                    <button class="btn btn-warning" onclick="exportCourseData()">
+                                        <i class="fas fa-download me-2"></i>导出课程数据
+                                    </button>
+                                    <button class="btn btn-danger" onclick="deleteCourse()" 
+                                            th:if="${course.status == 0}">
+                                        <i class="fas fa-trash me-2"></i>删除课程
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 如果没有课程信息 -->
+                <div class="row" th:unless="${course}">
+                    <div class="col-12">
+                        <div class="card shadow">
+                            <div class="card-body text-center py-5">
+                                <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                                <h5 class="text-muted">课程不存在</h5>
+                                <p class="text-muted">请检查课程ID是否正确</p>
+                                <a href="/admin/courses" class="btn btn-primary">
+                                    <i class="fas fa-arrow-left me-2"></i>返回课程列表
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 引入组件脚本 -->
+    <div th:replace="~{admin-components :: scripts}"></div>
+
+    <script>
+        function viewStudentList() {
+            alert('查看选课学生功能开发中...');
+        }
+
+        function exportCourseData() {
+            alert('导出课程数据功能开发中...');
+        }
+
+        function deleteCourse() {
+            if (confirm('确定要删除这门课程吗？此操作不可恢复！')) {
+                // 这里添加删除逻辑
+                alert('删除功能开发中...');
+            }
+        }
+    </script>
+</body>
+</html>

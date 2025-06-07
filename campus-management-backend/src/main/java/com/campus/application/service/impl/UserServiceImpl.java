@@ -2,7 +2,6 @@ package com.campus.application.service.impl;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -12,11 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,7 +34,7 @@ import com.campus.domain.repository.UserRoleRepository;
  */
 @Service
 @Transactional
-public class UserServiceImpl implements UserService, UserDetailsService {
+public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -55,22 +50,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         this.userRoleRepository = userRoleRepository;
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByUsernameAndStatus(username, 1)
-                .orElseThrow(() -> new UsernameNotFoundException("用户不存在: " + username));
 
-        return new org.springframework.security.core.userdetails.User(
-                user.getUsername(),
-                user.getPassword(),
-                user.getStatus() == 1,
-                true,
-                true,
-                true,
-                getAuthorities(user)
-        );
-    }
 
     @Override
     @Transactional(readOnly = true)
@@ -252,8 +232,8 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     public boolean deleteUser(Long id) {
         try {
             User user = findUserById(id);
-            // 软删除：设置状态为已删除
-            user.setStatus(0);
+            // 软删除：设置状态为已删除(-1表示已删除，0表示禁用，1表示正常)
+            user.setStatus(-1);
             user.setUpdatedAt(LocalDateTime.now());
             userRepository.save(user);
             return true;
@@ -394,13 +374,20 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     @Transactional(readOnly = true)
     public Page<User> findUsersByPage(Pageable pageable, Map<String, Object> params) {
         try {
-            // 获取所有用户，然后根据条件过滤
-            List<User> allUsers = userRepository.findAll();
+            // 获取所有用户并预加载角色信息，然后根据条件过滤
+            List<User> allUsers = userRepository.findAllWithRoles();
             List<User> filteredUsers = new ArrayList<>();
+
+            System.out.println("📊 获取到用户总数: " + allUsers.size());
 
             // 应用筛选条件
             for (User user : allUsers) {
                 boolean matches = true;
+
+                // 首先过滤掉已删除的用户（状态为-1的用户）
+                if (user.getStatus() == -1) {
+                    continue; // 跳过已删除的用户
+                }
 
                 // 搜索条件
                 if (params != null && params.containsKey("search")) {
@@ -409,18 +396,26 @@ public class UserServiceImpl implements UserService, UserDetailsService {
                         search = search.trim().toLowerCase();
                         boolean searchMatch = false;
 
+                        System.out.println("🔍 搜索关键词: " + search + ", 检查用户: " + user.getUsername());
+
                         if (user.getUsername() != null && user.getUsername().toLowerCase().contains(search)) {
                             searchMatch = true;
+                            System.out.println("✅ 用户名匹配: " + user.getUsername());
                         }
                         if (user.getRealName() != null && user.getRealName().toLowerCase().contains(search)) {
                             searchMatch = true;
+                            System.out.println("✅ 真实姓名匹配: " + user.getRealName());
                         }
                         if (user.getEmail() != null && user.getEmail().toLowerCase().contains(search)) {
                             searchMatch = true;
+                            System.out.println("✅ 邮箱匹配: " + user.getEmail());
                         }
 
                         if (!searchMatch) {
                             matches = false;
+                            System.out.println("❌ 搜索不匹配，过滤掉用户: " + user.getUsername());
+                        } else {
+                            System.out.println("✅ 搜索匹配，保留用户: " + user.getUsername());
                         }
                     }
                 }
@@ -430,32 +425,66 @@ public class UserServiceImpl implements UserService, UserDetailsService {
                     String role = (String) params.get("role");
                     if (role != null && !role.trim().isEmpty()) {
                         boolean roleMatch = false;
+                        System.out.println("🔍 角色筛选: " + role + ", 检查用户: " + user.getUsername());
+
                         if (user.getUserRoles() != null) {
+                            System.out.println("  用户角色数量: " + user.getUserRoles().size());
                             for (UserRole userRole : user.getUserRoles()) {
-                                if (userRole.getRole() != null &&
-                                    (role.equals(userRole.getRole().getRoleKey()) ||
-                                     role.equals(userRole.getRole().getRoleName()))) {
-                                    roleMatch = true;
-                                    break;
+                                if (userRole.getRole() != null) {
+                                    System.out.println("  检查角色: ID=" + userRole.getRole().getId() +
+                                                     ", Key=" + userRole.getRole().getRoleKey() +
+                                                     ", Name=" + userRole.getRole().getRoleName());
+
+                                    // 支持按角色ID、角色名称或角色键匹配
+                                    if (role.equals(String.valueOf(userRole.getRole().getId())) ||
+                                        role.equals(userRole.getRole().getRoleKey()) ||
+                                        role.equals(userRole.getRole().getRoleName())) {
+                                        roleMatch = true;
+                                        System.out.println("✅ 角色匹配: " + userRole.getRole().getRoleName());
+                                        break;
+                                    }
                                 }
                             }
+                        } else {
+                            System.out.println("  用户没有角色");
                         }
+
                         if (!roleMatch) {
                             matches = false;
+                            System.out.println("❌ 角色不匹配，过滤掉用户: " + user.getUsername());
+                        } else {
+                            System.out.println("✅ 角色匹配，保留用户: " + user.getUsername());
                         }
                     }
                 }
 
                 // 状态条件
                 if (matches && params != null && params.containsKey("status")) {
-                    String statusStr = (String) params.get("status");
-                    if (statusStr != null && !statusStr.trim().isEmpty()) {
+                    Object statusObj = params.get("status");
+                    if (statusObj != null) {
                         try {
-                            int status = Integer.parseInt(statusStr);
+                            int status;
+                            if (statusObj instanceof Integer) {
+                                status = (Integer) statusObj;
+                            } else if (statusObj instanceof String) {
+                                String statusStr = (String) statusObj;
+                                if (statusStr.trim().isEmpty()) {
+                                    continue; // 空字符串，跳过状态筛选
+                                }
+                                status = Integer.parseInt(statusStr);
+                            } else {
+                                continue; // 其他类型，跳过状态筛选
+                            }
+
+                            System.out.println("🔍 状态筛选: 用户状态=" + user.getStatus() + ", 筛选状态=" + status);
                             if (user.getStatus() != status) {
                                 matches = false;
+                                System.out.println("❌ 状态不匹配，过滤掉用户: " + user.getUsername());
+                            } else {
+                                System.out.println("✅ 状态匹配，保留用户: " + user.getUsername());
                             }
                         } catch (NumberFormatException e) {
+                            System.err.println("❌ 状态参数格式错误: " + statusObj);
                             // 状态参数格式错误，忽略该条件
                         }
                     }
@@ -540,26 +569,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         return userRepository.findAll();
     }
 
-    /**
-     * 获取用户权限列表
-     */
-    private Collection<? extends GrantedAuthority> getAuthorities(User user) {
-        List<SimpleGrantedAuthority> authorities = new ArrayList<>();
 
-        // 添加角色权限 - 注意：hasAnyRole()会自动添加ROLE_前缀，所以这里不要重复添加
-        for (UserRole userRole : user.getUserRoles()) {
-            Role role = userRole.getRole();
-            // 使用roleKey而不是roleName，并且不添加ROLE_前缀
-            authorities.add(new SimpleGrantedAuthority("ROLE_" + role.getRoleKey()));
-
-            // 添加角色对应的权限
-            role.getRolePermissions().forEach(rolePermission ->
-                authorities.add(new SimpleGrantedAuthority(rolePermission.getPermission().getPermissionCode()))
-            );
-        }
-
-        return authorities;
-    }
 
     @Override
     @Transactional(readOnly = true)
@@ -684,7 +694,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             throw new IllegalArgumentException("用户不存在");
         }
 
-        // 更新用户信息
+        // 更新用户基本信息
         if (userData.containsKey("realName")) {
             user.setRealName((String) userData.get("realName"));
         }
@@ -701,12 +711,95 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         if (userData.containsKey("phone")) {
             user.setPhone((String) userData.get("phone"));
         }
+        if (userData.containsKey("gender")) {
+            user.setGender((String) userData.get("gender"));
+        }
+        if (userData.containsKey("idCard")) {
+            user.setIdCard((String) userData.get("idCard"));
+        }
+        if (userData.containsKey("address")) {
+            user.setAddress((String) userData.get("address"));
+        }
         if (userData.containsKey("status")) {
             user.setStatus((Integer) userData.get("status"));
         }
+        if (userData.containsKey("remarks")) {
+            user.setRemarks((String) userData.get("remarks"));
+        }
 
-        // 保存更新
-        return userRepository.save(user);
+        // 设置更新时间
+        user.setUpdatedAt(LocalDateTime.now());
+
+        // 保存用户基本信息
+        user = userRepository.save(user);
+
+        // 处理角色信息
+        if (userData.containsKey("roles")) {
+            updateUserRoles(userId, userData.get("roles"));
+        }
+
+        return user;
+    }
+
+    /**
+     * 更新用户角色
+     */
+    @Transactional
+    public void updateUserRoles(Long userId, Object rolesData) {
+        try {
+            System.out.println("🔄 开始更新用户角色，用户ID: " + userId);
+
+            // 先删除用户现有的所有角色
+            System.out.println("🗑️ 删除用户现有角色...");
+            userRoleRepository.deleteByUserId(userId);
+
+            // 强制刷新，确保删除操作立即生效
+            userRoleRepository.flush();
+            System.out.println("✅ 用户现有角色已删除");
+
+            // 添加新的角色
+            if (rolesData instanceof List) {
+                @SuppressWarnings("unchecked")
+                List<Map<String, Object>> roles = (List<Map<String, Object>>) rolesData;
+
+                System.out.println("📝 准备添加 " + roles.size() + " 个角色");
+
+                for (Map<String, Object> roleData : roles) {
+                    Object idObj = roleData.get("id");
+                    if (idObj != null) {
+                        Long roleId;
+                        if (idObj instanceof Integer) {
+                            roleId = ((Integer) idObj).longValue();
+                        } else if (idObj instanceof Long) {
+                            roleId = (Long) idObj;
+                        } else {
+                            System.out.println("⚠️ 跳过无效的角色ID类型: " + idObj.getClass());
+                            continue; // 跳过无效的角色ID
+                        }
+
+                        // 检查角色是否存在
+                        if (roleRepository.existsById(roleId)) {
+                            // 检查是否已经存在该用户角色关系（防止重复）
+                            if (!userRoleRepository.existsByUserIdAndRoleId(userId, roleId)) {
+                                UserRole userRole = new UserRole(userId, roleId);
+                                userRoleRepository.save(userRole);
+                                System.out.println("✅ 添加用户角色: userId=" + userId + ", roleId=" + roleId);
+                            } else {
+                                System.out.println("⚠️ 用户角色关系已存在，跳过: userId=" + userId + ", roleId=" + roleId);
+                            }
+                        } else {
+                            System.out.println("⚠️ 角色不存在，跳过: roleId=" + roleId);
+                        }
+                    }
+                }
+            }
+
+            System.out.println("✅ 用户角色更新完成");
+        } catch (Exception e) {
+            System.err.println("❌ 更新用户角色失败: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("更新用户角色失败: " + e.getMessage());
+        }
     }
 
     @Override
@@ -815,5 +908,27 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             System.err.println("移除用户角色失败: " + e.getMessage());
             return false;
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<User> findByIdOptional(Long userId) {
+        return userRepository.findById(userId);
+    }
+
+    @Override
+    @Transactional
+    public User save(User user) {
+        if (user.getCreatedAt() == null) {
+            user.setCreatedAt(LocalDateTime.now());
+        }
+        user.setUpdatedAt(LocalDateTime.now());
+        return userRepository.save(user);
+    }
+
+    @Override
+    @Transactional
+    public void deleteById(Long userId) {
+        userRepository.deleteById(userId);
     }
 }

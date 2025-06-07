@@ -90,10 +90,10 @@ public class CourseController {
             model.addAttribute("status", status);
             model.addAttribute("pageTitle", "课程管理");
             model.addAttribute("currentPage", "courses");
-            return "admin/courses";
+            return "admin/academic/courses";
         } catch (Exception e) {
             model.addAttribute("error", "加载课程列表失败：" + e.getMessage());
-            return "admin/courses";
+            return "admin/academic/courses";
         }
     }
 
@@ -113,10 +113,10 @@ public class CourseController {
             model.addAttribute("semesters", semesters);
             model.addAttribute("pageTitle", "添加课程");
             model.addAttribute("currentPage", "courses");
-            return "admin/course-form";
+            return "admin/academic/course-form";
         } catch (Exception e) {
             model.addAttribute("error", "加载添加课程页面失败：" + e.getMessage());
-            return "admin/courses";
+            return "admin/academic/courses";
         }
     }
 
@@ -130,7 +130,7 @@ public class CourseController {
             Course course = courseService.findById(id).orElse(null);
             if (course == null) {
                 model.addAttribute("error", "课程不存在");
-                return "admin/courses";
+                return "admin/academic/courses";
             }
 
             // 获取筛选选项
@@ -144,10 +144,10 @@ public class CourseController {
             model.addAttribute("semesters", semesters);
             model.addAttribute("pageTitle", "编辑课程");
             model.addAttribute("currentPage", "courses");
-            return "admin/course-form";
+            return "admin/academic/course-form";
         } catch (Exception e) {
             model.addAttribute("error", "加载编辑课程页面失败：" + e.getMessage());
-            return "admin/courses";
+            return "admin/academic/courses";
         }
     }
 
@@ -161,16 +161,16 @@ public class CourseController {
             Course course = courseService.findById(id).orElse(null);
             if (course == null) {
                 model.addAttribute("error", "课程不存在");
-                return "admin/courses";
+                return "admin/academic/courses";
             }
 
             model.addAttribute("course", course);
             model.addAttribute("pageTitle", "课程详情");
             model.addAttribute("currentPage", "courses");
-            return "admin/course-detail";
+            return "admin/academic/course-detail";
         } catch (Exception e) {
             model.addAttribute("error", "加载课程详情失败：" + e.getMessage());
-            return "admin/courses";
+            return "admin/academic/courses";
         }
     }
 

@@ -55,6 +55,13 @@
                 </a>
             </li>
 
+            <li th:classappend="${currentPage == 'notifications'} ? 'active'" th:if="${@permissionUtil.hasMenuPermission('/admin/notifications')}">
+                <a th:href="@{/admin/notifications}" data-tooltip="通知管理">
+                    <i class="fas fa-bell"></i>
+                    <span>通知管理</span>
+                </a>
+            </li>
+
             <!-- 教务管理分组 - 教务管理员可见 -->
             <li class="nav-section" th:if="${@permissionUtil.isAcademicAdmin()}">教务管理</li>
 
@@ -73,10 +80,10 @@
             </li>
 
             <li th:classappend="${currentPage == 'schedules'} ? 'active'" th:if="${@permissionUtil.hasMenuPermission('/admin/academic/schedules')}">
-                <a th:href="@{/admin/academic/schedules}" data-tooltip="课程安排">
+                <a th:href="@{/admin/academic/schedules}" data-tooltip="课表管理">
                     <i class="fas fa-calendar-alt"></i>
-                    <span>课程安排</span>
-                </a>
+                    <span>课表管理</span>
+                </a>    
             </li>
 
             <li th:classappend="${currentPage == 'students'} ? 'active'" th:if="${@permissionUtil.hasMenuPermission('/admin/students')}">
@@ -89,29 +96,29 @@
             <!-- 财务管理分组 - 财务管理员可见 -->
             <li class="nav-section" th:if="${@permissionUtil.isFinanceAdmin()}">财务管理</li>
 
-            <li th:classappend="${currentPage == 'fee-items'} ? 'active'" th:if="${@permissionUtil.hasMenuPermission('/admin/fee-items')}">
-                <a th:href="@{/admin/fee-items}" data-tooltip="收费项目">
+            <li th:classappend="${currentPage == 'finance'} ? 'active'" th:if="${@permissionUtil.hasMenuPermission('/admin/finance')}">
+                <a th:href="@{/admin/finance}" data-tooltip="财务概览">
+                    <i class="fas fa-chart-line"></i>
+                    <span>财务概览</span>
+                </a>
+            </li>
+
+            <li th:classappend="${currentPage == 'fee-items'} ? 'active'" th:if="${@permissionUtil.hasMenuPermission('/admin/finance/fee-items')}">
+                <a th:href="@{/admin/finance/fee-items}" data-tooltip="收费项目">
                     <i class="fas fa-list-alt"></i>
                     <span>收费项目</span>
                 </a>
             </li>
 
-            <li th:classappend="${currentPage == 'payments'} ? 'active'" th:if="${@permissionUtil.hasMenuPermission('/admin/payments')}">
-                <a th:href="@{/admin/payments}" data-tooltip="缴费管理">
-                    <i class="fas fa-credit-card"></i>
-                    <span>缴费管理</span>
-                </a>
-            </li>
-
-            <li th:classappend="${currentPage == 'payment-records'} ? 'active'" th:if="${@permissionUtil.hasMenuPermission('/admin/payment-records')}">
-                <a th:href="@{/admin/payment-records}" data-tooltip="缴费记录">
+            <li th:classappend="${currentPage == 'payment-records'} ? 'active'" th:if="${@permissionUtil.hasMenuPermission('/admin/finance/payment-records')}">
+                <a th:href="@{/admin/finance/payment-records}" data-tooltip="缴费记录">
                     <i class="fas fa-receipt"></i>
                     <span>缴费记录</span>
                 </a>
             </li>
 
-            <li th:classappend="${currentPage == 'reports'} ? 'active'" th:if="${@permissionUtil.hasMenuPermission('/admin/reports')}">
-                <a th:href="@{/admin/reports}" data-tooltip="财务报表">
+            <li th:classappend="${currentPage == 'finance-reports'} ? 'active'" th:if="${@permissionUtil.hasMenuPermission('/admin/finance/reports')}">
+                <a th:href="@{/admin/finance/reports}" data-tooltip="财务报表">
                     <i class="fas fa-chart-bar"></i>
                     <span>财务报表</span>
                 </a>

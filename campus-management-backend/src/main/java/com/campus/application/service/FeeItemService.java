@@ -175,16 +175,27 @@ public interface FeeItemService {
         private long totalItems;
         private long activeItems;
         private long inactiveItems;
+        private long feeTypeCount;
         private BigDecimal totalAmount;
         private BigDecimal totalPaid;
 
         public FeeItemStatistics() {}
 
-        public FeeItemStatistics(long totalItems, long activeItems, long inactiveItems, 
+        public FeeItemStatistics(long totalItems, long activeItems, long inactiveItems,
                                BigDecimal totalAmount, BigDecimal totalPaid) {
             this.totalItems = totalItems;
             this.activeItems = activeItems;
             this.inactiveItems = inactiveItems;
+            this.totalAmount = totalAmount;
+            this.totalPaid = totalPaid;
+        }
+
+        public FeeItemStatistics(long totalItems, long activeItems, long inactiveItems,
+                               long feeTypeCount, BigDecimal totalAmount, BigDecimal totalPaid) {
+            this.totalItems = totalItems;
+            this.activeItems = activeItems;
+            this.inactiveItems = inactiveItems;
+            this.feeTypeCount = feeTypeCount;
             this.totalAmount = totalAmount;
             this.totalPaid = totalPaid;
         }
@@ -199,6 +210,9 @@ public interface FeeItemService {
         public long getInactiveItems() { return inactiveItems; }
         public void setInactiveItems(long inactiveItems) { this.inactiveItems = inactiveItems; }
 
+        public long getFeeTypeCount() { return feeTypeCount; }
+        public void setFeeTypeCount(long feeTypeCount) { this.feeTypeCount = feeTypeCount; }
+
         public BigDecimal getTotalAmount() { return totalAmount; }
         public void setTotalAmount(BigDecimal totalAmount) { this.totalAmount = totalAmount; }
 
@@ -212,6 +226,29 @@ public interface FeeItemService {
      * @return 统计信息
      */
     FeeItemStatistics getStatistics();
+
+    /**
+     * 获取缴费项目统计信息（别名方法）
+     *
+     * @return 统计信息
+     */
+    FeeItemStatistics getFeeItemStatistics();
+
+    /**
+     * 分页查询缴费项目（带条件）
+     *
+     * @param pageable 分页参数
+     * @param params 查询条件
+     * @return 分页结果
+     */
+    Page<FeeItem> findFeeItemsByPage(Pageable pageable, java.util.Map<String, Object> params);
+
+    /**
+     * 获取所有费用类型
+     *
+     * @return 费用类型列表
+     */
+    List<String> getAllFeeTypes();
 
     /**
      * 生成项目编码

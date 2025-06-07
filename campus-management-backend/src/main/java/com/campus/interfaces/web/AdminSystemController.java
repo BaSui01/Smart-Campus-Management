@@ -4,11 +4,14 @@ import com.campus.application.service.CourseService;
 import com.campus.application.service.PaymentRecordService;
 import com.campus.application.service.StudentService;
 import com.campus.application.service.UserService;
+import com.campus.application.service.RoleService;
+import com.campus.application.service.FeeItemService;
 
 import com.campus.domain.entity.PaymentRecord;
 import com.campus.domain.entity.User;
 import com.campus.domain.entity.UserRole;
 import com.campus.domain.entity.Role;
+import com.campus.domain.entity.FeeItem;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -41,16 +44,22 @@ public class AdminSystemController {
     private final StudentService studentService;
     private final CourseService courseService;
     private final PaymentRecordService paymentRecordService;
+    private final RoleService roleService;
+    private final FeeItemService feeItemService;
 
     @Autowired
     public AdminSystemController(UserService userService,
                                 StudentService studentService,
                                 CourseService courseService,
-                                PaymentRecordService paymentRecordService) {
+                                PaymentRecordService paymentRecordService,
+                                RoleService roleService,
+                                FeeItemService feeItemService) {
         this.userService = userService;
         this.studentService = studentService;
         this.courseService = courseService;
         this.paymentRecordService = paymentRecordService;
+        this.roleService = roleService;
+        this.feeItemService = feeItemService;
     }
 
     /**
@@ -59,17 +68,19 @@ public class AdminSystemController {
     @GetMapping("/profile")
     public String profile(HttpServletRequest request, Model model) {
         try {
-            // 从请求属性中获取当前用户（JWT认证设置的）
+            // 从请求属性中获取当前用户（AdminJwtInterceptor设置的）
             User currentUser = (User) request.getAttribute("currentUser");
-            
-            // 如果JWT认证没有设置，尝试从Session获取
+            String currentUserRole = (String) request.getAttribute("currentUserRole");
+
+            // 如果JWT拦截器没有设置，尝试从Session获取
             if (currentUser == null) {
                 HttpSession session = request.getSession(false);
                 if (session != null) {
                     currentUser = (User) session.getAttribute("currentUser");
+                    currentUserRole = (String) session.getAttribute("userRole");
                 }
             }
-            
+
             // 如果还是没有找到用户，尝试从用户名获取（兼容处理）
             if (currentUser == null) {
                 String username = (String) request.getAttribute("currentUsername");
@@ -77,6 +88,13 @@ public class AdminSystemController {
                     Optional<User> userOpt = userService.findByUsername(username);
                     currentUser = userOpt.orElse(null);
                 }
+            }
+
+            // 确保session中有用户角色信息供侧边栏使用
+            if (currentUser != null && currentUserRole != null) {
+                HttpSession session = request.getSession(true);
+                session.setAttribute("userRole", currentUserRole);
+                session.setAttribute("user", currentUser);
             }
             
             Map<String, Object> userProfile = new HashMap<>();
@@ -403,39 +421,67 @@ public class AdminSystemController {
      * 角色管理页面
      */
     @GetMapping("/roles")
-    public String roles(Model model) {
+    public String roles(@RequestParam(defaultValue = "0") int page,
+                       @RequestParam(defaultValue = "20") int size,
+                       @RequestParam(defaultValue = "") String search,
+                       @RequestParam(defaultValue = "") String status,
+                       Model model) {
         try {
-            // 获取所有角色（简化实现）
-            List<Map<String, Object>> roles = new ArrayList<>();
-            roles.add(Map.of("id", 1, "roleName", "ADMIN", "roleDescription", "系统管理员", "status", 1, "userCount", 1));
-            roles.add(Map.of("id", 2, "roleName", "TEACHER", "roleDescription", "教师", "status", 1, "userCount", 0));
-            roles.add(Map.of("id", 3, "roleName", "STUDENT", "roleDescription", "学生", "status", 1, "userCount", 0));
-            roles.add(Map.of("id", 4, "roleName", "FINANCE", "roleDescription", "财务人员", "status", 1, "userCount", 0));
+            // 获取角色统计信息
+            RoleService.RoleStatistics roleStatistics = roleService.getRoleStatistics();
+
+            // 构建查询参数
+            Map<String, Object> params = new HashMap<>();
+            if (!search.isEmpty()) {
+                params.put("search", search);
+            }
+            if (!status.isEmpty()) {
+                params.put("status", status);
+            }
+
+            // 分页查询角色
+            Pageable pageable = PageRequest.of(page, size);
+            Page<Role> rolePage = roleService.findRolesByPage(pageable, params);
+
+            // 转换为Map格式以供模板使用
+            List<Map<String, Object>> roleList = new ArrayList<>();
+            for (Role role : rolePage.getContent()) {
+                Map<String, Object> roleMap = new HashMap<>();
+                roleMap.put("id", role.getId());
+                roleMap.put("roleName", role.getRoleName());
+                roleMap.put("roleKey", role.getRoleKey());
+                roleMap.put("roleDescription", role.getDescription());
+                roleMap.put("status", role.getStatus());
+                roleMap.put("userCount", role.getUserCount());
+                roleMap.put("createdTime", role.getCreatedAt());
+                roleMap.put("updatedTime", role.getUpdatedAt());
+                roleList.add(roleMap);
+            }
 
             // 构建角色统计数据
             List<Map<String, Object>> roleStats = new ArrayList<>();
             roleStats.add(Map.of(
                 "title", "总角色数",
-                "value", roles.size(),
+                "value", roleStatistics.getTotalRoles(),
                 "icon", "fas fa-user-tag",
                 "color", "primary"
             ));
             roleStats.add(Map.of(
                 "title", "启用角色",
-                "value", roles.stream().mapToInt(r -> (Integer) r.get("status")).sum(),
+                "value", roleStatistics.getActiveRoles(),
                 "icon", "fas fa-check-circle",
                 "color", "success"
             ));
             roleStats.add(Map.of(
-                "title", "已分配用户",
-                "value", roles.stream().mapToInt(r -> (Integer) r.get("userCount")).sum(),
-                "icon", "fas fa-users",
+                "title", "系统角色",
+                "value", roleStatistics.getSystemRoles(),
+                "icon", "fas fa-cog",
                 "color", "info"
             ));
             roleStats.add(Map.of(
-                "title", "系统角色",
-                "value", 4,
-                "icon", "fas fa-cog",
+                "title", "禁用角色",
+                "value", roleStatistics.getInactiveRoles(),
+                "icon", "fas fa-times-circle",
                 "color", "warning"
             ));
 
@@ -446,39 +492,75 @@ public class AdminSystemController {
 
             // 表格列配置
             List<Map<String, Object>> columns = new ArrayList<>();
-            columns.add(Map.of("field", "id", "title", "ID", "class", "text-center"));
-            columns.add(Map.of("field", "roleName", "title", "角色名称", "class", ""));
+            columns.add(Map.of("field", "id", "title", "ID", "class", "text-center", "width", "80px"));
+            columns.add(Map.of("field", "roleName", "title", "角色名称", "icon", "fas fa-user-tag"));
+            columns.add(Map.of("field", "roleKey", "title", "角色键", "icon", "fas fa-key"));
             columns.add(Map.of("field", "roleDescription", "title", "角色描述", "class", ""));
-            columns.add(Map.of("field", "status", "title", "状态", "class", "text-center"));
-            columns.add(Map.of("field", "userCount", "title", "用户数", "class", "text-center"));
+            columns.add(Map.of(
+                "field", "status",
+                "title", "状态",
+                "type", "badge",
+                "class", "text-center",
+                "width", "100px"
+            ));
+            columns.add(Map.of("field", "userCount", "title", "用户数", "class", "text-center", "width", "100px"));
+            columns.add(Map.of("field", "createdTime", "title", "创建时间", "type", "datetime", "icon", "fas fa-calendar"));
             roleTableConfig.put("columns", columns);
 
             // 操作按钮配置
             List<Map<String, Object>> actions = new ArrayList<>();
+            actions.add(Map.of("function", "viewRole", "title", "查看", "icon", "fas fa-eye", "type", "info"));
             actions.add(Map.of("function", "editRole", "title", "编辑", "icon", "fas fa-edit", "type", "primary"));
-            actions.add(Map.of("function", "viewPermissions", "title", "权限", "icon", "fas fa-key", "type", "info"));
+            actions.add(Map.of("function", "viewPermissions", "title", "权限", "icon", "fas fa-key", "type", "success"));
+            actions.add(Map.of("function", "toggleStatus", "title", "切换状态", "icon", "fas fa-toggle-on", "type", "warning"));
             actions.add(Map.of("function", "deleteRole", "title", "删除", "icon", "fas fa-trash", "type", "danger"));
             roleTableConfig.put("actions", actions);
 
-            // 创建分页对象（模拟）
+            // 构建筛选配置
+            Map<String, Object> roleFilters = new HashMap<>();
+            roleFilters.put("search", Map.of(
+                "name", "search",
+                "placeholder", "搜索角色名称、角色键、描述...",
+                "value", search
+            ));
+
+            List<Map<String, Object>> selectFilters = new ArrayList<>();
+            selectFilters.add(Map.of(
+                "name", "status",
+                "label", "状态",
+                "icon", "fas fa-toggle-on",
+                "selectedValue", status,
+                "options", List.of(
+                    Map.of("value", "1", "text", "启用"),
+                    Map.of("value", "0", "text", "禁用")
+                )
+            ));
+            roleFilters.put("selects", selectFilters);
+
+            // 创建分页对象
             Map<String, Object> pageData = new HashMap<>();
-            pageData.put("content", roles);
-            pageData.put("totalElements", roles.size());
-            pageData.put("totalPages", 1);
-            pageData.put("number", 0);
-            pageData.put("size", 20);
-            pageData.put("numberOfElements", roles.size());
-            pageData.put("first", true);
-            pageData.put("last", true);
-            pageData.put("empty", roles.isEmpty());
+            pageData.put("content", roleList);
+            pageData.put("totalElements", rolePage.getTotalElements());
+            pageData.put("totalPages", rolePage.getTotalPages());
+            pageData.put("number", rolePage.getNumber());
+            pageData.put("size", rolePage.getSize());
+            pageData.put("numberOfElements", rolePage.getNumberOfElements());
+            pageData.put("first", rolePage.isFirst());
+            pageData.put("last", rolePage.isLast());
+            pageData.put("empty", rolePage.isEmpty());
 
             model.addAttribute("roles", pageData);
             model.addAttribute("roleStats", roleStats);
             model.addAttribute("roleTableConfig", roleTableConfig);
+            model.addAttribute("roleFilters", roleFilters);
+            model.addAttribute("search", search);
+            model.addAttribute("status", status);
             model.addAttribute("pageTitle", "角色管理");
             model.addAttribute("currentPage", "roles");
             return "admin/system/roles";
         } catch (Exception e) {
+            System.err.println("加载角色列表失败: " + e.getMessage());
+            e.printStackTrace();
             model.addAttribute("error", "加载角色列表失败：" + e.getMessage());
             return "admin/system/roles";
         }
@@ -579,58 +661,74 @@ public class AdminSystemController {
     }
 
     /**
-     * 缴费项目管理页面
+     * 缴费项目管理页面 - 使用真实数据库数据
      */
     @GetMapping("/fee-items")
-    public String feeItems(Model model) {
+    public String feeItems(@RequestParam(defaultValue = "0") int page,
+                          @RequestParam(defaultValue = "20") int size,
+                          @RequestParam(defaultValue = "") String search,
+                          @RequestParam(defaultValue = "") String feeType,
+                          @RequestParam(defaultValue = "") String status,
+                          Model model) {
         try {
-            // 获取缴费项目（简化实现）
-            List<Map<String, Object>> feeItems = new ArrayList<>();
-            feeItems.add(Map.of("id", 1, "itemName", "学费", "itemCode", "TUITION", "amount", 5000.00, "feeType", "学费", "status", 1));
-            feeItems.add(Map.of("id", 2, "itemName", "住宿费", "itemCode", "ACCOMMODATION", "amount", 1200.00, "feeType", "住宿费", "status", 1));
-            feeItems.add(Map.of("id", 3, "itemName", "教材费", "itemCode", "TEXTBOOK", "amount", 300.00, "feeType", "教材费", "status", 1));
-            feeItems.add(Map.of("id", 4, "itemName", "实验费", "itemCode", "EXPERIMENT", "amount", 500.00, "feeType", "实验费", "status", 1));
-            feeItems.add(Map.of("id", 5, "itemName", "活动费", "itemCode", "ACTIVITY", "amount", 300.00, "feeType", "活动费", "status", 1));
+            // 构建查询参数
+            Map<String, Object> params = new HashMap<>();
+            if (!search.isEmpty()) {
+                params.put("search", search);
+            }
+            if (!feeType.isEmpty()) {
+                params.put("feeType", feeType);
+            }
+            if (!status.isEmpty()) {
+                params.put("status", status);
+            }
+
+            // 分页查询缴费项目
+            Pageable pageable = PageRequest.of(page, size);
+            Page<FeeItem> feeItemPage = feeItemService.findFeeItemsByPage(pageable, params);
+
+            // 获取缴费项目统计信息
+            FeeItemService.FeeItemStatistics feeItemStatistics = feeItemService.getFeeItemStatistics();
+
+            // 转换为Map格式以供模板使用
+            List<Map<String, Object>> feeItemList = new ArrayList<>();
+            for (FeeItem feeItem : feeItemPage.getContent()) {
+                Map<String, Object> feeItemMap = new HashMap<>();
+                feeItemMap.put("id", feeItem.getId());
+                feeItemMap.put("itemName", feeItem.getItemName());
+                feeItemMap.put("itemCode", feeItem.getItemCode());
+                feeItemMap.put("amount", feeItem.getAmount());
+                feeItemMap.put("feeType", feeItem.getFeeType());
+                feeItemMap.put("status", feeItem.getStatus());
+                feeItemMap.put("description", feeItem.getDescription());
+                feeItemMap.put("createdTime", feeItem.getCreatedTime());
+                feeItemMap.put("updatedTime", feeItem.getUpdatedTime());
+                feeItemList.add(feeItemMap);
+            }
 
             // 构建费用项目统计数据
             List<Map<String, Object>> feeItemStats = new ArrayList<>();
             feeItemStats.add(Map.of(
                 "title", "总费用项目",
-                "value", feeItems.size(),
+                "value", feeItemStatistics.getTotalItems(),
                 "icon", "fas fa-money-bill-wave",
                 "color", "primary"
             ));
-
-            // 计算总金额
-            double totalAmount = feeItems.stream()
-                .mapToDouble(item -> (Double) item.get("amount"))
-                .sum();
             feeItemStats.add(Map.of(
                 "title", "总金额",
-                "value", String.format("%.2f", totalAmount),
+                "value", String.format("%.2f", feeItemStatistics.getTotalAmount()),
                 "icon", "fas fa-dollar-sign",
                 "color", "success"
             ));
-
-            // 启用项目数量
-            long activeItems = feeItems.stream()
-                .mapToLong(item -> (Integer) item.get("status") == 1 ? 1 : 0)
-                .sum();
             feeItemStats.add(Map.of(
                 "title", "启用项目",
-                "value", activeItems,
+                "value", feeItemStatistics.getActiveItems(),
                 "icon", "fas fa-check-circle",
                 "color", "info"
             ));
-
-            // 费用类型数量
-            long feeTypeCount = feeItems.stream()
-                .map(item -> (String) item.get("feeType"))
-                .distinct()
-                .count();
             feeItemStats.add(Map.of(
                 "title", "费用类型",
-                "value", feeTypeCount,
+                "value", feeItemStatistics.getFeeTypeCount(),
                 "icon", "fas fa-tags",
                 "color", "warning"
             ));
@@ -639,28 +737,33 @@ public class AdminSystemController {
             Map<String, Object> feeItemFilters = new HashMap<>();
             feeItemFilters.put("search", Map.of(
                 "placeholder", "搜索费用项目名称或编码",
-                "name", "search"
+                "name", "search",
+                "value", search
             ));
 
             // 构建下拉筛选列表
             List<Map<String, Object>> selects = new ArrayList<>();
+            
+            // 获取所有费用类型用于筛选
+            List<String> feeTypes = feeItemService.getAllFeeTypes();
+            List<Map<String, Object>> feeTypeOptions = new ArrayList<>();
+            feeTypeOptions.add(Map.of("value", "", "text", "全部类型"));
+            for (String type : feeTypes) {
+                feeTypeOptions.add(Map.of("value", type, "text", type));
+            }
+            
             selects.add(Map.of(
                 "label", "费用类型",
                 "name", "feeType",
                 "icon", "fas fa-tags",
-                "options", List.of(
-                    Map.of("value", "", "text", "全部类型"),
-                    Map.of("value", "学费", "text", "学费"),
-                    Map.of("value", "住宿费", "text", "住宿费"),
-                    Map.of("value", "教材费", "text", "教材费"),
-                    Map.of("value", "实验费", "text", "实验费"),
-                    Map.of("value", "活动费", "text", "活动费")
-                )
+                "selectedValue", feeType,
+                "options", feeTypeOptions
             ));
             selects.add(Map.of(
                 "label", "状态",
                 "name", "status",
                 "icon", "fas fa-toggle-on",
+                "selectedValue", status,
                 "options", List.of(
                     Map.of("value", "", "text", "全部状态"),
                     Map.of("value", "1", "text", "启用"),
@@ -676,12 +779,19 @@ public class AdminSystemController {
 
             // 表格列配置
             List<Map<String, Object>> columns = new ArrayList<>();
-            columns.add(Map.of("field", "id", "title", "ID", "class", "text-center"));
-            columns.add(Map.of("field", "itemName", "title", "项目名称", "class", ""));
-            columns.add(Map.of("field", "itemCode", "title", "项目编码", "class", ""));
-            columns.add(Map.of("field", "feeType", "title", "费用类型", "class", ""));
-            columns.add(Map.of("field", "amount", "title", "金额", "class", "text-end"));
-            columns.add(Map.of("field", "status", "title", "状态", "class", "text-center"));
+            columns.add(Map.of("field", "id", "title", "ID", "class", "text-center", "width", "80px"));
+            columns.add(Map.of("field", "itemName", "title", "项目名称", "icon", "fas fa-money-bill-wave"));
+            columns.add(Map.of("field", "itemCode", "title", "项目编码", "icon", "fas fa-barcode"));
+            columns.add(Map.of("field", "feeType", "title", "费用类型", "icon", "fas fa-tags"));
+            columns.add(Map.of("field", "amount", "title", "金额(元)", "class", "text-end", "type", "currency", "width", "120px"));
+            columns.add(Map.of(
+                "field", "status",
+                "title", "状态",
+                "type", "badge",
+                "class", "text-center",
+                "width", "100px"
+            ));
+            columns.add(Map.of("field", "createdTime", "title", "创建时间", "type", "datetime", "icon", "fas fa-calendar"));
             feeItemTableConfig.put("columns", columns);
 
             // 操作按钮配置
@@ -689,29 +799,35 @@ public class AdminSystemController {
             actions.add(Map.of("function", "viewFeeItem", "title", "查看", "icon", "fas fa-eye", "type", "info"));
             actions.add(Map.of("function", "editFeeItem", "title", "编辑", "icon", "fas fa-edit", "type", "primary"));
             actions.add(Map.of("function", "viewPaymentRecords", "title", "缴费记录", "icon", "fas fa-list", "type", "success"));
+            actions.add(Map.of("function", "toggleStatus", "title", "切换状态", "icon", "fas fa-toggle-on", "type", "warning"));
             actions.add(Map.of("function", "deleteFeeItem", "title", "删除", "icon", "fas fa-trash", "type", "danger"));
             feeItemTableConfig.put("actions", actions);
 
-            // 创建分页对象（模拟）
+            // 创建分页对象
             Map<String, Object> pageData = new HashMap<>();
-            pageData.put("content", feeItems);
-            pageData.put("totalElements", feeItems.size());
-            pageData.put("totalPages", 1);
-            pageData.put("number", 0);
-            pageData.put("size", 20);
-            pageData.put("numberOfElements", feeItems.size());
-            pageData.put("first", true);
-            pageData.put("last", true);
-            pageData.put("empty", feeItems.isEmpty());
+            pageData.put("content", feeItemList);
+            pageData.put("totalElements", feeItemPage.getTotalElements());
+            pageData.put("totalPages", feeItemPage.getTotalPages());
+            pageData.put("number", feeItemPage.getNumber());
+            pageData.put("size", feeItemPage.getSize());
+            pageData.put("numberOfElements", feeItemPage.getNumberOfElements());
+            pageData.put("first", feeItemPage.isFirst());
+            pageData.put("last", feeItemPage.isLast());
+            pageData.put("empty", feeItemPage.isEmpty());
 
             model.addAttribute("feeItems", pageData);
             model.addAttribute("feeItemStats", feeItemStats);
             model.addAttribute("feeItemFilters", feeItemFilters);
             model.addAttribute("feeItemTableConfig", feeItemTableConfig);
+            model.addAttribute("search", search);
+            model.addAttribute("feeType", feeType);
+            model.addAttribute("status", status);
             model.addAttribute("pageTitle", "缴费项目管理");
             model.addAttribute("currentPage", "fee-items");
             return "admin/finance/fee-items";
         } catch (Exception e) {
+            System.err.println("加载缴费项目失败: " + e.getMessage());
+            e.printStackTrace();
             model.addAttribute("error", "加载缴费项目失败：" + e.getMessage());
             return "admin/finance/fee-items";
         }

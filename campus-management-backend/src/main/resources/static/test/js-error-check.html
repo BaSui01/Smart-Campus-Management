@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JavaScript错误检查工具</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .error-item {
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #dc3545;
+            background-color: #f8d7da;
+        }
+        .success-item {
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #28a745;
+            background-color: #d4edda;
+        }
+        .warning-item {
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #ffc107;
+            background-color: #fff3cd;
+        }
+        .test-result {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        .page-card {
+            margin-bottom: 20px;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+        }
+        .page-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px 10px 0 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid py-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="text-center mb-4">
+                    <h1><i class="fas fa-bug me-2"></i>JavaScript错误检查工具</h1>
+                    <p class="text-muted">检查所有管理页面的JavaScript错误</p>
+                </div>
+
+                <!-- 总体状态 -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>检查状态总览</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-3">
+                                <div class="h2 text-success" id="successCount">0</div>
+                                <div class="text-muted">正常页面</div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="h2 text-warning" id="warningCount">0</div>
+                                <div class="text-muted">警告页面</div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="h2 text-danger" id="errorCount">0</div>
+                                <div class="text-muted">错误页面</div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="h2 text-primary" id="totalCount">0</div>
+                                <div class="text-muted">总页面数</div>
+                            </div>
+                        </div>
+                        <div class="progress mt-3">
+                            <div class="progress-bar bg-success" id="progressBar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 控制按钮 -->
+                <div class="text-center mb-4">
+                    <button class="btn btn-primary btn-lg me-2" onclick="startErrorCheck()">
+                        <i class="fas fa-play me-2"></i>开始检查
+                    </button>
+                    <button class="btn btn-secondary btn-lg me-2" onclick="clearResults()">
+                        <i class="fas fa-broom me-2"></i>清空结果
+                    </button>
+                    <button class="btn btn-info btn-lg" onclick="exportReport()">
+                        <i class="fas fa-download me-2"></i>导出报告
+                    </button>
+                </div>
+
+                <!-- 检查结果 -->
+                <div id="checkResults"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 要检查的页面列表
+        const pagesToCheck = [
+            {
+                name: '仪表板',
+                url: '/admin/dashboard',
+                expectedElements: ['#dashboardStats', '.stats-card'],
+                jsModules: []
+            },
+            {
+                name: '班级管理',
+                url: '/admin/academic/classes',
+                expectedElements: ['#classTable', '#addClassModal'],
+                jsModules: ['ClassManagement']
+            },
+            {
+                name: '学生管理',
+                url: '/admin/students',
+                expectedElements: ['#studentTable', '#addStudentModal'],
+                jsModules: ['StudentManagement']
+            },
+            {
+                name: '课程管理',
+                url: '/admin/academic/courses',
+                expectedElements: ['#courseTable', '#addCourseModal'],
+                jsModules: ['CourseManagement']
+            },
+            {
+                name: '财务管理',
+                url: '/admin/finance/payments',
+                expectedElements: ['#paymentTable', '#addPaymentModal'],
+                jsModules: ['PaymentManagement']
+            },
+            {
+                name: '用户管理',
+                url: '/admin/users',
+                expectedElements: ['#userTable', '#addUserModal'],
+                jsModules: ['UserManagement']
+            },
+            {
+                name: '角色管理',
+                url: '/admin/system/roles',
+                expectedElements: ['#roleTable', '#addRoleModal'],
+                jsModules: ['RoleManagement']
+            },
+            {
+                name: '系统设置',
+                url: '/admin/system/settings',
+                expectedElements: ['#basicSettingsForm', '#securitySettingsForm'],
+                jsModules: ['SystemSettingsManager']
+            }
+        ];
+
+        let checkResults = [];
+        let currentCheckIndex = 0;
+
+        // 开始错误检查
+        async function startErrorCheck() {
+            clearResults();
+            currentCheckIndex = 0;
+            checkResults = [];
+
+            const resultsContainer = document.getElementById('checkResults');
+            resultsContainer.innerHTML = '<div class="text-center"><div class="spinner-border"></div><p class="mt-2">正在检查页面...</p></div>';
+
+            for (let i = 0; i < pagesToCheck.length; i++) {
+                currentCheckIndex = i;
+                await checkPage(pagesToCheck[i]);
+                updateProgress();
+            }
+
+            displayFinalResults();
+        }
+
+        // 检查单个页面
+        async function checkPage(pageInfo) {
+            const result = {
+                name: pageInfo.name,
+                url: pageInfo.url,
+                status: 'success',
+                errors: [],
+                warnings: [],
+                loadTime: 0,
+                elementsFound: 0,
+                elementsExpected: pageInfo.expectedElements.length,
+                jsModulesLoaded: 0,
+                jsModulesExpected: pageInfo.jsModules.length
+            };
+
+            try {
+                const startTime = performance.now();
+
+                // 尝试获取页面
+                const response = await fetch(pageInfo.url);
+                result.loadTime = Math.round(performance.now() - startTime);
+
+                if (!response.ok) {
+                    result.status = 'error';
+                    result.errors.push(`HTTP ${response.status}: ${response.statusText}`);
+                    checkResults.push(result);
+                    return;
+                }
+
+                const html = await response.text();
+
+                // 检查预期元素
+                pageInfo.expectedElements.forEach(selector => {
+                    if (html.includes(selector.replace('#', 'id="').replace('.', 'class="'))) {
+                        result.elementsFound++;
+                    } else {
+                        result.warnings.push(`缺少预期元素: ${selector}`);
+                    }
+                });
+
+                // 检查JavaScript模块
+                pageInfo.jsModules.forEach(module => {
+                    if (html.includes(module) || html.includes(`${module.toLowerCase()}.js`)) {
+                        result.jsModulesLoaded++;
+                    } else {
+                        result.warnings.push(`JavaScript模块可能未加载: ${module}`);
+                    }
+                });
+
+                // 检查常见错误模式
+                const errorPatterns = [
+                    { pattern: /Uncaught.*Error/gi, message: 'JavaScript运行时错误' },
+                    { pattern: /404.*not found/gi, message: '资源文件404错误' },
+                    { pattern: /500.*internal server error/gi, message: '服务器内部错误' },
+                    { pattern: /undefined.*function/gi, message: '未定义函数错误' }
+                ];
+
+                errorPatterns.forEach(({ pattern, message }) => {
+                    if (pattern.test(html)) {
+                        result.errors.push(message);
+                        result.status = 'error';
+                    }
+                });
+
+                // 检查性能
+                if (result.loadTime > 3000) {
+                    result.warnings.push(`页面加载时间过长: ${result.loadTime}ms`);
+                    if (result.status === 'success') result.status = 'warning';
+                }
+
+                // 检查元素完整性
+                if (result.elementsFound < result.elementsExpected) {
+                    if (result.status === 'success') result.status = 'warning';
+                }
+
+                // 检查JS模块
+                if (result.jsModulesLoaded < result.jsModulesExpected) {
+                    if (result.status === 'success') result.status = 'warning';
+                }
+
+            } catch (error) {
+                result.status = 'error';
+                result.errors.push(`检查失败: ${error.message}`);
+            }
+
+            checkResults.push(result);
+            displayPageResult(result);
+        }
+
+        // 显示单个页面结果
+        function displayPageResult(result) {
+            const resultsContainer = document.getElementById('checkResults');
+            
+            let statusClass = 'success-item';
+            let statusIcon = 'fa-check-circle';
+            let statusText = '正常';
+
+            if (result.status === 'warning') {
+                statusClass = 'warning-item';
+                statusIcon = 'fa-exclamation-triangle';
+                statusText = '警告';
+            } else if (result.status === 'error') {
+                statusClass = 'error-item';
+                statusIcon = 'fa-times-circle';
+                statusText = '错误';
+            }
+
+            const resultHtml = `
+                <div class="page-card">
+                    <div class="page-header">
+                        <h6 class="mb-0">
+                            <i class="fas ${statusIcon} me-2"></i>
+                            ${result.name} - ${statusText}
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <strong>加载时间:</strong> ${result.loadTime}ms
+                            </div>
+                            <div class="col-md-3">
+                                <strong>页面元素:</strong> ${result.elementsFound}/${result.elementsExpected}
+                            </div>
+                            <div class="col-md-3">
+                                <strong>JS模块:</strong> ${result.jsModulesLoaded}/${result.jsModulesExpected}
+                            </div>
+                            <div class="col-md-3">
+                                <strong>状态:</strong> <span class="badge bg-${result.status === 'success' ? 'success' : result.status === 'warning' ? 'warning' : 'danger'}">${statusText}</span>
+                            </div>
+                        </div>
+                        
+                        ${result.errors.length > 0 ? `
+                            <div class="mb-2">
+                                <strong class="text-danger">错误:</strong>
+                                <ul class="mb-0 text-danger">
+                                    ${result.errors.map(error => `<li>${error}</li>`).join('')}
+                                </ul>
+                            </div>
+                        ` : ''}
+                        
+                        ${result.warnings.length > 0 ? `
+                            <div class="mb-2">
+                                <strong class="text-warning">警告:</strong>
+                                <ul class="mb-0 text-warning">
+                                    ${result.warnings.map(warning => `<li>${warning}</li>`).join('')}
+                                </ul>
+                            </div>
+                        ` : ''}
+                        
+                        <div class="mt-2">
+                            <small class="text-muted">URL: ${result.url}</small>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            if (resultsContainer.innerHTML.includes('spinner-border')) {
+                resultsContainer.innerHTML = resultHtml;
+            } else {
+                resultsContainer.innerHTML += resultHtml;
+            }
+        }
+
+        // 更新进度
+        function updateProgress() {
+            const progress = ((currentCheckIndex + 1) / pagesToCheck.length) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+
+            const successCount = checkResults.filter(r => r.status === 'success').length;
+            const warningCount = checkResults.filter(r => r.status === 'warning').length;
+            const errorCount = checkResults.filter(r => r.status === 'error').length;
+
+            document.getElementById('successCount').textContent = successCount;
+            document.getElementById('warningCount').textContent = warningCount;
+            document.getElementById('errorCount').textContent = errorCount;
+            document.getElementById('totalCount').textContent = checkResults.length;
+        }
+
+        // 显示最终结果
+        function displayFinalResults() {
+            const successCount = checkResults.filter(r => r.status === 'success').length;
+            const warningCount = checkResults.filter(r => r.status === 'warning').length;
+            const errorCount = checkResults.filter(r => r.status === 'error').length;
+
+            let summaryClass = 'success-item';
+            let summaryText = '所有页面检查完成！';
+
+            if (errorCount > 0) {
+                summaryClass = 'error-item';
+                summaryText = `检查完成，发现 ${errorCount} 个页面有错误需要修复。`;
+            } else if (warningCount > 0) {
+                summaryClass = 'warning-item';
+                summaryText = `检查完成，发现 ${warningCount} 个页面有警告需要关注。`;
+            }
+
+            const summaryHtml = `
+                <div class="${summaryClass}">
+                    <h5><i class="fas fa-flag-checkered me-2"></i>检查完成</h5>
+                    <p class="mb-0">${summaryText}</p>
+                    <div class="mt-2">
+                        <strong>总结:</strong> 
+                        成功 ${successCount} 个，
+                        警告 ${warningCount} 个，
+                        错误 ${errorCount} 个
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('checkResults').innerHTML += summaryHtml;
+        }
+
+        // 清空结果
+        function clearResults() {
+            checkResults = [];
+            currentCheckIndex = 0;
+            document.getElementById('checkResults').innerHTML = '';
+            document.getElementById('successCount').textContent = '0';
+            document.getElementById('warningCount').textContent = '0';
+            document.getElementById('errorCount').textContent = '0';
+            document.getElementById('totalCount').textContent = '0';
+            document.getElementById('progressBar').style.width = '0%';
+        }
+
+        // 导出报告
+        function exportReport() {
+            if (checkResults.length === 0) {
+                alert('请先运行检查');
+                return;
+            }
+
+            const report = {
+                timestamp: new Date().toISOString(),
+                summary: {
+                    total: checkResults.length,
+                    success: checkResults.filter(r => r.status === 'success').length,
+                    warning: checkResults.filter(r => r.status === 'warning').length,
+                    error: checkResults.filter(r => r.status === 'error').length
+                },
+                results: checkResults
+            };
+
+            const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `js-error-check-report-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // 页面加载时显示说明
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('checkResults').innerHTML = `
+                <div class="text-center text-muted py-5">
+                    <i class="fas fa-info-circle fa-3x mb-3"></i>
+                    <h5>JavaScript错误检查工具</h5>
+                    <p>点击"开始检查"按钮来检查所有管理页面的JavaScript错误</p>
+                    <p class="small">此工具将检查页面加载、元素存在性、JavaScript模块加载等</p>
+                </div>
+            `;
+        });
+    </script>
+</body>
+</html>

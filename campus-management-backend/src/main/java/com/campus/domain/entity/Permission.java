@@ -1,96 +1,214 @@
 package com.campus.domain.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 /**
  * 权限实体类
+ * 管理系统权限信息和资源访问控制
  *
  * @author Campus Management Team
  * @version 1.0.0
- * @since 2025-06-03
+ * @since 2025-06-07
  */
 @Entity
-@Table(name = "tb_permission")
-public class Permission {
+@Table(name = "tb_permission", indexes = {
+    @Index(name = "idx_permission_key", columnList = "permission_key", unique = true),
+    @Index(name = "idx_permission_type", columnList = "permission_type"),
+    @Index(name = "idx_parent_id", columnList = "parent_id"),
+    @Index(name = "idx_status_deleted", columnList = "status,deleted"),
+    @Index(name = "idx_sort_order", columnList = "sort_order")
+})
+public class Permission extends BaseEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
+    /**
+     * 权限名称
+     */
     @NotBlank(message = "权限名称不能为空")
     @Size(max = 50, message = "权限名称长度不能超过50个字符")
     @Column(name = "permission_name", nullable = false, length = 50)
     private String permissionName;
 
+    /**
+     * 权限键（唯一标识）
+     */
     @NotBlank(message = "权限键不能为空")
     @Size(max = 100, message = "权限键长度不能超过100个字符")
     @Column(name = "permission_key", unique = true, nullable = false, length = 100)
     private String permissionKey;
 
+    /**
+     * 权限描述
+     */
     @Size(max = 200, message = "权限描述长度不能超过200个字符")
     @Column(name = "description", length = 200)
     private String description;
 
-    @Size(max = 50, message = "权限类型长度不能超过50个字符")
-    @Column(name = "permission_type", length = 50)
-    private String permissionType; // 权限类型：menu, button, api等
+    /**
+     * 权限类型 (menu/button/api/data)
+     */
+    @Size(max = 20, message = "权限类型长度不能超过20个字符")
+    @Column(name = "permission_type", length = 20)
+    private String permissionType = "api";
 
+    /**
+     * 资源路径
+     */
     @Size(max = 200, message = "资源路径长度不能超过200个字符")
     @Column(name = "resource_path", length = 200)
-    private String resourcePath; // 资源路径
+    private String resourcePath;
 
+    /**
+     * HTTP方法 (GET/POST/PUT/DELETE/ALL)
+     */
+    @Size(max = 10, message = "HTTP方法长度不能超过10个字符")
+    @Column(name = "http_method", length = 10)
+    private String httpMethod = "ALL";
+
+    /**
+     * 父权限ID
+     */
     @Column(name = "parent_id")
-    private Long parentId; // 父权限ID
+    private Long parentId;
 
-    @Column(nullable = false, columnDefinition = "TINYINT DEFAULT 1")
-    private Integer status = 1;
+    /**
+     * 权限级别（数字越小级别越高）
+     */
+    @Column(name = "permission_level", columnDefinition = "INT DEFAULT 1")
+    private Integer permissionLevel = 1;
 
+    /**
+     * 排序顺序
+     */
     @Column(name = "sort_order", columnDefinition = "INT DEFAULT 0")
     private Integer sortOrder = 0;
 
-    @Column(name = "created_time", updatable = false)
-    private LocalDateTime createdTime;
+    /**
+     * 是否为系统权限
+     */
+    @Column(name = "is_system", nullable = false, columnDefinition = "TINYINT DEFAULT 0")
+    private Boolean isSystem = false;
 
-    @Column(name = "updated_time")
-    private LocalDateTime updatedTime;
+    /**
+     * 图标
+     */
+    @Size(max = 100, message = "图标长度不能超过100个字符")
+    @Column(name = "icon", length = 100)
+    private String icon;
 
-    @Column(name = "deleted", columnDefinition = "TINYINT DEFAULT 0")
-    private Integer deleted = 0;
+    // ================================
+    // 关联关系
+    // ================================
 
-    @PrePersist
-    protected void onCreate() {
-        createdTime = LocalDateTime.now();
-        updatedTime = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedTime = LocalDateTime.now();
-    }
-
-    // 关联关系 - 角色权限
+    /**
+     * 角色权限关联
+     */
     @OneToMany(mappedBy = "permission", fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<RolePermission> rolePermissions;
 
+    // ================================
     // 构造函数
-    public Permission() {}
+    // ================================
+
+    public Permission() {
+        super();
+    }
 
     public Permission(String permissionName, String permissionKey) {
+        this();
         this.permissionName = permissionName;
         this.permissionKey = permissionKey;
     }
 
     public Permission(String permissionName, String permissionKey, String description, String permissionType) {
-        this.permissionName = permissionName;
-        this.permissionKey = permissionKey;
+        this(permissionName, permissionKey);
         this.description = description;
         this.permissionType = permissionType;
     }
+
+    // ================================
+    // 业务方法
+    // ================================
+
+    /**
+     * 检查是否为菜单权限
+     */
+    public boolean isMenuPermission() {
+        return "menu".equals(permissionType);
+    }
+
+    /**
+     * 检查是否为按钮权限
+     */
+    public boolean isButtonPermission() {
+        return "button".equals(permissionType);
+    }
+
+    /**
+     * 检查是否为API权限
+     */
+    public boolean isApiPermission() {
+        return "api".equals(permissionType);
+    }
+
+    /**
+     * 检查是否为数据权限
+     */
+    public boolean isDataPermission() {
+        return "data".equals(permissionType);
+    }
+
+    /**
+     * 检查是否为系统权限
+     */
+    public boolean isSystemPermission() {
+        return isSystem != null && isSystem;
+    }
+
+    /**
+     * 检查是否为根权限（没有父权限）
+     */
+    public boolean isRootPermission() {
+        return parentId == null || parentId == 0;
+    }
+
+    /**
+     * 获取权限类型文本
+     */
+    public String getPermissionTypeText() {
+        if (permissionType == null) return "未知";
+        return switch (permissionType) {
+            case "menu" -> "菜单权限";
+            case "button" -> "按钮权限";
+            case "api" -> "接口权限";
+            case "data" -> "数据权限";
+            default -> permissionType;
+        };
+    }
+
+    /**
+     * 获取HTTP方法文本
+     */
+    public String getHttpMethodText() {
+        if (httpMethod == null) return "ALL";
+        return switch (httpMethod.toUpperCase()) {
+            case "GET" -> "查询";
+            case "POST" -> "新增";
+            case "PUT" -> "修改";
+            case "DELETE" -> "删除";
+            case "ALL" -> "全部";
+            default -> httpMethod;
+        };
+    }
+
+    // ================================
+    // Getter and Setter methods
+    // ================================
 
     // Getter 和 Setter 方法
     public Long getId() {
@@ -165,29 +283,7 @@ public class Permission {
         this.sortOrder = sortOrder;
     }
 
-    public LocalDateTime getCreatedTime() {
-        return createdTime;
-    }
 
-    public void setCreatedTime(LocalDateTime createdTime) {
-        this.createdTime = createdTime;
-    }
-
-    public LocalDateTime getUpdatedTime() {
-        return updatedTime;
-    }
-
-    public void setUpdatedTime(LocalDateTime updatedTime) {
-        this.updatedTime = updatedTime;
-    }
-
-    public Integer getDeleted() {
-        return deleted;
-    }
-
-    public void setDeleted(Integer deleted) {
-        this.deleted = deleted;
-    }
 
     public List<RolePermission> getRolePermissions() {
         return rolePermissions;
@@ -230,22 +326,6 @@ public class Permission {
         this.description = permissionDesc;
     }
 
-    public LocalDateTime getCreatedAt() {
-        return createdTime;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdTime = createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedTime;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedTime = updatedAt;
-    }
-
     @Override
     public String toString() {
         return "Permission{" +
@@ -254,8 +334,14 @@ public class Permission {
                 ", permissionKey='" + permissionKey + '\'' +
                 ", description='" + description + '\'' +
                 ", permissionType='" + permissionType + '\'' +
+                ", resourcePath='" + resourcePath + '\'' +
+                ", httpMethod='" + httpMethod + '\'' +
+                ", parentId=" + parentId +
                 ", status=" + status +
-                ", createdTime=" + createdTime +
+                ", sortOrder=" + sortOrder +
+                ", isSystem=" + isSystem +
+                ", createdAt=" + createdAt +
+                ", updatedAt=" + updatedAt +
                 '}';
     }
 }

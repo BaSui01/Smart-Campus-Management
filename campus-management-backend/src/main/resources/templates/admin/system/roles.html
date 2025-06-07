@@ -5,6 +5,7 @@
 <head th:replace="~{layout/admin :: head}">
     <th:block th:fragment="head-extra">
         <title>角色管理 - 智慧校园管理系统</title>
+        <link th:href="@{/css/admin-common.css}" rel="stylesheet">
         <link th:href="@{/css/components/data-table.css}" rel="stylesheet">
         <link th:href="@{/css/components/form-components.css}" rel="stylesheet">
 
@@ -53,9 +54,14 @@
                 </h1>
                 <p class="text-muted mb-0">管理系统角色和权限</p>
             </div>
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addRoleModal">
-                <i class="fas fa-plus me-2"></i>添加角色
-            </button>
+            <div class="btn-group">
+                <button type="button" class="btn btn-primary" id="addBtn">
+                    <i class="fas fa-plus me-2"></i>添加角色
+                </button>
+                <button type="button" class="btn btn-outline-danger" id="batchDeleteBtn" disabled>
+                    <i class="fas fa-trash me-2"></i>批量删除
+                </button>
+            </div>
         </div>
 
         <!-- 统计卡片 -->
@@ -148,21 +154,24 @@
                                 <td th:text="${role.userCount ?: 0}">0</td>
                                 <td>2024-01-01 00:00</td>
                                 <td>
-                                    <div class="btn-group btn-group-sm">
-                                        <button type="button" class="btn btn-outline-primary"
-                                                th:data-role-id="${role.id}"
-                                                th:data-role-name="${role.roleDescription}"
-                                                onclick="managePermissions(this.dataset.roleId, this.dataset.roleName)">
+                                    <div class="action-buttons">
+                                        <button type="button" class="btn-action btn-view"
+                                                data-action="permissions"
+                                                th:data-id="${role.id}"
+                                                th:data-name="${role.roleDescription}"
+                                                title="管理权限">
                                             <i class="fas fa-key"></i>
                                         </button>
-                                        <button type="button" class="btn btn-outline-warning"
-                                                th:data-role-id="${role.id}"
-                                                onclick="editRole(this.dataset.roleId)">
+                                        <button type="button" class="btn-action btn-edit"
+                                                data-action="edit"
+                                                th:data-id="${role.id}"
+                                                title="编辑">
                                             <i class="fas fa-edit"></i>
                                         </button>
-                                        <button type="button" class="btn btn-outline-danger"
-                                                th:data-role-id="${role.id}"
-                                                onclick="deleteRole(this.dataset.roleId)">
+                                        <button type="button" class="btn-action btn-delete"
+                                                data-action="delete"
+                                                th:data-id="${role.id}"
+                                                title="删除">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </div>
@@ -237,7 +246,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                    <button type="button" class="btn btn-primary" onclick="saveEditRole()">保存</button>
+                    <button type="button" class="btn btn-primary" id="saveEditRoleBtn">保存</button>
                 </div>
             </div>
         </div>
@@ -277,75 +286,13 @@
         </div>
     </div>
 
+        </div>
+
     </div>
 
     <th:block th:fragment="scripts">
-        <!-- 角色管理特定脚本 -->
-        <script>
-            // 角色操作函数
-            function editRole(id) {
-                alert('编辑角色：' + id);
-            }
-
-            function managePermissions(id, displayName) {
-                alert('管理权限：' + displayName + ' (ID: ' + id + ')');
-            }
-
-            function deleteRole(id) {
-                if (confirm('确定要删除这个角色吗？此操作不可恢复！')) {
-                    alert('删除角色：' + id);
-                }
-            }
-
-            // 保存新角色
-            function saveRole() {
-                const form = document.getElementById('addRoleForm');
-                const formData = new FormData(form);
-
-                const roleData = {
-                    name: formData.get('roleName'),
-                    displayName: formData.get('roleDisplayName'),
-                    description: formData.get('roleDescription')
-                };
-
-                // 验证必填字段
-                if (!roleData.name || !roleData.displayName) {
-                    alert('请填写角色名称和显示名称');
-                    return;
-                }
-
-                fetch('/admin/api/roles', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(roleData)
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('添加角色成功');
-                        bootstrap.Modal.getInstance(document.getElementById('addRoleModal')).hide();
-                        window.location.reload();
-                    } else {
-                        alert('添加角色失败：' + (data.message || '未知错误'));
-                    }
-                })
-                .catch(error => {
-                    console.error('添加角色失败:', error);
-                    alert('添加角色失败，请稍后重试');
-                });
-            }
-
-            // 权限管理相关函数（简化版）
-            function savePermissions() {
-                alert('权限保存功能待实现');
-            }
-
-            function toggleAllPermissions(checked) {
-                alert('全选/取消全选功能待实现');
-            }
-        </script>
+        <!-- 引入角色管理模块 -->
+        <script th:src="@{/js/modules/role-management.js}"></script>
     </th:block>
 </body>
 </html>

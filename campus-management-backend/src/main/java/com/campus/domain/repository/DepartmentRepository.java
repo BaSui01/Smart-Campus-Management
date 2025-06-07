@@ -3,7 +3,7 @@ package com.campus.domain.repository;
 import com.campus.domain.entity.Department;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -12,54 +12,79 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * 院系数据访问接口
+ * 部门Repository接口
+ * 提供部门相关的数据访问方法
  *
  * @author Campus Management Team
  * @version 1.0.0
- * @since 2025-06-06
+ * @since 2025-06-07
  */
 @Repository
-public interface DepartmentRepository extends JpaRepository<Department, Long> {
+public interface DepartmentRepository extends BaseRepository<Department> {
+
+    // ================================
+    // 基础查询方法
+    // ================================
 
     /**
-     * 根据院系代码查找院系
+     * 根据部门代码查找部门
      */
-    Optional<Department> findByDeptCodeAndDeleted(String deptCode, Integer deleted);
+    @Query("SELECT d FROM Department d WHERE d.deptCode = :deptCode AND d.deleted = 0")
+    Optional<Department> findByDeptCode(@Param("deptCode") String deptCode);
 
     /**
-     * 根据院系名称查找院系
+     * 根据部门名称查找部门
      */
-    Optional<Department> findByDeptNameAndDeleted(String deptName, Integer deleted);
+    @Query("SELECT d FROM Department d WHERE d.deptName = :deptName AND d.deleted = 0")
+    Optional<Department> findByDeptName(@Param("deptName") String deptName);
 
     /**
-     * 查找所有未删除的院系
+     * 根据上级部门ID查找子部门
      */
-    List<Department> findByDeletedOrderBySortOrderAsc(Integer deleted);
+    @Query("SELECT d FROM Department d WHERE d.parentId = :parentId AND d.deleted = 0 ORDER BY d.sortOrder ASC")
+    List<Department> findByParentId(@Param("parentId") Long parentId);
 
     /**
-     * 根据上级院系ID查找子院系
+     * 查找顶级部门（没有上级部门）
      */
-    List<Department> findByParentIdAndDeletedOrderBySortOrderAsc(Long parentId, Integer deleted);
+    @Query("SELECT d FROM Department d WHERE d.parentId IS NULL AND d.deleted = 0 ORDER BY d.sortOrder ASC")
+    List<Department> findTopLevelDepartments();
 
     /**
-     * 查找顶级院系（没有上级院系）
+     * 根据部门类型查找部门
      */
-    List<Department> findByParentIdIsNullAndDeletedOrderBySortOrderAsc(Integer deleted);
+    @Query("SELECT d FROM Department d WHERE d.deptType = :deptType AND d.deleted = 0 ORDER BY d.sortOrder ASC")
+    List<Department> findByDeptType(@Param("deptType") String deptType);
 
     /**
-     * 根据院系类型查找院系
+     * 根据部门级别查找部门
      */
-    List<Department> findByDeptTypeAndDeletedOrderBySortOrderAsc(String deptType, Integer deleted);
+    @Query("SELECT d FROM Department d WHERE d.deptLevel = :deptLevel AND d.deleted = 0 ORDER BY d.sortOrder ASC")
+    List<Department> findByDeptLevel(@Param("deptLevel") Integer deptLevel);
 
     /**
-     * 根据院系级别查找院系
+     * 根据负责人ID查找部门
      */
-    List<Department> findByDeptLevelAndDeletedOrderBySortOrderAsc(Integer deptLevel, Integer deleted);
+    @Query("SELECT d FROM Department d WHERE d.leaderId = :leaderId AND d.deleted = 0 ORDER BY d.sortOrder ASC")
+    List<Department> findByLeaderId(@Param("leaderId") Long leaderId);
 
     /**
-     * 分页查询院系
+     * 根据部门名称模糊查询
      */
-    Page<Department> findByDeletedOrderByCreatedAtDesc(Integer deleted, Pageable pageable);
+    @Query("SELECT d FROM Department d WHERE d.deptName LIKE %:deptName% AND d.deleted = 0 ORDER BY d.sortOrder ASC")
+    List<Department> findByDeptNameContaining(@Param("deptName") String deptName);
+
+    /**
+     * 查找启用的部门
+     */
+    @Query("SELECT d FROM Department d WHERE d.status = 1 AND d.deleted = 0 ORDER BY d.sortOrder ASC")
+    List<Department> findActiveDepartments();
+
+    /**
+     * 分页查找启用的部门
+     */
+    @Query("SELECT d FROM Department d WHERE d.status = 1 AND d.deleted = 0")
+    Page<Department> findActiveDepartments(Pageable pageable);
 
     /**
      * 根据条件分页查询院系
@@ -113,13 +138,78 @@ public interface DepartmentRepository extends JpaRepository<Department, Long> {
     @Query("SELECT d FROM Department d WHERE d.deleted = 0 ORDER BY d.sortOrder ASC")
     List<Department> findDepartmentTree();
 
-    /**
-     * 根据负责人ID查找院系
-     */
-    List<Department> findByLeaderIdAndDeleted(Long leaderId, Integer deleted);
+
 
     /**
-     * 查找启用的院系
+     * 查找启用的院系（兼容性方法）
      */
-    List<Department> findByStatusAndDeletedOrderBySortOrderAsc(Integer status, Integer deleted);
+    default List<Department> findByStatusAndDeletedOrderBySortOrderAsc(Integer status, Integer deleted) {
+        return findActiveDepartments();
+    }
+
+    // ================================
+    // 兼容性方法（为现有Service提供支持）
+    // ================================
+
+    /**
+     * 根据部门代码查找部门（兼容性方法）
+     */
+    default Optional<Department> findByDeptCodeAndDeleted(String deptCode, Integer deleted) {
+        return findByDeptCode(deptCode);
+    }
+
+    /**
+     * 根据部门名称查找部门（兼容性方法）
+     */
+    default Optional<Department> findByDeptNameAndDeleted(String deptName, Integer deleted) {
+        return findByDeptName(deptName);
+    }
+
+    /**
+     * 查找所有未删除的部门（兼容性方法）
+     */
+    @Query("SELECT d FROM Department d WHERE d.deleted = 0 ORDER BY d.sortOrder ASC")
+    List<Department> findByDeletedOrderBySortOrderAsc(Integer deleted);
+
+    /**
+     * 根据上级部门ID查找子部门（兼容性方法）
+     */
+    default List<Department> findByParentIdAndDeletedOrderBySortOrderAsc(Long parentId, Integer deleted) {
+        return findByParentId(parentId);
+    }
+
+    /**
+     * 查找顶级部门（兼容性方法）
+     */
+    default List<Department> findByParentIdIsNullAndDeletedOrderBySortOrderAsc(Integer deleted) {
+        return findTopLevelDepartments();
+    }
+
+    /**
+     * 根据部门类型查找部门（兼容性方法）
+     */
+    default List<Department> findByDeptTypeAndDeletedOrderBySortOrderAsc(String deptType, Integer deleted) {
+        return findByDeptType(deptType);
+    }
+
+    /**
+     * 根据部门级别查找部门（兼容性方法）
+     */
+    default List<Department> findByDeptLevelAndDeletedOrderBySortOrderAsc(Integer deptLevel, Integer deleted) {
+        return findByDeptLevel(deptLevel);
+    }
+
+    /**
+     * 分页查询部门（兼容性方法）
+     */
+    @Query("SELECT d FROM Department d WHERE d.deleted = 0 ORDER BY d.createdAt DESC")
+    Page<Department> findByDeletedOrderByCreatedAtDesc(Integer deleted, Pageable pageable);
+
+    /**
+     * 根据负责人ID查找部门（兼容性方法）
+     */
+    default List<Department> findByLeaderIdAndDeleted(Long leaderId, Integer deleted) {
+        return findByLeaderId(leaderId);
+    }
+
 }

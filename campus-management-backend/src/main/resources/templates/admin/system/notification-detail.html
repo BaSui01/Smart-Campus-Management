@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>通知详情 - 智慧校园管理系统</title>
+    
+    <!-- 引入布局头部 -->
+    <div th:replace="~{layout/admin :: head}"></div>
+</head>
+<body>
+    <!-- 使用管理后台布局 -->
+    <div th:replace="~{layout/admin :: layout}">
+        <!-- 页面内容 -->
+        <div th:fragment="content" class="container-fluid">
+            <!-- 页面标题 -->
+            <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                <h1 class="h3 mb-0 text-gray-800">
+                    <i class="fas fa-bell text-primary me-2"></i>通知详情
+                </h1>
+                <div>
+                    <a href="/admin/notifications" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>返回列表
+                    </a>
+                    <a th:href="@{/admin/notifications/edit(id=${notification.id})}" class="btn btn-primary ms-2">
+                        <i class="fas fa-edit me-2"></i>编辑
+                    </a>
+                </div>
+            </div>
+
+            <!-- 错误提示 -->
+            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <span th:text="${error}">错误信息</span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <!-- 通知详情 -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-info-circle me-2"></i>通知信息
+                    </h6>
+                    <div>
+                        <!-- 状态标签 -->
+                        <span class="badge me-2" 
+                              th:classappend="${notification.status == 'PUBLISHED' ? 'bg-success' : 
+                                              notification.status == 'DRAFT' ? 'bg-secondary' : 'bg-warning'}"
+                              th:text="${notification.status == 'PUBLISHED' ? '已发布' : 
+                                       notification.status == 'DRAFT' ? '草稿' : '已撤回'}">已发布</span>
+                        
+                        <!-- 置顶标签 -->
+                        <span th:if="${notification.isPinned}" class="badge bg-info">
+                            <i class="fas fa-thumbtack me-1"></i>置顶
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- 基本信息 -->
+                        <div class="col-md-8">
+                            <!-- 标题 -->
+                            <div class="mb-4">
+                                <h4 class="text-primary" th:text="${notification.title}">通知标题</h4>
+                            </div>
+                            
+                            <!-- 内容 -->
+                            <div class="mb-4">
+                                <h6 class="text-muted mb-3">通知内容</h6>
+                                <div class="border rounded p-3 bg-light" style="min-height: 200px;">
+                                    <div th:utext="${#strings.replace(notification.content, '\\n', '<br>')}" 
+                                         style="white-space: pre-wrap;">通知内容</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 详细信息 -->
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="m-0 font-weight-bold text-secondary">详细信息</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <strong>通知类型：</strong>
+                                        <span class="badge" 
+                                              th:classappend="${notification.type == 'SYSTEM' ? 'bg-primary' : 
+                                                              notification.type == 'ACADEMIC' ? 'bg-success' : 
+                                                              notification.type == 'FINANCE' ? 'bg-warning' : 'bg-info'}"
+                                              th:text="${notification.type == 'SYSTEM' ? '系统通知' : 
+                                                       notification.type == 'ACADEMIC' ? '教务通知' : 
+                                                       notification.type == 'FINANCE' ? '财务通知' : '活动通知'}">系统通知</span>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <strong>目标受众：</strong>
+                                        <span th:text="${notification.targetAudience == 'ALL' ? '全体用户' : 
+                                                        notification.targetAudience == 'STUDENTS' ? '学生' : 
+                                                        notification.targetAudience == 'TEACHERS' ? '教师' : '管理员'}">全体用户</span>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <strong>优先级：</strong>
+                                        <span class="badge" 
+                                              th:classappend="${notification.priority == 'URGENT' ? 'bg-danger' : 
+                                                              notification.priority == 'HIGH' ? 'bg-warning' : 
+                                                              notification.priority == 'NORMAL' ? 'bg-info' : 'bg-secondary'}"
+                                              th:text="${notification.priority == 'URGENT' ? '紧急' : 
+                                                       notification.priority == 'HIGH' ? '高' : 
+                                                       notification.priority == 'NORMAL' ? '普通' : '低'}">普通</span>
+                                    </div>
+                                    
+                                    <div class="mb-3" th:if="${notification.senderName}">
+                                        <strong>发送者：</strong>
+                                        <span th:text="${notification.senderName}">系统管理员</span>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <strong>创建时间：</strong>
+                                        <span th:text="${#temporals.format(notification.createTime, 'yyyy-MM-dd HH:mm:ss')}">2024-01-01 10:00:00</span>
+                                    </div>
+                                    
+                                    <div class="mb-3" th:if="${notification.publishTime}">
+                                        <strong>发布时间：</strong>
+                                        <span th:text="${#temporals.format(notification.publishTime, 'yyyy-MM-dd HH:mm:ss')}">2024-01-01 10:00:00</span>
+                                    </div>
+                                    
+                                    <div class="mb-3" th:if="${notification.expireTime}">
+                                        <strong>过期时间：</strong>
+                                        <span th:text="${#temporals.format(notification.expireTime, 'yyyy-MM-dd HH:mm:ss')}">2024-01-01 10:00:00</span>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <strong>阅读次数：</strong>
+                                        <span th:text="${notification.readCount}">0</span>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <strong>更新时间：</strong>
+                                        <span th:text="${#temporals.format(notification.updateTime, 'yyyy-MM-dd HH:mm:ss')}">2024-01-01 10:00:00</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 操作按钮 -->
+                            <div class="card mt-3">
+                                <div class="card-header">
+                                    <h6 class="m-0 font-weight-bold text-secondary">操作</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-grid gap-2">
+                                        <!-- 发布/撤回 -->
+                                        <button th:if="${notification.status == 'DRAFT'}" 
+                                                type="button" class="btn btn-success btn-sm"
+                                                th:onclick="'publishNotification(' + ${notification.id} + ')'">
+                                            <i class="fas fa-paper-plane me-2"></i>发布
+                                        </button>
+                                        <button th:if="${notification.status == 'PUBLISHED'}" 
+                                                type="button" class="btn btn-warning btn-sm"
+                                                th:onclick="'withdrawNotification(' + ${notification.id} + ')'">
+                                            <i class="fas fa-undo me-2"></i>撤回
+                                        </button>
+                                        
+                                        <!-- 置顶/取消置顶 -->
+                                        <button th:if="${!notification.isPinned}" 
+                                                type="button" class="btn btn-info btn-sm"
+                                                th:onclick="'pinNotification(' + ${notification.id} + ', true)'">
+                                            <i class="fas fa-thumbtack me-2"></i>置顶
+                                        </button>
+                                        <button th:if="${notification.isPinned}" 
+                                                type="button" class="btn btn-outline-info btn-sm"
+                                                th:onclick="'pinNotification(' + ${notification.id} + ', false)'">
+                                            <i class="fas fa-thumbtack me-2"></i>取消置顶
+                                        </button>
+                                        
+                                        <!-- 删除 -->
+                                        <button type="button" class="btn btn-danger btn-sm"
+                                                th:onclick="'deleteNotification(' + ${notification.id} + ')'">
+                                            <i class="fas fa-trash me-2"></i>删除
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 引入布局脚本 -->
+    <div th:replace="~{layout/admin :: scripts}"></div>
+
+    <!-- 页面特定脚本 -->
+    <script src="/js/pages/notifications.js"></script>
+    <script>
+        // 发布通知
+        function publishNotification(id) {
+            if (confirm('确定要发布这条通知吗？')) {
+                fetch('/admin/notifications/publish', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'id=' + id
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('发布成功');
+                        location.reload();
+                    } else {
+                        alert('发布失败：' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('操作失败');
+                });
+            }
+        }
+
+        // 撤回通知
+        function withdrawNotification(id) {
+            if (confirm('确定要撤回这条通知吗？')) {
+                fetch('/admin/notifications/withdraw', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'id=' + id
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('撤回成功');
+                        location.reload();
+                    } else {
+                        alert('撤回失败：' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('操作失败');
+                });
+            }
+        }
+
+        // 置顶/取消置顶通知
+        function pinNotification(id, pinned) {
+            const action = pinned ? '置顶' : '取消置顶';
+            if (confirm('确定要' + action + '这条通知吗？')) {
+                fetch('/admin/notifications/pin', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'id=' + id + '&pinned=' + pinned
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        location.reload();
+                    } else {
+                        alert(action + '失败：' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('操作失败');
+                });
+            }
+        }
+
+        // 删除通知
+        function deleteNotification(id) {
+            if (confirm('确定要删除这条通知吗？此操作不可恢复！')) {
+                fetch('/admin/notifications/delete', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'id=' + id
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('删除成功');
+                        window.location.href = '/admin/notifications';
+                    } else {
+                        alert('删除失败：' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('操作失败');
+                });
+            }
+        }
+    </script>
+</body>
+</html>

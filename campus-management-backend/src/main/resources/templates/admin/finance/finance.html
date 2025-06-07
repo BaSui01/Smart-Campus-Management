@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>财务管理 - 智慧校园管理系统</title>
+    
+    <!-- 引入组件样式 -->
+    <div th:replace="~{components/admin/admin-components :: head}"></div>
+</head>
+<body>
+    <!-- 侧边栏 -->
+    <div th:replace="~{components/admin/admin-components :: sidebar}"></div>
+
+    <!-- 主要内容区域 -->
+    <div class="content">
+        <!-- 顶部导航栏 -->
+        <div th:replace="~{components/admin/admin-components :: topbar}"></div>
+
+        <!-- 页面内容 -->
+        <div class="content-wrapper">
+            <div class="container-fluid">
+                <!-- 页面标题 -->
+                <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                    <h1 class="h3 mb-0 text-gray-800">
+                        <i class="fas fa-chart-line text-primary me-2"></i>财务管理
+                    </h1>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="/admin/dashboard">首页</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">财务管理</li>
+                        </ol>
+                    </nav>
+                </div>
+
+                <!-- 错误提示 -->
+                <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <span th:text="${error}">错误信息</span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+
+                <!-- 财务统计卡片 -->
+                <div class="row mb-4">
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card border-left-primary shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                            总收入
+                                        </div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                            ¥<span th:text="${#numbers.formatDecimal(stats?.totalIncome ?: 0, 1, 2)}">0.00</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card border-left-success shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                            本月收入
+                                        </div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                            ¥<span th:text="${#numbers.formatDecimal(stats?.monthlyIncome ?: 0, 1, 2)}">0.00</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-calendar fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card border-left-warning shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                            待缴费用
+                                        </div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                            ¥<span th:text="${#numbers.formatDecimal(stats?.unpaidAmount ?: 0, 1, 2)}">0.00</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card border-left-danger shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                            逾期费用
+                                        </div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                            ¥<span th:text="${#numbers.formatDecimal(stats?.overdueAmount ?: 0, 1, 2)}">0.00</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-clock fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 快速操作 -->
+                <div class="row mb-4">
+                    <div class="col-lg-6">
+                        <div class="card shadow">
+                            <div class="card-header py-3">
+                                <h6 class="m-0 font-weight-bold text-primary">
+                                    <i class="fas fa-cogs me-2"></i>快速操作
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-6 mb-3">
+                                        <a href="/admin/finance/fee-items" class="btn btn-primary btn-icon-split w-100">
+                                            <span class="icon text-white-50">
+                                                <i class="fas fa-list-alt"></i>
+                                            </span>
+                                            <span class="text">收费项目</span>
+                                        </a>
+                                    </div>
+                                    <div class="col-6 mb-3">
+                                        <a href="/admin/finance/payment-records" class="btn btn-success btn-icon-split w-100">
+                                            <span class="icon text-white-50">
+                                                <i class="fas fa-receipt"></i>
+                                            </span>
+                                            <span class="text">缴费记录</span>
+                                        </a>
+                                    </div>
+                                    <div class="col-6 mb-3">
+                                        <a href="/admin/finance/reports" class="btn btn-info btn-icon-split w-100">
+                                            <span class="icon text-white-50">
+                                                <i class="fas fa-chart-bar"></i>
+                                            </span>
+                                            <span class="text">财务报表</span>
+                                        </a>
+                                    </div>
+                                    <div class="col-6 mb-3">
+                                        <button class="btn btn-warning btn-icon-split w-100" onclick="exportFinanceData()">
+                                            <span class="icon text-white-50">
+                                                <i class="fas fa-download"></i>
+                                            </span>
+                                            <span class="text">导出数据</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-6">
+                        <div class="card shadow">
+                            <div class="card-header py-3">
+                                <h6 class="m-0 font-weight-bold text-primary">
+                                    <i class="fas fa-clock me-2"></i>最近收支记录
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>学生</th>
+                                                <th>费用类型</th>
+                                                <th>金额</th>
+                                                <th>状态</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr th:each="record : ${recentRecords}" th:if="${recentRecords != null}">
+                                                <td th:text="${record.studentName}">张三</td>
+                                                <td th:text="${record.feeType}">学费</td>
+                                                <td class="text-success">
+                                                    ¥<span th:text="${#numbers.formatDecimal(record.amount, 1, 2)}">0.00</span>
+                                                </td>
+                                                <td>
+                                                    <span class="badge" 
+                                                          th:classappend="${record.status == '已缴费' ? 'bg-success' : 'bg-warning'}"
+                                                          th:text="${record.status}">已缴费</span>
+                                                </td>
+                                            </tr>
+                                            <tr th:if="${recentRecords == null or recentRecords.empty}">
+                                                <td colspan="4" class="text-center text-muted">暂无记录</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 财务概览图表 -->
+                <div class="row">
+                    <div class="col-lg-6">
+                        <div class="card shadow mb-4">
+                            <div class="card-header py-3">
+                                <h6 class="m-0 font-weight-bold text-primary">
+                                    <i class="fas fa-chart-area me-2"></i>收入趋势
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-area">
+                                    <canvas id="incomeChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-6">
+                        <div class="card shadow mb-4">
+                            <div class="card-header py-3">
+                                <h6 class="m-0 font-weight-bold text-primary">
+                                    <i class="fas fa-chart-pie me-2"></i>费用类型分布
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-pie pt-4 pb-2">
+                                    <canvas id="feeTypeChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 引入组件脚本 -->
+    <div th:replace="~{components/admin/admin-components :: scripts}"></div>
+
+    <!-- 页面特定脚本 -->
+    <script src="/js/pages/finance.js"></script>
+</body>
+</html>

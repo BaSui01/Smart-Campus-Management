@@ -3,7 +3,6 @@ package com.campus.domain.repository;
 import com.campus.domain.entity.PaymentRecord;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -14,86 +13,87 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * 缴费记录数据访问层
+ * 缴费记录Repository接口
+ * 提供缴费记录相关的数据访问方法
  *
  * @author Campus Management Team
  * @version 1.0.0
- * @since 2025-06-05
+ * @since 2025-06-07
  */
 @Repository
-public interface PaymentRecordRepository extends JpaRepository<PaymentRecord, Long> {
+public interface PaymentRecordRepository extends BaseRepository<PaymentRecord> {
 
-    /**
-     * 查找所有未删除的缴费记录
-     *
-     * @return 缴费记录列表
-     */
-    @Query("SELECT p FROM PaymentRecord p WHERE p.deleted = 0 ORDER BY p.paymentTime DESC")
-    List<PaymentRecord> findAllActive();
-
-    /**
-     * 分页查询所有未删除的缴费记录
-     *
-     * @param pageable 分页参数
-     * @return 缴费记录分页结果
-     */
-    @Query("SELECT p FROM PaymentRecord p WHERE p.deleted = 0 ORDER BY p.paymentTime DESC")
-    Page<PaymentRecord> findAllActive(Pageable pageable);
+    // ================================
+    // 基础查询方法
+    // ================================
 
     /**
      * 根据学生ID查找缴费记录
-     *
-     * @param studentId 学生ID
-     * @return 缴费记录列表
      */
     @Query("SELECT p FROM PaymentRecord p WHERE p.studentId = :studentId AND p.deleted = 0 ORDER BY p.paymentTime DESC")
     List<PaymentRecord> findByStudentId(@Param("studentId") Long studentId);
 
     /**
+     * 分页根据学生ID查找缴费记录
+     */
+    @Query("SELECT p FROM PaymentRecord p WHERE p.studentId = :studentId AND p.deleted = 0")
+    Page<PaymentRecord> findByStudentId(@Param("studentId") Long studentId, Pageable pageable);
+
+    /**
      * 根据缴费项目ID查找缴费记录
-     *
-     * @param feeItemId 缴费项目ID
-     * @return 缴费记录列表
      */
     @Query("SELECT p FROM PaymentRecord p WHERE p.feeItemId = :feeItemId AND p.deleted = 0 ORDER BY p.paymentTime DESC")
     List<PaymentRecord> findByFeeItemId(@Param("feeItemId") Long feeItemId);
 
     /**
+     * 分页根据缴费项目ID查找缴费记录
+     */
+    @Query("SELECT p FROM PaymentRecord p WHERE p.feeItemId = :feeItemId AND p.deleted = 0")
+    Page<PaymentRecord> findByFeeItemId(@Param("feeItemId") Long feeItemId, Pageable pageable);
+
+    /**
      * 根据交易流水号查找缴费记录
-     *
-     * @param transactionNo 交易流水号
-     * @return 缴费记录
      */
     @Query("SELECT p FROM PaymentRecord p WHERE p.transactionNo = :transactionNo AND p.deleted = 0")
     Optional<PaymentRecord> findByTransactionNo(@Param("transactionNo") String transactionNo);
 
     /**
      * 根据缴费方式查找缴费记录
-     *
-     * @param paymentMethod 缴费方式
-     * @return 缴费记录列表
      */
     @Query("SELECT p FROM PaymentRecord p WHERE p.paymentMethod = :paymentMethod AND p.deleted = 0 ORDER BY p.paymentTime DESC")
     List<PaymentRecord> findByPaymentMethod(@Param("paymentMethod") String paymentMethod);
 
     /**
-     * 根据状态查找缴费记录
-     *
-     * @param status 状态
-     * @return 缴费记录列表
+     * 分页根据缴费方式查找缴费记录
      */
-    @Query("SELECT p FROM PaymentRecord p WHERE p.status = :status AND p.deleted = 0 ORDER BY p.paymentTime DESC")
-    List<PaymentRecord> findByStatus(@Param("status") Integer status);
+    @Query("SELECT p FROM PaymentRecord p WHERE p.paymentMethod = :paymentMethod AND p.deleted = 0")
+    Page<PaymentRecord> findByPaymentMethod(@Param("paymentMethod") String paymentMethod, Pageable pageable);
+
+    /**
+     * 根据缴费状态查找缴费记录
+     */
+    @Query("SELECT p FROM PaymentRecord p WHERE p.paymentStatus = :status AND p.deleted = 0 ORDER BY p.paymentTime DESC")
+    List<PaymentRecord> findByPaymentStatus(@Param("status") String paymentStatus);
+
+    /**
+     * 根据金额范围查找缴费记录
+     */
+    @Query("SELECT p FROM PaymentRecord p WHERE p.amount BETWEEN :minAmount AND :maxAmount AND p.deleted = 0 ORDER BY p.paymentTime DESC")
+    List<PaymentRecord> findByAmountBetween(@Param("minAmount") BigDecimal minAmount, @Param("maxAmount") BigDecimal maxAmount);
 
     /**
      * 根据时间范围查找缴费记录
-     *
-     * @param startTime 开始时间
-     * @param endTime 结束时间
-     * @return 缴费记录列表
      */
     @Query("SELECT p FROM PaymentRecord p WHERE p.paymentTime BETWEEN :startTime AND :endTime AND p.deleted = 0 ORDER BY p.paymentTime DESC")
     List<PaymentRecord> findByPaymentTimeBetween(@Param("startTime") LocalDateTime startTime, @Param("endTime") LocalDateTime endTime);
+
+    /**
+     * 分页根据时间范围查找缴费记录
+     */
+    @Query("SELECT p FROM PaymentRecord p WHERE p.paymentTime BETWEEN :startTime AND :endTime AND p.deleted = 0")
+    Page<PaymentRecord> findByPaymentTimeBetween(@Param("startTime") LocalDateTime startTime,
+                                                @Param("endTime") LocalDateTime endTime,
+                                                Pageable pageable);
 
     /**
      * 分页查询缴费记录
@@ -190,4 +190,30 @@ public interface PaymentRecordRepository extends JpaRepository<PaymentRecord, Lo
         )
         """, nativeQuery = true)
     List<Object[]> findUnpaidFeeItemsByStudentId(@Param("studentId") Long studentId);
+
+    // ================================
+    // 兼容性方法（为现有Service提供支持）
+    // ================================
+
+    /**
+     * 查找所有未删除的缴费记录（兼容性方法）
+     */
+    @Query("SELECT p FROM PaymentRecord p WHERE p.deleted = 0 ORDER BY p.paymentTime DESC")
+    List<PaymentRecord> findAllActive();
+
+    /**
+     * 分页查询所有未删除的缴费记录（兼容性方法）
+     */
+    @Query("SELECT p FROM PaymentRecord p WHERE p.deleted = 0 ORDER BY p.paymentTime DESC")
+    Page<PaymentRecord> findAllActive(Pageable pageable);
+
+    /**
+     * 根据状态查找缴费记录（兼容性方法）
+     */
+    default List<PaymentRecord> findByStatus(Integer status) {
+        return findByPaymentStatus(String.valueOf(status));
+    }
+
+
+
 }

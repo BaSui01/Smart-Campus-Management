@@ -4,9 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
+
 
 import java.time.LocalDate;
 import java.util.List;
@@ -17,11 +15,8 @@ import java.util.List;
  *
  * @author Campus Management Team
  * @version 1.0.0
- * @since 2025-06-06
+ * @since 2025-06-07
  */
-@Data
-@EqualsAndHashCode(callSuper = true)
-@ToString(callSuper = true)
 @Entity
 @Table(name = "tb_class", indexes = {
     @Index(name = "idx_class_code", columnList = "class_code"),
@@ -199,7 +194,6 @@ public class SchoolClass extends BaseEntity {
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "department_id", insertable = false, updatable = false)
-    @ToString.Exclude
     @JsonIgnore
     private Department department;
 
@@ -208,7 +202,6 @@ public class SchoolClass extends BaseEntity {
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "head_teacher_id", insertable = false, updatable = false)
-    @ToString.Exclude
     @JsonIgnore
     private User headTeacher;
 
@@ -217,7 +210,6 @@ public class SchoolClass extends BaseEntity {
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "assistant_teacher_id", insertable = false, updatable = false)
-    @ToString.Exclude
     @JsonIgnore
     private User assistantTeacher;
 
@@ -225,17 +217,11 @@ public class SchoolClass extends BaseEntity {
      * 班级学生列表
      */
     @OneToMany(mappedBy = "schoolClass", fetch = FetchType.LAZY)
-    @ToString.Exclude
     @JsonIgnore
     private List<Student> students;
 
-    /**
-     * 班级课程表
-     */
-    @OneToMany(mappedBy = "schoolClass", fetch = FetchType.LAZY)
-    @ToString.Exclude
-    @JsonIgnore
-    private List<CourseSchedule> schedules;
+    // 注意：课程安排通过classList字段关联，不使用直接的实体关联
+    // 因为支持合班教学，一个课程安排可能对应多个班级
 
     // ================================
     // 构造函数
@@ -693,6 +679,8 @@ public class SchoolClass extends BaseEntity {
     public void setStudents(java.util.List<Student> students) {
         this.students = students;
     }
+
+    // 课程安排相关方法已移除，因为使用classList字段进行关联
 
     public String getDescription() {
         return description;

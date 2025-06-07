@@ -7,9 +7,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
+
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -21,11 +19,8 @@ import java.util.List;
  *
  * @author Campus Management Team
  * @version 1.0.0
- * @since 2025-06-06
+ * @since 2025-06-07
  */
-@Data
-@EqualsAndHashCode(callSuper = true)
-@ToString(callSuper = true)
 @Entity
 @Table(name = "tb_user", indexes = {
     @Index(name = "idx_username", columnList = "username"),
@@ -176,7 +171,6 @@ public class User extends BaseEntity {
      * 用户角色关联
      */
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @ToString.Exclude
     @JsonIgnore
     private List<UserRole> userRoles;
 

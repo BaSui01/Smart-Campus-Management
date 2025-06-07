@@ -19,6 +19,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 /**
  * 学生管理API控制器
@@ -44,6 +45,7 @@ public class StudentApiController {
      */
     @GetMapping
     @Operation(summary = "获取学生列表", description = "分页查询学生信息")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ACADEMIC_ADMIN', 'TEACHER')")
     public ApiResponse<Map<String, Object>> getStudents(
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") int page,
             @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") int size,
@@ -87,6 +89,7 @@ public class StudentApiController {
      */
     @GetMapping("/{id}")
     @Operation(summary = "获取学生详情", description = "根据ID查询学生详细信息")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ACADEMIC_ADMIN', 'TEACHER')")
     public ApiResponse<Object[]> getStudentById(@Parameter(description = "学生ID") @PathVariable Long id) {
         Optional<Object[]> student = studentService.findStudentWithUser(id);
         if (student.isPresent()) {
@@ -101,6 +104,7 @@ public class StudentApiController {
      */
     @GetMapping("/form-data")
     @Operation(summary = "获取学生表单数据", description = "获取创建/编辑学生表单所需的数据")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ACADEMIC_ADMIN', 'TEACHER')")
     public ApiResponse<Map<String, Object>> getStudentFormData() {
         try {
             Map<String, Object> formData = new HashMap<>();
@@ -143,6 +147,7 @@ public class StudentApiController {
      */
     @PostMapping
     @Operation(summary = "创建学生", description = "添加新学生信息")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ACADEMIC_ADMIN')")
     public ApiResponse<Student> createStudent(@Parameter(description = "学生信息") @Valid @RequestBody Student student) {
         try {
             Student createdStudent = studentService.createStudent(student);

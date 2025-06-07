@@ -111,7 +111,13 @@ public class PermissionUtil {
             if (attributes != null) {
                 HttpSession session = attributes.getRequest().getSession(false);
                 if (session != null) {
-                    return (User) session.getAttribute("currentUser");
+                    // 优先从session中获取user（AdminJwtInterceptor设置的）
+                    User user = (User) session.getAttribute("user");
+                    if (user == null) {
+                        // 兼容旧的属性名
+                        user = (User) session.getAttribute("currentUser");
+                    }
+                    return user;
                 }
             }
         } catch (Exception e) {

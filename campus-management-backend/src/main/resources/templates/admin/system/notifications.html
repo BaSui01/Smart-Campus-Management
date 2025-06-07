@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/admin :: html}"
+      lang="zh-CN">
+<head th:replace="~{layout/admin :: head}">
+    <th:block th:fragment="head-extra">
+        <title>通知管理 - 智慧校园管理系统</title>
+    </th:block>
+</head>
+<body>
+    <div th:fragment="content">
+            <!-- 页面标题 -->
+            <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                <h1 class="h3 mb-0 text-gray-800">
+                    <i class="fas fa-bell text-primary me-2"></i>通知管理
+                </h1>
+                <div>
+                    <a href="/admin/notifications/add" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>添加通知
+                    </a>
+                </div>
+            </div>
+
+            <!-- 错误提示 -->
+            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <span th:text="${error}">错误信息</span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <!-- 统计卡片 -->
+            <div class="row mb-4">
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-primary shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                        总通知数
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${notifications?.size() ?: 0}">0</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-bell fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-success shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                        已发布
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">2</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-warning shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                        草稿
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">1</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-edit fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-info shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                        今日发布
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">1</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-calendar-day fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 通知列表 -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-list me-2"></i>通知列表
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>标题</th>
+                                    <th>类型</th>
+                                    <th>目标受众</th>
+                                    <th>发送者</th>
+                                    <th>状态</th>
+                                    <th>创建时间</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="notification : ${notifications}" th:if="${notifications != null}">
+                                    <td th:text="${notification.id}">1</td>
+                                    <td>
+                                        <a th:href="@{/admin/notifications/detail(id=${notification.id})}" 
+                                           th:text="${notification.title}" 
+                                           class="text-decoration-none">通知标题</a>
+                                    </td>
+                                    <td>
+                                        <span class="badge" 
+                                              th:classappend="${notification.type == '系统通知' ? 'bg-primary' : 
+                                                              notification.type == '教务通知' ? 'bg-success' : 
+                                                              notification.type == '财务通知' ? 'bg-warning' : 'bg-info'}"
+                                              th:text="${notification.type}">系统通知</span>
+                                    </td>
+                                    <td th:text="${notification.targetAudience}">全体用户</td>
+                                    <td th:text="${notification.sender}">系统管理员</td>
+                                    <td>
+                                        <span class="badge" 
+                                              th:classappend="${notification.status == '已发布' ? 'bg-success' : 'bg-secondary'}"
+                                              th:text="${notification.status}">已发布</span>
+                                    </td>
+                                    <td th:text="${#temporals.format(notification.createTime, 'yyyy-MM-dd HH:mm')}">2024-01-01 10:00</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <a th:href="@{/admin/notifications/detail(id=${notification.id})}" 
+                                               class="btn btn-outline-info" title="查看详情">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a th:href="@{/admin/notifications/edit(id=${notification.id})}" 
+                                               class="btn btn-outline-primary" title="编辑">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-outline-danger" 
+                                                    th:onclick="'deleteNotification(' + ${notification.id} + ')'" title="删除">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr th:if="${notifications == null or notifications.empty}">
+                                    <td colspan="8" class="text-center py-4">
+                                        <div class="text-muted">
+                                            <i class="fas fa-inbox fa-3x mb-3"></i>
+                                            <p>暂无通知数据</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <th:block th:fragment="scripts">
+        <!-- 页面特定脚本 -->
+        <script src="/js/pages/notifications.js"></script>
+    </th:block>
+</body>
+</html>

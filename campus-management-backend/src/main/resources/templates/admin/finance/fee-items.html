@@ -5,58 +5,72 @@
 <head th:replace="~{layout/admin :: head}">
     <th:block th:fragment="head-extra">
         <title>学费管理 - 智慧校园管理系统</title>
-        <!-- 网站图标 -->
-        <link rel="icon" type="image/svg+xml" th:href="@{/images/favicon.svg}">
-        <link rel="alternate icon" th:href="@{/favicon.ico}">
-        <link rel="apple-touch-icon" th:href="@{/images/favicon.svg}">
+        <!-- 财务管理样式 -->
+        <link rel="stylesheet" href="/css/finance.css">
     </th:block>
 </head>
 <body>
     <div th:fragment="content">
         <!-- 页面标题 -->
-        <div th:replace="~{components/admin/admin-components :: page-header(
-            title='学费管理',
-            icon='fas fa-money-bill',
-            showAddButton=true,
-            addButtonText='添加缴费项目',
-            addButtonTarget='#addFeeItemModal'
-        )}"></div>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-money-bill me-2 text-primary"></i>学费管理
+                </h1>
+                <p class="text-muted mb-0">管理学校各类费用项目</p>
+            </div>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addFeeItemModal">
+                <i class="fas fa-plus me-2"></i>添加缴费项目
+            </button>
+        </div>
 
-        <!-- 统计卡片 -->
-        <div th:replace="~{components/admin/admin-components :: stat-cards(${feeItemStats})}"></div>
+        <!-- 简化的费用项目列表 -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-list me-2"></i>费用项目列表
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover finance-table" id="feeItemsTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th>项目名称</th>
+                                <th>费用类型</th>
+                                <th>金额</th>
+                                <th>状态</th>
+                                <th>创建时间</th>
+                                <th width="120">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="6" class="text-center py-4">
+                                    <div class="text-muted">
+                                        <i class="fas fa-inbox fa-3x mb-3"></i>
+                                        <p>暂无费用项目数据</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- 分页 -->
+                <nav aria-label="费用项目分页" class="mt-3">
+                    <ul class="pagination pagination-finance justify-content-center" style="display: none;">
+                        <!-- 分页内容由JavaScript动态生成 -->
+                    </ul>
+                </nav>
+            </div>
+        </div>
 
-        <!-- 搜索筛选组件 -->
-        <div th:replace="~{components/admin/admin-components :: search-filter('/admin/fee-items', ${feeItemFilters})}"></div>
-
-        <!-- 数据表格组件 -->
-        <div th:replace="~{components/admin/admin-components :: data-table(${feeItemTableConfig}, ${feeItems})}"></div>
     </div>
 
-    <!-- 引入admin组件样式和脚本 -->
-    <th:block th:replace="~{components/admin/admin-components :: admin-style}"></th:block>
-    <th:block th:replace="~{components/admin/admin-components :: admin-script}"></th:block>
-
-    <!-- 学费管理特定脚本 -->
-    <script th:fragment="page-script">
-        // 缴费项目操作函数
-        function viewFeeItem(feeItemId) {
-            alert('查看缴费项目详情：' + feeItemId);
-        }
-
-        function editFeeItem(feeItemId) {
-            alert('编辑缴费项目：' + feeItemId);
-        }
-
-        function deleteFeeItem(feeItemId) {
-            if (confirm('确定要删除该缴费项目吗？')) {
-                alert('删除缴费项目：' + feeItemId);
-            }
-        }
-
-        function viewPaymentRecords(feeItemId) {
-            alert('查看缴费记录：' + feeItemId);
-        }
-    </script>
+    <th:block th:fragment="scripts">
+        <!-- 费用项目管理脚本 -->
+        <script src="/js/modules/fee-items-management.js"></script>
 
     <!-- 添加缴费项目模态框 -->
     <div class="modal fade" id="addFeeItemModal" tabindex="-1">
@@ -132,51 +146,6 @@
         </div>
     </div>
 
-    <script>
-        function submitAddFeeItemForm() {
-            const form = document.getElementById('addFeeItemForm');
-            if (!form.checkValidity()) {
-                form.classList.add('was-validated');
-                return;
-            }
-
-            const formData = new FormData(form);
-            const feeItemData = {
-                itemCode: formData.get('itemCode'),
-                itemName: formData.get('itemName'),
-                feeType: formData.get('feeType'),
-                amount: formData.get('amount'),
-                applicableGrade: formData.get('applicableGrade'),
-                dueDate: formData.get('dueDate'),
-                description: formData.get('description'),
-                status: 1 // 默认启用
-            };
-
-            fetch('/admin/fee-items/add', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(feeItemData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('添加缴费项目成功！');
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('addFeeItemModal'));
-                    modal.hide();
-                    form.reset();
-                    form.classList.remove('was-validated');
-                    window.location.reload();
-                } else {
-                    alert('添加缴费项目失败：' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('添加缴费项目失败，请稍后重试');
-            });
-        }
-    </script>
+    </th:block>
 </body>
 </html>

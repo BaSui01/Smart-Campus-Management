@@ -2,6 +2,10 @@
  * API客户端工具类
  * 统一处理API请求、响应和错误处理
  */
+
+// 避免重复声明
+if (typeof window.ApiClient === 'undefined') {
+
 class ApiClient {
     constructor() {
         this.baseURL = '';
@@ -15,8 +19,13 @@ class ApiClient {
      * 获取JWT token
      */
     getToken() {
-        // 从localStorage获取token
-        let token = localStorage.getItem('token');
+        // 优先使用认证管理器的token
+        if (window.authManager && window.authManager.getToken()) {
+            return window.authManager.getToken();
+        }
+
+        // 备用方案：从localStorage获取token
+        let token = localStorage.getItem('campus_auth_token') || localStorage.getItem('token');
 
         // 如果localStorage没有，尝试从sessionStorage获取
         if (!token) {
@@ -43,6 +52,13 @@ class ApiClient {
      */
     async fetchTokenFromServer() {
         try {
+            // 优先使用认证管理器获取认证信息
+            if (window.authManager) {
+                await window.authManager.fetchAuthInfo();
+                return window.authManager.getToken();
+            }
+
+            // 备用方案：直接请求token状态
             const response = await fetch('/admin/token-status', {
                 method: 'GET',
                 headers: {
@@ -56,9 +72,11 @@ class ApiClient {
                 const data = await response.json();
                 if (data.valid && data.token) {
                     // 将token存储到localStorage以供后续使用
-                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('campus_auth_token', data.token);
                     localStorage.setItem('tokenType', 'Bearer');
-                    localStorage.setItem('username', data.username);
+                    if (data.username) {
+                        localStorage.setItem('username', data.username);
+                    }
                     return data.token;
                 }
             }
@@ -106,11 +124,17 @@ class ApiClient {
      * 发送POST请求
      */
     async post(url, data = {}) {
-        return this.request(url, {
+        const options = {
             method: 'POST',
-            headers: await this.getHeaders(),
-            body: JSON.stringify(data)
-        });
+            headers: await this.getHeaders()
+        };
+
+        // 只有当data不为null且不为undefined时才添加body
+        if (data !== null && data !== undefined) {
+            options.body = JSON.stringify(data);
+        }
+
+        return this.request(url, options);
     }
 
     /**
@@ -127,11 +151,18 @@ class ApiClient {
     /**
      * 发送DELETE请求
      */
-    async delete(url) {
-        return this.request(url, {
+    async delete(url, data = null) {
+        const options = {
             method: 'DELETE',
             headers: await this.getHeaders()
-        });
+        };
+
+        // 如果有数据，添加到请求体
+        if (data !== null && data !== undefined) {
+            options.body = JSON.stringify(data);
+        }
+
+        return this.request(url, options);
     }
 
     /**
@@ -139,8 +170,17 @@ class ApiClient {
      */
     async request(url, options) {
         try {
+            // 添加credentials以包含session cookie
+            options.credentials = 'include';
+
             const response = await fetch(url, options);
-            
+
+            // 检查是否被重定向到登录页面
+            if (response.url && response.url.includes('/admin/login')) {
+                console.warn('用户未登录，被重定向到登录页面');
+                throw new Error('用户未登录，请先登录');
+            }
+
             // 检查HTTP状态码
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -150,15 +190,23 @@ class ApiClient {
             const contentType = response.headers.get('content-type');
             if (contentType && contentType.includes('application/json')) {
                 const data = await response.json();
-                
+
                 // 检查业务状态码
                 if (data.success === false) {
                     throw new Error(data.message || '操作失败');
                 }
-                
+
                 return data;
             } else {
-                return await response.text();
+                const text = await response.text();
+
+                // 检查是否返回了HTML登录页面
+                if (text.includes('<title>管理员登录') || text.includes('login-container')) {
+                    console.warn('返回了登录页面HTML，用户可能未登录');
+                    throw new Error('用户未登录，请先登录');
+                }
+
+                return text;
             }
         } catch (error) {
             console.error('API请求失败:', error);
@@ -204,6 +252,10 @@ class ApiClient {
 
 // 创建全局API客户端实例
 const apiClient = new ApiClient();
+
+// 将API客户端暴露到全局作用域
+window.apiClient = apiClient;
+window.ApiClient = ApiClient;
 
 // 页面加载时初始化token
 document.addEventListener('DOMContentLoaded', async function() {
@@ -506,3 +558,10 @@ window.hideLoading = function() {
 window.showAlert = function(message, type = 'info') {
     MessageUtils[type] ? MessageUtils[type](message) : MessageUtils.info(message);
 };
+
+// 将工具类暴露到全局作用域
+window.MessageUtils = MessageUtils;
+window.FormValidator = FormValidator;
+window.LoadingManager = LoadingManager;
+
+} // 关闭 if (typeof window.ApiClient === 'undefined') 条件

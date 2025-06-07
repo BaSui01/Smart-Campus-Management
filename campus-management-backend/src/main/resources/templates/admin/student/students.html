@@ -5,10 +5,8 @@
 <head th:replace="~{layout/admin :: head}">
     <th:block th:fragment="head-extra">
         <title>学生管理 - 智慧校园管理系统</title>
-        <!-- 网站图标 -->
-        <link rel="icon" type="image/svg+xml" th:href="@{/images/favicon.svg}">
-        <link rel="alternate icon" th:href="@{/favicon.ico}">
-        <link rel="apple-touch-icon" th:href="@{/images/favicon.svg}">
+        <link th:href="@{/css/admin-common.css}" rel="stylesheet">
+        <link th:href="@{/css/components/data-table.css}" rel="stylesheet">
     </th:block>
 </head>
 <body>
@@ -22,7 +20,7 @@
                 <p class="text-muted mb-0">管理学校的学生信息</p>
             </div>
             <div class="btn-group">
-                <button type="button" class="btn btn-primary" id="addStudentBtn">
+                <button type="button" class="btn btn-primary" id="addBtn">
                     <i class="fas fa-plus me-2"></i>添加学生
                 </button>
                 <button type="button" class="btn btn-outline-danger" id="batchDeleteBtn" disabled>
@@ -171,7 +169,7 @@
                                 <th width="120">操作</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="studentTable">
                             <!-- 数据将通过JavaScript动态加载 -->
                         </tbody>
                     </table>
@@ -185,6 +183,7 @@
                 </nav>
             </div>
         </div>
+
     </div>
 
         <!-- 学生模态框 -->
@@ -254,15 +253,13 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                        <button type="button" class="btn btn-primary" id="saveStudentBtn">保存</button>
+                        <button type="button" class="btn btn-primary" id="saveBtn">保存</button>
                     </div>
                 </div>
             </div>
         </div>
 
     <th:block th:fragment="scripts">
-        <!-- 引入API客户端和工具类 -->
-        <script th:src="@{/js/api-client.js}"></script>
         <!-- 引入学生管理模块 -->
         <script th:src="@{/js/modules/student-management.js}"></script>
     </th:block>

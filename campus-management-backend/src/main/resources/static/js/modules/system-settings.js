@@ -671,53 +671,91 @@ class SystemSettingsManager {
     }
 
     /**
-     * 渲染日志分页
+     * 更新设置状态
      */
-    renderLogPagination(data) {
-        const pagination = document.getElementById('logPagination');
-        if (!pagination) return;
-
-        const { page, totalPages } = data;
-        let paginationHtml = '';
-
-        // 上一页
-        if (page > 1) {
-            paginationHtml += `<li class="page-item"><a class="page-link" href="#" data-page="${page - 1}">上一页</a></li>`;
-        }
-
-        // 页码
-        const startPage = Math.max(1, page - 2);
-        const endPage = Math.min(totalPages, page + 2);
-
-        for (let i = startPage; i <= endPage; i++) {
-            const activeClass = i === page ? 'active' : '';
-            paginationHtml += `<li class="page-item ${activeClass}"><a class="page-link" href="#" data-page="${i}">${i}</a></li>`;
-        }
-
-        // 下一页
-        if (page < totalPages) {
-            paginationHtml += `<li class="page-item"><a class="page-link" href="#" data-page="${page + 1}">下一页</a></li>`;
-        }
-
-        pagination.innerHTML = paginationHtml;
-
-        // 绑定分页点击事件
-        pagination.querySelectorAll('a[data-page]').forEach(link => {
-            link.addEventListener('click', (e) => {
-                e.preventDefault();
-                const page = parseInt(e.target.getAttribute('data-page'));
-                const pageSize = parseInt(document.getElementById('logPageSize')?.value) || 50;
-                this.loadSystemLogs(page, pageSize);
-            });
+    updateSettingsStatus(status) {
+        const statusElements = document.querySelectorAll('.settings-status');
+        statusElements.forEach(element => {
+            element.className = 'settings-status';
+            if (status === 'success') {
+                element.classList.add('text-success');
+                element.innerHTML = '<i class="fas fa-check-circle me-1"></i>设置已同步';
+            } else if (status === 'error') {
+                element.classList.add('text-danger');
+                element.innerHTML = '<i class="fas fa-exclamation-circle me-1"></i>设置同步失败';
+            } else {
+                element.classList.add('text-warning');
+                element.innerHTML = '<i class="fas fa-sync-alt me-1"></i>正在同步...';
+            }
         });
+    }
+
+    /**
+     * 加载系统统计信息
+     */
+    async loadSystemStatistics() {
+        try {
+            const response = await apiClient.get('/api/system/statistics');
+
+            if (response.success) {
+                this.updateStatistics(response.data);
+            } else {
+                console.error('加载系统统计失败:', response.message);
+            }
+        } catch (error) {
+            console.error('加载系统统计失败:', error);
+        }
+    }
+
+    /**
+     * 更新统计信息显示
+     */
+    updateStatistics(stats) {
+        const statElements = {
+            totalUsers: document.getElementById('totalUsers'),
+            totalStudents: document.getElementById('totalStudents'),
+            totalClasses: document.getElementById('totalClasses'),
+            totalCourses: document.getElementById('totalCourses'),
+            systemUptime: document.getElementById('systemUptime'),
+            memoryUsage: document.getElementById('memoryUsage'),
+            diskUsage: document.getElementById('diskUsage'),
+            cpuUsage: document.getElementById('cpuUsage')
+        };
+
+        Object.keys(statElements).forEach(key => {
+            if (statElements[key] && stats[key] !== undefined) {
+                if (key.includes('Usage')) {
+                    statElements[key].textContent = stats[key] + '%';
+                } else {
+                    statElements[key].textContent = stats[key];
+                }
+            }
+        });
+
+        // 更新最后更新时间
+        const lastUpdateElement = document.getElementById('lastStatsUpdate');
+        if (lastUpdateElement) {
+            lastUpdateElement.textContent = new Date().toLocaleString();
+        }
+    }
+
+    /**
+     * 开始统计信息自动刷新
+     */
+    startStatisticsRefresh() {
+        // 每30秒刷新一次统计信息
+        setInterval(() => {
+            this.loadSystemStatistics();
+        }, 30000);
     }
 
     /**
      * 刷新日志
      */
     refreshLogs() {
-        const pageSize = parseInt(document.getElementById('logPageSize')?.value) || 50;
-        this.loadSystemLogs(1, pageSize);
+        const page = 1;
+        const size = parseInt(document.getElementById('logPageSize')?.value) || 50;
+        this.loadSystemLogs(page, size);
     }
 
     /**
@@ -726,18 +764,11 @@ class SystemSettingsManager {
     async restartSystem() {
         const confirmed = await MessageUtils.confirm(
             '确定要重启系统吗？这将中断所有用户的连接。',
-            '危险操作确认'
+            '确认重启',
+            'warning'
         );
 
         if (!confirmed) return;
-
-        // 二次确认
-        const secondConfirmed = await MessageUtils.confirm(
-            '请再次确认：重启系统是危险操作，将影响所有用户。',
-            '最终确认'
-        );
-
-        if (!secondConfirmed) return;
 
         try {
             const restartBtn = document.querySelector('[onclick="restartSystem()"]');
@@ -746,19 +777,12 @@ class SystemSettingsManager {
             const response = await apiClient.post('/api/system/restart');
 
             if (response.success) {
-                MessageUtils.warning(response.message || '系统重启指令已发送');
-                
-                // 倒计时提示
-                let countdown = 30;
-                const countdownInterval = setInterval(() => {
-                    MessageUtils.warning(`系统将在 ${countdown} 秒后重启...`);
-                    countdown--;
-                    
-                    if (countdown < 0) {
-                        clearInterval(countdownInterval);
-                        window.location.reload();
-                    }
-                }, 1000);
+                MessageUtils.success('系统重启指令已发送，请稍候...');
+
+                // 5秒后刷新页面
+                setTimeout(() => {
+                    window.location.reload();
+                }, 5000);
             } else {
                 MessageUtils.error('系统重启失败：' + response.message);
             }
@@ -772,78 +796,48 @@ class SystemSettingsManager {
     }
 
     /**
-     * 加载系统统计信息
+     * 渲染日志分页
      */
-    async loadSystemStatistics() {
-        try {
-            const response = await apiClient.get('/api/system/statistics');
+    renderLogPagination(data) {
+        const pagination = document.getElementById('logPagination');
+        if (!pagination) return;
 
-            if (response.success) {
-                this.updateSystemInfo(response.data);
-            }
-        } catch (error) {
-            console.error('加载系统统计失败:', error);
-        }
-    }
+        const totalPages = Math.ceil(data.total / data.size);
+        const currentPage = data.page;
 
-    /**
-     * 更新系统信息显示
-     */
-    updateSystemInfo(stats) {
-        // 更新系统版本
-        const versionElements = document.querySelectorAll('[th\\:text="${systemSettings.systemVersion}"]');
-        versionElements.forEach(el => {
-            if (stats.javaVersion) {
-                el.textContent = `v2.0.0 (Java ${stats.javaVersion})`;
-            }
-        });
+        let paginationHtml = '';
 
-        // 更新运行时间
-        const uptimeElements = document.querySelectorAll('span:contains("15天 8小时 32分钟")');
-        if (stats.uptime) {
-            uptimeElements.forEach(el => {
-                el.textContent = stats.uptime;
-            });
+        // 上一页
+        if (currentPage > 1) {
+            paginationHtml += `
+                <li class="page-item">
+                    <a class="page-link" href="#" onclick="systemSettings.loadSystemLogs(${currentPage - 1}, ${data.size})">上一页</a>
+                </li>
+            `;
         }
 
-        // 更新进度条
-        if (stats.memoryUsagePercent) {
-            this.updateProgressBar('内存使用', stats.memoryUsagePercent, 'bg-info');
-        }
-        if (stats.cpuUsagePercent) {
-            this.updateProgressBar('CPU使用', stats.cpuUsagePercent, 'bg-success');
-        }
-        if (stats.diskUsagePercent) {
-            this.updateProgressBar('磁盘使用', stats.diskUsagePercent, 'bg-warning');
-        }
-    }
+        // 页码
+        const startPage = Math.max(1, currentPage - 2);
+        const endPage = Math.min(totalPages, currentPage + 2);
 
-    /**
-     * 更新进度条
-     */
-    updateProgressBar(label, percentage, className) {
-        const progressElements = document.querySelectorAll('.progress');
-        progressElements.forEach(progress => {
-            const labelElement = progress.parentElement.querySelector('strong');
-            if (labelElement && labelElement.textContent.includes(label)) {
-                const progressBar = progress.querySelector('.progress-bar');
-                if (progressBar) {
-                    progressBar.style.width = percentage + '%';
-                    progressBar.textContent = percentage + '%';
-                    progressBar.className = `progress-bar ${className}`;
-                }
-            }
-        });
-    }
+        for (let i = startPage; i <= endPage; i++) {
+            paginationHtml += `
+                <li class="page-item ${i === currentPage ? 'active' : ''}">
+                    <a class="page-link" href="#" onclick="systemSettings.loadSystemLogs(${i}, ${data.size})">${i}</a>
+                </li>
+            `;
+        }
 
-    /**
-     * 开始统计信息自动刷新
-     */
-    startStatisticsRefresh() {
-        // 每30秒刷新一次统计信息
-        setInterval(() => {
-            this.loadSystemStatistics();
-        }, 30000);
+        // 下一页
+        if (currentPage < totalPages) {
+            paginationHtml += `
+                <li class="page-item">
+                    <a class="page-link" href="#" onclick="systemSettings.loadSystemLogs(${currentPage + 1}, ${data.size})">下一页</a>
+                </li>
+            `;
+        }
+
+        pagination.innerHTML = paginationHtml;
     }
 }
 

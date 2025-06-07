@@ -42,6 +42,7 @@ public class UserApiController {
     public ApiResponse<Map<String, Object>> getUsers(
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") int page,
             @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") int size,
+            @Parameter(description = "搜索关键词") @RequestParam(required = false) String search,
             @Parameter(description = "用户名") @RequestParam(required = false) String username,
             @Parameter(description = "真实姓名") @RequestParam(required = false) String realName,
             @Parameter(description = "角色") @RequestParam(required = false) String role,
@@ -49,6 +50,22 @@ public class UserApiController {
 
         // 构建查询参数
         Map<String, Object> params = new HashMap<>();
+
+        // 打印接收到的参数
+        System.out.println("🔍 接收到的搜索参数:");
+        System.out.println("  search: " + search);
+        System.out.println("  username: " + username);
+        System.out.println("  realName: " + realName);
+        System.out.println("  role: " + role);
+        System.out.println("  status: " + status);
+
+        // 通用搜索参数
+        if (search != null && !search.isEmpty()) {
+            params.put("search", search);
+            System.out.println("✅ 添加搜索参数: " + search);
+        }
+
+        // 具体字段搜索参数
         if (username != null && !username.isEmpty()) {
             params.put("username", username);
         }
@@ -57,10 +74,14 @@ public class UserApiController {
         }
         if (role != null && !role.isEmpty()) {
             params.put("role", role);
+            System.out.println("✅ 添加角色参数: " + role);
         }
         if (status != null) {
             params.put("status", status);
+            System.out.println("✅ 添加状态参数: " + status);
         }
+
+        System.out.println("📊 最终查询参数: " + params);
 
         // 执行分页查询
         Pageable pageable = PageRequest.of(page - 1, size);
@@ -162,11 +183,10 @@ public class UserApiController {
     @Operation(summary = "更新用户信息", description = "修改用户信息")
     public ApiResponse<Void> updateUser(
             @Parameter(description = "用户ID") @PathVariable Long id,
-            @Parameter(description = "用户信息") @Valid @RequestBody User user) {
+            @Parameter(description = "用户信息") @RequestBody Map<String, Object> userData) {
         try {
-            user.setId(id);
-            boolean result = userService.updateUser(user);
-            if (result) {
+            User updatedUser = userService.updateUser(id, userData);
+            if (updatedUser != null) {
                 return ApiResponse.success("更新用户信息成功");
             } else {
                 return ApiResponse.error(404, "用户不存在");
@@ -260,6 +280,22 @@ public class UserApiController {
             }
         } catch (Exception e) {
             return ApiResponse.error(500, "用户状态切换失败：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 获取禁用用户列表
+     */
+    @GetMapping("/disabled")
+    @Operation(summary = "获取禁用用户列表", description = "获取所有被禁用的用户")
+    public ApiResponse<List<User>> getDisabledUsers() {
+        try {
+            // 使用分页查询，获取前100个禁用用户
+            Pageable pageable = PageRequest.of(0, 100);
+            Page<User> disabledUsersPage = userService.findUsersByStatus(0, pageable);
+            return ApiResponse.success(disabledUsersPage.getContent());
+        } catch (Exception e) {
+            return ApiResponse.error(500, "获取禁用用户列表失败：" + e.getMessage());
         }
     }
 

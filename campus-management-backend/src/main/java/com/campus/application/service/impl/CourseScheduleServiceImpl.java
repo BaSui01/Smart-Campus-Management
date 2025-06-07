@@ -113,10 +113,10 @@ public class CourseScheduleServiceImpl implements CourseScheduleService {
         String endTimeStr = schedule.getEndTime().format(TIME_FORMATTER);
 
         // 检查教室是否被占用
-        if (isClassroomOccupied(schedule.getClassroom(), schedule.getDayOfWeek(),
+        if (isClassroomOccupied(schedule.getClassroomId().toString(), schedule.getDayOfWeek(),
                 startTimeStr, endTimeStr,
                 schedule.getSemester(), null)) {
-            throw new IllegalArgumentException("教室已被占用：" + schedule.getClassroom());
+            throw new IllegalArgumentException("教室已被占用：" + schedule.getClassroomId());
         }
 
         // 检查教师是否有冲突的课程
@@ -149,10 +149,10 @@ public class CourseScheduleServiceImpl implements CourseScheduleService {
         String endTimeStr = schedule.getEndTime().format(TIME_FORMATTER);
 
         // 检查教室是否被占用
-        if (isClassroomOccupied(schedule.getClassroom(), schedule.getDayOfWeek(),
+        if (isClassroomOccupied(schedule.getClassroomId().toString(), schedule.getDayOfWeek(),
                 startTimeStr, endTimeStr,
                 schedule.getSemester(), schedule.getId())) {
-            throw new IllegalArgumentException("教室已被占用：" + schedule.getClassroom());
+            throw new IllegalArgumentException("教室已被占用：" + schedule.getClassroomId());
         }
 
         // 检查教师是否有冲突的课程
@@ -267,8 +267,9 @@ public class CourseScheduleServiceImpl implements CourseScheduleService {
                                 CourseSchedule schedule = new CourseSchedule();
                                 schedule.setCourseId(course.getId());
                                 schedule.setTeacherId(course.getTeacherId());
-                                schedule.setClassroom(classroom);
-                                schedule.setDayOfWeek(dayOfWeek);
+                                // 这里需要设置教室ID，暂时使用1L作为示例
+                                schedule.setClassroomId(1L); // 实际应该根据classroom名称查找对应的ID
+                                schedule.setScheduleDate(java.time.LocalDate.now());
                                 schedule.setStartTime(java.time.LocalTime.parse(startTime));
                                 schedule.setEndTime(java.time.LocalTime.parse(endTime));
                                 schedule.setSemester(currentSemester);

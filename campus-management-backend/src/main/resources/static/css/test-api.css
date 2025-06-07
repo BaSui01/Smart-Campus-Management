@@ -1,0 +1,385 @@
+/**
+ * API测试页面样式
+ * 智慧校园管理系统
+ */
+
+/* 页面布局 */
+.api-test-container {
+    padding: 20px;
+}
+
+/* API分类导航 */
+.api-nav {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.api-nav .nav-link {
+    color: #495057;
+    border-radius: 6px;
+    margin-right: 10px;
+    transition: all 0.3s ease;
+}
+
+.api-nav .nav-link:hover {
+    background-color: #e9ecef;
+    color: #007bff;
+}
+
+.api-nav .nav-link.active {
+    background-color: #007bff;
+    color: white;
+}
+
+/* API列表表格 */
+.api-table {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.api-table .table {
+    margin-bottom: 0;
+}
+
+.api-table .table th {
+    background-color: #f8f9fa;
+    border-top: none;
+    font-weight: 600;
+    color: #495057;
+}
+
+.api-table .table td {
+    vertical-align: middle;
+}
+
+/* HTTP方法标签 */
+.method-badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 4px;
+    min-width: 60px;
+    text-align: center;
+    display: inline-block;
+}
+
+.method-get {
+    background-color: #28a745;
+    color: white;
+}
+
+.method-post {
+    background-color: #007bff;
+    color: white;
+}
+
+.method-put {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.method-delete {
+    background-color: #dc3545;
+    color: white;
+}
+
+.method-patch {
+    background-color: #17a2b8;
+    color: white;
+}
+
+/* API URL样式 */
+.api-url {
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    color: #495057;
+    background-color: #f8f9fa;
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+
+/* 操作按钮 */
+.btn-test {
+    background-color: #28a745;
+    border-color: #28a745;
+    color: white;
+    font-size: 0.875rem;
+    padding: 4px 12px;
+}
+
+.btn-test:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+    color: white;
+}
+
+.btn-copy {
+    background-color: #6c757d;
+    border-color: #6c757d;
+    color: white;
+    font-size: 0.875rem;
+    padding: 4px 12px;
+}
+
+.btn-copy:hover {
+    background-color: #5a6268;
+    border-color: #545b62;
+    color: white;
+}
+
+/* Token信息区域 */
+.token-info {
+    background: #e3f2fd;
+    border: 1px solid #bbdefb;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.token-display {
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    color: #1976d2;
+    background-color: white;
+    padding: 8px 12px;
+    border-radius: 4px;
+    border: 1px solid #e3f2fd;
+    word-break: break-all;
+}
+
+/* API结果区域 */
+.api-results {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    min-height: 400px;
+}
+
+.result-container {
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    margin-bottom: 15px;
+    overflow: hidden;
+}
+
+.result-container.success-response {
+    border-color: #28a745;
+}
+
+.result-container.success-response .card-header {
+    background-color: #d4edda;
+    border-bottom-color: #28a745;
+}
+
+.result-container.error-response {
+    border-color: #dc3545;
+}
+
+.result-container.error-response .card-header {
+    background-color: #f8d7da;
+    border-bottom-color: #dc3545;
+}
+
+.result-header {
+    background-color: #f8f9fa;
+    padding: 12px 15px;
+    border-bottom: 1px solid #dee2e6;
+    font-weight: 600;
+}
+
+.result-content {
+    padding: 15px;
+}
+
+.result-content pre {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    padding: 12px;
+    margin: 0;
+    font-size: 0.875rem;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.result-content code {
+    color: #495057;
+}
+
+/* 状态标签 */
+.status-badge {
+    font-size: 0.75rem;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+.status-success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.status-error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.status-loading {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
+/* 响应时间 */
+.response-time {
+    font-size: 0.8rem;
+    color: #6c757d;
+    margin-left: 10px;
+}
+
+/* 空状态 */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #6c757d;
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 20px;
+    color: #dee2e6;
+}
+
+.empty-state h5 {
+    color: #495057;
+    margin-bottom: 10px;
+}
+
+.empty-state p {
+    margin-bottom: 0;
+}
+
+/* 加载动画 */
+.loading-spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #007bff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* 工具栏 */
+.api-toolbar {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* 统计信息 */
+.api-stats {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.stat-item {
+    background: white;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    text-align: center;
+    flex: 1;
+}
+
+.stat-number {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #007bff;
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .api-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .toolbar-left,
+    .toolbar-right {
+        justify-content: center;
+    }
+    
+    .api-stats {
+        flex-direction: column;
+    }
+    
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+    
+    .btn-sm {
+        padding: 2px 8px;
+        font-size: 0.75rem;
+    }
+}
+
+/* 代码高亮增强 */
+.language-json {
+    color: #495057;
+}
+
+.token.string {
+    color: #d73a49;
+}
+
+.token.number {
+    color: #005cc5;
+}
+
+.token.boolean {
+    color: #d73a49;
+}
+
+.token.null {
+    color: #6f42c1;
+}
+
+.token.property {
+    color: #22863a;
+}

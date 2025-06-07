@@ -1,0 +1,97 @@
+# 测试环境配置文件
+spring:
+  # 数据源配置 - 使用H2内存数据库进行测试
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: 
+    
+  # H2控制台配置（测试时可选）
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+      
+  # JPA配置
+  jpa:
+    hibernate:
+      ddl-auto: create-drop  # 测试时每次重新创建表
+    show-sql: true          # 显示SQL语句
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: true    # 格式化SQL输出
+        use_sql_comments: true
+    defer-datasource-initialization: true
+    
+  # SQL初始化配置
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema-test.sql
+      data-locations: classpath:data-test.sql
+      continue-on-error: false
+      
+  # 缓存配置 - 测试时禁用Redis
+  cache:
+    type: simple
+    
+  # 测试时禁用Redis
+  redis:
+    host: localhost
+    port: 6379
+    timeout: 2000ms
+    lettuce:
+      pool:
+        max-active: 8
+        max-idle: 8
+        min-idle: 0
+        max-wait: -1ms
+        
+# 日志配置
+logging:
+  level:
+    com.campus: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.springframework.transaction: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    
+# 安全配置
+security:
+  jwt:
+    secret: test-secret-key-for-jwt-token-generation-in-test-environment
+    expiration: 3600000  # 1小时
+    
+# 应用配置
+app:
+  name: Smart Campus Management Test
+  version: 1.0.0-TEST
+  
+# 测试专用配置
+test:
+  # 是否启用测试数据初始化
+  data:
+    init: true
+  # 测试用户配置
+  users:
+    admin:
+      username: admin
+      password: admin123
+      email: admin@test.com
+    teacher:
+      username: teacher
+      password: teacher123
+      email: teacher@test.com
+    student:
+      username: student
+      password: student123
+      email: student@test.com
+      
+# 禁用不必要的自动配置
+spring.autoconfigure.exclude:
+  - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+  - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration

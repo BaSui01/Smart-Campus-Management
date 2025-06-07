@@ -317,7 +317,7 @@ public class SystemApiController {
             
             // 验证文件类型
             String contentType = file.getContentType();
-            if (!contentType.startsWith("image/")) {
+            if (contentType == null || !contentType.startsWith("image/")) {
                 return ApiResponse.error(400, "只能上传图片文件");
             }
             

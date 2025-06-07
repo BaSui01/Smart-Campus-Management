@@ -1,77 +1,94 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>仪表盘 - 智慧校园管理系统</title>
-
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <!-- 自定义CSS -->
-    <link th:href="@{/css/admin.css}" rel="stylesheet">
-
-    <!-- 引入组件样式 -->
-    <th:block th:replace="~{components/sidebar :: sidebar-style}"></th:block>
-    <th:block th:replace="~{components/topbar :: topbar-style}"></th:block>
-    <th:block th:replace="~{components/admin/admin-components :: admin-style}"></th:block>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/admin :: html}"
+      lang="zh-CN">
+<head th:replace="~{layout/admin :: head}">
+    <th:block th:fragment="head-extra">
+        <title>仪表盘 - 智慧校园管理系统</title>
+        <!-- Chart.js -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+        
+        <!-- 仪表盘专用样式 -->
+        <link th:href="@{/css/dashboard.css}" rel="stylesheet">
+    </th:block>
 </head>
 <body>
-    <!-- 布局容器 -->
-    <div class="wrapper">
-        <!-- 左侧导航栏 -->
-        <th:block th:replace="~{components/sidebar :: sidebar}"></th:block>
-
-        <!-- 主内容区域 -->
-        <div class="content" id="content">
-            <!-- 顶部导航栏 -->
-            <th:block th:replace="~{components/topbar :: topbar}"></th:block>
-
-            <!-- 页面内容包装器 -->
-            <div class="content-wrapper">
+    <div th:fragment="content">
         <!-- 页面标题 -->
-        <div th:replace="~{components/admin/admin-components :: page-header(
-            title='仪表盘',
-            icon='fas fa-tachometer-alt',
-            showAddButton=false,
-            addButtonText='',
-            addButtonTarget=''
-        )}"></div>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-tachometer-alt me-2 text-primary"></i>仪表盘
+                </h1>
+                <p class="text-muted mb-0">智慧校园管理系统概览</p>
+            </div>
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-outline-primary" onclick="refreshDashboardData()">
+                    <i class="fas fa-sync-alt me-2"></i>刷新数据
+                </button>
+                <button type="button" class="btn btn-outline-info" onclick="runDashboardDiagnostics()">
+                    <i class="fas fa-stethoscope me-2"></i>系统诊断
+                </button>
+                <div class="dropdown">
+                    <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-plus me-2"></i>快速操作
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="/admin/students"><i class="fas fa-user-graduate me-2"></i>学生管理</a></li>
+                        <li><a class="dropdown-item" href="/admin/courses"><i class="fas fa-book me-2"></i>课程管理</a></li>
+                        <li><a class="dropdown-item" href="/admin/classes"><i class="fas fa-users me-2"></i>班级管理</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/admin/settings"><i class="fas fa-cogs me-2"></i>系统设置</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#" onclick="runDashboardDiagnostics()"><i class="fas fa-stethoscope me-2"></i>系统诊断</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
 
-        <!-- 错误提示 -->
+        <!-- 错误提示和加载状态 -->
         <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
             <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>系统错误：</strong>
             <span th:text="${error}">加载数据时发生错误</span>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
+
+        <!-- 数据加载状态指示器 -->
+        <div id="dataLoadingIndicator" class="loading-state" style="display: none;">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">正在加载...</span>
+            </div>
+            <h5>正在加载仪表盘数据</h5>
+            <p>请稍候，正在从服务器获取最新数据...</p>
+        </div>
+
+        <!-- 网络错误提示区域 -->
+        <div id="networkErrorContainer"></div>
 
         <!-- 统计卡片 -->
         <div class="row mb-4">
             <!-- 学生总数 -->
             <div class="col-xl-3 col-md-6 mb-4">
-                <div class="card border-left-primary shadow h-100 py-2 stats-card" data-aos="fade-up">
-                    <div class="card-body">
-                        <div class="row no-gutters align-items-center">
-                            <div class="col mr-2">
-                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                <div class="card stats-card h-100 border-0 shadow-sm">
+                    <div class="card-body gradient-primary text-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-white-50 text-uppercase small mb-1">
                                     学生总数
                                 </div>
-                                <div class="h5 mb-0 font-weight-bold text-gray-800 counter"
+                                <div class="counter text-white"
                                      th:text="${stats?.totalStudents ?: 0}"
                                      th:data-target="${stats?.totalStudents ?: 0}">
                                     0
                                 </div>
-                                <div class="text-xs text-muted mt-1">
-                                    <span class="text-success mr-2">
-                                        <i class="fas fa-user-graduate"></i>
-                                        <span th:text="${stats?.totalTeachers ?: 0}">0</span>
-                                    </span>
-                                    教师数量
+                                <div class="text-white-50 small mt-2">
+                                    <i class="fas fa-chalkboard-teacher me-1"></i>
+                                    教师: <span th:text="${stats?.totalTeachers ?: 0}">0</span>
                                 </div>
                             </div>
-                            <div class="col-auto">
-                                <i class="fas fa-user-graduate fa-2x text-gray-300"></i>
+                            <div class="text-white-50">
+                                <i class="fas fa-user-graduate fa-3x"></i>
                             </div>
                         </div>
                     </div>
@@ -80,84 +97,77 @@
 
             <!-- 课程总数 -->
             <div class="col-xl-3 col-md-6 mb-4">
-                <div class="card border-left-success shadow h-100 py-2 stats-card" data-aos="fade-up" data-aos-delay="200">
-                    <div class="card-body">
-                        <div class="row no-gutters align-items-center">
-                            <div class="col mr-2">
-                                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                <div class="card stats-card h-100 border-0 shadow-sm">
+                    <div class="card-body gradient-success text-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-white-50 text-uppercase small mb-1">
                                     课程总数
                                 </div>
-                                <div class="h5 mb-0 font-weight-bold text-gray-800 counter"
+                                <div class="counter text-white"
                                      th:text="${stats?.totalCourses ?: 0}"
                                      th:data-target="${stats?.totalCourses ?: 0}">
                                     0
                                 </div>
-                                <div class="text-xs text-muted mt-1">
-                                    <span class="text-info mr-2">
-                                        <i class="fas fa-calendar-check"></i>
-                                        <span th:text="${stats?.activeSchedules ?: 0}">0</span>
-                                    </span>
-                                    活跃课表
+                                <div class="text-white-50 small mt-2">
+                                    <i class="fas fa-calendar-check me-1"></i>
+                                    活跃: <span th:text="${stats?.activeSchedules ?: 0}">0</span>
                                 </div>
                             </div>
-                            <div class="col-auto">
-                                <i class="fas fa-book fa-2x text-gray-300"></i>
+                            <div class="text-white-50">
+                                <i class="fas fa-book fa-3x"></i>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
+            <!-- 班级总数 -->
             <div class="col-xl-3 col-md-6 mb-4">
-                <div class="card border-left-info shadow h-100 py-2 stats-card" data-aos="fade-up" data-aos-delay="300">
-                    <div class="card-body">
-                        <div class="row no-gutters align-items-center">
-                            <div class="col mr-2">
-                                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                <div class="card stats-card h-100 border-0 shadow-sm">
+                    <div class="card-body gradient-info text-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-white-50 text-uppercase small mb-1">
                                     班级总数
                                 </div>
-                                <div class="h5 mb-0 font-weight-bold text-gray-800 counter"
+                                <div class="counter text-white"
                                      th:text="${stats?.totalClasses ?: 0}"
                                      th:data-target="${stats?.totalClasses ?: 0}">
                                     0
                                 </div>
-                                <div class="text-xs text-muted mt-1">
-                                    <span class="text-primary mr-2">
-                                        <i class="fas fa-users"></i>
-                                        <span th:text="${stats?.totalUsers ?: 0}">0</span>
-                                    </span>
-                                    系统用户
+                                <div class="text-white-50 small mt-2">
+                                    <i class="fas fa-user-cog me-1"></i>
+                                    用户: <span th:text="${stats?.totalUsers ?: 0}">0</span>
                                 </div>
                             </div>
-                            <div class="col-auto">
-                                <i class="fas fa-users fa-2x text-gray-300"></i>
+                            <div class="text-white-50">
+                                <i class="fas fa-users fa-3x"></i>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
+            <!-- 本月收费 -->
             <div class="col-xl-3 col-md-6 mb-4">
-                <div class="card border-left-warning shadow h-100 py-2 stats-card" data-aos="fade-up" data-aos-delay="400">
-                    <div class="card-body">
-                        <div class="row no-gutters align-items-center">
-                            <div class="col mr-2">
-                                <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                <div class="card stats-card h-100 border-0 shadow-sm">
+                    <div class="card-body gradient-warning text-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-white-50 text-uppercase small mb-1">
                                     本月收费
                                 </div>
-                                <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${stats?.monthlyRevenue ?: '¥0.00'}">
+                                <div class="h4 mb-0 text-white" th:text="${stats?.monthlyRevenue ?: '¥0.00'}">
                                     ¥0.00
                                 </div>
-                                <div class="text-xs text-muted mt-1">
-                                    <span class="text-warning mr-2">
-                                        <i class="fas fa-exclamation-triangle"></i>
-                                        <span th:text="${stats?.pendingPayments ?: 0}">0</span>
-                                    </span>
-                                    待缴费
+                                <div class="text-white-50 small mt-2">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>
+                                    待缴: <span th:text="${stats?.pendingPayments ?: 0}">0</span>
                                 </div>
                             </div>
-                            <div class="col-auto">
-                                <i class="fas fa-money-bill-wave fa-2x text-gray-300"></i>
+                            <div class="text-white-50">
+                                <i class="fas fa-money-bill-wave fa-3x"></i>
                             </div>
                         </div>
                     </div>
@@ -165,153 +175,94 @@
             </div>
         </div>
 
-        <!-- 第二行快速统计卡片 -->
+        <!-- 快速统计信息 -->
         <div class="row mb-4">
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="card border-left-danger shadow h-100 py-2 stats-card" data-aos="fade-up" data-aos-delay="500">
-                    <div class="card-body">
-                        <div class="row no-gutters align-items-center">
-                            <div class="col mr-2">
-                                <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
-                                    今日缴费
-                                </div>
-                                <div class="h5 mb-0 font-weight-bold text-gray-800 counter"
-                                     th:text="${stats?.quickStats?.todayPayments ?: 0}"
-                                     th:data-target="${stats?.quickStats?.todayPayments ?: 0}">
-                                    0
-                                </div>
-                                <div class="text-xs text-muted mt-1">
-                                    <span class="text-success">
-                                        <i class="fas fa-check-circle"></i>
-                                        今日收入: <span th:text="${stats?.quickStats?.todayRevenue != null ? '¥' + stats.quickStats.todayRevenue : '¥0.00'}">¥0.00</span>
-                                    </span>
-                                </div>
-                            </div>
-                            <div class="col-auto">
-                                <i class="fas fa-credit-card fa-2x text-gray-300"></i>
-                            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="text-primary mb-2">
+                            <i class="fas fa-credit-card fa-2x"></i>
                         </div>
+                        <h5 class="card-title mb-1">今日缴费</h5>
+                        <h3 class="text-primary mb-0" th:text="${stats?.quickStats?.todayPayments ?: 0}">0</h3>
+                        <small class="text-muted">收入: <span th:text="${stats?.quickStats?.todayRevenue != null ? '¥' + stats.quickStats.todayRevenue : '¥0.00'}">¥0.00</span></small>
                     </div>
                 </div>
             </div>
-
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="card border-left-secondary shadow h-100 py-2 stats-card" data-aos="fade-up" data-aos-delay="600">
-                    <div class="card-body">
-                        <div class="row no-gutters align-items-center">
-                            <div class="col mr-2">
-                                <div class="text-xs font-weight-bold text-secondary text-uppercase mb-1">
-                                    在线用户
-                                </div>
-                                <div class="h5 mb-0 font-weight-bold text-gray-800 counter"
-                                     th:text="${stats?.quickStats?.onlineUsers ?: 0}"
-                                     th:data-target="${stats?.quickStats?.onlineUsers ?: 0}">
-                                    0
-                                </div>
-                                <div class="text-xs text-muted mt-1">
-                                    <span class="text-success">
-                                        <i class="fas fa-circle text-success"></i>
-                                        系统运行正常
-                                    </span>
-                                </div>
-                            </div>
-                            <div class="col-auto">
-                                <i class="fas fa-user-clock fa-2x text-gray-300"></i>
-                            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="text-success mb-2">
+                            <i class="fas fa-user-clock fa-2x"></i>
                         </div>
+                        <h5 class="card-title mb-1">在线用户</h5>
+                        <h3 class="text-success mb-0" th:text="${stats?.quickStats?.onlineUsers ?: 0}">0</h3>
+                        <small class="text-success"><i class="fas fa-circle"></i> 系统正常</small>
                     </div>
                 </div>
             </div>
-
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="card border-left-dark shadow h-100 py-2 stats-card" data-aos="fade-up" data-aos-delay="700">
-                    <div class="card-body">
-                        <div class="row no-gutters align-items-center">
-                            <div class="col mr-2">
-                                <div class="text-xs font-weight-bold text-dark text-uppercase mb-1">
-                                    系统警告
-                                </div>
-                                <div class="h5 mb-0 font-weight-bold text-gray-800 counter"
-                                     th:text="${stats?.quickStats?.systemAlerts ?: 0}"
-                                     th:data-target="${stats?.quickStats?.systemAlerts ?: 0}">
-                                    0
-                                </div>
-                                <div class="text-xs text-muted mt-1">
-                                    <span class="text-success">
-                                        <i class="fas fa-shield-alt"></i>
-                                        系统安全
-                                    </span>
-                                </div>
-                            </div>
-                            <div class="col-auto">
-                                <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
-                            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="text-warning mb-2">
+                            <i class="fas fa-exclamation-triangle fa-2x"></i>
                         </div>
+                        <h5 class="card-title mb-1">系统警告</h5>
+                        <h3 class="text-warning mb-0" th:text="${stats?.quickStats?.systemAlerts ?: 0}">0</h3>
+                        <small class="text-muted"><i class="fas fa-shield-alt"></i> 系统安全</small>
                     </div>
                 </div>
             </div>
-
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="card border-left-light shadow h-100 py-2 stats-card" data-aos="fade-up" data-aos-delay="800">
-                    <div class="card-body">
-                        <div class="row no-gutters align-items-center">
-                            <div class="col mr-2">
-                                <div class="text-xs font-weight-bold text-muted text-uppercase mb-1">
-                                    数据更新
-                                </div>
-                                <div class="h6 mb-0 font-weight-bold text-gray-800" id="lastUpdateTime">
-                                    刚刚
-                                </div>
-                                <div class="text-xs text-muted mt-1">
-                                    <button class="btn btn-sm btn-outline-primary" onclick="refreshDashboardData()">
-                                        <i class="fas fa-sync-alt"></i> 刷新数据
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="col-auto">
-                                <i class="fas fa-database fa-2x text-gray-300"></i>
-                            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="text-info mb-2">
+                            <i class="fas fa-clock fa-2x"></i>
                         </div>
+                        <h5 class="card-title mb-1">最后更新</h5>
+                        <h6 class="text-info mb-0" id="lastUpdateTime">刚刚</h6>
+                        <small class="text-muted">数据同步时间</small>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- 图表区域 -->
-        <div class="row">
+        <div class="row mb-4">
             <!-- 学生统计图表 -->
-            <div class="col-xl-8 col-lg-7">
-                <div class="card shadow mb-4" data-aos="fade-right">
-                    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                        <h6 class="m-0 font-weight-bold text-primary">
-                            <i class="fas fa-chart-line mr-2"></i>学生注册统计
-                        </h6>
-                        <div class="dropdown no-arrow">
-                            <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink"
-                               data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
-                            </a>
-                            <div class="dropdown-menu dropdown-menu-right shadow">
-                                <div class="dropdown-header">操作:</div>
-                                <a class="dropdown-item" href="#" onclick="refreshCharts()">
-                                    <i class="fas fa-sync-alt mr-2"></i>刷新图表
-                                </a>
-                                <a class="dropdown-item" href="#" onclick="exportChartData('student')">
-                                    <i class="fas fa-download mr-2"></i>导出数据
-                                </a>
-                                <a class="dropdown-item" href="#" onclick="toggleChartType('studentChart')">
-                                    <i class="fas fa-exchange-alt mr-2"></i>切换图表类型
-                                </a>
+            <div class="col-xl-8 col-lg-7 mb-4">
+                <div class="card border-0 shadow-sm chart-container">
+                    <div class="card-header bg-white border-0 py-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0 text-primary">
+                                <i class="fas fa-chart-line me-2"></i>学生注册统计
+                            </h5>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-cog"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" onclick="refreshCharts()">
+                                        <i class="fas fa-sync-alt me-2"></i>刷新图表
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="exportChartData('student')">
+                                        <i class="fas fa-download me-2"></i>导出数据
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="#" onclick="toggleChartType('studentChart')">
+                                        <i class="fas fa-exchange-alt me-2"></i>切换图表类型
+                                    </a></li>
+                                </ul>
                             </div>
                         </div>
                     </div>
                     <div class="card-body">
-                        <div class="chart-area" style="position: relative; height: 320px;">
+                        <div class="chart-area" style="position: relative; height: 350px;">
                             <canvas id="studentChart"></canvas>
                         </div>
                         <div class="mt-3 text-center">
                             <small class="text-muted">
-                                <i class="fas fa-info-circle mr-1"></i>
+                                <i class="fas fa-info-circle me-1"></i>
                                 显示过去12个月的学生注册趋势
                             </small>
                         </div>
@@ -320,45 +271,48 @@
             </div>
 
             <!-- 课程分布图 -->
-            <div class="col-xl-4 col-lg-5">
-                <div class="card shadow mb-4" data-aos="fade-left">
-                    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                        <h6 class="m-0 font-weight-bold text-primary">
-                            <i class="fas fa-chart-pie mr-2"></i>课程分布
-                        </h6>
-                        <div class="dropdown no-arrow">
-                            <a class="dropdown-toggle" href="#" role="button"
-                               data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
-                            </a>
-                            <div class="dropdown-menu dropdown-menu-right shadow">
-                                <div class="dropdown-header">操作:</div>
-                                <a class="dropdown-item" href="#" onclick="refreshCharts()">
-                                    <i class="fas fa-sync-alt mr-2"></i>刷新图表
-                                </a>
-                                <a class="dropdown-item" href="#" onclick="exportChartData('course')">
-                                    <i class="fas fa-download mr-2"></i>导出数据
-                                </a>
-                                <a class="dropdown-item" href="#" onclick="toggleChartType('courseChart')">
-                                    <i class="fas fa-exchange-alt mr-2"></i>切换图表类型
-                                </a>
+            <div class="col-xl-4 col-lg-5 mb-4">
+                <div class="card border-0 shadow-sm chart-container">
+                    <div class="card-header bg-white border-0 py-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0 text-primary">
+                                <i class="fas fa-chart-pie me-2"></i>课程分布
+                            </h5>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-cog"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" onclick="refreshCharts()">
+                                        <i class="fas fa-sync-alt me-2"></i>刷新图表
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="exportChartData('course')">
+                                        <i class="fas fa-download me-2"></i>导出数据
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="#" onclick="toggleChartType('courseChart')">
+                                        <i class="fas fa-exchange-alt me-2"></i>切换图表类型
+                                    </a></li>
+                                </ul>
                             </div>
                         </div>
                     </div>
                     <div class="card-body">
-                        <div class="chart-pie pt-4 pb-2" style="position: relative; height: 250px;">
+                        <div class="chart-pie" style="position: relative; height: 280px;">
                             <canvas id="courseChart"></canvas>
                         </div>
-                        <div class="mt-4 text-center small">
-                            <span class="mr-3">
-                                <i class="fas fa-circle text-primary"></i> 必修课
-                            </span>
-                            <span class="mr-3">
-                                <i class="fas fa-circle text-success"></i> 选修课
-                            </span>
-                            <span class="mr-3">
-                                <i class="fas fa-circle text-info"></i> 实践课
-                            </span>
+                        <div class="mt-3 text-center">
+                            <div class="d-flex justify-content-center gap-3 flex-wrap">
+                                <span class="badge bg-primary">
+                                    <i class="fas fa-circle me-1"></i>必修课
+                                </span>
+                                <span class="badge bg-success">
+                                    <i class="fas fa-circle me-1"></i>选修课
+                                </span>
+                                <span class="badge bg-info">
+                                    <i class="fas fa-circle me-1"></i>实践课
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -366,32 +320,32 @@
         </div>
 
         <!-- 第二行图表 -->
-        <div class="row">
+        <div class="row mb-4">
             <!-- 年级分布图 -->
-            <div class="col-xl-6 col-lg-6">
-                <div class="card shadow mb-4" data-aos="fade-up">
-                    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                        <h6 class="m-0 font-weight-bold text-primary">
-                            <i class="fas fa-chart-bar mr-2"></i>年级分布统计
-                        </h6>
-                        <div class="dropdown no-arrow">
-                            <a class="dropdown-toggle" href="#" role="button"
-                               data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
-                            </a>
-                            <div class="dropdown-menu dropdown-menu-right shadow">
-                                <div class="dropdown-header">操作:</div>
-                                <a class="dropdown-item" href="#" onclick="refreshCharts()">
-                                    <i class="fas fa-sync-alt mr-2"></i>刷新图表
-                                </a>
-                                <a class="dropdown-item" href="#" onclick="exportChartData('grade')">
-                                    <i class="fas fa-download mr-2"></i>导出数据
-                                </a>
+            <div class="col-xl-6 col-lg-6 mb-4">
+                <div class="card border-0 shadow-sm chart-container">
+                    <div class="card-header bg-white border-0 py-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0 text-primary">
+                                <i class="fas fa-chart-bar me-2"></i>年级分布统计
+                            </h5>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-cog"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" onclick="refreshCharts()">
+                                        <i class="fas fa-sync-alt me-2"></i>刷新图表
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="exportChartData('grade')">
+                                        <i class="fas fa-download me-2"></i>导出数据
+                                    </a></li>
+                                </ul>
                             </div>
                         </div>
                     </div>
                     <div class="card-body">
-                        <div class="chart-bar" style="position: relative; height: 280px;">
+                        <div class="chart-bar" style="position: relative; height: 300px;">
                             <canvas id="gradeChart"></canvas>
                         </div>
                     </div>
@@ -399,35 +353,35 @@
             </div>
 
             <!-- 收入趋势图 -->
-            <div class="col-xl-6 col-lg-6">
-                <div class="card shadow mb-4" data-aos="fade-up" data-aos-delay="100">
-                    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                        <h6 class="m-0 font-weight-bold text-primary">
-                            <i class="fas fa-chart-area mr-2"></i>收入趋势
-                        </h6>
-                        <div class="dropdown no-arrow">
-                            <a class="dropdown-toggle" href="#" role="button"
-                               data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
-                            </a>
-                            <div class="dropdown-menu dropdown-menu-right shadow">
-                                <div class="dropdown-header">操作:</div>
-                                <a class="dropdown-item" href="#" onclick="refreshCharts()">
-                                    <i class="fas fa-sync-alt mr-2"></i>刷新图表
-                                </a>
-                                <a class="dropdown-item" href="#" onclick="exportChartData('revenue')">
-                                    <i class="fas fa-download mr-2"></i>导出数据
-                                </a>
+            <div class="col-xl-6 col-lg-6 mb-4">
+                <div class="card border-0 shadow-sm chart-container">
+                    <div class="card-header bg-white border-0 py-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0 text-primary">
+                                <i class="fas fa-chart-area me-2"></i>收入趋势
+                            </h5>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-cog"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" onclick="refreshCharts()">
+                                        <i class="fas fa-sync-alt me-2"></i>刷新图表
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="exportChartData('revenue')">
+                                        <i class="fas fa-download me-2"></i>导出数据
+                                    </a></li>
+                                </ul>
                             </div>
                         </div>
                     </div>
                     <div class="card-body">
-                        <div class="chart-area" style="position: relative; height: 280px;">
+                        <div class="chart-area" style="position: relative; height: 300px;">
                             <canvas id="revenueChart"></canvas>
                         </div>
                         <div class="mt-3 text-center">
                             <small class="text-muted">
-                                <i class="fas fa-info-circle mr-1"></i>
+                                <i class="fas fa-info-circle me-1"></i>
                                 显示过去6个月的收入趋势
                             </small>
                         </div>
@@ -440,123 +394,79 @@
         <div class="row">
             <!-- 快速操作 -->
             <div class="col-lg-6 mb-4">
-                <div class="card shadow">
-                    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                        <h6 class="m-0 font-weight-bold text-primary">
-                            <i class="fas fa-bolt mr-2"></i>快速操作
-                        </h6>
-                        <div class="dropdown no-arrow">
-                            <a class="dropdown-toggle" href="#" role="button"
-                               data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
-                            </a>
-                            <div class="dropdown-menu dropdown-menu-right shadow">
-                                <div class="dropdown-header">更多操作:</div>
-                                <a class="dropdown-item" href="/admin/users">
-                                    <i class="fas fa-user-cog mr-2"></i>用户管理
-                                </a>
-                                <a class="dropdown-item" href="/admin/system">
-                                    <i class="fas fa-cogs mr-2"></i>系统设置
-                                </a>
-                                <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="#" onclick="showBatchOperations()">
-                                    <i class="fas fa-tasks mr-2"></i>批量操作
-                                </a>
-                            </div>
-                        </div>
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-0 py-3">
+                        <h5 class="mb-0 text-primary">
+                            <i class="fas fa-bolt me-2"></i>快速操作
+                        </h5>
                     </div>
                     <div class="card-body">
-                        <div class="row">
-                            <div class="col-6 mb-3">
-                                <button type="button" onclick="openStudentModal()"
-                                        class="btn btn-primary btn-icon-split w-100 quick-action-btn">
-                                    <span class="icon text-white-50">
-                                        <i class="fas fa-user-plus"></i>
-                                    </span>
-                                    <span class="text">添加学生</span>
-                                </button>
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <a href="/admin/students" class="btn btn-primary w-100 quick-action-btn">
+                                    <i class="fas fa-user-graduate d-block mb-2 fa-2x"></i>
+                                    <span>学生管理</span>
+                                </a>
                             </div>
-                            <div class="col-6 mb-3">
-                                <button type="button" onclick="openCourseModal()"
-                                        class="btn btn-success btn-icon-split w-100 quick-action-btn">
-                                    <span class="icon text-white-50">
-                                        <i class="fas fa-book-plus"></i>
-                                    </span>
-                                    <span class="text">添加课程</span>
-                                </button>
+                            <div class="col-6">
+                                <a href="/admin/courses" class="btn btn-success w-100 quick-action-btn">
+                                    <i class="fas fa-book d-block mb-2 fa-2x"></i>
+                                    <span>课程管理</span>
+                                </a>
                             </div>
-                            <div class="col-6 mb-3">
-                                <button type="button" onclick="openClassModal()"
-                                        class="btn btn-info btn-icon-split w-100 quick-action-btn">
-                                    <span class="icon text-white-50">
-                                        <i class="fas fa-users"></i>
-                                    </span>
-                                    <span class="text">添加班级</span>
-                                </button>
+                            <div class="col-6">
+                                <a href="/admin/classes" class="btn btn-info w-100 quick-action-btn">
+                                    <i class="fas fa-users d-block mb-2 fa-2x"></i>
+                                    <span>班级管理</span>
+                                </a>
                             </div>
-                            <div class="col-6 mb-3">
-                                <button type="button" onclick="openScheduleModal()"
-                                        class="btn btn-warning btn-icon-split w-100 quick-action-btn">
-                                    <span class="icon text-white-50">
-                                        <i class="fas fa-calendar-plus"></i>
-                                    </span>
-                                    <span class="text">安排课程</span>
-                                </button>
+                            <div class="col-6">
+                                <a href="/admin/academic/schedules" class="btn btn-warning w-100 quick-action-btn">
+                                    <i class="fas fa-calendar-alt d-block mb-2 fa-2x"></i>
+                                    <span>课程安排</span>
+                                </a>
                             </div>
-                            <div class="col-6 mb-3">
-                                <button type="button" onclick="openPaymentModal()"
-                                        class="btn btn-danger btn-icon-split w-100 quick-action-btn">
-                                    <span class="icon text-white-50">
-                                        <i class="fas fa-credit-card"></i>
-                                    </span>
-                                    <span class="text">缴费管理</span>
-                                </button>
+                            <div class="col-6">
+                                <a href="/admin/payments" class="btn btn-secondary w-100 quick-action-btn">
+                                    <i class="fas fa-money-bill-wave d-block mb-2 fa-2x"></i>
+                                    <span>缴费管理</span>
+                                </a>
                             </div>
-                            <div class="col-6 mb-3">
-                                <button type="button" onclick="openReportModal()"
-                                        class="btn btn-secondary btn-icon-split w-100 quick-action-btn">
-                                    <span class="icon text-white-50">
-                                        <i class="fas fa-chart-line"></i>
-                                    </span>
-                                    <span class="text">生成报表</span>
-                                </button>
+                            <div class="col-6">
+                                <a href="/admin/settings" class="btn btn-dark w-100 quick-action-btn">
+                                    <i class="fas fa-cogs d-block mb-2 fa-2x"></i>
+                                    <span>系统设置</span>
+                                </a>
                             </div>
-                        </div>
-                        <div class="text-center mt-2">
-                            <small class="text-muted">
-                                <i class="fas fa-info-circle mr-1"></i>
-                                点击按钮快速访问常用功能
-                            </small>
                         </div>
                     </div>
                 </div>
             </div>
-
             <!-- 系统通知 -->
             <div class="col-lg-6 mb-4">
-                <div class="card shadow">
-                    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                        <h6 class="m-0 font-weight-bold text-primary">
-                            <i class="fas fa-bell mr-2"></i>系统通知
-                            <span class="badge badge-danger badge-pill ml-2" th:if="${stats?.systemNotifications != null and stats.systemNotifications.size() > 0}" th:text="${stats.systemNotifications.size()}">0</span>
-                        </h6>
-                        <div class="dropdown no-arrow">
-                            <a class="dropdown-toggle" href="#" role="button"
-                               data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
-                            </a>
-                            <div class="dropdown-menu dropdown-menu-right shadow">
-                                <div class="dropdown-header">通知操作:</div>
-                                <a class="dropdown-item" href="#" onclick="markAllAsRead()">
-                                    <i class="fas fa-check-double mr-2"></i>全部标记已读
-                                </a>
-                                <a class="dropdown-item" href="#" onclick="refreshNotifications()">
-                                    <i class="fas fa-sync-alt mr-2"></i>刷新通知
-                                </a>
-                                <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="/admin/notifications">
-                                    <i class="fas fa-list mr-2"></i>查看全部
-                                </a>
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-0 py-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0 text-primary">
+                                <i class="fas fa-bell me-2"></i>系统通知
+                                <span class="badge bg-danger ms-2" th:if="${stats?.systemNotifications != null and stats.systemNotifications.size() > 0}" th:text="${stats.systemNotifications.size()}">0</span>
+                            </h5>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-cog"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" onclick="markAllAsRead()">
+                                        <i class="fas fa-check-double me-2"></i>全部标记已读
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="refreshNotifications()">
+                                        <i class="fas fa-sync-alt me-2"></i>刷新通知
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="/admin/notifications">
+                                        <i class="fas fa-list me-2"></i>查看全部
+                                    </a></li>
+                                </ul>
                             </div>
                         </div>
                     </div>
@@ -647,28 +557,28 @@
         <!-- 最近活动区域 -->
         <div class="row">
             <div class="col-12">
-                <div class="card shadow mb-4" data-aos="fade-up">
-                    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                        <h6 class="m-0 font-weight-bold text-primary">
-                            <i class="fas fa-history mr-2"></i>最近活动
-                        </h6>
-                        <div class="dropdown no-arrow">
-                            <a class="dropdown-toggle" href="#" role="button"
-                               data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
-                            </a>
-                            <div class="dropdown-menu dropdown-menu-right shadow">
-                                <div class="dropdown-header">活动操作:</div>
-                                <a class="dropdown-item" href="#" onclick="refreshActivities()">
-                                    <i class="fas fa-sync-alt mr-2"></i>刷新活动
-                                </a>
-                                <a class="dropdown-item" href="#" onclick="exportActivities()">
-                                    <i class="fas fa-download mr-2"></i>导出活动日志
-                                </a>
-                                <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="/admin/logs">
-                                    <i class="fas fa-list mr-2"></i>查看完整日志
-                                </a>
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white border-0 py-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0 text-primary">
+                                <i class="fas fa-history me-2"></i>最近活动
+                            </h5>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-cog"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" onclick="refreshActivities()">
+                                        <i class="fas fa-sync-alt me-2"></i>刷新活动
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="exportActivities()">
+                                        <i class="fas fa-download me-2"></i>导出活动日志
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="/admin/activity-log">
+                                        <i class="fas fa-list me-2"></i>查看完整日志
+                                    </a></li>
+                                </ul>
                             </div>
                         </div>
                     </div>
@@ -769,42 +679,110 @@
         </div>
     </div>
 
-    <!-- 引入弹窗组件 -->
-    <!-- TODO: 添加模态框组件 -->
-
     <th:block th:fragment="scripts">
-        <!-- Chart.js -->
-        <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-
         <!-- 引入API客户端 -->
         <script th:src="@{/js/api-client.js}"></script>
 
-        <!-- 引入仪表盘数据管理模块 -->
+        <!-- 引入仪表盘数据管理模块（完全依赖后端数据）-->
         <script th:src="@{/js/modules/dashboard-data.js}"></script>
+        
+        <!-- 引入仪表盘诊断工具 -->
+        <script th:src="@{/js/modules/dashboard-diagnostics.js}"></script>
+
+        <!-- 仪表盘页面初始化脚本 -->
+        <script>
+            // 页面加载完成后的初始化
+            document.addEventListener('DOMContentLoaded', function() {
+                // 设置当前页面标识
+                document.body.setAttribute('data-current-page', 'dashboard');
+                console.log('仪表盘页面已加载，数据管理器将自动初始化');
+                
+                // 显示数据加载指示器
+                showDataLoadingIndicator();
+                
+                // 监听数据管理器初始化完成事件
+                document.addEventListener('dashboardDataReady', function() {
+                    hideDataLoadingIndicator();
+                    console.log('仪表盘数据管理器初始化完成');
+                });
+                
+                // 监听数据加载错误事件
+                document.addEventListener('dashboardDataError', function(event) {
+                    hideDataLoadingIndicator();
+                    console.error('仪表盘数据加载失败:', event.detail);
+                });
+            });
+
+            // 显示数据加载指示器
+            function showDataLoadingIndicator() {
+                const indicator = document.getElementById('dataLoadingIndicator');
+                if (indicator) {
+                    indicator.style.display = 'block';
+                    indicator.classList.add('fade-in');
+                }
+            }
+
+            // 隐藏数据加载指示器
+            function hideDataLoadingIndicator() {
+                const indicator = document.getElementById('dataLoadingIndicator');
+                if (indicator) {
+                    indicator.style.display = 'none';
+                    indicator.classList.remove('fade-in');
+                }
+            }
+
+            // 刷新仪表盘数据 - 使用数据管理器
+            function refreshDashboardData() {
+                if (window.dashboardData) {
+                    window.dashboardData.refreshAllData();
+                } else {
+                    console.warn('数据管理器未初始化，使用页面刷新');
+                    location.reload();
+                }
+            }
+
+            // 显示活动详情
+            function showActivityDetails(button) {
+                const activity = button.getAttribute('data-activity');
+                if (activity) {
+                    alert('活动详情：' + activity);
+                }
+            }
+
+            // 标记通知为已读
+            function markAsRead(button) {
+                const item = button.closest('.notification-item');
+                if (item) {
+                    item.classList.remove('unread');
+                    item.classList.add('read');
+                    showAlert('通知已标记为已读', 'success');
+                }
+            }
+
+            // 删除通知
+            function deleteNotification(button) {
+                const item = button.closest('.notification-item');
+                if (item && confirm('确定要删除这条通知吗？')) {
+                    item.remove();
+                    showAlert('通知已删除', 'info');
+                }
+            }
+
+            // 标记全部通知为已读
+            function markAllAsRead() {
+                const unreadItems = document.querySelectorAll('.notification-item.unread');
+                unreadItems.forEach(item => {
+                    item.classList.remove('unread');
+                    item.classList.add('read');
+                });
+                showAlert(`已标记 ${unreadItems.length} 条通知为已读`, 'success');
+            }
+
+            // 导出活动日志
+            function exportActivities() {
+                showAlert('活动日志导出功能开发中...', 'info');
+            }
+        </script>
     </th:block>
-            </div>
-        </div>
-    </div>
-
-    <!-- 退出登录确认模态框 -->
-    <th:block th:replace="~{components/topbar :: logout-modal}"></th:block>
-
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-
-    <!-- 引入侧边栏脚本 -->
-    <th:block th:replace="~{components/sidebar :: sidebar-script}"></th:block>
-
-    <!-- 仪表盘页面初始化脚本 -->
-    <script>
-        // 页面加载完成后的初始化
-        document.addEventListener('DOMContentLoaded', function() {
-            // 设置当前页面标识
-            document.body.setAttribute('data-current-page', 'dashboard');
-            console.log('仪表盘页面已加载，数据管理器将自动初始化');
-        });
-    </script>
 </body>
 </html>

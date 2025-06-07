@@ -3,9 +3,7 @@ package com.campus.domain.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
+
 
 import java.util.List;
 
@@ -15,11 +13,8 @@ import java.util.List;
  *
  * @author Campus Management Team
  * @version 1.0.0
- * @since 2025-06-06
+ * @since 2025-06-07
  */
-@Data
-@EqualsAndHashCode(callSuper = true)
-@ToString(callSuper = true)
 @Entity
 @Table(name = "tb_department", indexes = {
     @Index(name = "idx_dept_code", columnList = "dept_code"),
@@ -121,14 +116,12 @@ public class Department extends BaseEntity {
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id", insertable = false, updatable = false)
-    @ToString.Exclude
     private Department parent;
 
     /**
      * 下级院系
      */
     @OneToMany(mappedBy = "parent", fetch = FetchType.LAZY)
-    @ToString.Exclude
     private List<Department> children;
 
     /**
@@ -136,21 +129,18 @@ public class Department extends BaseEntity {
      */
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "leader_id", insertable = false, updatable = false)
-    @ToString.Exclude
     private User leader;
 
     /**
      * 院系下的课程
      */
     @OneToMany(mappedBy = "department", fetch = FetchType.LAZY)
-    @ToString.Exclude
     private List<Course> courses;
 
     /**
      * 院系下的班级
      */
     @OneToMany(mappedBy = "department", fetch = FetchType.LAZY)
-    @ToString.Exclude
     private List<SchoolClass> schoolClasses;
 
     // ================================

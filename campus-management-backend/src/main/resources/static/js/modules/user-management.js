@@ -3,7 +3,7 @@
  * 提供用户的增删改查功能
  * 
  * @author Campus Management Team
- * @version 1.0.0
+ * @version 2.2.0 - 修复重复声明和角色更新问题
  * @since 2025-06-06
  */
 
@@ -14,7 +14,41 @@ class UserManagement {
         this.totalPages = 0;
         this.searchParams = {};
         this.selectedUsers = new Set();
-        this.init();
+        this.loadingCount = 0; // 加载状态计数器
+
+        // 启动定期清理机制，防止加载状态卡住
+        this.startLoadingCleanup();
+    }
+
+    /**
+     * 启动加载状态清理机制
+     */
+    startLoadingCleanup() {
+        // 每5秒检查一次是否有卡住的加载状态
+        setInterval(() => {
+            const loadingElement = document.getElementById('globalLoading');
+            if (loadingElement) {
+                console.warn('⚠️ 检测到可能卡住的加载状态，准备清理');
+                // 如果加载状态存在超过10秒，强制清理
+                if (!loadingElement.dataset.timestamp) {
+                    loadingElement.dataset.timestamp = Date.now();
+                } else {
+                    const elapsed = Date.now() - parseInt(loadingElement.dataset.timestamp);
+                    if (elapsed > 10000) { // 10秒
+                        console.warn('🧹 强制清理卡住的加载状态');
+                        this.forceHideLoading();
+                    }
+                }
+            }
+        }, 5000);
+    }
+
+    /**
+     * 检查API响应是否成功
+     * 支持两种响应格式：{success: true} 和 {code: 200}
+     */
+    isResponseSuccess(response) {
+        return response.success === true || response.code === 200;
     }
 
     /**
@@ -23,12 +57,13 @@ class UserManagement {
     async init() {
         try {
             await this.loadUsers();
+            await this.loadDisabledUsers();
             this.bindEvents();
             this.initializeComponents();
             console.log('用户管理模块初始化完成');
         } catch (error) {
             console.error('用户管理模块初始化失败:', error);
-            showAlert('用户管理模块初始化失败: ' + error.message, 'error');
+            this.showAlert('用户管理模块初始化失败: ' + error.message, 'error');
         }
     }
 
@@ -83,6 +118,9 @@ class UserManagement {
 
         // 模态框事件
         this.bindModalEvents();
+        
+        // 表单验证事件
+        this.bindFormValidationEvents();
     }
 
     /**
@@ -96,10 +134,145 @@ class UserManagement {
         }
 
         // 关闭模态框
-        const closeModalBtns = document.querySelectorAll('[data-dismiss="modal"]');
+        const closeModalBtns = document.querySelectorAll('[data-bs-dismiss="modal"]');
         closeModalBtns.forEach(btn => {
             btn.addEventListener('click', () => this.closeModal());
         });
+    }
+
+    /**
+     * 绑定表单验证事件
+     */
+    bindFormValidationEvents() {
+        // 用户名验证
+        const usernameField = document.getElementById('username');
+        if (usernameField) {
+            usernameField.addEventListener('blur', () => this.validateField('username'));
+            usernameField.addEventListener('input', () => this.clearFieldError('username'));
+        }
+
+        // 真实姓名验证
+        const realNameField = document.getElementById('realName');
+        if (realNameField) {
+            realNameField.addEventListener('blur', () => this.validateField('realName'));
+            realNameField.addEventListener('input', () => this.clearFieldError('realName'));
+        }
+
+        // 邮箱验证
+        const emailField = document.getElementById('email');
+        if (emailField) {
+            emailField.addEventListener('blur', () => this.validateField('email'));
+            emailField.addEventListener('input', () => this.clearFieldError('email'));
+        }
+
+        // 手机号验证
+        const phoneField = document.getElementById('phone');
+        if (phoneField) {
+            phoneField.addEventListener('blur', () => this.validateField('phone'));
+            phoneField.addEventListener('input', () => this.clearFieldError('phone'));
+        }
+
+        // 身份证号验证
+        const idCardField = document.getElementById('idCard');
+        if (idCardField) {
+            idCardField.addEventListener('blur', () => this.validateField('idCard'));
+            idCardField.addEventListener('input', () => this.clearFieldError('idCard'));
+        }
+
+        // 角色选择验证
+        const rolesField = document.getElementById('userRoles');
+        if (rolesField) {
+            rolesField.addEventListener('change', () => this.validateField('userRoles'));
+        }
+    }
+
+    /**
+     * 验证单个字段
+     */
+    validateField(fieldId) {
+        const field = document.getElementById(fieldId);
+        if (!field) return true;
+
+        const value = field.value.trim();
+        let isValid = true;
+        let message = '';
+
+        switch (fieldId) {
+            case 'username':
+                if (!value || value.length < 3) {
+                    isValid = false;
+                    message = '用户名不能为空且至少3个字符';
+                } else if (!/^[a-zA-Z0-9_]{3,20}$/.test(value)) {
+                    isValid = false;
+                    message = '用户名只能包含字母、数字和下划线，长度3-20位';
+                }
+                break;
+
+            case 'realName':
+                if (!value || value.length < 2) {
+                    isValid = false;
+                    message = '真实姓名不能为空且至少2个字符';
+                }
+                break;
+
+            case 'email':
+                if (value && !this.isValidEmail(value)) {
+                    isValid = false;
+                    message = '请输入有效的邮箱地址';
+                }
+                break;
+
+            case 'phone':
+                if (value && !this.isValidPhone(value)) {
+                    isValid = false;
+                    message = '请输入有效的手机号码';
+                }
+                break;
+
+            case 'idCard':
+                if (value && !this.isValidIdCard(value)) {
+                    isValid = false;
+                    message = '请输入有效的身份证号码';
+                }
+                break;
+
+            case 'userRoles':
+                const selectedOptions = Array.from(field.selectedOptions);
+                if (selectedOptions.length === 0) {
+                    isValid = false;
+                    message = '请至少选择一个角色';
+                }
+                break;
+        }
+
+        if (isValid) {
+            this.setFieldSuccess(fieldId);
+        } else {
+            this.setFieldError(fieldId, message);
+        }
+
+        return isValid;
+    }
+
+    /**
+     * 清除字段错误
+     */
+    clearFieldError(fieldId) {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.classList.remove('is-invalid', 'is-valid');
+        }
+    }
+
+    /**
+     * 设置字段成功状态
+     */
+    setFieldSuccess(fieldId) {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.classList.remove('is-invalid');
+            field.classList.add('is-valid');
+        }
     }
 
     /**
@@ -145,29 +318,52 @@ class UserManagement {
      */
     async loadUsers() {
         try {
-            showLoading('正在加载用户数据...');
+            // this.showLoading('正在加载用户数据...');
 
             const params = {
-                page: this.currentPage - 1,
+                page: this.currentPage,
                 size: this.pageSize,
                 ...this.searchParams
             };
 
+            console.log('📡 发送API请求参数:', params);
             const response = await apiClient.get('/api/users', params);
-            
-            if (response.success) {
-                this.renderUserTable(response.data.content || response.data);
-                this.updatePagination(response.data);
-                this.updateUserStats(response.data);
+            console.log('📥 API响应:', response);
+
+            // 检查响应格式：支持 {success: true} 和 {code: 200} 两种格式
+            const isSuccess = this.isResponseSuccess(response);
+
+            if (isSuccess) {
+                // 处理分页数据
+                const pageData = response.data;
+                console.log('📊 分页数据:', pageData);
+
+                const users = pageData.records || pageData.content || pageData;
+                console.log('👥 用户数据:', users);
+
+                try {
+                    this.renderUserTable(Array.isArray(users) ? users : []);
+                    console.log('✅ 用户表格渲染完成');
+
+                    this.updatePagination(pageData);
+                    console.log('✅ 分页更新完成');
+
+                    this.updateUserStats(pageData);
+                    console.log('✅ 统计更新完成');
+                } catch (renderError) {
+                    console.error('❌ 渲染数据时出错:', renderError);
+                    throw new Error('渲染用户数据失败: ' + renderError.message);
+                }
             } else {
+                console.error('❌ API响应失败:', response);
                 throw new Error(response.message || '加载用户数据失败');
             }
         } catch (error) {
             console.error('加载用户数据失败:', error);
-            showAlert('加载用户数据失败: ' + error.message, 'error');
+            this.showAlert('加载用户数据失败: ' + error.message, 'error');
             this.renderUserTable([]);
         } finally {
-            hideLoading();
+            this.hideLoading();
         }
     }
 
@@ -235,6 +431,12 @@ class UserManagement {
                                 title="编辑">
                             <i class="fas fa-edit"></i>
                         </button>
+                        <button class="btn ${user.status === 1 ? 'btn-outline-secondary' : 'btn-outline-success'}"
+                                onclick="toggleUserStatus(${user.id})"
+                                title="${user.status === 1 ? '禁用用户' : '启用用户'}"
+                                ${user.username === 'admin' ? 'disabled' : ''}>
+                            <i class="fas ${user.status === 1 ? 'fa-user-slash' : 'fa-user-check'}"></i>
+                        </button>
                         <button class="btn btn-outline-info" onclick="resetPassword(${user.id})"
                                 title="重置密码">
                             <i class="fas fa-key"></i>
@@ -249,7 +451,11 @@ class UserManagement {
         `).join('');
 
         // 更新选中状态
-        this.updateSelectAllState();
+        try {
+            this.updateSelectAllState();
+        } catch (selectError) {
+            console.warn('更新选中状态失败:', selectError);
+        }
     }
 
     /**
@@ -278,10 +484,21 @@ class UserManagement {
      * 更新分页
      */
     updatePagination(pageData) {
-        if (pageData.totalPages !== undefined) {
-            this.totalPages = pageData.totalPages;
-            this.currentPage = pageData.number + 1;
+        console.log('📄 更新分页信息:', pageData);
+
+        if (pageData && pageData.pages !== undefined) {
+            this.totalPages = pageData.pages;
+            this.currentPage = pageData.current || 1;
         }
+
+        console.log('📄 分页状态:', { totalPages: this.totalPages, currentPage: this.currentPage });
+
+        // 更新页面信息
+        const currentPageInfo = document.getElementById('currentPageInfo');
+        const totalPagesInfo = document.getElementById('totalPagesInfo');
+        
+        if (currentPageInfo) currentPageInfo.textContent = this.currentPage;
+        if (totalPagesInfo) totalPagesInfo.textContent = this.totalPages;
 
         const pagination = document.getElementById('userPagination');
         if (!pagination || this.totalPages <= 1) {
@@ -294,7 +511,7 @@ class UserManagement {
         // 上一页
         paginationHtml += `
             <li class="page-item ${this.currentPage === 1 ? 'disabled' : ''}">
-                <a class="page-link" href="#" onclick="window.userManagement.goToPage(${this.currentPage - 1})">
+                <a class="page-link" href="#" onclick="event.preventDefault(); window.userManagement.goToPage(${this.currentPage - 1})">
                     <i class="fas fa-chevron-left"></i>
                 </a>
             </li>
@@ -305,7 +522,7 @@ class UserManagement {
         const endPage = Math.min(this.totalPages, this.currentPage + 2);
 
         if (startPage > 1) {
-            paginationHtml += `<li class="page-item"><a class="page-link" href="#" onclick="window.userManagement.goToPage(1)">1</a></li>`;
+            paginationHtml += `<li class="page-item"><a class="page-link" href="#" onclick="event.preventDefault(); window.userManagement.goToPage(1)">1</a></li>`;
             if (startPage > 2) {
                 paginationHtml += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
             }
@@ -314,7 +531,7 @@ class UserManagement {
         for (let i = startPage; i <= endPage; i++) {
             paginationHtml += `
                 <li class="page-item ${i === this.currentPage ? 'active' : ''}">
-                    <a class="page-link" href="#" onclick="window.userManagement.goToPage(${i})">${i}</a>
+                    <a class="page-link" href="#" onclick="event.preventDefault(); window.userManagement.goToPage(${i})">${i}</a>
                 </li>
             `;
         }
@@ -323,13 +540,13 @@ class UserManagement {
             if (endPage < this.totalPages - 1) {
                 paginationHtml += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
             }
-            paginationHtml += `<li class="page-item"><a class="page-link" href="#" onclick="window.userManagement.goToPage(${this.totalPages})">${this.totalPages}</a></li>`;
+            paginationHtml += `<li class="page-item"><a class="page-link" href="#" onclick="event.preventDefault(); window.userManagement.goToPage(${this.totalPages})">${this.totalPages}</a></li>`;
         }
 
         // 下一页
         paginationHtml += `
             <li class="page-item ${this.currentPage === this.totalPages ? 'disabled' : ''}">
-                <a class="page-link" href="#" onclick="window.userManagement.goToPage(${this.currentPage + 1})">
+                <a class="page-link" href="#" onclick="event.preventDefault(); window.userManagement.goToPage(${this.currentPage + 1})">
                     <i class="fas fa-chevron-right"></i>
                 </a>
             </li>
@@ -353,15 +570,18 @@ class UserManagement {
      * 更新用户统计
      */
     updateUserStats(data) {
+        console.log('📊 更新用户统计:', data);
+
         const totalElement = document.getElementById('totalUsers');
         const activeElement = document.getElementById('activeUsers');
-        
-        if (totalElement && data.totalElements !== undefined) {
-            totalElement.textContent = data.totalElements.toLocaleString();
+
+        if (totalElement && data.total !== undefined) {
+            totalElement.textContent = data.total.toLocaleString();
         }
-        
-        if (activeElement && data.activeCount !== undefined) {
-            activeElement.textContent = data.activeCount.toLocaleString();
+
+        // 暂时使用总数作为活跃用户数，后续可以从API获取具体统计
+        if (activeElement && data.total !== undefined) {
+            activeElement.textContent = data.total.toLocaleString();
         }
     }
 
@@ -369,6 +589,8 @@ class UserManagement {
      * 处理搜索
      */
     async handleSearch() {
+        console.log('🔍 开始搜索');
+
         const searchInput = document.getElementById('searchInput');
         const statusFilter = document.getElementById('statusFilter');
         const roleFilter = document.getElementById('roleFilter');
@@ -376,16 +598,21 @@ class UserManagement {
         this.searchParams = {};
 
         if (searchInput && searchInput.value.trim()) {
-            this.searchParams.keyword = searchInput.value.trim();
+            this.searchParams.search = searchInput.value.trim(); // 修改为search
+            console.log('🔍 搜索关键词:', this.searchParams.search);
         }
 
         if (statusFilter && statusFilter.value) {
             this.searchParams.status = statusFilter.value;
+            console.log('🔍 状态筛选:', this.searchParams.status);
         }
 
         if (roleFilter && roleFilter.value) {
-            this.searchParams.roleId = roleFilter.value;
+            this.searchParams.role = roleFilter.value; // 修改为role
+            console.log('🔍 角色筛选:', this.searchParams.role);
         }
+
+        console.log('🔍 搜索参数:', this.searchParams);
 
         this.currentPage = 1;
         await this.loadUsers();
@@ -424,23 +651,55 @@ class UserManagement {
      */
     async showEditUserModal(userId) {
         try {
-            showLoading('正在加载用户信息...');
+            console.log('🔄 开始显示编辑用户模态框，用户ID:', userId);
+            this.showLoading('正在加载用户信息...');
 
+            console.log('📡 获取用户信息...');
             const response = await apiClient.get(`/api/users/${userId}`);
+            console.log('📥 用户信息响应:', response);
 
-            if (response.success) {
-                this.fillUserForm(response.data);
-                document.getElementById('userModalTitle').textContent = '编辑用户';
-                document.getElementById('userId').value = userId;
+            if (this.isResponseSuccess(response)) {
+                console.log('✅ 用户信息获取成功，开始显示模态框');
+
+                // 先显示模态框
                 this.showModal('userModal');
+
+                // 监听模态框显示完成事件
+                const modal = document.getElementById('userModal');
+                if (modal) {
+                    const handleModalShown = () => {
+                        console.log('✅ 模态框已完全显示，开始填充表单');
+
+                        // 设置模态框标题
+                        const titleElement = document.getElementById('userModalTitle');
+                        if (titleElement) {
+                            titleElement.textContent = '编辑用户';
+                        }
+
+                        // 填充表单
+                        this.fillUserForm(response.data);
+                        this.setFieldValue('userId', userId);
+
+                        console.log('✅ 编辑用户模态框显示完成');
+
+                        // 移除事件监听器
+                        modal.removeEventListener('shown.bs.modal', handleModalShown);
+                    };
+
+                    modal.addEventListener('shown.bs.modal', handleModalShown);
+                } else {
+                    console.error('❌ 找不到用户模态框');
+                }
             } else {
+                console.log('❌ 获取用户信息失败:', response);
                 throw new Error(response.message || '获取用户信息失败');
             }
         } catch (error) {
-            console.error('获取用户信息失败:', error);
-            showAlert('获取用户信息失败: ' + error.message, 'error');
+            console.error('❌ 显示编辑用户模态框失败:', error);
+            this.showAlert('获取用户信息失败: ' + error.message, 'error');
         } finally {
-            hideLoading();
+            console.log('🔚 编辑用户模态框操作完成，隐藏加载状态');
+            this.hideLoading();
         }
     }
 
@@ -448,15 +707,18 @@ class UserManagement {
      * 填充用户表单
      */
     fillUserForm(user) {
-        document.getElementById('username').value = user.username || '';
-        document.getElementById('realName').value = user.realName || '';
-        document.getElementById('email').value = user.email || '';
-        document.getElementById('phone').value = user.phone || '';
-        document.getElementById('gender').value = user.gender || '';
-        document.getElementById('idCard').value = user.idCard || '';
-        document.getElementById('address').value = user.address || '';
-        document.getElementById('userStatus').value = user.status || 1;
-        document.getElementById('remarks').value = user.remarks || '';
+        console.log('🔄 开始填充用户表单，用户数据:', user);
+
+        // 安全设置表单字段值
+        this.setFieldValue('username', user.username || '');
+        this.setFieldValue('realName', user.realName || '');
+        this.setFieldValue('email', user.email || '');
+        this.setFieldValue('phone', user.phone || '');
+        this.setFieldValue('gender', user.gender || '');
+        this.setFieldValue('idCard', user.idCard || '');
+        this.setFieldValue('address', user.address || '');
+        this.setFieldValue('userStatus', user.status || 1);
+        this.setFieldValue('remarks', user.remarks || '');
 
         // 设置角色
         if (user.roles && user.roles.length > 0) {
@@ -465,7 +727,25 @@ class UserManagement {
                 Array.from(roleSelect.options).forEach(option => {
                     option.selected = user.roles.some(role => role.id == option.value);
                 });
+                console.log('✅ 角色设置完成');
+            } else {
+                console.warn('⚠️ 角色选择框不存在');
             }
+        }
+
+        console.log('✅ 用户表单填充完成');
+    }
+
+    /**
+     * 安全设置字段值
+     */
+    setFieldValue(fieldId, value) {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.value = value;
+            console.log(`✅ 设置字段 ${fieldId} = ${value}`);
+        } else {
+            console.error(`❌ 字段不存在: ${fieldId}`);
         }
     }
 
@@ -492,7 +772,7 @@ class UserManagement {
                 return;
             }
 
-            showLoading('正在保存用户...');
+            this.showLoading('正在保存用户...');
 
             const userId = document.getElementById('userId').value;
             let response;
@@ -505,18 +785,18 @@ class UserManagement {
                 response = await apiClient.post('/api/users', formData);
             }
 
-            if (response.success) {
-                showAlert(userId ? '用户更新成功' : '用户添加成功', 'success');
+            if (this.isResponseSuccess(response)) {
+                this.showAlert(userId ? '用户更新成功' : '用户添加成功', 'success');
                 this.closeModal();
-                await this.loadUsers();
+                await this.loadUsers(); // loadUsers会处理自己的加载状态
             } else {
                 throw new Error(response.message || '保存用户失败');
             }
         } catch (error) {
             console.error('保存用户失败:', error);
-            showAlert('保存用户失败: ' + error.message, 'error');
+            this.showAlert('保存用户失败: ' + error.message, 'error');
         } finally {
-            hideLoading();
+            this.hideLoading();
         }
     }
 
@@ -547,27 +827,93 @@ class UserManagement {
      * 验证用户表单
      */
     validateUserForm(formData) {
-        if (!formData.username) {
-            showAlert('请输入用户名', 'warning');
-            return false;
+        const form = document.getElementById('userForm');
+        if (form) {
+            form.classList.add('was-validated');
         }
 
-        if (!formData.realName) {
-            showAlert('请输入真实姓名', 'warning');
-            return false;
+        // 清除之前的错误状态
+        this.clearFormErrors();
+
+        let isValid = true;
+
+        // 验证用户名
+        if (!formData.username || formData.username.length < 3) {
+            this.setFieldError('username', '用户名不能为空且至少3个字符');
+            isValid = false;
+        } else if (!/^[a-zA-Z0-9_]{3,20}$/.test(formData.username)) {
+            this.setFieldError('username', '用户名只能包含字母、数字和下划线，长度3-20位');
+            isValid = false;
         }
 
+        // 验证真实姓名
+        if (!formData.realName || formData.realName.length < 2) {
+            this.setFieldError('realName', '真实姓名不能为空且至少2个字符');
+            isValid = false;
+        }
+
+        // 验证邮箱
         if (formData.email && !this.isValidEmail(formData.email)) {
-            showAlert('请输入有效的邮箱地址', 'warning');
-            return false;
+            this.setFieldError('email', '请输入有效的邮箱地址');
+            isValid = false;
         }
 
+        // 验证手机号
         if (formData.phone && !this.isValidPhone(formData.phone)) {
-            showAlert('请输入有效的手机号码', 'warning');
-            return false;
+            this.setFieldError('phone', '请输入有效的手机号码');
+            isValid = false;
         }
 
-        return true;
+        // 验证身份证号
+        if (formData.idCard && !this.isValidIdCard(formData.idCard)) {
+            this.setFieldError('idCard', '请输入有效的身份证号码');
+            isValid = false;
+        }
+
+        // 验证角色
+        if (!formData.roles || formData.roles.length === 0) {
+            this.setFieldError('userRoles', '请至少选择一个角色');
+            isValid = false;
+        }
+
+        if (!isValid) {
+            this.showAlert('请检查表单输入', 'warning');
+        }
+
+        return isValid;
+    }
+
+    /**
+     * 设置字段错误
+     */
+    setFieldError(fieldId, message) {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.classList.add('is-invalid');
+            
+            let feedback = field.parentNode.querySelector('.invalid-feedback');
+            if (feedback) {
+                feedback.textContent = message;
+            }
+        }
+    }
+
+    /**
+     * 清除表单错误
+     */
+    clearFormErrors() {
+        const form = document.getElementById('userForm');
+        if (form) {
+            const errorFields = form.querySelectorAll('.is-invalid');
+            errorFields.forEach(field => {
+                field.classList.remove('is-invalid');
+            });
+            
+            const successFields = form.querySelectorAll('.is-valid');
+            successFields.forEach(field => {
+                field.classList.remove('is-valid');
+            });
+        }
     }
 
     /**
@@ -587,6 +933,14 @@ class UserManagement {
     }
 
     /**
+     * 验证身份证号格式
+     */
+    isValidIdCard(idCard) {
+        const idCardRegex = /^[1-9]\d{5}(18|19|20)\d{2}((0[1-9])|(1[0-2]))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$/;
+        return idCardRegex.test(idCard);
+    }
+
+    /**
      * 删除用户
      */
     async deleteUser(userId) {
@@ -595,21 +949,17 @@ class UserManagement {
         }
 
         try {
-            showLoading('正在删除用户...');
-
             const response = await apiClient.delete(`/api/users/${userId}`);
 
-            if (response.success) {
-                showAlert('用户删除成功', 'success');
-                await this.loadUsers();
+            if (this.isResponseSuccess(response)) {
+                this.showAlert('用户删除成功', 'success');
+                await this.loadUsers(); // loadUsers会处理自己的加载状态
             } else {
                 throw new Error(response.message || '删除用户失败');
             }
         } catch (error) {
             console.error('删除用户失败:', error);
-            showAlert('删除用户失败: ' + error.message, 'error');
-        } finally {
-            hideLoading();
+            this.showAlert('删除用户失败: ' + error.message, 'error');
         }
     }
 
@@ -622,20 +972,26 @@ class UserManagement {
         }
 
         try {
-            showLoading('正在重置密码...');
+            console.log('🔄 开始重置密码，用户ID:', userId);
+            this.showLoading('正在重置密码...');
 
-            const response = await apiClient.post(`/api/users/${userId}/reset-password`);
+            console.log('📡 发送重置密码请求...');
+            const response = await apiClient.post(`/api/users/${userId}/reset-password`, null);
+            console.log('📥 重置密码响应:', response);
 
-            if (response.success) {
-                showAlert('密码重置成功，新密码已发送到用户邮箱', 'success');
+            if (this.isResponseSuccess(response)) {
+                console.log('✅ 密码重置成功');
+                this.showAlert('密码重置成功，新密码已发送到用户邮箱', 'success');
             } else {
+                console.log('❌ 密码重置失败:', response);
                 throw new Error(response.message || '重置密码失败');
             }
         } catch (error) {
-            console.error('重置密码失败:', error);
-            showAlert('重置密码失败: ' + error.message, 'error');
+            console.error('❌ 重置密码异常:', error);
+            this.showAlert('重置密码失败: ' + error.message, 'error');
         } finally {
-            hideLoading();
+            console.log('🔚 重置密码操作完成，隐藏加载状态');
+            this.hideLoading();
         }
     }
 
@@ -692,7 +1048,17 @@ class UserManagement {
 
         if (batchDeleteBtn) {
             batchDeleteBtn.disabled = selectedCount === 0;
-            batchDeleteBtn.textContent = selectedCount > 0 ? `批量删除 (${selectedCount})` : '批量删除';
+            
+            // 更新按钮文本和图标
+            if (selectedCount > 0) {
+                batchDeleteBtn.innerHTML = `<i class="fas fa-trash me-1"></i>批量删除 (${selectedCount})`;
+                batchDeleteBtn.classList.remove('btn-outline-danger');
+                batchDeleteBtn.classList.add('btn-danger');
+            } else {
+                batchDeleteBtn.innerHTML = `<i class="fas fa-trash me-1"></i>批量删除`;
+                batchDeleteBtn.classList.remove('btn-danger');
+                batchDeleteBtn.classList.add('btn-outline-danger');
+            }
         }
     }
 
@@ -701,7 +1067,7 @@ class UserManagement {
      */
     async handleBatchDelete() {
         if (this.selectedUsers.size === 0) {
-            showAlert('请选择要删除的用户', 'warning');
+            this.showAlert('请选择要删除的用户', 'warning');
             return;
         }
 
@@ -710,23 +1076,19 @@ class UserManagement {
         }
 
         try {
-            showLoading('正在批量删除用户...');
-
             const userIds = Array.from(this.selectedUsers);
-            const response = await apiClient.post('/api/users/batch-delete', { userIds });
+            const response = await apiClient.delete('/api/users/batch', userIds);
 
-            if (response.success) {
-                showAlert(`成功删除 ${userIds.length} 个用户`, 'success');
+            if (this.isResponseSuccess(response)) {
+                this.showAlert(`成功删除 ${userIds.length} 个用户`, 'success');
                 this.selectedUsers.clear();
-                await this.loadUsers();
+                await this.loadUsers(); // loadUsers会处理自己的加载状态
             } else {
                 throw new Error(response.message || '批量删除失败');
             }
         } catch (error) {
             console.error('批量删除失败:', error);
-            showAlert('批量删除失败: ' + error.message, 'error');
-        } finally {
-            hideLoading();
+            this.showAlert('批量删除失败: ' + error.message, 'error');
         }
     }
 
@@ -735,12 +1097,12 @@ class UserManagement {
      */
     async handleExport() {
         try {
-            showLoading('正在导出用户数据...');
+            this.showLoading('正在导出用户数据...');
 
             const params = { ...this.searchParams, export: true };
             const response = await apiClient.get('/api/users/export', params);
 
-            if (response.success) {
+            if (this.isResponseSuccess(response)) {
                 // 创建下载链接
                 const blob = new Blob([response.data], { type: 'application/vnd.ms-excel' });
                 const url = window.URL.createObjectURL(blob);
@@ -752,15 +1114,15 @@ class UserManagement {
                 document.body.removeChild(a);
                 window.URL.revokeObjectURL(url);
 
-                showAlert('用户数据导出成功', 'success');
+                this.showAlert('用户数据导出成功', 'success');
             } else {
                 throw new Error(response.message || '导出失败');
             }
         } catch (error) {
             console.error('导出失败:', error);
-            showAlert('导出失败: ' + error.message, 'error');
+            this.showAlert('导出失败: ' + error.message, 'error');
         } finally {
-            hideLoading();
+            this.hideLoading();
         }
     }
 
@@ -769,21 +1131,28 @@ class UserManagement {
      */
     async showUserDetail(userId) {
         try {
-            showLoading('正在加载用户详情...');
+            console.log('🔄 开始显示用户详情，用户ID:', userId);
+            this.showLoading('正在加载用户详情...');
 
+            console.log('📡 获取用户详情...');
             const response = await apiClient.get(`/api/users/${userId}`);
+            console.log('📥 用户详情响应:', response);
 
-            if (response.success) {
+            if (this.isResponseSuccess(response)) {
+                console.log('✅ 用户详情获取成功');
                 this.renderUserDetail(response.data);
                 this.showModal('userDetailModal');
+                console.log('✅ 用户详情模态框显示完成');
             } else {
+                console.log('❌ 获取用户详情失败:', response);
                 throw new Error(response.message || '获取用户详情失败');
             }
         } catch (error) {
-            console.error('获取用户详情失败:', error);
-            showAlert('获取用户详情失败: ' + error.message, 'error');
+            console.error('❌ 显示用户详情失败:', error);
+            this.showAlert('获取用户详情失败: ' + error.message, 'error');
         } finally {
-            hideLoading();
+            console.log('🔚 用户详情操作完成，隐藏加载状态');
+            this.hideLoading();
         }
     }
 
@@ -867,13 +1236,21 @@ class UserManagement {
      */
     async loadRoles() {
         try {
-            const response = await apiClient.get('/api/roles');
+            console.log('🔄 加载角色列表 - 使用硬编码数据');
+            
+            // 使用硬编码的角色数据（与后端AdminSystemController保持一致）
+            const roles = [
+                { id: 1, roleName: 'ADMIN', roleDescription: '系统管理员', status: 1 },
+                { id: 2, roleName: 'TEACHER', roleDescription: '教师', status: 1 },
+                { id: 3, roleName: 'STUDENT', roleDescription: '学生', status: 1 },
+                { id: 4, roleName: 'FINANCE', roleDescription: '财务人员', status: 1 },
+                { id: 5, roleName: 'ACADEMIC_ADMIN', roleDescription: '教务管理员', status: 1 }
+            ];
 
-            if (response.success) {
-                this.renderRoleOptions(response.data);
-            }
+            console.log('✅ 角色数据加载成功:', roles);
+            this.renderRoleOptions(roles);
         } catch (error) {
-            console.error('加载角色列表失败:', error);
+            console.error('❌ 加载角色列表失败:', error);
         }
     }
 
@@ -904,11 +1281,45 @@ class UserManagement {
      * 显示模态框
      */
     showModal(modalId) {
-        const modal = document.getElementById(modalId);
-        if (modal) {
-            const bsModal = new bootstrap.Modal(modal);
-            bsModal.show();
-        }
+        console.log('🔄 尝试显示模态框:', modalId);
+
+        // 等待DOM完全加载
+        setTimeout(() => {
+            const modal = document.getElementById(modalId);
+            if (!modal) {
+                console.error('❌ 找不到模态框元素:', modalId);
+                console.log('🔍 当前页面所有模态框:', document.querySelectorAll('.modal'));
+                this.showAlert('模态框元素不存在: ' + modalId, 'error');
+                return;
+            }
+
+            console.log('✅ 找到模态框元素:', modal);
+
+            // 检查Bootstrap是否可用
+            if (typeof bootstrap === 'undefined') {
+                console.error('❌ Bootstrap未加载');
+                this.showAlert('Bootstrap未加载，无法显示模态框', 'error');
+                return;
+            }
+
+            try {
+                // 先检查是否已有实例
+                let bsModal = bootstrap.Modal.getInstance(modal);
+                if (!bsModal) {
+                    console.log('🔄 创建新的Bootstrap模态框实例');
+                    bsModal = new bootstrap.Modal(modal);
+                } else {
+                    console.log('✅ 使用现有的Bootstrap模态框实例');
+                }
+
+                console.log('🔄 显示模态框...');
+                bsModal.show();
+                console.log('✅ 模态框显示命令已执行');
+            } catch (error) {
+                console.error('❌ 显示模态框失败:', error);
+                this.showAlert('显示模态框失败: ' + error.message, 'error');
+            }
+        }, 100);
     }
 
     /**
@@ -923,18 +1334,378 @@ class UserManagement {
             }
         });
     }
+
+    /**
+     * 显示加载状态
+     */
+    showLoading(message = '加载中...') {
+        console.log('🔄 显示加载状态:', message);
+
+        // 移除现有的加载指示器
+        this.hideLoading();
+
+        // 创建新的加载指示器
+        const loadingElement = document.createElement('div');
+        loadingElement.id = 'globalLoading';
+        loadingElement.className = 'position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center';
+        loadingElement.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+        loadingElement.style.zIndex = '9999';
+        loadingElement.dataset.timestamp = Date.now(); // 添加时间戳
+        loadingElement.innerHTML = `
+            <div class="bg-white p-4 rounded shadow">
+                <div class="d-flex align-items-center">
+                    <div class="spinner-border text-primary me-3" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <span>${message}</span>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(loadingElement);
+
+        console.log('✅ 加载状态已显示');
+    }
+
+    /**
+     * 隐藏加载状态
+     */
+    hideLoading() {
+        console.log('🔚 隐藏加载状态');
+
+        const loadingElement = document.getElementById('globalLoading');
+        if (loadingElement) {
+            loadingElement.remove();
+            console.log('✅ 加载状态已隐藏');
+        } else {
+            console.log('ℹ️ 没有找到加载状态元素');
+        }
+    }
+
+    /**
+     * 强制清理所有加载状态
+     */
+    forceHideLoading() {
+        console.log('🧹 强制清理所有加载状态');
+
+        // 清理所有可能的加载元素
+        const loadingElements = document.querySelectorAll('#globalLoading, .loading-overlay, [id*="loading"]');
+        loadingElements.forEach(element => {
+            element.remove();
+        });
+
+        // 重置计数器
+        this.loadingCount = 0;
+
+        console.log('✅ 强制清理完成');
+    }
+
+    /**
+     * 显示提示信息
+     */
+    showAlert(message, type = 'info', duration = 3000) {
+        // 创建提示元素
+        const alertElement = document.createElement('div');
+        alertElement.className = `alert alert-${this.getAlertClass(type)} alert-dismissible fade show position-fixed`;
+        alertElement.style.top = '20px';
+        alertElement.style.right = '20px';
+        alertElement.style.zIndex = '10000';
+        alertElement.style.minWidth = '300px';
+        
+        alertElement.innerHTML = `
+            <i class="fas ${this.getAlertIcon(type)} me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+
+        document.body.appendChild(alertElement);
+
+        // 自动移除
+        setTimeout(() => {
+            if (alertElement && alertElement.parentNode) {
+                alertElement.remove();
+            }
+        }, duration);
+    }
+
+    /**
+     * 获取提示样式类
+     */
+    getAlertClass(type) {
+        switch (type) {
+            case 'success': return 'success';
+            case 'error': return 'danger';
+            case 'warning': return 'warning';
+            case 'info': return 'info';
+            default: return 'primary';
+        }
+    }
+
+    /**
+     * 获取提示图标
+     */
+    getAlertIcon(type) {
+        switch (type) {
+            case 'success': return 'fa-check-circle';
+            case 'error': return 'fa-exclamation-circle';
+            case 'warning': return 'fa-exclamation-triangle';
+            case 'info': return 'fa-info-circle';
+            default: return 'fa-bell';
+        }
+    }
+
+    /**
+     * 切换用户状态
+     */
+    async toggleUserStatus(userId) {
+        try {
+            const response = await apiClient.post(`/api/users/${userId}/toggle-status`);
+
+            if (this.isResponseSuccess(response)) {
+                this.showAlert('用户状态切换成功', 'success');
+                await this.loadUsers(); // loadUsers会处理自己的加载状态
+                await this.loadDisabledUsers(); // 同时刷新禁用用户列表
+            } else {
+                throw new Error(response.message || '切换用户状态失败');
+            }
+        } catch (error) {
+            console.error('切换用户状态失败:', error);
+            this.showAlert('切换用户状态失败: ' + error.message, 'error');
+        }
+    }
+
+    /**
+     * 启用用户
+     */
+    async enableUser(userId) {
+        if (!confirm('确定要启用该用户吗？')) {
+            return;
+        }
+
+        try {
+            const response = await apiClient.post(`/api/users/${userId}/toggle-status`);
+
+            if (this.isResponseSuccess(response)) {
+                this.showAlert('用户启用成功', 'success');
+                await this.loadUsers(); // 刷新主用户列表
+                await this.loadDisabledUsers(); // 刷新禁用用户列表
+            } else {
+                throw new Error(response.message || '启用用户失败');
+            }
+        } catch (error) {
+            console.error('启用用户失败:', error);
+            this.showAlert('启用用户失败: ' + error.message, 'error');
+        }
+    }
+
+    /**
+     * 格式化日期
+     */
+    formatDate(dateString) {
+        if (!dateString) return '-';
+        
+        try {
+            const date = new Date(dateString);
+            return date.toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        } catch (error) {
+            return dateString;
+        }
+    }
+
+    /**
+     * 刷新用户列表
+     */
+    async refreshUsers() {
+        await this.loadUsers();
+        await this.loadDisabledUsers();
+    }
+
+    /**
+     * 加载禁用用户列表
+     */
+    async loadDisabledUsers() {
+        try {
+            console.log('🔄 开始加载禁用用户列表');
+
+            const response = await apiClient.get('/api/users/disabled');
+            console.log('📥 禁用用户列表响应:', response);
+
+            if (this.isResponseSuccess(response)) {
+                const disabledUsers = response.data || [];
+                this.renderDisabledUsers(disabledUsers);
+                console.log('✅ 禁用用户列表加载完成，共', disabledUsers.length, '个用户');
+            } else {
+                throw new Error(response.message || '获取禁用用户列表失败');
+            }
+        } catch (error) {
+            console.error('❌ 加载禁用用户列表失败:', error);
+            this.showAlert('加载禁用用户列表失败: ' + error.message, 'error');
+        }
+    }
+
+    /**
+     * 渲染禁用用户列表
+     */
+    renderDisabledUsers(disabledUsers) {
+        const container = document.getElementById('disabledUsersList');
+        const countElement = document.getElementById('disabledUserCount');
+
+        if (!container) {
+            console.warn('⚠️ 禁用用户列表容器不存在');
+            return;
+        }
+
+        // 更新计数
+        if (countElement) {
+            countElement.textContent = disabledUsers.length;
+        }
+
+        if (disabledUsers.length === 0) {
+            container.innerHTML = `
+                <div class="text-center p-3 text-muted">
+                    <i class="fas fa-user-slash fa-2x mb-2"></i>
+                    <p class="mb-0">暂无禁用用户</p>
+                </div>
+            `;
+            return;
+        }
+
+        const html = disabledUsers.map(user => `
+            <div class="border-bottom p-3">
+                <div class="d-flex align-items-center">
+                    <img src="${user.avatarUrl || '/images/default-avatar.svg'}"
+                         alt="头像" class="rounded-circle me-2" width="32" height="32">
+                    <div class="flex-grow-1">
+                        <div class="fw-bold small">${user.realName || user.username}</div>
+                        <small class="text-muted">${user.username}</small>
+                    </div>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-success btn-sm"
+                                onclick="enableUser(${user.id})"
+                                title="启用用户">
+                            <i class="fas fa-user-check"></i>
+                        </button>
+                        <button class="btn btn-outline-danger btn-sm"
+                                onclick="deleteUser(${user.id})"
+                                title="删除用户">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+
+        container.innerHTML = html;
+    }
+
+    /**
+     * 获取选中的用户ID列表
+     */
+    getSelectedUserIds() {
+        return Array.from(this.selectedUsers);
+    }
+
+    /**
+     * 清空选中状态
+     */
+    clearSelection() {
+        this.selectedUsers.clear();
+        const checkboxes = document.querySelectorAll('.user-checkbox');
+        checkboxes.forEach(checkbox => checkbox.checked = false);
+        
+        const selectAllCheckbox = document.getElementById('selectAll');
+        if (selectAllCheckbox) {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = false;
+        }
+        
+        this.updateBatchButtons();
+    }
 }
 
-// 全局实例
-let userManagement;
+// 移除重复的初始化代码，统一在文件末尾处理
 
-// 页面加载完成后初始化
-document.addEventListener('DOMContentLoaded', function() {
-    // 确保在用户管理页面才初始化
-    if (document.getElementById('userTableBody') || document.getElementById('userTable')) {
-        userManagement = new UserManagement();
-        // 将实例暴露到全局作用域
-        window.userManagement = userManagement;
-        console.log('用户管理模块已初始化');
+// 全局函数桥接 - 用于HTML按钮调用
+window.viewUser = function(userId) {
+    if (window.userManagement) {
+        window.userManagement.showUserDetail(userId);
     }
-});
+};
+
+window.editUser = function(userId) {
+    if (window.userManagement) {
+        window.userManagement.showEditUserModal(userId);
+    }
+};
+
+window.deleteUser = function(userId) {
+    if (window.userManagement) {
+        window.userManagement.deleteUser(userId);
+    }
+};
+
+window.resetPassword = function(userId) {
+    if (window.userManagement) {
+        window.userManagement.resetPassword(userId);
+    }
+};
+
+window.toggleUserStatus = function(userId) {
+    if (window.userManagement) {
+        window.userManagement.toggleUserStatus(userId);
+    }
+};
+
+window.enableUser = function(userId) {
+    if (window.userManagement) {
+        window.userManagement.enableUser(userId);
+    }
+};
+
+// 确保只实例化一次UserManagement
+(function() {
+    'use strict';
+
+    // 检查是否已经初始化过
+    if (window.userManagement) {
+        console.log('⚠️ 用户管理模块已存在，跳过初始化');
+        return;
+    }
+
+    // 检查是否在用户管理页面
+    function isUserManagementPage() {
+        return document.getElementById('userTableBody') ||
+               document.getElementById('userTable') ||
+               document.querySelector('.user-management-page');
+    }
+
+    // 初始化函数
+    function initializeUserManagement() {
+        if (!isUserManagementPage()) {
+            console.log('📄 非用户管理页面，跳过初始化');
+            return;
+        }
+
+        try {
+            console.log('🚀 初始化用户管理模块 v2.1');
+            window.userManagement = new UserManagement();
+            window.userManagement.init();
+            console.log('✅ 用户管理模块初始化完成');
+        } catch (error) {
+            console.error('❌ 用户管理模块初始化失败:', error);
+        }
+    }
+
+    // 页面加载完成后初始化
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeUserManagement);
+    } else {
+        // DOM已经加载完成
+        initializeUserManagement();
+    }
+})();

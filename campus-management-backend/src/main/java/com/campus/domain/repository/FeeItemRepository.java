@@ -1,7 +1,8 @@
 package com.campus.domain.repository;
 
 import com.campus.domain.entity.FeeItem;
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -12,86 +13,75 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * 缴费项目数据访问层
+ * 缴费项目Repository接口
+ * 提供缴费项目相关的数据访问方法
  *
  * @author Campus Management Team
  * @version 1.0.0
- * @since 2025-06-05
+ * @since 2025-06-07
  */
 @Repository
-public interface FeeItemRepository extends JpaRepository<FeeItem, Long> {
+public interface FeeItemRepository extends BaseRepository<FeeItem> {
+
+    // ================================
+    // 基础查询方法
+    // ================================
 
     /**
      * 根据项目编码查找缴费项目
-     *
-     * @param itemCode 项目编码
-     * @return 缴费项目
      */
-    Optional<FeeItem> findByItemCodeAndDeleted(String itemCode, Integer deleted);
+    @Query("SELECT f FROM FeeItem f WHERE f.itemCode = :itemCode AND f.deleted = 0")
+    Optional<FeeItem> findByItemCode(@Param("itemCode") String itemCode);
 
     /**
-     * 根据项目编码查找缴费项目（不考虑删除状态）
-     *
-     * @param itemCode 项目编码
-     * @return 缴费项目
+     * 根据项目名称查找缴费项目
      */
-    Optional<FeeItem> findByItemCode(String itemCode);
-
-    /**
-     * 检查项目编码是否存在
-     *
-     * @param itemCode 项目编码
-     * @return 是否存在
-     */
-    boolean existsByItemCode(String itemCode);
-
-    /**
-     * 检查项目编码是否存在（包含删除状态）
-     *
-     * @param itemCode 项目编码
-     * @param deleted 删除状态
-     * @return 是否存在
-     */
-    boolean existsByItemCodeAndDeleted(String itemCode, Integer deleted);
+    @Query("SELECT f FROM FeeItem f WHERE f.itemName = :itemName AND f.deleted = 0")
+    Optional<FeeItem> findByItemName(@Param("itemName") String itemName);
 
     /**
      * 根据费用类型查找缴费项目列表
-     *
-     * @param feeType 费用类型
-     * @return 缴费项目列表
      */
-    List<FeeItem> findByFeeTypeAndDeletedOrderByCreatedTimeDesc(String feeType, Integer deleted);
+    @Query("SELECT f FROM FeeItem f WHERE f.feeType = :feeType AND f.deleted = 0 ORDER BY f.createdAt DESC")
+    List<FeeItem> findByFeeType(@Param("feeType") String feeType);
 
     /**
-     * 根据费用类型查找缴费项目列表（简化版本）
-     *
-     * @param feeType 费用类型
-     * @return 缴费项目列表
+     * 分页根据费用类型查找缴费项目列表
      */
-    List<FeeItem> findByFeeType(String feeType);
+    @Query("SELECT f FROM FeeItem f WHERE f.feeType = :feeType AND f.deleted = 0")
+    Page<FeeItem> findByFeeType(@Param("feeType") String feeType, Pageable pageable);
 
     /**
      * 根据适用年级查找缴费项目列表
-     *
-     * @param applicableGrade 适用年级
-     * @return 缴费项目列表
      */
-    List<FeeItem> findByApplicableGradeAndDeletedOrderByCreatedTimeDesc(String applicableGrade, Integer deleted);
+    @Query("SELECT f FROM FeeItem f WHERE f.applicableGrade = :applicableGrade AND f.deleted = 0 ORDER BY f.createdAt DESC")
+    List<FeeItem> findByApplicableGrade(@Param("applicableGrade") String applicableGrade);
 
     /**
-     * 根据适用年级查找缴费项目列表（简化版本）
-     *
-     * @param applicableGrade 适用年级
-     * @return 缴费项目列表
+     * 分页根据适用年级查找缴费项目列表
      */
-    List<FeeItem> findByApplicableGrade(String applicableGrade);
+    @Query("SELECT f FROM FeeItem f WHERE f.applicableGrade = :applicableGrade AND f.deleted = 0")
+    Page<FeeItem> findByApplicableGrade(@Param("applicableGrade") String applicableGrade, Pageable pageable);
 
     /**
      * 查找启用状态的缴费项目列表
-     *
-     * @return 缴费项目列表
      */
-    List<FeeItem> findByStatusAndDeletedOrderByCreatedTimeDesc(Integer status, Integer deleted);
+    @Query("SELECT f FROM FeeItem f WHERE f.status = 1 AND f.deleted = 0 ORDER BY f.createdAt DESC")
+    List<FeeItem> findActiveItems();
+
+    /**
+     * 分页查找启用状态的缴费项目列表
+     */
+    @Query("SELECT f FROM FeeItem f WHERE f.status = 1 AND f.deleted = 0")
+    Page<FeeItem> findActiveItems(Pageable pageable);
+
+    /**
+     * 根据项目名称模糊查询
+     */
+    @Query("SELECT f FROM FeeItem f WHERE f.itemName LIKE %:itemName% AND f.deleted = 0 ORDER BY f.createdAt DESC")
+    List<FeeItem> findByItemNameContaining(@Param("itemName") String itemName);
+
+
 
     /**
      * 根据截止日期范围查找缴费项目
@@ -124,20 +114,9 @@ public interface FeeItemRepository extends JpaRepository<FeeItem, Long> {
     // @Select("SELECT * FROM tb_fee_item WHERE deleted = 0 ORDER BY created_time DESC LIMIT #{offset}, #{limit}")
     // List<FeeItem> findWithPagination(@Param("offset") int offset, @Param("limit") int limit);
 
-    /**
-     * 统计缴费项目总数
-     *
-     * @return 总数
-     */
-    long countByDeletedNot(Integer deleted);
 
-    /**
-     * 查找活跃的缴费项目
-     *
-     * @return 缴费项目列表
-     */
-    @Query("SELECT f FROM FeeItem f WHERE f.status = 1 AND f.deleted = 0 ORDER BY f.createdTime DESC")
-    List<FeeItem> findActiveItems();
+
+
 
     /**
      * 更新缴费项目状态
@@ -193,25 +172,7 @@ public interface FeeItemRepository extends JpaRepository<FeeItem, Long> {
         """)
     List<FeeItem> searchByKeyword(@Param("keyword") String keyword);
 
-    /**
-     * 根据多条件搜索缴费项目
-     *
-     * @param keyword 关键词
-     * @param feeType 费用类型
-     * @param status 状态
-     * @return 缴费项目列表
-     */
-    @Query("""
-        SELECT f FROM FeeItem f
-        WHERE f.deleted = 0
-        AND (:keyword IS NULL OR f.itemName LIKE %:keyword% OR f.itemCode LIKE %:keyword% OR f.description LIKE %:keyword%)
-        AND (:feeType IS NULL OR f.feeType = :feeType)
-        AND (:status IS NULL OR f.status = :status)
-        ORDER BY f.createdTime DESC
-        """)
-    List<FeeItem> searchFeeItems(@Param("keyword") String keyword,
-                                @Param("feeType") String feeType,
-                                @Param("status") Integer status);
+
 
     /**
      * 获取缴费项目详情（包含缴费统计）
@@ -229,6 +190,63 @@ public interface FeeItemRepository extends JpaRepository<FeeItem, Long> {
         GROUP BY f.id
         """)
     Optional<Object[]> findDetailById(@Param("id") Long id);
+
+    // ================================
+    // 兼容性方法（为现有Service提供支持）
+    // ================================
+
+    /**
+     * 根据项目编码查找缴费项目（兼容性方法）
+     */
+    default Optional<FeeItem> findByItemCodeAndDeleted(String itemCode, Integer deleted) {
+        return findByItemCode(itemCode);
+    }
+
+    /**
+     * 检查项目编码是否存在（兼容性方法）
+     */
+    @Query("SELECT CASE WHEN COUNT(f) > 0 THEN true ELSE false END FROM FeeItem f WHERE f.itemCode = :itemCode AND f.deleted = 0")
+    boolean existsByItemCode(@Param("itemCode") String itemCode);
+
+    /**
+     * 检查项目编码是否存在（兼容性方法）
+     */
+    @Query("SELECT CASE WHEN COUNT(f) > 0 THEN true ELSE false END FROM FeeItem f WHERE f.itemCode = :itemCode AND f.deleted = :deleted")
+    boolean existsByItemCodeAndDeleted(@Param("itemCode") String itemCode, @Param("deleted") Integer deleted);
+
+    /**
+     * 根据费用类型查找缴费项目列表（兼容性方法）
+     */
+    default List<FeeItem> findByFeeTypeAndDeletedOrderByCreatedTimeDesc(String feeType, Integer deleted) {
+        return findByFeeType(feeType);
+    }
+
+    /**
+     * 根据适用年级查找缴费项目列表（兼容性方法）
+     */
+    default List<FeeItem> findByApplicableGradeAndDeletedOrderByCreatedTimeDesc(String applicableGrade, Integer deleted) {
+        return findByApplicableGrade(applicableGrade);
+    }
+
+    /**
+     * 查找启用状态的缴费项目列表（兼容性方法）
+     */
+    default List<FeeItem> findByStatusAndDeletedOrderByCreatedTimeDesc(Integer status, Integer deleted) {
+        return findActiveItems();
+    }
+
+    /**
+     * 统计缴费项目总数（兼容性方法）
+     */
+    @Query("SELECT COUNT(f) FROM FeeItem f WHERE f.deleted != :deleted")
+    long countByDeletedNot(@Param("deleted") Integer deleted);
+
+    /**
+     * 根据多条件搜索缴费项目（兼容性方法）
+     */
+    default List<FeeItem> searchFeeItems(String keyword, String feeType, Integer status) {
+        return searchByKeyword(keyword);
+    }
 
     /**
      * 缴费项目详情类
@@ -249,4 +267,5 @@ public interface FeeItemRepository extends JpaRepository<FeeItem, Long> {
         public Long getPaymentCount() { return paymentCount; }
         public BigDecimal getTotalPaid() { return totalPaid; }
     }
+
 }

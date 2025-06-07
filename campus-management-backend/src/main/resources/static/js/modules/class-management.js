@@ -1,101 +1,78 @@
 /**
- * 班级管理模块
+ * 班级管理模块 v3.0
+ * 基于CrudBase的班级增删改查功能
  */
-class ClassManagement {
+class ClassManagement extends CrudBase {
     constructor() {
-        this.currentPage = 0;
-        this.pageSize = 20;
-        this.searchParams = {};
-        this.formValidator = null;
-        this.init();
-    }
-
-    /**
-     * 初始化
-     */
-    init() {
-        this.bindEvents();
-        this.loadClasses();
-        this.initFormValidator();
-    }
-
-    /**
-     * 绑定事件
-     */
-    bindEvents() {
-        // 搜索表单提交
-        const searchForm = document.getElementById('searchForm');
-        if (searchForm) {
-            searchForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                this.handleSearch();
-            });
-        }
-
-        // 重置搜索
-        const resetBtn = document.getElementById('resetBtn');
-        if (resetBtn) {
-            resetBtn.addEventListener('click', () => this.resetSearch());
-        }
-
-        // 添加班级按钮
-        const addClassBtn = document.getElementById('addClassBtn');
-        if (addClassBtn) {
-            addClassBtn.addEventListener('click', () => this.showAddClassModal());
-        }
-
-        // 保存班级按钮
-        const saveClassBtn = document.getElementById('saveClassBtn');
-        if (saveClassBtn) {
-            saveClassBtn.addEventListener('click', () => this.saveClass());
-        }
-
-        // 分页按钮
-        document.addEventListener('click', (e) => {
-            if (e.target.classList.contains('page-link')) {
-                e.preventDefault();
-                const page = parseInt(e.target.dataset.page);
-                if (!isNaN(page)) {
-                    this.loadClasses(page);
-                }
-            }
+        super({
+            apiEndpoint: '/api/classes',
+            tableName: '班级',
+            modalId: 'classModal',
+            formId: 'classForm',
+            tableBodyId: 'classTable',
+            paginationId: 'pagination',
+            searchFormId: 'searchForm'
         });
 
-        // 操作按钮
-        document.addEventListener('click', (e) => {
-            if (e.target.classList.contains('edit-class-btn')) {
-                const classId = e.target.dataset.classId;
-                this.editClass(classId);
-            } else if (e.target.classList.contains('delete-class-btn')) {
-                const classId = e.target.dataset.classId;
-                this.deleteClass(classId);
-            } else if (e.target.classList.contains('view-students-btn')) {
-                const classId = e.target.dataset.classId;
-                this.viewClassStudents(classId);
-            }
-        });
+        this.formData = {
+            grades: [],
+            majors: [],
+            teachers: []
+        };
     }
 
     /**
-     * 初始化表单验证器
+     * 渲染表格行
      */
-    initFormValidator() {
-        const classForm = document.getElementById('classForm');
-        if (classForm) {
-            this.formValidator = new FormValidator(classForm);
-            this.formValidator
-                .addRule('className', { required: true, maxLength: 50 }, '班级名称不能为空且不超过50个字符')
-                .addRule('grade', { required: true }, '请选择年级')
-                .addRule('major', { required: true }, '请选择专业')
-                .addRule('maxStudents', { 
-                    required: true, 
-                    custom: (value) => {
-                        const num = parseInt(value);
-                        return (num > 0 && num <= 100) || '班级人数必须在1-100之间';
-                    }
-                }, '班级人数格式不正确');
-        }
+    renderTableRow(schoolClass) {
+        return `
+            <tr>
+                <td>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="${schoolClass.id}">
+                    </div>
+                </td>
+                <td>
+                    <div class="fw-bold">${schoolClass.className}</div>
+                    <small class="text-muted">${schoolClass.classCode || ''}</small>
+                    <div><span class="badge bg-info">${schoolClass.grade}</span></div>
+                </td>
+                <td>
+                    <span class="badge bg-secondary">${schoolClass.major || '-'}</span>
+                </td>
+                <td>
+                    <span class="badge bg-primary">${schoolClass.currentStudents || 0}/${schoolClass.maxStudents || 0}</span>
+                </td>
+                <td>${schoolClass.headTeacherName || '-'}</td>
+                <td>
+                    ${DataFormatter.formatStatus(schoolClass.status)}
+                </td>
+                <td>
+                    <small class="text-muted">${DataFormatter.formatDate(schoolClass.createdAt)}</small>
+                </td>
+                <td>
+                    <div class="action-buttons">
+                        <button type="button" class="btn-action btn-view"
+                                data-action="view" data-id="${schoolClass.id}" title="查看详情">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button type="button" class="btn-action btn-edit"
+                                data-action="edit" data-id="${schoolClass.id}" title="编辑">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button type="button" class="btn-action btn-delete"
+                                data-action="delete" data-id="${schoolClass.id}" title="删除">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
     }
+
+
+
+
 
     /**
      * 加载班级列表
@@ -471,6 +448,175 @@ class ClassManagement {
         if (!dateString) return '-';
         const date = new Date(dateString);
         return date.toLocaleDateString('zh-CN');
+    }
+}
+
+    /**
+     * 获取表单数据
+     */
+    getFormData() {
+        const form = document.getElementById(this.config.formId);
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+
+        // 转换数据类型
+        data.maxStudents = parseInt(data.maxStudents) || 0;
+        data.status = parseInt(data.status) || 1;
+        data.headTeacherId = data.headTeacherId ? parseInt(data.headTeacherId) : null;
+
+        return data;
+    }
+
+    /**
+     * 填充表单
+     */
+    populateForm(data) {
+        document.getElementById('classId').value = data.id || '';
+        document.getElementById('className').value = data.className || '';
+        document.getElementById('classCode').value = data.classCode || '';
+        document.getElementById('grade').value = data.grade || '';
+        document.getElementById('major').value = data.major || '';
+        document.getElementById('maxStudents').value = data.maxStudents || '';
+        document.getElementById('headTeacherId').value = data.headTeacherId || '';
+        document.getElementById('description').value = data.description || '';
+        document.getElementById('status').value = data.status || 1;
+
+        // 更新模态框标题
+        document.getElementById('classModalLabel').innerHTML = '<i class="fas fa-edit me-2"></i>编辑班级';
+    }
+
+    /**
+     * 重置表单
+     */
+    resetForm() {
+        const form = document.getElementById(this.config.formId);
+        form.reset();
+        document.getElementById('classId').value = '';
+        document.getElementById('classModalLabel').innerHTML = '<i class="fas fa-plus me-2"></i>添加班级';
+
+        if (this.formValidator) {
+            this.formValidator.clearAllErrors();
+        }
+    }
+
+    /**
+     * 获取当前编辑的ID
+     */
+    getCurrentId() {
+        return document.getElementById('classId').value || null;
+    }
+
+    /**
+     * 准备表单数据
+     */
+    async prepareFormData() {
+        try {
+            const response = await apiClient.get('/api/classes/form-data');
+            if (this.isResponseSuccess(response)) {
+                this.formData = response.data;
+                this.populateFormSelects();
+            }
+        } catch (error) {
+            console.error('获取表单数据失败:', error);
+        }
+    }
+
+    /**
+     * 填充表单选择框
+     */
+    populateFormSelects() {
+        // 填充年级选项
+        const gradeSelects = document.querySelectorAll('select[name="grade"]');
+        gradeSelects.forEach(select => {
+            select.innerHTML = '<option value="">请选择年级</option>';
+            this.formData.grades.forEach(grade => {
+                select.innerHTML += `<option value="${grade}">${grade}</option>`;
+            });
+        });
+
+        // 填充专业选项
+        const majorSelects = document.querySelectorAll('select[name="major"]');
+        majorSelects.forEach(select => {
+            select.innerHTML = '<option value="">请选择专业</option>';
+            this.formData.majors.forEach(major => {
+                select.innerHTML += `<option value="${major}">${major}</option>`;
+            });
+        });
+
+        // 填充班主任选项
+        const teacherSelect = document.getElementById('headTeacherId');
+        if (teacherSelect) {
+            teacherSelect.innerHTML = '<option value="">请选择班主任</option>';
+            this.formData.teachers.forEach(teacher => {
+                teacherSelect.innerHTML += `<option value="${teacher.id}">${teacher.realName}</option>`;
+            });
+        }
+    }
+
+    /**
+     * 获取验证规则
+     */
+    getValidationRules() {
+        return [
+            {
+                field: 'className',
+                rules: { required: true, maxLength: 50 },
+                message: '班级名称不能为空且不超过50个字符'
+            },
+            {
+                field: 'classCode',
+                rules: { required: true, maxLength: 20 },
+                message: '班级代码不能为空且不超过20个字符'
+            },
+            {
+                field: 'grade',
+                rules: { required: true },
+                message: '请选择年级'
+            },
+            {
+                field: 'major',
+                rules: { required: true },
+                message: '请选择专业'
+            },
+            {
+                field: 'maxStudents',
+                rules: {
+                    required: true,
+                    custom: (value) => {
+                        const num = parseInt(value);
+                        return (num > 0 && num <= 100) || '班级人数必须在1-100之间';
+                    }
+                },
+                message: '班级人数格式不正确'
+            }
+        ];
+    }
+
+    /**
+     * 更新统计信息
+     */
+    updateStatistics(data) {
+        const stats = data.stats || {};
+
+        const statElements = {
+            totalClasses: document.getElementById('totalClasses'),
+            activeClasses: document.getElementById('activeClasses'),
+            totalStudents: document.getElementById('totalStudents'),
+            avgStudentsPerClass: document.getElementById('avgStudentsPerClass')
+        };
+
+        Object.keys(statElements).forEach(key => {
+            if (statElements[key]) {
+                statElements[key].textContent = stats[key] || 0;
+            }
+        });
+    }
+
+    /**
+     * 获取导出表头
+     */
+    getExportHeaders() {
+        return ['班级名称', '班级代码', '年级', '专业', '班级人数', '班主任', '状态', '创建时间'];
     }
 }
 

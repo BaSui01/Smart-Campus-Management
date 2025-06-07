@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>控制器路由映射检查</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .mapping-card {
+            margin-bottom: 20px;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+        }
+        .mapping-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px 10px 0 0;
+        }
+        .route-item {
+            padding: 10px 15px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .route-item:last-child {
+            border-bottom: none;
+        }
+        .method-badge {
+            font-size: 0.8em;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .method-get { background-color: #28a745; color: white; }
+        .method-post { background-color: #007bff; color: white; }
+        .method-put { background-color: #ffc107; color: black; }
+        .method-delete { background-color: #dc3545; color: white; }
+        .method-patch { background-color: #6f42c1; color: white; }
+        .duplicate-warning {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        .conflict-error {
+            background-color: #f8d7da;
+            border-left: 4px solid #dc3545;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        .optimization-suggestion {
+            background-color: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+            padding: 10px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid py-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="text-center mb-4">
+                    <h1><i class="fas fa-route me-2"></i>控制器路由映射检查</h1>
+                    <p class="text-muted">检查控制器重复路由、冲突映射和优化建议</p>
+                </div>
+
+                <!-- 控制按钮 -->
+                <div class="text-center mb-4">
+                    <button class="btn btn-primary btn-lg me-2" onclick="checkControllerMappings()">
+                        <i class="fas fa-search me-2"></i>检查路由映射
+                    </button>
+                    <button class="btn btn-secondary btn-lg me-2" onclick="clearResults()">
+                        <i class="fas fa-broom me-2"></i>清空结果
+                    </button>
+                    <button class="btn btn-info btn-lg" onclick="generateOptimizationReport()">
+                        <i class="fas fa-chart-line me-2"></i>生成优化报告
+                    </button>
+                </div>
+
+                <!-- 检查结果 -->
+                <div id="checkResults"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 模拟的控制器路由映射数据
+        const controllerMappings = [
+            {
+                name: 'AdminSystemController',
+                baseMapping: '/admin',
+                routes: [
+                    { method: 'GET', path: '/profile', description: '个人资料页面' },
+                    { method: 'GET', path: '/settings', description: '系统设置页面' },
+                    { method: 'GET', path: '/users', description: '用户管理页面' },
+                    { method: 'GET', path: '/roles', description: '角色管理页面' },
+                    { method: 'GET', path: '/permissions', description: '权限管理页面' },
+                    { method: 'GET', path: '/fee-items', description: '缴费项目管理页面' },
+                    { method: 'GET', path: '/payments', description: '缴费管理页面' },
+                    { method: 'GET', path: '/payment-records', description: '缴费记录页面' },
+                    { method: 'GET', path: '/reports', description: '报表管理页面' },
+                    { method: 'GET', path: '/logs', description: '系统日志页面' }
+                ]
+            },
+            {
+                name: 'AdminAcademicController',
+                baseMapping: '/admin',
+                routes: [
+                    { method: 'GET', path: '/academic/courses', description: '课程管理页面' },
+                    { method: 'GET', path: '/academic/classes', description: '班级管理页面' },
+                    { method: 'GET', path: '/academic/schedules', description: '课程安排页面' }
+                ]
+            },
+            {
+                name: 'StudentController',
+                baseMapping: '',
+                routes: [
+                    { method: 'GET', path: '/admin/students', description: '学生管理页面' },
+                    { method: 'GET', path: '/admin/students/new', description: '添加学生页面' },
+                    { method: 'GET', path: '/admin/students/edit', description: '编辑学生页面' },
+                    { method: 'GET', path: '/admin/students/detail', description: '学生详情页面' },
+                    { method: 'GET', path: '/student/profile', description: '学生个人信息页面' },
+                    { method: 'GET', path: '/student/grades', description: '学生成绩查询页面' },
+                    { method: 'GET', path: '/student/schedule', description: '学生课程表页面' }
+                ]
+            },
+            {
+                name: 'AuthController',
+                baseMapping: '',
+                routes: [
+                    { method: 'GET', path: '/admin/login', description: '管理员登录页面' },
+                    { method: 'POST', path: '/admin/login', description: '管理员登录处理' },
+                    { method: 'GET', path: '/admin/logout', description: '管理员登出' },
+                    { method: 'GET', path: '/admin/api/database', description: '数据库连接测试API' }
+                ]
+            },
+            {
+                name: 'AdminDashboardController',
+                baseMapping: '/admin',
+                routes: [
+                    { method: 'GET', path: '/', description: '仪表盘页面' },
+                    { method: 'GET', path: '/dashboard', description: '仪表盘页面' },
+                    { method: 'GET', path: '/sidebar-test', description: '侧边栏测试页面' }
+                ]
+            },
+            // API控制器
+            {
+                name: 'StudentApiController',
+                baseMapping: '/api/v1',
+                routes: [
+                    { method: 'GET', path: '/students', description: '获取学生列表API' },
+                    { method: 'GET', path: '/students/{id}', description: '获取学生详情API' },
+                    { method: 'POST', path: '/students', description: '创建学生API' },
+                    { method: 'PUT', path: '/students/{id}', description: '更新学生API' },
+                    { method: 'DELETE', path: '/students/{id}', description: '删除学生API' }
+                ]
+            },
+            {
+                name: 'UserApiController',
+                baseMapping: '/api/v1',
+                routes: [
+                    { method: 'GET', path: '/users', description: '获取用户列表API' },
+                    { method: 'GET', path: '/users/{id}', description: '获取用户详情API' },
+                    { method: 'POST', path: '/users', description: '创建用户API' },
+                    { method: 'PUT', path: '/users/{id}', description: '更新用户API' },
+                    { method: 'DELETE', path: '/users/{id}', description: '删除用户API' }
+                ]
+            },
+            {
+                name: 'OptimizedStudentApiController',
+                baseMapping: '/api/v1',
+                routes: [
+                    { method: 'GET', path: '/students', description: '优化的获取学生列表API' },
+                    { method: 'GET', path: '/students/{id}', description: '优化的获取学生详情API' },
+                    { method: 'POST', path: '/students', description: '优化的创建学生API' },
+                    { method: 'PUT', path: '/students/{id}', description: '优化的更新学生API' },
+                    { method: 'DELETE', path: '/students/{id}', description: '优化的删除学生API' },
+                    { method: 'DELETE', path: '/students/batch', description: '批量删除学生API' },
+                    { method: 'GET', path: '/students/search', description: '搜索学生API' },
+                    { method: 'GET', path: '/students/statistics', description: '学生统计API' }
+                ]
+            }
+        ];
+
+        let checkResults = [];
+
+        // 检查控制器路由映射
+        function checkControllerMappings() {
+            clearResults();
+            const resultsContainer = document.getElementById('checkResults');
+            resultsContainer.innerHTML = '<div class="text-center"><div class="spinner-border"></div><p class="mt-2">正在检查路由映射...</p></div>';
+
+            // 分析路由映射
+            const analysis = analyzeRouteMappings();
+            
+            // 显示结果
+            displayAnalysisResults(analysis);
+        }
+
+        // 分析路由映射
+        function analyzeRouteMappings() {
+            const analysis = {
+                totalControllers: controllerMappings.length,
+                totalRoutes: 0,
+                duplicateRoutes: [],
+                conflictingRoutes: [],
+                optimizationSuggestions: [],
+                controllerDetails: []
+            };
+
+            // 收集所有路由
+            const allRoutes = [];
+            controllerMappings.forEach(controller => {
+                controller.routes.forEach(route => {
+                    const fullPath = controller.baseMapping + route.path;
+                    allRoutes.push({
+                        controller: controller.name,
+                        method: route.method,
+                        path: fullPath,
+                        description: route.description
+                    });
+                    analysis.totalRoutes++;
+                });
+                analysis.controllerDetails.push(controller);
+            });
+
+            // 检查重复路由
+            const routeMap = new Map();
+            allRoutes.forEach(route => {
+                const key = `${route.method}:${route.path}`;
+                if (routeMap.has(key)) {
+                    const existing = routeMap.get(key);
+                    analysis.duplicateRoutes.push({
+                        route: key,
+                        controllers: [existing.controller, route.controller],
+                        description: route.description
+                    });
+                } else {
+                    routeMap.set(key, route);
+                }
+            });
+
+            // 检查冲突路由（相同路径不同方法但可能冲突）
+            const pathGroups = new Map();
+            allRoutes.forEach(route => {
+                if (!pathGroups.has(route.path)) {
+                    pathGroups.set(route.path, []);
+                }
+                pathGroups.get(route.path).push(route);
+            });
+
+            pathGroups.forEach((routes, path) => {
+                if (routes.length > 1) {
+                    const methods = routes.map(r => r.method);
+                    const controllers = [...new Set(routes.map(r => r.controller))];
+                    
+                    if (controllers.length > 1) {
+                        analysis.conflictingRoutes.push({
+                            path: path,
+                            methods: methods,
+                            controllers: controllers,
+                            routes: routes
+                        });
+                    }
+                }
+            });
+
+            // 生成优化建议
+            generateOptimizationSuggestions(analysis);
+
+            return analysis;
+        }
+
+        // 生成优化建议
+        function generateOptimizationSuggestions(analysis) {
+            // 检查重复的API控制器
+            const studentApiControllers = analysis.controllerDetails.filter(c => 
+                c.name.includes('Student') && c.name.includes('Api')
+            );
+            
+            if (studentApiControllers.length > 1) {
+                analysis.optimizationSuggestions.push({
+                    type: 'duplicate_controllers',
+                    title: '发现重复的学生API控制器',
+                    description: `存在多个学生API控制器：${studentApiControllers.map(c => c.name).join(', ')}`,
+                    suggestion: '建议合并为一个优化的控制器，删除旧的控制器'
+                });
+            }
+
+            // 检查路由组织
+            const adminRoutes = analysis.controllerDetails.filter(c => 
+                c.baseMapping === '/admin' || c.routes.some(r => r.path.startsWith('/admin'))
+            );
+            
+            if (adminRoutes.length > 3) {
+                analysis.optimizationSuggestions.push({
+                    type: 'route_organization',
+                    title: '管理后台路由分散',
+                    description: `管理后台路由分散在${adminRoutes.length}个控制器中`,
+                    suggestion: '建议按功能模块重新组织控制器，提高代码可维护性'
+                });
+            }
+
+            // 检查UTF-8编码优化
+            analysis.optimizationSuggestions.push({
+                type: 'encoding_optimization',
+                title: 'UTF-8编码优化',
+                description: '确保所有控制器都正确处理UTF-8编码',
+                suggestion: '在所有控制器中添加UTF-8编码处理，使用BaseController统一管理'
+            });
+
+            // 检查性能优化
+            analysis.optimizationSuggestions.push({
+                type: 'performance_optimization',
+                title: '性能优化建议',
+                description: '使用真实数据库数据，避免模拟数据',
+                suggestion: '所有控制器都应该使用真实的数据库查询，添加缓存机制，优化查询性能'
+            });
+        }
+
+        // 显示分析结果
+        function displayAnalysisResults(analysis) {
+            const resultsContainer = document.getElementById('checkResults');
+            
+            let html = `
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title text-primary">${analysis.totalControllers}</h5>
+                                <p class="card-text">控制器总数</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title text-info">${analysis.totalRoutes}</h5>
+                                <p class="card-text">路由总数</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title text-warning">${analysis.duplicateRoutes.length}</h5>
+                                <p class="card-text">重复路由</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title text-danger">${analysis.conflictingRoutes.length}</h5>
+                                <p class="card-text">冲突路由</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // 显示重复路由
+            if (analysis.duplicateRoutes.length > 0) {
+                html += `
+                    <div class="conflict-error">
+                        <h5><i class="fas fa-exclamation-triangle me-2"></i>重复路由检测</h5>
+                        <p>发现以下重复的路由映射：</p>
+                        <ul>
+                `;
+                analysis.duplicateRoutes.forEach(duplicate => {
+                    html += `
+                        <li>
+                            <strong>${duplicate.route}</strong> - ${duplicate.description}<br>
+                            <small class="text-muted">控制器: ${duplicate.controllers.join(', ')}</small>
+                        </li>
+                    `;
+                });
+                html += `</ul></div>`;
+            }
+
+            // 显示冲突路由
+            if (analysis.conflictingRoutes.length > 0) {
+                html += `
+                    <div class="duplicate-warning">
+                        <h5><i class="fas fa-exclamation-circle me-2"></i>潜在冲突路由</h5>
+                        <p>发现以下可能存在冲突的路由：</p>
+                        <ul>
+                `;
+                analysis.conflictingRoutes.forEach(conflict => {
+                    html += `
+                        <li>
+                            <strong>${conflict.path}</strong><br>
+                            <small class="text-muted">方法: ${conflict.methods.join(', ')} | 控制器: ${conflict.controllers.join(', ')}</small>
+                        </li>
+                    `;
+                });
+                html += `</ul></div>`;
+            }
+
+            // 显示优化建议
+            if (analysis.optimizationSuggestions.length > 0) {
+                html += `
+                    <div class="optimization-suggestion">
+                        <h5><i class="fas fa-lightbulb me-2"></i>优化建议</h5>
+                `;
+                analysis.optimizationSuggestions.forEach(suggestion => {
+                    html += `
+                        <div class="mb-3">
+                            <h6>${suggestion.title}</h6>
+                            <p class="mb-1">${suggestion.description}</p>
+                            <small class="text-muted"><strong>建议:</strong> ${suggestion.suggestion}</small>
+                        </div>
+                    `;
+                });
+                html += `</div>`;
+            }
+
+            // 显示控制器详情
+            html += `<h5 class="mt-4 mb-3"><i class="fas fa-list me-2"></i>控制器详情</h5>`;
+            analysis.controllerDetails.forEach(controller => {
+                html += `
+                    <div class="mapping-card">
+                        <div class="mapping-header">
+                            <h6 class="mb-0">
+                                <i class="fas fa-code me-2"></i>
+                                ${controller.name}
+                                <small class="ms-2">${controller.baseMapping || '/'}</small>
+                            </h6>
+                        </div>
+                        <div class="card-body p-0">
+                `;
+                controller.routes.forEach(route => {
+                    const fullPath = controller.baseMapping + route.path;
+                    html += `
+                        <div class="route-item">
+                            <div>
+                                <span class="method-badge method-${route.method.toLowerCase()}">${route.method}</span>
+                                <span class="ms-2">${fullPath}</span>
+                            </div>
+                            <small class="text-muted">${route.description}</small>
+                        </div>
+                    `;
+                });
+                html += `
+                        </div>
+                    </div>
+                `;
+            });
+
+            resultsContainer.innerHTML = html;
+        }
+
+        // 生成优化报告
+        function generateOptimizationReport() {
+            const analysis = analyzeRouteMappings();
+            
+            let report = `# 控制器优化报告\n\n`;
+            report += `## 概览\n`;
+            report += `- 控制器总数: ${analysis.totalControllers}\n`;
+            report += `- 路由总数: ${analysis.totalRoutes}\n`;
+            report += `- 重复路由: ${analysis.duplicateRoutes.length}\n`;
+            report += `- 冲突路由: ${analysis.conflictingRoutes.length}\n\n`;
+            
+            if (analysis.duplicateRoutes.length > 0) {
+                report += `## 重复路由问题\n`;
+                analysis.duplicateRoutes.forEach(duplicate => {
+                    report += `- ${duplicate.route}: ${duplicate.controllers.join(', ')}\n`;
+                });
+                report += `\n`;
+            }
+            
+            report += `## 优化建议\n`;
+            analysis.optimizationSuggestions.forEach((suggestion, index) => {
+                report += `${index + 1}. **${suggestion.title}**\n`;
+                report += `   - 问题: ${suggestion.description}\n`;
+                report += `   - 建议: ${suggestion.suggestion}\n\n`;
+            });
+            
+            // 下载报告
+            const blob = new Blob([report], { type: 'text/markdown' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'controller-optimization-report.md';
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            alert('优化报告已生成并下载！');
+        }
+
+        // 清空结果
+        function clearResults() {
+            checkResults = [];
+            document.getElementById('checkResults').innerHTML = '';
+        }
+
+        // 页面加载时显示说明
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('checkResults').innerHTML = `
+                <div class="text-center text-muted py-5">
+                    <i class="fas fa-info-circle fa-3x mb-3"></i>
+                    <h5>控制器路由映射检查工具</h5>
+                    <p>点击"检查路由映射"按钮来分析控制器的路由映射情况</p>
+                    <p class="small">此工具将检查重复路由、冲突映射并提供优化建议</p>
+                </div>
+            `;
+        });
+    </script>
+</body>
+</html>

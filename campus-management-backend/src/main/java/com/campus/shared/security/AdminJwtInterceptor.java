@@ -23,6 +23,9 @@ public class AdminJwtInterceptor implements HandlerInterceptor {
     
     private static final Logger logger = LoggerFactory.getLogger(AdminJwtInterceptor.class);
     
+    // 服务器启动时间，用于检测重启前的Token
+    private static final long SERVER_START_TIME = System.currentTimeMillis();
+    
     @Autowired
     private JwtUtil jwtUtil;
     
@@ -70,6 +73,13 @@ public class AdminJwtInterceptor implements HandlerInterceptor {
             // 检查是否为管理后台token
             if (!jwtUtil.isAdminToken(token)) {
                 logger.warn("非管理后台Token尝试访问: {}", requestURI);
+                clearSessionAndRedirect(request, response);
+                return false;
+            }
+            
+            // 检查Token是否在服务器重启之前签发
+            if (isTokenIssuedBeforeRestart(token)) {
+                logger.warn("检测到服务器重启前的Token，强制重新登录: {}", requestURI);
                 clearSessionAndRedirect(request, response);
                 return false;
             }
@@ -132,8 +142,15 @@ public class AdminJwtInterceptor implements HandlerInterceptor {
             request.setAttribute("currentUserId", userId);
             request.setAttribute("currentUsername", username);
             request.setAttribute("currentUserRole", role);
-            
-            logger.debug("JWT认证成功: {} 访问 {}", username, requestURI);
+
+            // 将用户信息设置到session中供模板使用
+            if (session != null) {
+                session.setAttribute("user", user);
+                session.setAttribute("userRole", role);
+                session.setAttribute("username", username);
+            }
+
+            logger.debug("JWT认证成功: {} (角色: {}) 访问 {}", username, role, requestURI);
             return true;
             
         } catch (Exception e) {
@@ -199,5 +216,32 @@ public class AdminJwtInterceptor implements HandlerInterceptor {
         }
         
         response.sendRedirect(redirectUrl.toString());
+    }
+    
+    /**
+     * 检查Token是否在服务器重启之前签发
+     */
+    private boolean isTokenIssuedBeforeRestart(String token) {
+        try {
+            // 从JWT Token中获取签发时间
+            java.util.Date issuedAt = jwtUtil.getClaimFromToken(token, io.jsonwebtoken.Claims::getIssuedAt);
+            if (issuedAt == null) {
+                logger.warn("无法获取Token签发时间，为安全起见拒绝访问");
+                return true; // 无法确定签发时间，为安全起见认为无效
+            }
+            
+            // 如果Token签发时间早于服务器启动时间，则认为是重启前的Token
+            boolean isBeforeRestart = issuedAt.getTime() < SERVER_START_TIME;
+            if (isBeforeRestart) {
+                logger.info("检测到重启前Token: 签发时间={}, 服务器启动时间={}",
+                    new java.util.Date(issuedAt.getTime()),
+                    new java.util.Date(SERVER_START_TIME));
+            }
+            
+            return isBeforeRestart;
+        } catch (Exception e) {
+            logger.error("检查Token签发时间时发生错误: {}", e.getMessage());
+            return true; // 异常情况下为安全起见认为Token无效
+        }
     }
 }

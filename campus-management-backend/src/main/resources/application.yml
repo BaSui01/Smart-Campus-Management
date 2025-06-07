@@ -1,28 +1,6 @@
-# 智慧校园管理系统 - 主配置文件
+# 智慧校园管理系统 - 统一配置文件
 server:
-  port: 8080
-  servlet:
-    context-path: ''
-    encoding:
-      charset: UTF-8
-      enabled: true
-      force: true
-  # 响应压缩配置
-  compression:
-    enabled: true
-    mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
-    min-response-size: 1024
-  
-  # HTTP配置
-  tomcat:
-    connection-timeout: 20000  # 20秒连接超时
-    keep-alive-timeout: 60000  # 60秒保活超时
-    max-keep-alive-requests: 100
-    accept-count: 100
-    max-connections: 200
-    threads:
-      max: 200
-      min-spare: 10
+  port: 8082  # 开发环境端口
 
 spring:
   application:
@@ -38,18 +16,20 @@ spring:
   # 数据源配置
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/campus_management_db?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://localhost:3306/campus_management_db?useUnicode=true&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&autoReconnect=true&failOverReadOnly=false&maxReconnects=3&useAffectedRows=true
     username: root
     password: xiaoxiao123
     # HikariCP连接池配置
     hikari:
       pool-name: HikariCP
-      minimum-idle: 5
-      maximum-pool-size: 20
+      minimum-idle: 2
+      maximum-pool-size: 50
       auto-commit: true
-      idle-timeout: 30000
+      idle-timeout: 600000
       connection-timeout: 30000
       max-lifetime: 1800000
+      connection-init-sql: SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci
+      validation-timeout: 3000
       connection-test-query: SELECT 1
 
   # JPA配置
@@ -57,54 +37,74 @@ spring:
     hibernate:
       ddl-auto: update
       naming:
-        physical-strategy: org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy
-    show-sql: true
+        physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
+        implicit-strategy: org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy
+    show-sql: false
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
-        format_sql: true
+        format_sql: false
+        use_sql_comments: false
+        query.timeout: 5000
+        connection.provider_disables_autocommit: false
+        enable_lazy_load_no_trans: false
+        current_session_context_class: thread
+        connection.release_mode: after_transaction
+        generate_statistics: false
+        query.plan_cache_max_size: 2048
         jdbc:
           batch_size: 20
         order_inserts: true
         order_updates: true
-    open-in-view: false
+    open-in-view: true
 
   # Redis配置
   data:
     redis:
       host: localhost
       port: 6379
-      password: ''
       database: 0
       timeout: 3000ms
-      jedis:
+      lettuce:
         pool:
           max-active: 20
           max-wait: -1ms
           max-idle: 10
-          min-idle: 0
+          min-idle: 5
 
   # 缓存配置
   cache:
     type: redis
     redis:
       time-to-live: 1800000  # 30分钟
-      cache-null-values: false
 
   # 邮件配置
   mail:
     host: smtp.qq.com
     port: 587
-    username: your-email@qq.com
-    password: your-email-password
+    username: test@qq.com
+    password: test-password
+    protocol: smtp
+    default-encoding: UTF-8
     properties:
       mail:
         smtp:
           auth: true
           starttls:
             enable: true
-            required: true
-    test-connection: false
+
+  # Quartz配置
+  quartz:
+    job-store-type: memory
+    properties:
+      org:
+        quartz:
+          threadPool:
+            threadCount: 5
+            threadPriority: 5
+          scheduler:
+            instanceName: CampusScheduler-Dev
+            instanceId: AUTO
 
   # Thymeleaf配置
   thymeleaf:
@@ -133,14 +133,16 @@ spring:
     basename: messages
     encoding: UTF-8
 
-  # 安全配置
-  security:
-    oauth2:
-      client:
-        registration:
-          github:
-            client-id: your-github-client-id
-            client-secret: your-github-client-secret
+# JWT配置
+jwt:
+  secret: campus-management-jwt-secret-key-dev-2024
+  expiration: 7200000        # 2小时
+  refresh-expiration: 604800000  # 7天
+  header: Authorization
+  prefix: Bearer
+  redis:
+    prefix: "jwt:token:"
+    refresh-prefix: "jwt:refresh:"
 
 # 自定义配置
 campus:
@@ -149,15 +151,7 @@ campus:
     name: 智慧校园管理系统
     version: 1.0.0
     author: Campus Team
-    domain: localhost:8080
-
-  # JWT配置
-  jwt:
-    secret: SmartCampusManagementSystemJWTSecretKey2025
-    expiration: 86400000  # 24小时
-    refresh-expiration: 604800000  # 7天
-    header: Authorization
-    prefix: Bearer
+    domain: localhost:8082
 
   # 文件上传配置
   upload:
@@ -194,34 +188,77 @@ campus:
       reminder-days: 7
       late-fee-rate: 0.001
 
+  # 缓存配置
+  cache:
+    # 课程信息缓存 - 30分钟
+    course-ttl: 1800
+    # 用户权限缓存 - 15分钟
+    permission-ttl: 900
+    # 系统配置缓存 - 1小时
+    config-ttl: 3600
+    # 学生信息缓存 - 30分钟
+    student-ttl: 1800
+    # 班级信息缓存 - 1小时
+    class-ttl: 3600
+
+  # 性能监控配置
+  monitor:
+    enabled: false  # 临时禁用监控
+    redis-monitor-interval: 60000  # Redis监控间隔 1分钟
+    performance-log: false  # 临时禁用性能日志
+
+  # 邮件模板配置
+  mail:
+    template-path: classpath:/templates/email/
+    from-name: 智慧校园管理系统
+
 # 监控配置
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,prometheus
+        include: health,info,metrics,prometheus,redis
   endpoint:
     health:
-      show-details: when-authorized
+      show-details: always
   metrics:
     export:
       prometheus:
         enabled: true
+    tags:
+      application: smart-campus-management
+      environment: dev
 
-# 日志配置
+# 日志配置 - 开发环境（减少输出）
 logging:
   level:
-    com.campus: DEBUG
-    org.springframework.security: DEBUG
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    com.campus: INFO
+    org.springframework: WARN
+    org.springframework.security: ERROR
+    org.springframework.data: ERROR
+    org.springframework.cache: ERROR
+    org.springframework.boot: ERROR
+    org.springframework.web: ERROR
+    org.springframework.orm: ERROR
+    org.hibernate: ERROR
+    org.hibernate.SQL: ERROR
+    org.hibernate.type: ERROR
+    org.hibernate.stat: ERROR
+    org.hibernate.engine: ERROR
+    org.apache.tomcat: ERROR
+    org.apache.catalina: ERROR
+    com.zaxxer.hikari: ERROR
+    com.zaxxer.hikari.HikariConfig: ERROR
+    com.zaxxer.hikari.pool: ERROR
+    org.quartz: ERROR
+    io.lettuce: ERROR
+    io.netty: ERROR
+    org.apache.http: ERROR
+    org.apache.commons: ERROR
+    org.springframework.transaction: ERROR
+    root: WARN
   pattern:
-    console: '%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n'
-    file: '%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n'
-  file:
-    name: logs/campus-management.log
-    max-size: 100MB
-    max-history: 30
+    console: "%d{HH:mm:ss} %-5level %logger{15} - %msg%n"
 
 # SpringDoc OpenAPI配置
 springdoc:
@@ -242,54 +279,3 @@ springdoc:
     license:
       name: MIT License
       url: https://opensource.org/licenses/MIT
-
----
-# 开发环境配置
-spring:
-  config:
-    activate:
-      on-profile: dev
-  jpa:
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
-  thymeleaf:
-    cache: false
-
-logging:
-  level:
-    com.campus: DEBUG
-
----
-# 测试环境配置
-spring:
-  config:
-    activate:
-      on-profile: test
-  datasource:
-    url: jdbc:mysql://localhost:3306/campus_management_test?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8
-  jpa:
-    hibernate:
-      ddl-auto: create-drop
-    show-sql: false
-
----
-# 生产环境配置
-spring:
-  config:
-    activate:
-      on-profile: prod
-  jpa:
-    show-sql: false
-    properties:
-      hibernate:
-        format_sql: false
-  thymeleaf:
-    cache: true
-
-logging:
-  level:
-    com.campus: INFO
-    org.springframework.security: WARN
-    org.hibernate.SQL: WARN

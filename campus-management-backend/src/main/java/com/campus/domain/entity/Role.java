@@ -1,97 +1,179 @@
 package com.campus.domain.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 /**
  * 角色实体类
+ * 管理系统角色信息和权限分配
  *
  * @author Campus Management Team
  * @version 1.0.0
- * @since 2025-06-03
+ * @since 2025-06-07
  */
 @Entity
-@Table(name = "tb_role")
-public class Role {
+@Table(name = "tb_role", indexes = {
+    @Index(name = "idx_role_key", columnList = "role_key", unique = true),
+    @Index(name = "idx_role_name", columnList = "role_name"),
+    @Index(name = "idx_status_deleted", columnList = "status,deleted"),
+    @Index(name = "idx_sort_order", columnList = "sort_order")
+})
+public class Role extends BaseEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
+    /**
+     * 角色名称
+     */
     @NotBlank(message = "角色名称不能为空")
     @Size(max = 50, message = "角色名称长度不能超过50个字符")
     @Column(name = "role_name", nullable = false, length = 50)
     private String roleName;
 
+    /**
+     * 角色键（唯一标识）
+     */
     @NotBlank(message = "角色键不能为空")
     @Size(max = 50, message = "角色键长度不能超过50个字符")
     @Column(name = "role_key", unique = true, nullable = false, length = 50)
     private String roleKey;
 
+    /**
+     * 角色描述
+     */
     @Size(max = 200, message = "角色描述长度不能超过200个字符")
     @Column(name = "description", length = 200)
     private String description;
 
-    @Column(nullable = false, columnDefinition = "TINYINT DEFAULT 1")
-    private Integer status = 1;
-
+    /**
+     * 排序顺序
+     */
     @Column(name = "sort_order", columnDefinition = "INT DEFAULT 0")
     private Integer sortOrder = 0;
 
-    @Column(name = "created_time", updatable = false)
-    private LocalDateTime createdTime;
+    /**
+     * 是否为系统内置角色
+     */
+    @Column(name = "is_system", nullable = false, columnDefinition = "TINYINT DEFAULT 0")
+    private Boolean isSystem = false;
 
-    @Column(name = "updated_time")
-    private LocalDateTime updatedTime;
+    /**
+     * 角色级别（数字越小级别越高）
+     */
+    @Column(name = "role_level", columnDefinition = "INT DEFAULT 99")
+    private Integer roleLevel = 99;
 
-    @Column(name = "deleted", columnDefinition = "TINYINT DEFAULT 0")
-    private Integer deleted = 0;
+    // 非持久化字段，用于显示用户数量
+    @Transient
+    private Integer userCount = 0;
 
-    @PrePersist
-    protected void onCreate() {
-        createdTime = LocalDateTime.now();
-        updatedTime = LocalDateTime.now();
-    }
+    // ================================
+    // 关联关系
+    // ================================
 
-    @PreUpdate
-    protected void onUpdate() {
-        updatedTime = LocalDateTime.now();
-    }
-
-    // 关联关系 - 用户角色
+    /**
+     * 用户角色关联
+     */
     @OneToMany(mappedBy = "role", fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<UserRole> userRoles;
 
-    // 关联关系 - 角色权限
+    /**
+     * 角色权限关联
+     */
     @OneToMany(mappedBy = "role", fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<RolePermission> rolePermissions;
 
+    // ================================
     // 构造函数
-    public Role() {}
+    // ================================
+
+    public Role() {
+        super();
+    }
 
     public Role(String roleName, String roleKey) {
+        this();
         this.roleName = roleName;
         this.roleKey = roleKey;
     }
 
     public Role(String roleName, String roleKey, String description) {
-        this.roleName = roleName;
-        this.roleKey = roleKey;
+        this(roleName, roleKey);
         this.description = description;
     }
 
-    // Getter 和 Setter 方法
-    public Long getId() {
-        return id;
+    // ================================
+    // 业务方法
+    // ================================
+
+    /**
+     * 检查是否为管理员角色
+     */
+    public boolean isAdmin() {
+        return "ADMIN".equals(roleKey) || "SUPER_ADMIN".equals(roleKey);
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    /**
+     * 检查是否为教师角色
+     */
+    public boolean isTeacher() {
+        return "TEACHER".equals(roleKey);
     }
+
+    /**
+     * 检查是否为学生角色
+     */
+    public boolean isStudent() {
+        return "STUDENT".equals(roleKey);
+    }
+
+    /**
+     * 检查是否为家长角色
+     */
+    public boolean isParent() {
+        return "PARENT".equals(roleKey);
+    }
+
+    /**
+     * 检查是否为系统角色
+     */
+    public boolean isSystemRole() {
+        return isSystem != null && isSystem;
+    }
+
+    /**
+     * 获取角色级别文本
+     */
+    public String getRoleLevelText() {
+        if (roleLevel == null) return "普通";
+        return switch (roleLevel) {
+            case 1 -> "超级管理员";
+            case 2 -> "系统管理员";
+            case 3 -> "部门管理员";
+            case 4 -> "教师";
+            case 5 -> "学生";
+            case 6 -> "家长";
+            default -> "普通用户";
+        };
+    }
+
+    /**
+     * 检查角色级别是否高于指定角色
+     */
+    public boolean isHigherThan(Role other) {
+        if (other == null || this.roleLevel == null || other.roleLevel == null) {
+            return false;
+        }
+        return this.roleLevel < other.roleLevel; // 数字越小级别越高
+    }
+
+    // ================================
+    // Getter and Setter methods
+    // ================================
 
     public String getRoleName() {
         return roleName;
@@ -133,29 +215,7 @@ public class Role {
         this.sortOrder = sortOrder;
     }
 
-    public LocalDateTime getCreatedTime() {
-        return createdTime;
-    }
 
-    public void setCreatedTime(LocalDateTime createdTime) {
-        this.createdTime = createdTime;
-    }
-
-    public LocalDateTime getUpdatedTime() {
-        return updatedTime;
-    }
-
-    public void setUpdatedTime(LocalDateTime updatedTime) {
-        this.updatedTime = updatedTime;
-    }
-
-    public Integer getDeleted() {
-        return deleted;
-    }
-
-    public void setDeleted(Integer deleted) {
-        this.deleted = deleted;
-    }
 
     public List<UserRole> getUserRoles() {
         return userRoles;
@@ -173,6 +233,14 @@ public class Role {
         this.rolePermissions = rolePermissions;
     }
 
+    public Integer getUserCount() {
+        return userCount;
+    }
+
+    public void setUserCount(Integer userCount) {
+        this.userCount = userCount;
+    }
+
     @Override
     public String toString() {
         return "Role{" +
@@ -181,7 +249,11 @@ public class Role {
                 ", roleKey='" + roleKey + '\'' +
                 ", description='" + description + '\'' +
                 ", status=" + status +
-                ", createdTime=" + createdTime +
+                ", sortOrder=" + sortOrder +
+                ", isSystem=" + isSystem +
+                ", roleLevel=" + roleLevel +
+                ", createdAt=" + createdAt +
+                ", updatedAt=" + updatedAt +
                 '}';
     }
 }

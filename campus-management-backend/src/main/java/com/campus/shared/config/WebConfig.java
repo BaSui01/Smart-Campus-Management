@@ -22,7 +22,7 @@ public class WebConfig implements WebMvcConfigurer {
     public void addInterceptors(@org.springframework.lang.NonNull InterceptorRegistry registry) {
         // 注册管理后台JWT认证拦截器
         registry.addInterceptor(adminJwtInterceptor)
-                .addPathPatterns("/admin/**")
+                .addPathPatterns("/admin/**", "/api/**")
                 .excludePathPatterns(
                     "/admin/login",
                     "/admin/logout",
@@ -32,7 +32,10 @@ public class WebConfig implements WebMvcConfigurer {
                     "/admin/access-denied",
                     "/admin/session-timeout",
                     "/admin/refresh-token",
-                    "/admin/token-status"
+                    "/admin/token-status",
+                    "/api/test/**",
+                    "/api/swagger-ui.html",
+                    "/api/v3/api-docs/**"
                 );
     }
     

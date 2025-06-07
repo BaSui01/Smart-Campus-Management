@@ -24,7 +24,7 @@ import java.util.Map;
  * @since 2025-06-05
  */
 @RestController
-@RequestMapping("/health")
+@RequestMapping("/api/health")
 public class HealthController {
 
     private final UserService userService;

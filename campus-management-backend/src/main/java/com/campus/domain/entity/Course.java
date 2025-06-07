@@ -3,9 +3,7 @@ package com.campus.domain.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
+
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -16,11 +14,8 @@ import java.util.List;
  *
  * @author Campus Management Team
  * @version 1.0.0
- * @since 2025-06-06
+ * @since 2025-06-07
  */
-@Data
-@EqualsAndHashCode(callSuper = true)
-@ToString(callSuper = true)
 @Entity
 @Table(name = "tb_course", indexes = {
     @Index(name = "idx_course_code", columnList = "course_code"),
@@ -268,7 +263,6 @@ public class Course extends BaseEntity {
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "department_id", insertable = false, updatable = false)
-    @ToString.Exclude
     @JsonIgnore
     private Department department;
 
@@ -277,7 +271,6 @@ public class Course extends BaseEntity {
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "teacher_id", insertable = false, updatable = false)
-    @ToString.Exclude
     @JsonIgnore
     private User teacher;
 
@@ -286,7 +279,6 @@ public class Course extends BaseEntity {
      */
     @OneToMany(fetch = FetchType.LAZY)
     @JoinColumn(name = "course_id")
-    @ToString.Exclude
     @JsonIgnore
     private List<CourseSchedule> schedules;
 
@@ -295,7 +287,6 @@ public class Course extends BaseEntity {
      */
     @OneToMany(fetch = FetchType.LAZY)
     @JoinColumn(name = "course_id")
-    @ToString.Exclude
     @JsonIgnore
     private List<CourseSelection> selections;
 
@@ -304,7 +295,6 @@ public class Course extends BaseEntity {
      */
     @OneToMany(fetch = FetchType.LAZY)
     @JoinColumn(name = "course_id")
-    @ToString.Exclude
     @JsonIgnore
     private List<Grade> grades;
 
@@ -520,6 +510,20 @@ public class Course extends BaseEntity {
 
     public void setCredits(BigDecimal credits) {
         this.credits = credits;
+    }
+
+    /**
+     * 获取学分（兼容性方法）
+     */
+    public BigDecimal getCredit() {
+        return credits;
+    }
+
+    /**
+     * 设置学分（兼容性方法）
+     */
+    public void setCredit(BigDecimal credit) {
+        this.credits = credit;
     }
 
     public Integer getHours() {

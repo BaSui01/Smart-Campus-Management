@@ -5,6 +5,7 @@
 <head th:replace="~{layout/admin :: head}">
     <th:block th:fragment="head-extra">
         <title>用户管理 - 智慧校园管理系统</title>
+        <link th:href="@{/css/admin-common.css}" rel="stylesheet">
         <link th:href="@{/css/components/data-table.css}" rel="stylesheet">
         <link th:href="@{/css/components/form-components.css}" rel="stylesheet">
     </th:block>
@@ -98,10 +99,7 @@
                             <label class="form-label">角色</label>
                             <select class="form-select" id="roleFilter">
                                 <option value="">全部角色</option>
-                                <option value="ADMIN">管理员</option>
-                                <option value="TEACHER">教师</option>
-                                <option value="STUDENT">学生</option>
-                                <option value="FINANCE">财务</option>
+                                <!-- 角色选项将由JavaScript动态加载 -->
                             </select>
                         </div>
                         <div class="col-md-2">
@@ -132,18 +130,21 @@
             </div>
         </div>
 
-        <!-- 用户列表 -->
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h6 class="mb-0">
-                    <i class="fas fa-list me-2"></i>用户列表
-                </h6>
-                <div class="btn-group btn-group-sm">
-                    <button type="button" class="btn btn-outline-danger" id="batchDeleteBtn" disabled>
-                        <i class="fas fa-trash me-1"></i>批量删除
-                    </button>
-                </div>
-            </div>
+        <!-- 用户列表和禁用用户列表 -->
+        <div class="row">
+            <!-- 主用户列表 -->
+            <div class="col-lg-9">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">
+                            <i class="fas fa-list me-2"></i>用户列表
+                        </h6>
+                        <div class="btn-group btn-group-sm">
+                            <button type="button" class="btn btn-outline-danger" id="batchDeleteBtn" disabled>
+                                <i class="fas fa-trash me-1"></i>批量删除
+                            </button>
+                        </div>
+                    </div>
             <div class="card-body">
                 <div class="table-responsive">
                     <table class="table table-hover" id="userTable">
@@ -207,6 +208,13 @@
                                                 title="编辑">
                                             <i class="fas fa-edit"></i>
                                         </button>
+                                        <button class="btn"
+                                                th:classappend="${user.status == 1} ? 'btn-outline-secondary' : 'btn-outline-success'"
+                                                th:onclick="|toggleUserStatus(${user.id})|"
+                                                th:title="${user.status == 1} ? '禁用用户' : '启用用户'"
+                                                th:disabled="${user.username == 'admin'}">
+                                            <i class="fas" th:classappend="${user.status == 1} ? 'fa-user-slash' : 'fa-user-check'"></i>
+                                        </button>
                                         <button class="btn btn-outline-info"
                                                 th:onclick="|resetPassword(${user.id})|"
                                                 title="重置密码">
@@ -239,11 +247,31 @@
             </div>
         </div>
 
+        <!-- 禁用用户列表 -->
+        <div class="col-lg-3">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">
+                        <i class="fas fa-user-slash me-2 text-warning"></i>禁用用户
+                    </h6>
+                    <span class="badge bg-warning" id="disabledUserCount">0</span>
+                </div>
+                <div class="card-body p-0" style="max-height: 600px; overflow-y: auto;">
+                    <div id="disabledUsersList">
+                        <!-- 禁用用户列表将由JavaScript动态生成 -->
+                        <div class="text-center p-3 text-muted">
+                            <i class="fas fa-user-slash fa-2x mb-2"></i>
+                            <p class="mb-0">暂无禁用用户</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     </div>
 
     <th:block th:fragment="scripts">
-        <!-- 引入API客户端 -->
-        <script th:src="@{/js/api-client.js}"></script>
         <!-- 引入用户管理模块 -->
         <script th:src="@{/js/modules/user-management.js}"></script>
 
@@ -252,41 +280,72 @@
             // 兼容旧的函数调用
             function viewUser(userId) {
                 if (window.userManagement) {
-                    userManagement.showUserDetail(userId);
+                    window.userManagement.showUserDetail(userId);
+                } else {
+                    console.error('用户管理模块未初始化');
                 }
             }
 
             function editUser(userId) {
                 if (window.userManagement) {
-                    userManagement.showEditUserModal(userId);
+                    window.userManagement.showEditUserModal(userId);
+                } else {
+                    console.error('用户管理模块未初始化');
                 }
             }
 
             function resetPassword(userId) {
                 if (window.userManagement) {
-                    userManagement.resetPassword(userId);
+                    window.userManagement.resetPassword(userId);
+                } else {
+                    console.error('用户管理模块未初始化');
                 }
             }
 
             function toggleUserStatus(userId) {
                 if (window.userManagement) {
-                    userManagement.toggleUserStatus(userId);
+                    window.userManagement.toggleUserStatus(userId);
+                } else {
+                    console.error('用户管理模块未初始化');
                 }
             }
 
             function deleteUser(userId) {
                 if (window.userManagement) {
-                    userManagement.deleteUser(userId);
+                    window.userManagement.deleteUser(userId);
+                } else {
+                    console.error('用户管理模块未初始化');
                 }
             }
 
             // 添加用户函数
             function submitAddUserForm() {
                 if (window.userManagement) {
-                    userManagement.handleSaveUser();
+                    window.userManagement.handleSaveUser();
+                } else {
+                    console.error('用户管理模块未初始化');
+                }
+            }
+
+            // 刷新用户列表
+            function refreshUsers() {
+                if (window.userManagement) {
+                    window.userManagement.refreshUsers();
+                } else {
+                    console.error('用户管理模块未初始化');
+                }
+            }
+
+            // 清空选中状态
+            function clearSelection() {
+                if (window.userManagement) {
+                    window.userManagement.clearSelection();
+                } else {
+                    console.error('用户管理模块未初始化');
                 }
             }
         </script>
+    </th:block>
 
     <!-- 用户模态框 -->
     <div class="modal fade" id="userModal" tabindex="-1" aria-labelledby="userModalLabel" aria-hidden="true">
@@ -296,7 +355,7 @@
                     <h5 class="modal-title" id="userModalTitle">
                         <i class="fas fa-user-plus"></i> 添加用户
                     </h5>
-                    <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <form id="userForm" novalidate>
@@ -389,7 +448,7 @@
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
                     <button type="button" class="btn btn-primary" id="saveUserBtn">
                         <i class="fas fa-save"></i> 保存
                     </button>
@@ -406,7 +465,7 @@
                     <h5 class="modal-title" id="userDetailModalLabel">
                         <i class="fas fa-user"></i> 用户详情
                     </h5>
-                    <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div id="userDetailContent">
@@ -414,7 +473,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
                 </div>
             </div>
         </div>
@@ -424,8 +483,54 @@
     <script>
         // 页面加载完成后初始化用户管理模块
         document.addEventListener('DOMContentLoaded', function() {
-            // 用户管理模块会自动初始化
-            console.log('用户管理页面加载完成');
+            // 确保Bootstrap模态框正常工作
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                modal.addEventListener('shown.bs.modal', function () {
+                    const autofocusElement = modal.querySelector('[autofocus]');
+                    if (autofocusElement) {
+                        autofocusElement.focus();
+                    }
+                });
+                
+                modal.addEventListener('hidden.bs.modal', function () {
+                    // 清理模态框数据
+                    const form = modal.querySelector('form');
+                    if (form) {
+                        form.classList.remove('was-validated');
+                    }
+                });
+            });
+
+            // 添加全局键盘快捷键
+            document.addEventListener('keydown', function(e) {
+                // Ctrl+N 添加用户
+                if (e.ctrlKey && e.key === 'n') {
+                    e.preventDefault();
+                    if (window.userManagement) {
+                        window.userManagement.showAddUserModal();
+                    }
+                }
+                
+                // Ctrl+R 刷新列表
+                if (e.ctrlKey && e.key === 'r') {
+                    e.preventDefault();
+                    refreshUsers();
+                }
+                
+                // Escape 关闭模态框
+                if (e.key === 'Escape') {
+                    const openModal = document.querySelector('.modal.show');
+                    if (openModal) {
+                        const bsModal = bootstrap.Modal.getInstance(openModal);
+                        if (bsModal) {
+                            bsModal.hide();
+                        }
+                    }
+                }
+            });
+
+            console.log('用户管理页面初始化完成');
         });
     </script>
 </body>

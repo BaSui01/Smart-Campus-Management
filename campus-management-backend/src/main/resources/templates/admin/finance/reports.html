@@ -5,10 +5,6 @@
 <head th:replace="~{layout/admin :: head}">
     <th:block th:fragment="head-extra">
         <title>财务报表 - 智慧校园管理系统</title>
-        <!-- 网站图标 -->
-        <link rel="icon" type="image/svg+xml" th:href="@{/images/favicon.svg}">
-        <link rel="alternate icon" th:href="@{/favicon.ico}">
-        <link rel="apple-touch-icon" th:href="@{/images/favicon.svg}">
         <!-- Chart.js -->
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     </th:block>
@@ -78,7 +74,60 @@
         </div>
 
         <!-- 统计卡片 -->
-        <div th:replace="~{components/admin/admin-components :: stat-cards(${reportStats})}"></div>
+        <div class="row mb-4">
+            <div class="col-xl-3 col-md-6">
+                <div class="card bg-primary text-white mb-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-white-75 small">总收入</div>
+                                <div class="text-lg fw-bold">¥0</div>
+                            </div>
+                            <i class="fas fa-dollar-sign fa-2x text-white-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card bg-success text-white mb-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-white-75 small">本月收入</div>
+                                <div class="text-lg fw-bold">¥0</div>
+                            </div>
+                            <i class="fas fa-chart-line fa-2x text-white-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card bg-info text-white mb-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-white-75 small">缴费记录</div>
+                                <div class="text-lg fw-bold">0</div>
+                            </div>
+                            <i class="fas fa-receipt fa-2x text-white-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card bg-warning text-white mb-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-white-75 small">待缴费</div>
+                                <div class="text-lg fw-bold">0</div>
+                            </div>
+                            <i class="fas fa-clock fa-2x text-white-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- 图表区域 -->
         <div class="row mb-4">
@@ -143,12 +192,11 @@
                 </div>
             </div>
         </div>
-    </div>
-    <!-- 引入admin组件样式和脚本 -->
-    <th:block th:replace="~{components/admin/admin-components :: admin-style}"></th:block>
-    <th:block th:replace="~{components/admin/admin-components :: admin-script}"></th:block>
 
-    <script th:inline="javascript">
+    </div>
+
+    <th:block th:fragment="scripts">
+        <script th:inline="javascript">
         // 月度收入数据
         const monthlyData = /*[[${monthlyData}]]*/ [];
         const feeTypeStats = /*[[${feeTypeStats}]]*/ [];
@@ -242,6 +290,7 @@
             link.click();
             document.body.removeChild(link);
         }
-    </script>
+        </script>
+    </th:block>
 </body>
 </html>

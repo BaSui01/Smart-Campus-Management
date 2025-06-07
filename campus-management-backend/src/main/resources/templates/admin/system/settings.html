@@ -8,22 +8,22 @@
         <link th:href="@{/css/components/data-table.css}" rel="stylesheet">
         <link th:href="@{/css/components/form-components.css}" rel="stylesheet">
         <style>
-            .form-changed {
-                border-left: 4px solid #ffc107;
-            }
-            .save-hint {
-                font-size: 0.875rem;
-                margin-bottom: 0;
-            }
-            .progress {
-                height: 8px;
-            }
-            .card-header .badge {
-                font-size: 0.75rem;
-            }
-            .log-level-ERROR { color: #dc3545; }
-            .log-level-WARN { color: #ffc107; }
-            .log-level-INFO { color: #0dcaf0; }
+        .form-changed {
+            border-left: 4px solid #ffc107;
+        }
+        .save-hint {
+            font-size: 0.875rem;
+            margin-bottom: 0;
+        }
+        .progress {
+            height: 8px;
+        }
+        .card-header .badge {
+            font-size: 0.75rem;
+        }
+        .log-level-ERROR { color: #dc3545; }
+        .log-level-WARN { color: #ffc107; }
+        .log-level-INFO { color: #0dcaf0; }
         </style>
     </th:block>
 </head>
@@ -263,12 +263,11 @@
                         </div>
                     </div>
                 </div>
+        </div>
+
     </div>
 
     <th:block th:fragment="scripts">
-        <!-- API客户端和工具类 -->
-        <script th:src="@{/js/api-client.js}"></script>
-        
         <!-- 系统设置管理模块 -->
         <script th:src="@{/js/modules/system-settings.js}"></script>
     </th:block>

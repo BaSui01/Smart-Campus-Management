@@ -1,50 +1,27 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>API测试页面 - 智慧校园管理系统</title>
-
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <!-- 自定义CSS -->
-    <link th:href="@{/css/admin.css}" rel="stylesheet">
-
-    <!-- 引入组件样式 -->
-    <th:block th:replace="~{components/sidebar :: sidebar-style}"></th:block>
-    <th:block th:replace="~{components/topbar :: topbar-style}"></th:block>
-    <th:block th:replace="~{components/admin/admin-components :: admin-style}"></th:block>
-
-    <!-- 代码高亮 -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/admin :: html}"
+      lang="zh-CN">
+<head th:replace="~{layout/admin :: head}">
+    <th:block th:fragment="head-extra">
+        <title>API测试页面 - 智慧校园管理系统</title>
+        <!-- 代码高亮 -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
+        <!-- API测试页面样式 -->
+        <link th:href="@{/css/test-api.css}" rel="stylesheet">
+    </th:block>
 </head>
 <body>
-    <!-- 布局容器 -->
-    <div class="wrapper">
-        <!-- 左侧导航栏 -->
-        <th:block th:replace="~{components/sidebar :: sidebar}"></th:block>
-
-        <!-- 主内容区域 -->
-        <div class="content" id="content">
-            <!-- 顶部导航栏 -->
-            <th:block th:replace="~{components/topbar :: topbar}"></th:block>
-
-            <!-- 页面内容包装器 -->
-            <div class="content-wrapper">
-                <div th:fragment="content">
-        <!-- 使用admin-components的页面标题组件 -->
-        <div th:replace="~{components/admin/admin-components :: page-header(
-            title='API测试页面',
-            icon='fas fa-code',
-            showAddButton=false,
-            addButtonText='',
-            addButtonTarget=''
-        )}"></div>
-
-        <!-- API功能统计卡片 -->
-        <div th:replace="~{components/admin/admin-components :: stat-cards(${apiStats})}"></div>
+    <div th:fragment="content">
+        <!-- 页面标题 -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-code me-2 text-primary"></i>API测试页面
+                </h1>
+                <p class="text-muted mb-0">测试系统API接口</p>
+            </div>
+        </div>
 
         <!-- API分类导航 -->
         <div class="row mb-4">
@@ -52,17 +29,19 @@
                 <div class="card">
                     <div class="card-body">
                         <nav class="nav nav-pills nav-fill">
-                            <a class="nav-link active" href="#" onclick="filterByCategory('all')">全部接口</a>
-                            <a class="nav-link" href="#" onclick="filterByCategory('测试接口')">测试接口</a>
-                            <a class="nav-link" href="#" onclick="filterByCategory('仪表盘API')">仪表盘API</a>
-                            <a class="nav-link" href="#" onclick="filterByCategory('学生管理API')">学生管理</a>
-                            <a class="nav-link" href="#" onclick="filterByCategory('班级管理API')">班级管理</a>
-                            <a class="nav-link" href="#" onclick="filterByCategory('课程管理API')">课程管理</a>
-                            <a class="nav-link" href="#" onclick="filterByCategory('成绩管理API')">成绩管理</a>
-                            <a class="nav-link" href="#" onclick="filterByCategory('缴费管理API')">缴费管理</a>
-                            <a class="nav-link" href="#" onclick="filterByCategory('用户管理API')">用户管理</a>
-                            <a class="nav-link" href="#" onclick="filterByCategory('认证API')">认证API</a>
-                            <a class="nav-link" href="#" onclick="filterByCategory('系统管理API')">系统管理</a>
+                            <a class="nav-link active filter-link" href="#" data-category="all">全部接口</a>
+                            <a class="nav-link filter-link" href="#" data-category="测试接口">测试接口</a>
+                            <a class="nav-link filter-link" href="#" data-category="认证API">认证API</a>
+                            <a class="nav-link filter-link" href="#" data-category="仪表盘API">仪表盘API</a>
+                            <a class="nav-link filter-link" href="#" data-category="用户管理API">用户管理</a>
+                            <a class="nav-link filter-link" href="#" data-category="学生管理API">学生管理</a>
+                            <a class="nav-link filter-link" href="#" data-category="班级管理API">班级管理</a>
+                            <a class="nav-link filter-link" href="#" data-category="课程管理API">课程管理</a>
+                            <a class="nav-link filter-link" href="#" data-category="课程安排管理">课程安排</a>
+                            <a class="nav-link filter-link" href="#" data-category="成绩管理API">成绩管理</a>
+                            <a class="nav-link filter-link" href="#" data-category="缴费管理API">缴费管理</a>
+                            <a class="nav-link filter-link" href="#" data-category="系统管理API">系统管理</a>
+                            <a class="nav-link filter-link" href="#" data-category="缓存管理">缓存管理</a>
                         </nav>
                     </div>
                 </div>
@@ -79,6 +58,28 @@
             </div>
         </div>
 
+        <!-- Token信息 -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">
+                                    <i class="fas fa-key text-warning me-2"></i>
+                                    当前Token
+                                </h6>
+                                <code id="currentToken" class="text-muted">未设置Token</code>
+                            </div>
+                            <button class="btn btn-outline-primary btn-sm" id="refreshToken">
+                                <i class="fas fa-sync-alt me-1"></i>刷新Token
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- 快速操作按钮 -->
         <div class="row mb-4">
             <div class="col-12">
@@ -90,13 +91,16 @@
                                 快速操作
                             </h5>
                             <div>
-                                <button class="btn btn-outline-secondary me-2" onclick="clearAllResults()">
+                                <button class="btn btn-outline-secondary me-2" id="clearResults">
                                     <i class="fas fa-trash me-1"></i>清空结果
                                 </button>
-                                <button class="btn btn-primary" onclick="testAllApis()" title="测试GET接口和安全的POST接口">
-                                    <i class="fas fa-play me-1"></i>批量测试
+                                <button class="btn btn-primary me-2" id="testAllApis" title="测试GET接口和安全的POST接口">
+                                    <i class="fas fa-play me-1"></i>安全测试
                                 </button>
-                                <a href="/api/swagger-ui.html" target="_blank" class="btn btn-info ms-2">
+                                <button class="btn btn-warning me-2" id="testAllDangerous" title="测试所有API接口，包括可能修改数据的操作">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>完整测试
+                                </button>
+                                <a href="/api/swagger-ui.html" target="_blank" class="btn btn-info">
                                     <i class="fas fa-book me-1"></i>API文档
                                 </a>
                             </div>
@@ -148,10 +152,41 @@
         <div class="row">
             <!-- API列表 -->
             <div class="col-md-6">
-                <div th:replace="~{components/admin/admin-components :: data-table(
-                    tableConfig=${apiTableConfig},
-                    data=${testApis}
-                )}"></div>
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-list me-2"></i>API接口列表
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>方法</th>
+                                        <th>接口路径</th>
+                                        <th>描述</th>
+                                        <th>分类</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="api-table-body">
+                                    <!-- API列表将由JavaScript动态加载 -->
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4">
+                                            <div id="loading-indicator">
+                                                <div class="spinner-border text-primary" role="status">
+                                                    <span class="visually-hidden">Loading...</span>
+                                                </div>
+                                                <div class="mt-2">正在加载API列表...</div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- 响应结果 -->
@@ -164,726 +199,28 @@
                         </h5>
                     </div>
                     <div class="card-body">
-                        <div id="api-results">
+                        <!-- API测试结果容器 -->
+                        <div id="apiResults">
                             <div class="text-center text-muted py-4">
                                 <i class="fas fa-code fa-3x mb-3"></i>
                                 <p>点击左侧API列表中的"测试"按钮查看响应结果</p>
                             </div>
                         </div>
-
-                        <!-- 动态结果容器 -->
-                        <div id="api-response-container">
-                            <!-- 响应结果将动态插入到这里 -->
-                        </div>
                     </div>
                 </div>
             </div>
         </div>
-
-
-
-
-                </div>
-            </div>
         </div>
+
     </div>
 
-    <!-- 退出登录确认模态框 -->
-    <th:block th:replace="~{components/topbar :: logout-modal}"></th:block>
-
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-    <!-- 代码高亮 -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
-
-    <!-- 引入侧边栏脚本 -->
-    <th:block th:replace="~{components/sidebar :: sidebar-script}"></th:block>
-    <!-- 引入admin组件脚本 -->
-    <th:block th:replace="~{components/admin/admin-components :: admin-script}"></th:block>
-
-    <!-- API测试页面特定样式 -->
-    <style>
-        .api-item {
-            border: 1px solid #e9ecef;
-            border-radius: 8px;
-            padding: 15px;
-            background: #f8f9fa;
-        }
-
-        .api-item:hover {
-            background: #e9ecef;
-            transition: background 0.2s;
-        }
-
-        .result-container {
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-            padding: 15px;
-            background: #ffffff;
-        }
-
-        .result-container h6 {
-            color: #495057;
-            margin-bottom: 10px;
-        }
-
-        .result-container pre {
-            background: #f8f9fa;
-            border: 1px solid #e9ecef;
-            border-radius: 4px;
-            padding: 10px;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
-        .badge {
-            font-size: 0.75rem;
-            min-width: 50px;
-        }
-
-        .nav-pills .nav-link {
-            border-radius: 20px;
-            margin: 0 5px;
-        }
-
-        .nav-pills .nav-link.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-
-        .loading {
-            opacity: 0.6;
-            pointer-events: none;
-        }
-
-        .success-response {
-            border-left: 4px solid #28a745;
-        }
-
-        .error-response {
-            border-left: 4px solid #dc3545;
-        }
-    </style>
-
-    <!-- API测试JavaScript -->
-    <script>
-        // 全局变量
-        let testResults = {};
-        let allApiData = [];
-
-        // 按分类筛选API
-        function filterByCategory(category) {
-            const tableRows = document.querySelectorAll('tbody tr');
-
-            // 更新导航栏激活状态
-            document.querySelectorAll('.nav-link').forEach(link => {
-                link.classList.remove('active');
-            });
-            event.target.classList.add('active');
-
-            // 筛选显示
-            tableRows.forEach(row => {
-                const categoryCell = row.querySelector('td:nth-child(4)');
-                if (categoryCell) {
-                    const rowCategory = categoryCell.textContent.trim();
-                    if (category === 'all' || rowCategory === category) {
-                        row.style.display = '';
-                    } else {
-                        row.style.display = 'none';
-                    }
-                }
-            });
-
-            // 更新统计信息
-            updateFilterStats(category);
-        }
-
-        // 更新筛选统计信息
-        function updateFilterStats(category) {
-            const visibleRows = document.querySelectorAll('tbody tr[style=""], tbody tr:not([style])');
-            const totalCount = visibleRows.length;
-
-            // 更新页面上的统计信息
-            const recordCountElement = document.getElementById('record-count');
-            if (recordCountElement) {
-                recordCountElement.textContent = totalCount;
-            }
-
-            console.log(`当前分类: ${category}, 显示接口数: ${totalCount}`);
-        }
-
-        // 通用API测试函数
-        async function testApi(method, url, data, resultId) {
-            const button = event.target.closest('button');
-            await testApiWithButton(method, url, data, resultId, button);
-        }
-
-        // 获取当前admin用户的JWT token
-        function getAdminToken() {
-            // 尝试从多个来源获取token
-            let token = null;
-
-            // 1. 从localStorage获取
-            token = localStorage.getItem('adminToken');
-            if (token) return token;
-
-            // 2. 从sessionStorage获取
-            token = sessionStorage.getItem('adminToken');
-            if (token) return token;
-
-            // 3. 从cookie获取
-            const cookies = document.cookie.split(';');
-            for (let cookie of cookies) {
-                const [name, value] = cookie.trim().split('=');
-                if (name === 'adminToken' || name === 'accessToken') {
-                    return value;
-                }
-            }
-
-            return null;
-        }
-
-        // 带按钮参数的API测试函数
-        async function testApiWithButton(method, url, data, resultId, button) {
-            let originalText = '';
-
-            if (button) {
-                originalText = button.innerHTML;
-                // 显示加载状态
-                button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-                button.disabled = true;
-            }
-
-            try {
-                const options = {
-                    method: method,
-                    headers: {
-                        'Content-Type': 'application/json',
-                    }
-                };
-
-                // 添加admin认证token
-                const token = getAdminToken();
-                if (token) {
-                    options.headers['Authorization'] = `Bearer ${token}`;
-                    console.log('API请求详情:', {
-                        url: url,
-                        method: method,
-                        token: token.substring(0, 20) + '...',
-                        headers: options.headers
-                    });
-                } else {
-                    console.warn('未找到admin token，API请求可能失败');
-                }
-
-                if (data) {
-                    options.body = JSON.stringify(data);
-                }
-
-                const response = await fetch(url, options);
-
-                // 尝试解析JSON响应
-                let result;
-                try {
-                    result = await response.json();
-                } catch (e) {
-                    // 如果不是JSON响应，获取文本内容
-                    result = {
-                        status: response.status,
-                        statusText: response.statusText,
-                        message: await response.text() || '无响应内容'
-                    };
-                }
-
-                // 显示结果
-                displayResult(resultId, result, response.ok);
-
-                // 保存结果
-                testResults[resultId] = {
-                    url: url,
-                    method: method,
-                    status: response.status,
-                    data: result,
-                    success: response.ok,
-                    timestamp: new Date().toISOString()
-                };
-
-            } catch (error) {
-                const errorResult = {
-                    error: true,
-                    message: error.message,
-                    timestamp: new Date().toISOString()
-                };
-
-                displayResult(resultId, errorResult, false);
-
-                testResults[resultId] = {
-                    url: url,
-                    method: method,
-                    error: error.message,
-                    success: false,
-                    timestamp: new Date().toISOString()
-                };
-            } finally {
-                // 恢复按钮状态
-                if (button) {
-                    button.innerHTML = originalText;
-                    button.disabled = false;
-                }
-            }
-        }
-
-        // 获取API测试数据
-        function getTestDataForApi(method, url) {
-            // 只为POST、PUT、PATCH请求提供测试数据
-            if (!['POST', 'PUT', 'PATCH'].includes(method)) {
-                return null;
-            }
-
-            // 根据URL路径提供相应的测试数据
-            if (url.includes('/api/auth/login')) {
-                return {
-                    username: "admin",
-                    password: "admin123"
-                };
-            } else if (url.includes('/api/auth/register')) {
-                return {
-                    username: "testuser" + Date.now(),
-                    password: "test123",
-                    email: "test@example.com",
-                    realName: "测试用户"
-                };
-            } else if (url.includes('/api/students')) {
-                return {
-                    studentNo: "TEST" + Date.now(),
-                    realName: "测试学生",
-                    gender: "男",
-                    birthday: "2000-01-01",
-                    phone: "13800138000",
-                    email: "student@example.com",
-                    classId: 1,
-                    status: 1
-                };
-            } else if (url.includes('/api/classes')) {
-                return {
-                    className: "测试班级" + Date.now(),
-                    classCode: "TEST" + Date.now(),
-                    grade: "2024",
-                    majorId: 1,
-                    teacherId: 1,
-                    maxStudents: 30,
-                    status: 1
-                };
-            } else if (url.includes('/api/courses')) {
-                return {
-                    courseName: "测试课程" + Date.now(),
-                    courseCode: "TEST" + Date.now(),
-                    credits: 3,
-                    courseType: "必修",
-                    semester: "2024-1",
-                    teacherId: 1,
-                    status: 1
-                };
-            } else if (url.includes('/api/users')) {
-                return {
-                    username: "testuser" + Date.now(),
-                    password: "test123",
-                    realName: "测试用户",
-                    email: "user@example.com",
-                    phone: "13800138000",
-                    status: 1
-                };
-            } else if (url.includes('/api/grades')) {
-                return {
-                    studentId: 1,
-                    courseId: 1,
-                    score: 85,
-                    semester: "2024-1",
-                    examType: "期末考试"
-                };
-            } else if (url.includes('/api/payments') || url.includes('/api/fee-items')) {
-                return {
-                    amount: 1000.00,
-                    feeType: "学费",
-                    description: "测试缴费项目",
-                    dueDate: "2024-12-31",
-                    status: 1
-                };
-            }
-
-            // 默认测试数据
-            return {
-                name: "测试数据",
-                description: "API测试用数据",
-                status: 1,
-                createTime: new Date().toISOString()
-            };
-        }
-
-        // 测试单个API（从表格操作按钮调用）
-        function testSingleApi(id, buttonElement) {
-            // 从表格行中获取API信息
-            let button = buttonElement;
-            if (!button && window.event && window.event.target) {
-                button = window.event.target.closest('button');
-            }
-
-            if (!button) {
-                console.error('无法找到按钮元素');
-                return;
-            }
-
-            const row = button.closest('tr');
-            const cells = row.querySelectorAll('td');
-
-            if (cells.length >= 4) {
-                const method = cells[0].textContent.trim();
-                const url = cells[1].textContent.trim();
-                const description = cells[2].textContent.trim();
-                const resultId = 'test-' + url.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
-
-                // 获取测试数据
-                const testData = getTestDataForApi(method, url);
-
-                // 清空之前的结果
-                const resultsContainer = document.getElementById('api-response-container');
-                resultsContainer.innerHTML = '';
-
-                // 创建结果容器
-                const resultContainer = document.createElement('div');
-                resultContainer.id = resultId;
-                resultContainer.className = 'result-container mb-3';
-
-                let requestInfo = `<strong>请求方法:</strong> ${method}<br><strong>请求URL:</strong> ${url}`;
-                if (testData) {
-                    requestInfo += `<br><strong>请求数据:</strong><br><pre>${JSON.stringify(testData, null, 2)}</pre>`;
-                }
-
-                resultContainer.innerHTML = `
-                    <h6>${description} 响应：</h6>
-                    <div class="mb-2 text-muted small">${requestInfo}</div>
-                    <pre><code class="language-json">正在请求...</code></pre>
-                `;
-                resultsContainer.appendChild(resultContainer);
-
-                // 隐藏默认提示
-                document.getElementById('api-results').style.display = 'none';
-
-                // 调用API测试（传递按钮元素和测试数据）
-                testApiWithButton(method, url, testData, resultId, button);
-            }
-        }
-
-        // 复制API URL
-        function copyApiUrl(id, buttonElement) {
-            let button = buttonElement;
-            if (!button && window.event && window.event.target) {
-                button = window.event.target.closest('button');
-            }
-            
-            if (!button) {
-                console.error('无法找到按钮元素');
-                return;
-            }
-            
-            const row = button.closest('tr');
-            const cells = row.querySelectorAll('td');
-
-            if (cells.length >= 2) {
-                const url = window.location.origin + cells[1].textContent.trim();
-                navigator.clipboard.writeText(url).then(() => {
-                    showToast('API地址已复制到剪贴板', 'success');
-                }).catch(() => {
-                    showToast('复制失败，请手动复制', 'error');
-                });
-            }
-        }
-
-        // 显示API响应结果
-        function displayResult(resultId, data, isSuccess) {
-            const container = document.getElementById(resultId);
-            if (!container) return;
-
-            const codeElement = container.querySelector('code');
-            if (codeElement) {
-                codeElement.textContent = JSON.stringify(data, null, 2);
-
-                // 添加成功/失败样式
-                container.className = `result-container mb-3 ${isSuccess ? 'success-response' : 'error-response'}`;
-
-                // 显示容器
-                container.style.display = 'block';
-
-                // 重新应用代码高亮
-                if (window.Prism) {
-                    Prism.highlightElement(codeElement);
-                }
-
-                // 滚动到结果
-                container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            }
-        }
-
-        // 测试创建学生API
-        async function testCreateStudent() {
-            const studentData = {
-                studentNo: "TEST" + Date.now(),
-                realName: "测试学生",
-                gender: "男",
-                birthday: "2000-01-01",
-                phone: "13800138000",
-                email: "test@example.com",
-                classId: 1,
-                status: 1
-            };
-
-            await testApi('POST', '/api/students', studentData, 'students-create');
-        }
-
-        // 清空所有结果
-        function clearAllResults() {
-            const resultsContainer = document.getElementById('api-response-container');
-            resultsContainer.innerHTML = '';
-
-            // 显示默认提示
-            document.getElementById('api-results').style.display = 'block';
-
-            testResults = {};
-
-            // 显示清空成功消息
-            showToast('所有测试结果已清空', 'success');
-        }
-
-        // 测试所有可见的安全API
-        async function testAllApis() {
-            const visibleRows = document.querySelectorAll('tbody tr[style=""], tbody tr:not([style])');
-            const safeApis = [];
-
-            visibleRows.forEach(row => {
-                const cells = row.querySelectorAll('td');
-                if (cells.length >= 4) {
-                    const method = cells[0].textContent.trim();
-                    const url = cells[1].textContent.trim();
-                    const description = cells[2].textContent.trim();
-
-                    // 优先测试GET请求，也包含一些安全的POST请求
-                    const isSafeApi = method === 'GET' ||
-                                     (method === 'POST' && (
-                                         url.includes('/api/auth/login') ||
-                                         url.includes('/api/test/') ||
-                                         url.includes('/search') ||
-                                         url.includes('/stats') ||
-                                         url.includes('/check')
-                                     ));
-
-                    if (isSafeApi) {
-                        safeApis.push({
-                            method: method,
-                            url: url,
-                            description: description,
-                            resultId: 'test-' + url.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()
-                        });
-                    }
-                }
-            });
-
-            if (safeApis.length === 0) {
-                showToast('当前筛选条件下没有可测试的安全接口', 'warning');
-                return;
-            }
-
-            showToast(`开始批量测试 ${safeApis.length} 个安全接口...`, 'info');
-
-            // 清空之前的结果
-            clearAllResults();
-
-            const resultsContainer = document.getElementById('api-response-container');
-
-            for (const api of safeApis) {
-                try {
-                    // 获取测试数据（如果需要）
-                    const testData = getTestDataForApi(api.method, api.url);
-
-                    // 创建结果容器
-                    const resultContainer = document.createElement('div');
-                    resultContainer.id = api.resultId;
-                    resultContainer.className = 'result-container mb-3';
-
-                    let requestInfo = `<strong>${api.method}</strong> ${api.url}`;
-                    if (testData) {
-                        requestInfo += ` <small class="text-muted">(携带测试数据)</small>`;
-                    }
-
-                    resultContainer.innerHTML = `
-                        <h6>${api.description} 响应：</h6>
-                        <div class="mb-2 text-muted small">${requestInfo}</div>
-                        <pre><code class="language-json">正在请求...</code></pre>
-                    `;
-                    resultsContainer.appendChild(resultContainer);
-
-                    // 测试API（不传递按钮，因为是批量测试）
-                    await testApiWithButton(api.method, api.url, testData, api.resultId, null);
-
-                    // 添加延迟避免请求过快
-                    await new Promise(resolve => setTimeout(resolve, 500));
-                } catch (error) {
-                    console.error(`测试 ${api.url} 失败:`, error);
-                }
-            }
-
-            showToast('批量测试完成！', 'success');
-        }
-
-        // 处理表格操作按钮（兼容admin-components的调用方式）
-        function handleAction(button) {
-            // 支持两种调用方式：handleAction(button) 和 handleAction(action, id)
-            if (typeof button === 'string') {
-                // 第一个参数是action，第二个参数是id
-                const action = button;
-                const id = arguments[1];
-                switch(action) {
-                    case 'test':
-                        testSingleApi(id);
-                        break;
-                    case 'copy':
-                        copyApiUrl(id);
-                        break;
-                    default:
-                        console.log(`未知操作: ${action}, ID: ${id}`);
-                }
-            } else {
-                // 按钮对象作为参数（admin-components的调用方式）
-                const functionName = button.getAttribute('data-function');
-                const id = button.getAttribute('data-id');
-                
-                switch(functionName) {
-                    case 'test':
-                        testSingleApi(id, button);
-                        break;
-                    case 'copy':
-                        copyApiUrl(id, button);
-                        break;
-                    default:
-                        // 尝试调用全局函数
-                        if (typeof window[functionName] === 'function') {
-                            window[functionName](id, button);
-                        } else {
-                            console.error('Function not found:', functionName);
-                        }
-                }
-            }
-        }
-
-        // 显示提示消息
-        function showToast(message, type = 'info') {
-            // 创建toast元素
-            const toast = document.createElement('div');
-            toast.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
-            toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
-            toast.innerHTML = `
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            `;
-
-            document.body.appendChild(toast);
-
-            // 自动移除
-            setTimeout(() => {
-                if (toast.parentNode) {
-                    toast.parentNode.removeChild(toast);
-                }
-            }, 3000);
-        }
-
-        // 页面加载完成后初始化
-        document.addEventListener('DOMContentLoaded', function() {
-            // 初始化统计信息（显示全部接口数量）
-            updateFilterStats('all');
-        });
-
-        // 确保函数在全局作用域中可用
-        window.filterByCategory = filterByCategory;
-        window.handleAction = handleAction;
-        window.testSingleApi = testSingleApi;
-        window.copyApiUrl = copyApiUrl;
-        window.clearAllResults = clearAllResults;
-        window.testAllApis = testAllApis;
-        window.testApi = testApi;
-        window.testApiWithButton = testApiWithButton;
-        window.showToast = showToast;
-
-        // 更新认证状态显示
-        function updateAuthStatus(isAuthenticated, username, message) {
-            const authStatus = document.getElementById('auth-status');
-            const authMessage = document.getElementById('auth-message');
-
-            if (isAuthenticated) {
-                authStatus.className = 'alert alert-success';
-                authMessage.innerHTML = `<i class="fas fa-check-circle me-2"></i>已通过管理员认证 (${username}) - API请求将携带认证令牌`;
-            } else {
-                authStatus.className = 'alert alert-warning';
-                authMessage.innerHTML = `<i class="fas fa-exclamation-triangle me-2"></i>认证状态异常: ${message || '未知错误'} - 部分API可能返回403错误`;
-            }
-        }
-
-        // 从服务器获取当前admin token
-        async function fetchAdminToken() {
-            try {
-                const response = await fetch('/admin/token-status', {
-                    method: 'GET',
-                    credentials: 'include' // 包含session cookie
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.valid && data.token) {
-                        // 将token保存到sessionStorage
-                        sessionStorage.setItem('adminToken', data.token);
-                        console.log('Admin token已获取并保存');
-                        updateAuthStatus(true, data.username, '认证成功');
-                        return data.token;
-                    } else {
-                        console.warn('Token无效或不存在:', data.message);
-                        updateAuthStatus(false, null, data.message);
-                    }
-                } else {
-                    console.warn('获取token状态失败:', response.status);
-                    updateAuthStatus(false, null, `HTTP ${response.status}`);
-                }
-            } catch (error) {
-                console.warn('获取admin token失败:', error);
-                updateAuthStatus(false, null, error.message);
-            }
-            return null;
-        }
-
-        // 页面加载完成后初始化
-        document.addEventListener('DOMContentLoaded', async function() {
-            console.log('API测试页面已加载');
-
-            // 获取admin token
-            await fetchAdminToken();
-
-            // 获取所有API数据
-            const tableRows = document.querySelectorAll('tbody tr');
-            tableRows.forEach(row => {
-                const cells = row.querySelectorAll('td');
-                if (cells.length >= 4) {
-                    allApiData.push({
-                        method: cells[0].textContent.trim(),
-                        url: cells[1].textContent.trim(),
-                        description: cells[2].textContent.trim(),
-                        category: cells[3].textContent.trim(),
-                        row: row
-                    });
-                }
-            });
-
-            showToast('API测试页面已准备就绪', 'success');
-        });
-    </script>
-
+    <th:block th:fragment="scripts">
+        <!-- 代码高亮 -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+
+        <!-- API测试页面JavaScript -->
+        <script th:src="@{/js/test-api.js}"></script>
+    </th:block>
 </body>
 </html>

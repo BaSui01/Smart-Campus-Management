@@ -2,6 +2,10 @@
  * JWT Token管理器
  * 负责Token的自动刷新和状态监控
  */
+
+// 避免重复声明
+if (typeof window.JwtManager === 'undefined') {
+
 class JwtManager {
     constructor() {
         this.refreshInterval = null;
@@ -215,7 +219,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // 将管理器实例暴露到全局，方便调试
         window.jwtManager = jwtManager;
-        
+        window.JwtManager = JwtManager;
+
         console.log('JWT管理器已初始化');
     }
 });
@@ -224,3 +229,5 @@ document.addEventListener('DOMContentLoaded', function() {
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = JwtManager;
 }
+
+} // 结束条件检查

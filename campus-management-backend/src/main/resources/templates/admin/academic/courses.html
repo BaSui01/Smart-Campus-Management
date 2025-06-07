@@ -5,6 +5,8 @@
 <head th:replace="~{layout/admin :: head}">
     <th:block th:fragment="head-extra">
         <title>课程管理 - 智慧校园管理系统</title>
+        <link th:href="@{/css/admin-common.css}" rel="stylesheet">
+        <link th:href="@{/css/components/data-table.css}" rel="stylesheet">
     </th:block>
 </head>
 <body>
@@ -17,7 +19,7 @@
                 </h1>
                 <p class="text-muted mb-0">管理学校的课程信息</p>
             </div>
-            <button type="button" class="btn btn-primary" id="addCourseBtn">
+            <button type="button" class="btn btn-primary" id="addBtn">
                 <i class="fas fa-plus me-2"></i>添加课程
             </button>
         </div>
@@ -164,7 +166,7 @@
                                 <th width="120">操作</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="courseTable">
                             <!-- 数据将通过JavaScript动态加载 -->
                         </tbody>
                     </table>
@@ -266,15 +268,15 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                        <button type="button" class="btn btn-primary" id="saveCourseBtn">保存</button>
+                        <button type="button" class="btn btn-primary" id="saveBtn">保存</button>
                     </div>
                 </div>
             </div>
         </div>
+
     </div>
+
     <th:block th:fragment="scripts">
-        <!-- 引入API客户端和工具类 -->
-        <script th:src="@{/js/api-client.js}"></script>
         <!-- 引入课程管理模块 -->
         <script th:src="@{/js/modules/course-management.js}"></script>
     </th:block>

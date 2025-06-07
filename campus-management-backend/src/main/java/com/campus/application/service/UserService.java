@@ -180,6 +180,21 @@ public interface UserService {
     User findById(Long userId);
 
     /**
+     * 根据ID查找用户（返回Optional）
+     */
+    Optional<User> findByIdOptional(Long userId);
+
+    /**
+     * 保存用户
+     */
+    User save(User user);
+
+    /**
+     * 根据ID删除用户
+     */
+    void deleteById(Long userId);
+
+    /**
      * 更新用户状态
      */
     void updateUserStatus(Long userId, int status);

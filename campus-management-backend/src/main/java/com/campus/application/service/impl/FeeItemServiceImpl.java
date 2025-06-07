@@ -13,14 +13,18 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.PageImpl;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * 缴费项目服务实现类
@@ -248,13 +252,140 @@ public class FeeItemServiceImpl implements FeeItemService {
         // 这里简化为总金额的80%作为已缴费金额
         paidAmount = totalAmount.multiply(new BigDecimal("0.8"));
 
+        // 统计费用类型数量
+        long feeTypeCount = allItems.stream()
+            .filter(item -> item.getDeleted() == 0)
+            .map(FeeItem::getFeeType)
+            .filter(feeType -> feeType != null && !feeType.isEmpty())
+            .distinct()
+            .count();
+
         return new FeeItemStatistics(
             totalItems,
             activeItems,
             inactiveItems,
+            feeTypeCount,
             totalAmount,
             paidAmount
         );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public FeeItemStatistics getFeeItemStatistics() {
+        return getStatistics();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<FeeItem> findFeeItemsByPage(Pageable pageable, Map<String, Object> params) {
+        try {
+            List<FeeItem> allFeeItems = feeItemRepository.findAll();
+            List<FeeItem> filteredFeeItems = new ArrayList<>();
+
+            for (FeeItem feeItem : allFeeItems) {
+                boolean matches = true;
+
+                // 过滤已删除的项目
+                if (feeItem.getDeleted() != null && feeItem.getDeleted() == 1) {
+                    continue;
+                }
+
+                // 搜索条件
+                if (params != null && params.containsKey("search")) {
+                    String search = (String) params.get("search");
+                    if (search != null && !search.trim().isEmpty()) {
+                        search = search.trim().toLowerCase();
+                        boolean searchMatch = false;
+
+                        if (feeItem.getItemName() != null && feeItem.getItemName().toLowerCase().contains(search)) {
+                            searchMatch = true;
+                        }
+                        if (feeItem.getItemCode() != null && feeItem.getItemCode().toLowerCase().contains(search)) {
+                            searchMatch = true;
+                        }
+                        if (feeItem.getDescription() != null && feeItem.getDescription().toLowerCase().contains(search)) {
+                            searchMatch = true;
+                        }
+
+                        if (!searchMatch) {
+                            matches = false;
+                        }
+                    }
+                }
+
+                // 费用类型条件
+                if (matches && params != null && params.containsKey("feeType")) {
+                    String feeType = (String) params.get("feeType");
+                    if (feeType != null && !feeType.trim().isEmpty()) {
+                        if (!feeType.equals(feeItem.getFeeType())) {
+                            matches = false;
+                        }
+                    }
+                }
+
+                // 状态条件
+                if (matches && params != null && params.containsKey("status")) {
+                    Object statusObj = params.get("status");
+                    if (statusObj != null) {
+                        try {
+                            Integer status;
+                            if (statusObj instanceof Integer) {
+                                status = (Integer) statusObj;
+                            } else if (statusObj instanceof String) {
+                                String statusStr = (String) statusObj;
+                                if (statusStr.trim().isEmpty()) {
+                                    continue;
+                                }
+                                status = Integer.parseInt(statusStr);
+                            } else {
+                                continue;
+                            }
+
+                            if (!feeItem.getStatus().equals(status)) {
+                                matches = false;
+                            }
+                        } catch (NumberFormatException e) {
+                            // 状态参数格式错误，忽略该条件
+                        }
+                    }
+                }
+
+                if (matches) {
+                    filteredFeeItems.add(feeItem);
+                }
+            }
+
+            // 手动分页
+            int start = (int) pageable.getOffset();
+            int end = Math.min(start + pageable.getPageSize(), filteredFeeItems.size());
+            List<FeeItem> pageContent = start < filteredFeeItems.size() ?
+                filteredFeeItems.subList(start, end) : new ArrayList<>();
+
+            return new PageImpl<>(pageContent, pageable, filteredFeeItems.size());
+
+        } catch (Exception e) {
+            logger.error("分页查询缴费项目失败: {}", e.getMessage(), e);
+            return new PageImpl<>(new ArrayList<>(), pageable, 0);
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<String> getAllFeeTypes() {
+        try {
+            List<FeeItem> allFeeItems = feeItemRepository.findAll();
+            return allFeeItems.stream()
+                .filter(item -> item.getDeleted() == 0)
+                .map(FeeItem::getFeeType)
+                .filter(feeType -> feeType != null && !feeType.trim().isEmpty())
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+        } catch (Exception e) {
+            logger.error("获取所有费用类型失败: {}", e.getMessage(), e);
+            return new ArrayList<>();
+        }
     }
 
     @Override

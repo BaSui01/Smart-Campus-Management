@@ -5,10 +5,6 @@
 <head th:replace="~{layout/admin :: head}">
     <th:block th:fragment="head-extra">
         <title>个人资料 - 智慧校园管理系统</title>
-        <!-- 网站图标 -->
-        <link rel="icon" type="image/svg+xml" th:href="@{/images/favicon.svg}">
-        <link rel="alternate icon" th:href="@{/favicon.ico}">
-        <link rel="apple-touch-icon" th:href="@{/images/favicon.svg}">
     </th:block>
 </head>
 <body>
@@ -168,14 +164,12 @@
                     </div>
                 </div>
         </div>
+
     </div>
 
-    <!-- 引入admin组件样式和脚本 -->
-    <th:block th:replace="~{components/admin/admin-components :: admin-style}"></th:block>
-    <th:block th:replace="~{components/admin/admin-components :: admin-script}"></th:block>
-
-    <!-- 个人资料特定脚本 -->
-    <script th:fragment="page-script">
+    <th:block th:fragment="scripts">
+        <!-- 个人资料特定脚本 -->
+        <script>
         function saveProfile() {
             alert('保存个人资料功能开发中');
         }
@@ -201,35 +195,36 @@
                 reader.readAsDataURL(input.files[0]);
             }
         }
-    </script>
+        </script>
 
-    <!-- 更换头像模态框 -->
-    <div class="modal fade" id="changeAvatarModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">更换头像</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="text-center">
-                        <div class="mb-3">
-                            <img id="avatarPreview" src="/images/default-avatar.svg" class="rounded-circle" width="150" height="150" alt="头像预览">
-                        </div>
-                        <div class="mb-3">
-                            <input type="file" class="form-control" id="avatarFile" accept="image/*" onchange="previewAvatar(this)">
-                        </div>
-                        <div class="text-muted">
-                            <small>支持 JPG、PNG 格式，文件大小不超过 2MB</small>
+        <!-- 更换头像模态框 -->
+        <div class="modal fade" id="changeAvatarModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">更换头像</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="text-center">
+                            <div class="mb-3">
+                                <img id="avatarPreview" src="/images/default-avatar.svg" class="rounded-circle" width="150" height="150" alt="头像预览">
+                            </div>
+                            <div class="mb-3">
+                                <input type="file" class="form-control" id="avatarFile" accept="image/*" onchange="previewAvatar(this)">
+                            </div>
+                            <div class="text-muted">
+                                <small>支持 JPG、PNG 格式，文件大小不超过 2MB</small>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                    <button type="button" class="btn btn-primary" onclick="uploadAvatar()">上传头像</button>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        <button type="button" class="btn btn-primary" onclick="uploadAvatar()">上传头像</button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    </th:block>
 </body>
 </html>

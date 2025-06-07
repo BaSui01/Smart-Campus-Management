@@ -2,6 +2,7 @@ package com.campus.shared.config;
 
 import java.util.Arrays;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -14,9 +15,13 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import com.campus.shared.security.JwtAuthenticationFilter;
+
 
 /**
  * Spring Security 配置类
@@ -29,6 +34,9 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
+
+    @Autowired
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     /**
      * 密码编码器
@@ -62,6 +70,9 @@ public class SecurityConfig {
 
             // 配置会话管理为有状态（传统session方式）
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+
+            // 添加JWT认证过滤器
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
 
             // 配置请求授权
             .authorizeHttpRequests(authz -> authz
@@ -99,8 +110,8 @@ public class SecurityConfig {
                     "/favicon.ico"          // 图标
                 ).permitAll()
 
-                // API接口需要认证
-                .requestMatchers("/api/**").authenticated()
+                // API接口开放访问（使用自定义拦截器处理认证）
+                .requestMatchers("/api/**").permitAll()
 
                 // 管理后台使用自定义拦截器认证，这里允许访问
                 .requestMatchers("/admin/**").permitAll()

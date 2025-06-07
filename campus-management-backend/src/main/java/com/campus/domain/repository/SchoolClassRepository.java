@@ -1,64 +1,69 @@
 package com.campus.domain.repository;
 
-import java.util.List;
-import java.util.Optional;
-
-import org.springframework.data.jpa.repository.JpaRepository;
+import com.campus.domain.entity.SchoolClass;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import com.campus.domain.entity.SchoolClass;
+import java.util.List;
+import java.util.Optional;
 
 /**
- * 班级数据访问层
+ * 班级Repository接口
+ * 提供班级相关的数据访问方法
  *
  * @author Campus Management Team
  * @version 1.0.0
- * @since 2025-06-03
+ * @since 2025-06-07
  */
 @Repository
-public interface SchoolClassRepository extends JpaRepository<SchoolClass, Long> {
+public interface SchoolClassRepository extends BaseRepository<SchoolClass> {
+
+    // ================================
+    // 基础查询方法
+    // ================================
 
     /**
      * 根据班级代码查找班级
-     *
-     * @param classCode 班级代码
-     * @return 班级信息
      */
-    Optional<SchoolClass> findByClassCodeAndDeleted(String classCode, Integer deleted);
+    @Query("SELECT c FROM SchoolClass c WHERE c.classCode = :classCode AND c.deleted = 0")
+    Optional<SchoolClass> findByClassCode(@Param("classCode") String classCode);
+
+    /**
+     * 根据班级名称查找班级
+     */
+    @Query("SELECT c FROM SchoolClass c WHERE c.className = :className AND c.deleted = 0")
+    Optional<SchoolClass> findByClassName(@Param("className") String className);
 
     /**
      * 根据年级查找班级列表
-     *
-     * @param grade 年级
-     * @return 班级列表
      */
-    List<SchoolClass> findByGradeAndDeletedOrderByClassCodeAsc(String grade, Integer deleted);
+    @Query("SELECT c FROM SchoolClass c WHERE c.grade = :grade AND c.deleted = 0 ORDER BY c.classCode ASC")
+    List<SchoolClass> findByGrade(@Param("grade") String grade);
 
     /**
      * 根据部门ID查找班级列表
-     *
-     * @param departmentId 部门ID
-     * @return 班级列表
      */
-    List<SchoolClass> findByDepartmentIdAndDeletedOrderByGradeAscClassCodeAsc(Long departmentId, Integer deleted);
+    @Query("SELECT c FROM SchoolClass c WHERE c.departmentId = :departmentId AND c.deleted = 0 ORDER BY c.grade ASC, c.classCode ASC")
+    List<SchoolClass> findByDepartmentId(@Param("departmentId") Long departmentId);
 
     /**
      * 根据班主任ID查找班级列表
-     *
-     * @param headTeacherId 班主任ID
-     * @return 班级列表
      */
-    List<SchoolClass> findByHeadTeacherIdAndDeletedOrderByGradeAscClassCodeAsc(Long headTeacherId, Integer deleted);
+    @Query("SELECT c FROM SchoolClass c WHERE c.headTeacherId = :headTeacherId AND c.deleted = 0 ORDER BY c.grade ASC, c.classCode ASC")
+    List<SchoolClass> findByHeadTeacherId(@Param("headTeacherId") Long headTeacherId);
 
     /**
-     * 检查班级代码是否存在
-     *
-     * @param classCode 班级代码
-     * @return 是否存在
+     * 根据班级名称模糊查询
      */
-    boolean existsByClassCodeAndDeleted(String classCode, Integer deleted);
+    @Query("SELECT c FROM SchoolClass c WHERE c.className LIKE %:className% AND c.deleted = 0 ORDER BY c.grade ASC, c.classCode ASC")
+    List<SchoolClass> findByClassNameContaining(@Param("className") String className);
+
+    /**
+     * 根据学年查找班级列表
+     */
+    @Query("SELECT c FROM SchoolClass c WHERE c.academicYear = :academicYear AND c.deleted = 0 ORDER BY c.grade ASC, c.classCode ASC")
+    List<SchoolClass> findByAcademicYear(@Param("academicYear") Integer academicYear);
 
     /**
      * 获取班级详情（包含班主任信息和学生数量）
@@ -131,7 +136,7 @@ public interface SchoolClassRepository extends JpaRepository<SchoolClass, Long> 
     List<Object[]> searchClasses(@Param("keyword") String keyword);
 
     /**
-     * 查找没有班主任的班级
+     * 查找没有班主任的班级（详细信息）
      */
     @Query("""
         SELECT c,
@@ -140,5 +145,51 @@ public interface SchoolClassRepository extends JpaRepository<SchoolClass, Long> 
         WHERE c.headTeacherId IS NULL AND c.deleted = 0
         ORDER BY c.grade ASC, c.classCode ASC
         """)
-    List<Object[]> findClassesWithoutHeadTeacher();
+    List<Object[]> findClassesWithoutHeadTeacherDetails();
+
+    // ================================
+    // 兼容性方法（为现有Service提供支持）
+    // ================================
+
+    /**
+     * 根据班级代码查找班级（兼容性方法）
+     */
+    default Optional<SchoolClass> findByClassCodeAndDeleted(String classCode, Integer deleted) {
+        return findByClassCode(classCode);
+    }
+
+    /**
+     * 根据年级查找班级列表（兼容性方法）
+     */
+    default List<SchoolClass> findByGradeAndDeletedOrderByClassCodeAsc(String grade, Integer deleted) {
+        return findByGrade(grade);
+    }
+
+    /**
+     * 根据部门ID查找班级列表（兼容性方法）
+     */
+    default List<SchoolClass> findByDepartmentIdAndDeletedOrderByGradeAscClassCodeAsc(Long departmentId, Integer deleted) {
+        return findByDepartmentId(departmentId);
+    }
+
+    /**
+     * 根据班主任ID查找班级列表（兼容性方法）
+     */
+    default List<SchoolClass> findByHeadTeacherIdAndDeletedOrderByGradeAscClassCodeAsc(Long headTeacherId, Integer deleted) {
+        return findByHeadTeacherId(headTeacherId);
+    }
+
+    /**
+     * 检查班级代码是否存在（兼容性方法）
+     */
+    @Query("SELECT CASE WHEN COUNT(c) > 0 THEN true ELSE false END FROM SchoolClass c WHERE c.classCode = :classCode AND c.deleted = 0")
+    boolean existsByClassCodeAndDeleted(@Param("classCode") String classCode, Integer deleted);
+
+    /**
+     * 查找没有班主任的班级（兼容性方法）
+     */
+    default List<Object[]> findClassesWithoutHeadTeacher() {
+        return findClassesWithoutHeadTeacherDetails();
+    }
+
 }

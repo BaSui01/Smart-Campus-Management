@@ -60,10 +60,10 @@ public interface SchoolClassRepository extends BaseRepository<SchoolClass> {
     List<SchoolClass> findByClassNameContaining(@Param("className") String className);
 
     /**
-     * 根据学年查找班级列表
+     * 根据入学年份查找班级列表
      */
-    @Query("SELECT c FROM SchoolClass c WHERE c.academicYear = :academicYear AND c.deleted = 0 ORDER BY c.grade ASC, c.classCode ASC")
-    List<SchoolClass> findByAcademicYear(@Param("academicYear") Integer academicYear);
+    @Query("SELECT c FROM SchoolClass c WHERE c.enrollmentYear = :enrollmentYear AND c.deleted = 0 ORDER BY c.grade ASC, c.classCode ASC")
+    List<SchoolClass> findByEnrollmentYear(@Param("enrollmentYear") Integer enrollmentYear);
 
     /**
      * 获取班级详情（包含班主任信息和学生数量）
@@ -182,8 +182,8 @@ public interface SchoolClassRepository extends BaseRepository<SchoolClass> {
     /**
      * 检查班级代码是否存在（兼容性方法）
      */
-    @Query("SELECT CASE WHEN COUNT(c) > 0 THEN true ELSE false END FROM SchoolClass c WHERE c.classCode = :classCode AND c.deleted = 0")
-    boolean existsByClassCodeAndDeleted(@Param("classCode") String classCode, Integer deleted);
+    @Query("SELECT CASE WHEN COUNT(c) > 0 THEN true ELSE false END FROM SchoolClass c WHERE c.classCode = :classCode AND c.deleted = :deleted")
+    boolean existsByClassCodeAndDeleted(@Param("classCode") String classCode, @Param("deleted") Integer deleted);
 
     /**
      * 查找没有班主任的班级（兼容性方法）

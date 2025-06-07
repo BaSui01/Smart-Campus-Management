@@ -39,16 +39,16 @@ public interface RoleRepository extends BaseRepository<Role> {
     Optional<Role> findByRoleName(@Param("roleName") String roleName);
 
     /**
-     * 根据角色类型查找角色列表
+     * 根据角色级别查找角色列表
      */
-    @Query("SELECT r FROM Role r WHERE r.roleType = :roleType AND r.deleted = 0 ORDER BY r.sortOrder ASC")
-    List<Role> findByRoleType(@Param("roleType") String roleType);
+    @Query("SELECT r FROM Role r WHERE r.roleLevel = :roleLevel AND r.deleted = 0 ORDER BY r.sortOrder ASC")
+    List<Role> findByRoleLevel(@Param("roleLevel") Integer roleLevel);
 
     /**
-     * 分页根据角色类型查找角色列表
+     * 分页根据角色级别查找角色列表
      */
-    @Query("SELECT r FROM Role r WHERE r.roleType = :roleType AND r.deleted = 0")
-    Page<Role> findByRoleType(@Param("roleType") String roleType, Pageable pageable);
+    @Query("SELECT r FROM Role r WHERE r.roleLevel = :roleLevel AND r.deleted = 0")
+    Page<Role> findByRoleLevel(@Param("roleLevel") Integer roleLevel, Pageable pageable);
 
     /**
      * 根据角色名称模糊查询
@@ -84,11 +84,11 @@ public interface RoleRepository extends BaseRepository<Role> {
     @Query("SELECT r FROM Role r WHERE " +
            "(:roleName IS NULL OR r.roleName LIKE %:roleName%) AND " +
            "(:roleKey IS NULL OR r.roleKey LIKE %:roleKey%) AND " +
-           "(:roleType IS NULL OR r.roleType = :roleType) AND " +
+           "(:roleLevel IS NULL OR r.roleLevel = :roleLevel) AND " +
            "r.deleted = 0")
     Page<Role> findByMultipleConditions(@Param("roleName") String roleName,
                                        @Param("roleKey") String roleKey,
-                                       @Param("roleType") String roleType,
+                                       @Param("roleLevel") Integer roleLevel,
                                        Pageable pageable);
 
     /**

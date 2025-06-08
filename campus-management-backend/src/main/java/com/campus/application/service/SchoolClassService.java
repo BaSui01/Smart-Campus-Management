@@ -172,4 +172,68 @@ public interface SchoolClassService {
      * @return 更新结果
      */
     boolean updateStudentCount(Long classId);
+
+    // ================================
+    // 班级管理页面需要的方法
+    // ================================
+
+    /**
+     * 搜索班级（分页）
+     */
+    Page<SchoolClass> searchClasses(String keyword, Pageable pageable);
+
+    /**
+     * 根据部门查找班级（分页）
+     */
+    Page<SchoolClass> findClassesByDepartment(Long departmentId, Pageable pageable);
+
+    /**
+     * 根据年级查找班级（分页）
+     */
+    Page<SchoolClass> findClassesByGrade(String grade, Pageable pageable);
+
+    /**
+     * 查找所有班级（分页）
+     */
+    Page<SchoolClass> findAllClasses(Pageable pageable);
+
+    /**
+     * 统计班级总数
+     */
+    long countTotalClasses();
+
+    /**
+     * 统计活跃班级数
+     */
+    long countActiveClasses();
+
+    /**
+     * 获取所有年级列表
+     */
+    List<String> findAllGrades();
+
+    /**
+     * 根据ID查找班级
+     */
+    SchoolClass findClassById(Long id);
+
+    /**
+     * 统计班级学生数量
+     */
+    long countStudentsByClass(Long classId);
+
+    /**
+     * 统计班级课程数量
+     */
+    long countCoursesByClass(Long classId);
+
+    /**
+     * 启用班级
+     */
+    boolean enableClass(Long classId);
+
+    /**
+     * 禁用班级
+     */
+    boolean disableClass(Long classId);
 }

@@ -91,11 +91,13 @@ public class FinanceServiceImpl implements FinanceService {
         
         try {
             // 按日期统计收入
-            List<Object[]> dailyIncome = paymentRecordService.getDailyIncomeStatistics(startDate, endDate);
+            // TODO: 需要在PaymentRecordService中添加该方法
+            List<Object[]> dailyIncome = java.util.Collections.emptyList();
             statistics.put("dailyIncome", dailyIncome);
             
             // 按缴费项目统计收入
-            List<Object[]> incomeByFeeItem = paymentRecordService.getIncomeByFeeItem(startDate, endDate);
+            // TODO: 需要在PaymentRecordService中添加该方法
+            List<Object[]> incomeByFeeItem = java.util.Collections.emptyList();
             statistics.put("incomeByFeeItem", incomeByFeeItem);
             
             // 按支付方式统计

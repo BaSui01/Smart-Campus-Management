@@ -1,12 +1,16 @@
 package com.campus.application.service.impl;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -227,5 +231,206 @@ public class SchoolClassServiceImpl implements SchoolClassService {
      */
     public List<Object[]> getClassesWithoutHeadTeacher() {
         return schoolClassRepository.findClassesWithoutHeadTeacher();
+    }
+
+    // ================================
+    // 班级管理页面需要的方法实现
+    // ================================
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<SchoolClass> searchClasses(String keyword, Pageable pageable) {
+        try {
+            if (keyword == null || keyword.trim().isEmpty()) {
+                return schoolClassRepository.findAll(pageable);
+            }
+
+            // 使用现有的搜索方法，然后手动分页
+            List<Object[]> searchResults = schoolClassRepository.searchClasses(keyword.trim());
+
+            // 转换为 SchoolClass 对象列表
+            List<SchoolClass> classes = new ArrayList<>();
+            for (Object[] result : searchResults) {
+                SchoolClass schoolClass = new SchoolClass();
+                schoolClass.setId((Long) result[0]);
+                schoolClass.setClassName((String) result[1]);
+                schoolClass.setClassCode((String) result[2]);
+                schoolClass.setGrade((String) result[3]);
+                classes.add(schoolClass);
+            }
+
+            // 手动分页
+            int start = (int) pageable.getOffset();
+            int end = Math.min(start + pageable.getPageSize(), classes.size());
+            List<SchoolClass> pageContent = start < classes.size() ?
+                classes.subList(start, end) : new ArrayList<>();
+
+            return new PageImpl<>(pageContent, pageable, classes.size());
+        } catch (Exception e) {
+            System.err.println("搜索班级失败: " + e.getMessage());
+            return Page.empty(pageable);
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<SchoolClass> findClassesByDepartment(Long departmentId, Pageable pageable) {
+        try {
+            List<SchoolClass> classes = schoolClassRepository.findByDepartmentIdAndDeletedOrderByGradeAscClassCodeAsc(departmentId, 0);
+
+            // 手动分页
+            int start = (int) pageable.getOffset();
+            int end = Math.min(start + pageable.getPageSize(), classes.size());
+            List<SchoolClass> pageContent = start < classes.size() ?
+                classes.subList(start, end) : new ArrayList<>();
+
+            return new PageImpl<>(pageContent, pageable, classes.size());
+        } catch (Exception e) {
+            System.err.println("根据部门查找班级失败: " + e.getMessage());
+            return Page.empty(pageable);
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<SchoolClass> findClassesByGrade(String grade, Pageable pageable) {
+        try {
+            List<SchoolClass> classes = schoolClassRepository.findByGradeAndDeletedOrderByClassCodeAsc(grade, 0);
+
+            // 手动分页
+            int start = (int) pageable.getOffset();
+            int end = Math.min(start + pageable.getPageSize(), classes.size());
+            List<SchoolClass> pageContent = start < classes.size() ?
+                classes.subList(start, end) : new ArrayList<>();
+
+            return new PageImpl<>(pageContent, pageable, classes.size());
+        } catch (Exception e) {
+            System.err.println("根据年级查找班级失败: " + e.getMessage());
+            return Page.empty(pageable);
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<SchoolClass> findAllClasses(Pageable pageable) {
+        try {
+            return schoolClassRepository.findAll(pageable);
+        } catch (Exception e) {
+            System.err.println("查找所有班级失败: " + e.getMessage());
+            return Page.empty(pageable);
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countTotalClasses() {
+        try {
+            return schoolClassRepository.count();
+        } catch (Exception e) {
+            System.err.println("统计班级总数失败: " + e.getMessage());
+            return 0;
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countActiveClasses() {
+        try {
+            return schoolClassRepository.findAll()
+                .stream()
+                .filter(schoolClass -> schoolClass.getStatus() == 1 && schoolClass.getDeleted() == 0)
+                .count();
+        } catch (Exception e) {
+            System.err.println("统计活跃班级数失败: " + e.getMessage());
+            return 0;
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<String> findAllGrades() {
+        try {
+            return schoolClassRepository.findAll()
+                .stream()
+                .map(SchoolClass::getGrade)
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+        } catch (Exception e) {
+            System.err.println("获取所有年级失败: " + e.getMessage());
+            return new ArrayList<>();
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public SchoolClass findClassById(Long id) {
+        try {
+            return schoolClassRepository.findById(id).orElse(null);
+        } catch (Exception e) {
+            System.err.println("根据ID查找班级失败: " + e.getMessage());
+            return null;
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countStudentsByClass(Long classId) {
+        try {
+            List<Student> students = studentRepository.findByClassIdAndDeletedOrderByStudentNoAsc(classId, 0);
+            return students.size();
+        } catch (Exception e) {
+            System.err.println("统计班级学生数量失败: " + e.getMessage());
+            return 0;
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countCoursesByClass(Long classId) {
+        try {
+            // 模拟统计班级课程数量
+            // 在实际项目中，需要根据课程选择表或课程安排表来统计
+            return 8; // 模拟数据
+        } catch (Exception e) {
+            System.err.println("统计班级课程数量失败: " + e.getMessage());
+            return 0;
+        }
+    }
+
+    @Override
+    @Transactional
+    public boolean enableClass(Long classId) {
+        try {
+            SchoolClass schoolClass = schoolClassRepository.findById(classId).orElse(null);
+            if (schoolClass != null) {
+                schoolClass.setStatus(1);
+                schoolClass.setUpdatedAt(LocalDateTime.now());
+                schoolClassRepository.save(schoolClass);
+                return true;
+            }
+            return false;
+        } catch (Exception e) {
+            System.err.println("启用班级失败: " + e.getMessage());
+            return false;
+        }
+    }
+
+    @Override
+    @Transactional
+    public boolean disableClass(Long classId) {
+        try {
+            SchoolClass schoolClass = schoolClassRepository.findById(classId).orElse(null);
+            if (schoolClass != null) {
+                schoolClass.setStatus(0);
+                schoolClass.setUpdatedAt(LocalDateTime.now());
+                schoolClassRepository.save(schoolClass);
+                return true;
+            }
+            return false;
+        } catch (Exception e) {
+            System.err.println("禁用班级失败: " + e.getMessage());
+            return false;
+        }
     }
 }

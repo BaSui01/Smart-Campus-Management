@@ -113,6 +113,55 @@ public interface RoleService {
      */
     long countTotalRoles();
 
+    // ================================
+    // 角色管理页面需要的方法
+    // ================================
+
+    /**
+     * 搜索角色（分页）
+     */
+    Page<Role> searchRoles(String keyword, Pageable pageable);
+
+    /**
+     * 统计系统角色数量
+     */
+    long countSystemRoles();
+
+    /**
+     * 根据ID查找角色
+     */
+    Role findRoleById(Long id);
+
+    /**
+     * 获取角色权限列表
+     */
+    List<Map<String, Object>> getRolePermissions(Long roleId);
+
+    /**
+     * 分配权限给角色
+     */
+    boolean assignPermissions(Long roleId, List<Long> permissionIds);
+
+    /**
+     * 更新角色（单参数版本）
+     */
+    Role updateRole(Role role);
+
+    /**
+     * 清除角色权限
+     */
+    boolean clearRolePermissions(Long roleId);
+
+    /**
+     * 启用角色
+     */
+    boolean enableRole(Long roleId);
+
+    /**
+     * 禁用角色
+     */
+    boolean disableRole(Long roleId);
+
     /**
      * 角色统计信息
      */

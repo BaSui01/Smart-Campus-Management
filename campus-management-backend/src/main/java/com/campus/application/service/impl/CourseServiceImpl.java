@@ -1,6 +1,5 @@
 package com.campus.application.service.impl;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -487,28 +486,6 @@ public class CourseServiceImpl implements CourseService {
         newCourse.setDeleted(0);
         
         return save(newCourse);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<Map<String, Object>> getCourseCategories() {
-        List<Map<String, Object>> categories = new ArrayList<>();
-
-        String[] categoryNames = {"必修课", "选修课", "专业课", "公共课", "实验课", "实践课"};
-        String[] categoryCodes = {"required", "elective", "major", "public", "lab", "practice"};
-        String[] descriptions = {"必修课程", "选修课程", "专业课程", "公共基础课", "实验课程", "实践课程"};
-
-        for (int i = 0; i < categoryNames.length; i++) {
-            Map<String, Object> category = new HashMap<>();
-            category.put("id", (long) (i + 1));
-            category.put("name", categoryNames[i]);
-            category.put("code", categoryCodes[i]);
-            category.put("description", descriptions[i]);
-            category.put("courseCount", (i + 1) * 10); // 模拟课程数量
-            categories.add(category);
-        }
-
-        return categories;
     }
 
 }

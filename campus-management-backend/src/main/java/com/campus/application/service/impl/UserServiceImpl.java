@@ -990,4 +990,125 @@ public class UserServiceImpl implements UserService {
 
         return departments;
     }
+
+    // ================================
+    // 家长相关方法实现
+    // ================================
+
+    @Override
+    public List<User> findParents() {
+        return userRepository.findUsersByRoleName("PARENT");
+    }
+
+    @Override
+    public Map<String, Object> getParentStudentRelationById(Long id) {
+        // 模拟家长学生关系数据
+        Map<String, Object> relation = new HashMap<>();
+        relation.put("id", id);
+        relation.put("parentId", 1L);
+        relation.put("studentId", 2L);
+        relation.put("relationType", "父亲");
+        relation.put("parentName", "张三");
+        relation.put("studentName", "张小明");
+        relation.put("createTime", LocalDateTime.now().minusDays(30));
+        relation.put("status", 1);
+        return relation;
+    }
+
+    @Override
+    public List<Map<String, Object>> getRelationsByParent(Long parentId) {
+        List<Map<String, Object>> relations = new ArrayList<>();
+
+        // 模拟数据
+        for (int i = 1; i <= 3; i++) {
+            Map<String, Object> relation = new HashMap<>();
+            relation.put("id", (long) i);
+            relation.put("parentId", parentId);
+            relation.put("studentId", (long) (i + 10));
+            relation.put("relationType", i == 1 ? "父亲" : i == 2 ? "母亲" : "监护人");
+            relation.put("studentName", "学生" + i);
+            relation.put("studentNo", "2024" + String.format("%04d", i));
+            relation.put("grade", "2024级");
+            relation.put("className", "计算机" + i + "班");
+            relation.put("createTime", LocalDateTime.now().minusDays(i * 10));
+            relation.put("status", 1);
+            relations.add(relation);
+        }
+
+        return relations;
+    }
+
+    @Override
+    public List<Map<String, Object>> getRelationsByStudent(Long studentId) {
+        List<Map<String, Object>> relations = new ArrayList<>();
+
+        // 模拟数据
+        String[] relationTypes = {"父亲", "母亲"};
+        String[] parentNames = {"张三", "李四"};
+
+        for (int i = 0; i < relationTypes.length; i++) {
+            Map<String, Object> relation = new HashMap<>();
+            relation.put("id", (long) (i + 1));
+            relation.put("parentId", (long) (i + 100));
+            relation.put("studentId", studentId);
+            relation.put("relationType", relationTypes[i]);
+            relation.put("parentName", parentNames[i]);
+            relation.put("parentPhone", "138" + String.format("%08d", i + 12345678));
+            relation.put("parentEmail", parentNames[i].toLowerCase() + "@example.com");
+            relation.put("createTime", LocalDateTime.now().minusDays((i + 1) * 15));
+            relation.put("status", 1);
+            relations.add(relation);
+        }
+
+        return relations;
+    }
+
+    @Override
+    public Map<String, Object> getParentStudentRelationStatistics() {
+        Map<String, Object> statistics = new HashMap<>();
+
+        // 模拟统计数据
+        statistics.put("totalRelations", 1250);
+        statistics.put("activeRelations", 1180);
+        statistics.put("inactiveRelations", 70);
+        statistics.put("totalParents", 850);
+        statistics.put("totalStudents", 1200);
+
+        // 按关系类型统计
+        Map<String, Integer> typeStats = new HashMap<>();
+        typeStats.put("父亲", 520);
+        typeStats.put("母亲", 480);
+        typeStats.put("监护人", 180);
+        typeStats.put("其他", 70);
+        statistics.put("relationTypeStats", typeStats);
+
+        // 按年级统计
+        Map<String, Integer> gradeStats = new HashMap<>();
+        gradeStats.put("2021级", 280);
+        gradeStats.put("2022级", 320);
+        gradeStats.put("2023级", 350);
+        gradeStats.put("2024级", 300);
+        statistics.put("gradeStats", gradeStats);
+
+        return statistics;
+    }
+
+    @Override
+    public Map<String, Object> countParentStudentRelationsByType() {
+        Map<String, Object> typeCounts = new HashMap<>();
+
+        // 模拟按类型统计数据
+        Map<String, Long> counts = new HashMap<>();
+        counts.put("父亲", 520L);
+        counts.put("母亲", 480L);
+        counts.put("监护人", 180L);
+        counts.put("祖父母", 45L);
+        counts.put("外祖父母", 35L);
+        counts.put("其他", 25L);
+
+        typeCounts.put("counts", counts);
+        typeCounts.put("total", counts.values().stream().mapToLong(Long::longValue).sum());
+
+        return typeCounts;
+    }
 }

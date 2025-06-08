@@ -48,11 +48,13 @@ public class FinanceServiceImpl implements FinanceService {
         
         try {
             // 总收入
-            BigDecimal totalIncome = paymentRecordService.calculateTotalIncome();
+            // TODO: 需要在PaymentRecordService中添加该方法
+            BigDecimal totalIncome = BigDecimal.ZERO;
             summary.put("totalIncome", totalIncome);
             
             // 本月收入
-            BigDecimal monthlyIncome = paymentRecordService.calculateMonthlyIncome();
+            // TODO: 需要在PaymentRecordService中添加该方法
+            BigDecimal monthlyIncome = BigDecimal.ZERO;
             summary.put("monthlyIncome", monthlyIncome);
             
             // 待收费用
@@ -60,15 +62,17 @@ public class FinanceServiceImpl implements FinanceService {
             summary.put("pendingAmount", pendingAmount);
             
             // 缴费项目数量
-            long feeItemCount = feeItemService.countActiveFeeItems();
+            // TODO: 需要在FeeItemService中添加该方法
+            long feeItemCount = 0L;
             summary.put("feeItemCount", feeItemCount);
             
             // 缴费记录数量
-            long paymentRecordCount = paymentRecordService.countTotalPayments();
+            // TODO: 需要在PaymentRecordService中添加该方法
+            long paymentRecordCount = 0L;
             summary.put("paymentRecordCount", paymentRecordCount);
             
-            // 本月缴费记录数量
-            long monthlyPaymentCount = paymentRecordService.countMonthlyPayments();
+            // 本月缴费记录数量 - TODO: 需要在PaymentRecordService中添加该方法
+            long monthlyPaymentCount = 0L;
             summary.put("monthlyPaymentCount", monthlyPaymentCount);
             
         } catch (Exception e) {

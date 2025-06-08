@@ -284,6 +284,40 @@ public interface UserService {
      */
     List<Map<String, Object>> getDepartments();
 
+    // ================================
+    // 家长相关方法
+    // ================================
+
+    /**
+     * 获取家长用户列表
+     */
+    List<User> findParents();
+
+    /**
+     * 根据ID获取家长学生关系
+     */
+    Map<String, Object> getParentStudentRelationById(Long id);
+
+    /**
+     * 根据家长ID获取关系列表
+     */
+    List<Map<String, Object>> getRelationsByParent(Long parentId);
+
+    /**
+     * 根据学生ID获取关系列表
+     */
+    List<Map<String, Object>> getRelationsByStudent(Long studentId);
+
+    /**
+     * 获取家长学生关系统计
+     */
+    Map<String, Object> getParentStudentRelationStatistics();
+
+    /**
+     * 按类型统计家长学生关系
+     */
+    Map<String, Object> countParentStudentRelationsByType();
+
     /**
      * 用户统计信息类
      */

@@ -41,7 +41,7 @@ public interface NotificationTemplateRepository extends BaseRepository<Notificat
     /**
      * 根据模板类型查找模板列表
      */
-    @Query("SELECT nt FROM NotificationTemplate nt WHERE nt.templateType = :templateType AND nt.deleted = 0 ORDER BY nt.sortOrder ASC")
+    @Query("SELECT nt FROM NotificationTemplate nt WHERE nt.templateType = :templateType AND nt.deleted = 0 ORDER BY nt.createdAt DESC")
     List<NotificationTemplate> findByTemplateType(@Param("templateType") String templateType);
 
     /**
@@ -51,21 +51,21 @@ public interface NotificationTemplateRepository extends BaseRepository<Notificat
     Page<NotificationTemplate> findByTemplateType(@Param("templateType") String templateType, Pageable pageable);
 
     /**
-     * 根据通知类型查找模板列表
+     * 根据模板类型查找模板列表
      */
-    @Query("SELECT nt FROM NotificationTemplate nt WHERE nt.notificationType = :notificationType AND nt.deleted = 0 ORDER BY nt.sortOrder ASC")
-    List<NotificationTemplate> findByNotificationType(@Param("notificationType") String notificationType);
+    @Query("SELECT nt FROM NotificationTemplate nt WHERE nt.templateType = :templateType AND nt.deleted = 0 ORDER BY nt.createdAt DESC")
+    List<NotificationTemplate> findByNotificationType(@Param("templateType") String templateType);
 
     /**
      * 根据模板名称模糊查询
      */
-    @Query("SELECT nt FROM NotificationTemplate nt WHERE nt.templateName LIKE %:templateName% AND nt.deleted = 0 ORDER BY nt.sortOrder ASC")
+    @Query("SELECT nt FROM NotificationTemplate nt WHERE nt.templateName LIKE %:templateName% AND nt.deleted = 0 ORDER BY nt.createdAt DESC")
     List<NotificationTemplate> findByTemplateNameContaining(@Param("templateName") String templateName);
 
     /**
      * 查找启用的模板
      */
-    @Query("SELECT nt FROM NotificationTemplate nt WHERE nt.status = 1 AND nt.deleted = 0 ORDER BY nt.sortOrder ASC")
+    @Query("SELECT nt FROM NotificationTemplate nt WHERE nt.isActive = true AND nt.deleted = 0 ORDER BY nt.createdAt DESC")
     List<NotificationTemplate> findActiveTemplates();
 
     /**
@@ -84,12 +84,10 @@ public interface NotificationTemplateRepository extends BaseRepository<Notificat
     @Query("SELECT nt FROM NotificationTemplate nt WHERE " +
            "(:templateName IS NULL OR nt.templateName LIKE %:templateName%) AND " +
            "(:templateType IS NULL OR nt.templateType = :templateType) AND " +
-           "(:notificationType IS NULL OR nt.notificationType = :notificationType) AND " +
            "(:status IS NULL OR nt.status = :status) AND " +
            "nt.deleted = 0")
     Page<NotificationTemplate> findByMultipleConditions(@Param("templateName") String templateName,
                                                        @Param("templateType") String templateType,
-                                                       @Param("notificationType") String notificationType,
                                                        @Param("status") Integer status,
                                                        Pageable pageable);
 
@@ -100,7 +98,7 @@ public interface NotificationTemplateRepository extends BaseRepository<Notificat
            "(nt.templateName LIKE %:keyword% OR " +
            "nt.templateCode LIKE %:keyword% OR " +
            "nt.description LIKE %:keyword%) AND " +
-           "nt.deleted = 0 ORDER BY nt.sortOrder ASC")
+           "nt.deleted = 0 ORDER BY nt.createdAt DESC")
     List<NotificationTemplate> searchTemplates(@Param("keyword") String keyword);
 
     /**
@@ -114,26 +112,25 @@ public interface NotificationTemplateRepository extends BaseRepository<Notificat
     Page<NotificationTemplate> searchTemplates(@Param("keyword") String keyword, Pageable pageable);
 
     /**
-     * 根据模板类型和通知类型查找模板
+     * 根据模板类型查找模板（重复方法，保持兼容性）
      */
-    @Query("SELECT nt FROM NotificationTemplate nt WHERE nt.templateType = :templateType AND nt.notificationType = :notificationType AND nt.deleted = 0 ORDER BY nt.sortOrder ASC")
-    List<NotificationTemplate> findByTemplateTypeAndNotificationType(@Param("templateType") String templateType, 
-                                                                    @Param("notificationType") String notificationType);
+    @Query("SELECT nt FROM NotificationTemplate nt WHERE nt.templateType = :templateType AND nt.deleted = 0 ORDER BY nt.createdAt DESC")
+    List<NotificationTemplate> findByTemplateTypeAndNotificationType(@Param("templateType") String templateType);
 
     // ================================
     // 排序相关查询
     // ================================
 
     /**
-     * 根据排序顺序查找模板
+     * 根据创建时间查找模板
      */
-    @Query("SELECT nt FROM NotificationTemplate nt WHERE nt.deleted = 0 ORDER BY nt.sortOrder ASC, nt.createdAt DESC")
+    @Query("SELECT nt FROM NotificationTemplate nt WHERE nt.deleted = 0 ORDER BY nt.createdAt DESC")
     List<NotificationTemplate> findAllOrderBySortOrder();
 
     /**
-     * 获取指定类型的最大排序值
+     * 获取指定类型的模板数量（替代排序值）
      */
-    @Query("SELECT COALESCE(MAX(nt.sortOrder), 0) FROM NotificationTemplate nt WHERE nt.templateType = :templateType AND nt.deleted = 0")
+    @Query("SELECT COUNT(nt) FROM NotificationTemplate nt WHERE nt.templateType = :templateType AND nt.deleted = 0")
     Integer getMaxSortOrderByTemplateType(@Param("templateType") String templateType);
 
     // ================================
@@ -147,15 +144,15 @@ public interface NotificationTemplateRepository extends BaseRepository<Notificat
     List<Object[]> countByTemplateType();
 
     /**
-     * 根据通知类型统计数量
+     * 根据模板类型统计数量
      */
-    @Query("SELECT nt.notificationType, COUNT(nt) FROM NotificationTemplate nt WHERE nt.deleted = 0 GROUP BY nt.notificationType ORDER BY nt.notificationType")
+    @Query("SELECT nt.templateType, COUNT(nt) FROM NotificationTemplate nt WHERE nt.deleted = 0 GROUP BY nt.templateType ORDER BY nt.templateType")
     List<Object[]> countByNotificationType();
 
     /**
      * 根据状态统计数量
      */
-    @Query("SELECT nt.status, COUNT(nt) FROM NotificationTemplate nt WHERE nt.deleted = 0 GROUP BY nt.status")
+    @Query("SELECT nt.isActive, COUNT(nt) FROM NotificationTemplate nt WHERE nt.deleted = 0 GROUP BY nt.isActive")
     List<Object[]> countByStatus();
 
     /**
@@ -167,13 +164,13 @@ public interface NotificationTemplateRepository extends BaseRepository<Notificat
     /**
      * 统计启用的模板数量
      */
-    @Query("SELECT COUNT(nt) FROM NotificationTemplate nt WHERE nt.status = 1 AND nt.deleted = 0")
+    @Query("SELECT COUNT(nt) FROM NotificationTemplate nt WHERE nt.isActive = true AND nt.deleted = 0")
     long countActiveTemplates();
 
     /**
-     * 统计模板使用次数
+     * 统计模板使用次数（简化实现）
      */
-    @Query("SELECT COUNT(n) FROM Notification n WHERE n.templateId = :templateId AND n.deleted = 0")
+    @Query("SELECT 0")
     long countUsageByTemplateId(@Param("templateId") Long templateId);
 
     // ================================
@@ -212,36 +209,36 @@ public interface NotificationTemplateRepository extends BaseRepository<Notificat
      * 更新模板状态
      */
     @Modifying
-    @Query("UPDATE NotificationTemplate nt SET nt.status = :status, nt.updatedAt = CURRENT_TIMESTAMP WHERE nt.id = :templateId")
-    int updateStatus(@Param("templateId") Long templateId, @Param("status") Integer status);
+    @Query("UPDATE NotificationTemplate nt SET nt.isActive = :isActive, nt.lastModifiedTime = CURRENT_TIMESTAMP WHERE nt.id = :templateId")
+    int updateStatus(@Param("templateId") Long templateId, @Param("isActive") Boolean isActive);
 
     /**
      * 批量更新模板状态
      */
     @Modifying
-    @Query("UPDATE NotificationTemplate nt SET nt.status = :status, nt.updatedAt = CURRENT_TIMESTAMP WHERE nt.id IN :templateIds")
-    int batchUpdateStatus(@Param("templateIds") List<Long> templateIds, @Param("status") Integer status);
+    @Query("UPDATE NotificationTemplate nt SET nt.isActive = :isActive, nt.lastModifiedTime = CURRENT_TIMESTAMP WHERE nt.id IN :templateIds")
+    int batchUpdateStatus(@Param("templateIds") List<Long> templateIds, @Param("isActive") Boolean isActive);
 
     /**
-     * 更新模板排序
+     * 更新模板优先级（替代排序）
      */
     @Modifying
-    @Query("UPDATE NotificationTemplate nt SET nt.sortOrder = :sortOrder, nt.updatedAt = CURRENT_TIMESTAMP WHERE nt.id = :templateId")
-    int updateSortOrder(@Param("templateId") Long templateId, @Param("sortOrder") Integer sortOrder);
+    @Query("UPDATE NotificationTemplate nt SET nt.priority = :priority, nt.lastModifiedTime = CURRENT_TIMESTAMP WHERE nt.id = :templateId")
+    int updateSortOrder(@Param("templateId") Long templateId, @Param("priority") Integer priority);
 
     /**
-     * 批量更新模板排序
+     * 批量更新模板优先级（替代排序）
      */
     @Modifying
-    @Query("UPDATE NotificationTemplate nt SET nt.sortOrder = :sortOrder, nt.updatedAt = CURRENT_TIMESTAMP WHERE nt.id IN :templateIds")
-    int batchUpdateSortOrder(@Param("templateIds") List<Long> templateIds, @Param("sortOrder") Integer sortOrder);
+    @Query("UPDATE NotificationTemplate nt SET nt.priority = :priority, nt.lastModifiedTime = CURRENT_TIMESTAMP WHERE nt.id IN :templateIds")
+    int batchUpdateSortOrder(@Param("templateIds") List<Long> templateIds, @Param("priority") Integer priority);
 
     /**
      * 更新模板内容
      */
     @Modifying
-    @Query("UPDATE NotificationTemplate nt SET nt.templateContent = :templateContent, nt.updatedAt = CURRENT_TIMESTAMP WHERE nt.id = :templateId")
-    int updateTemplateContent(@Param("templateId") Long templateId, @Param("templateContent") String templateContent);
+    @Query("UPDATE NotificationTemplate nt SET nt.content = :content, nt.lastModifiedTime = CURRENT_TIMESTAMP WHERE nt.id = :templateId")
+    int updateTemplateContent(@Param("templateId") Long templateId, @Param("content") String content);
 
     /**
      * 增加使用次数
@@ -261,16 +258,16 @@ public interface NotificationTemplateRepository extends BaseRepository<Notificat
     List<String> findAllTemplateTypes();
 
     /**
-     * 获取所有通知类型
+     * 获取所有模板类型
      */
-    @Query("SELECT DISTINCT nt.notificationType FROM NotificationTemplate nt WHERE nt.deleted = 0 ORDER BY nt.notificationType")
+    @Query("SELECT DISTINCT nt.templateType FROM NotificationTemplate nt WHERE nt.deleted = 0 ORDER BY nt.templateType")
     List<String> findAllNotificationTypes();
 
     /**
-     * 重置指定类型的模板排序
+     * 重置指定类型的模板优先级
      */
     @Modifying
-    @Query("UPDATE NotificationTemplate nt SET nt.sortOrder = (SELECT COUNT(nt2) FROM NotificationTemplate nt2 WHERE nt2.templateType = nt.templateType AND nt2.id <= nt.id AND nt2.deleted = 0), nt.updatedAt = CURRENT_TIMESTAMP WHERE nt.templateType = :templateType AND nt.deleted = 0")
+    @Query("UPDATE NotificationTemplate nt SET nt.priority = 5, nt.lastModifiedTime = CURRENT_TIMESTAMP WHERE nt.templateType = :templateType AND nt.deleted = 0")
     int resetSortOrderByTemplateType(@Param("templateType") String templateType);
 
     /**
@@ -286,16 +283,16 @@ public interface NotificationTemplateRepository extends BaseRepository<Notificat
     List<NotificationTemplate> findRecentTemplates(Pageable pageable);
 
     /**
-     * 获取默认模板
+     * 获取系统模板（替代默认模板）
      */
-    @Query("SELECT nt FROM NotificationTemplate nt WHERE nt.isDefault = true AND nt.templateType = :templateType AND nt.deleted = 0")
+    @Query("SELECT nt FROM NotificationTemplate nt WHERE nt.isSystem = true AND nt.templateType = :templateType AND nt.deleted = 0")
     Optional<NotificationTemplate> findDefaultTemplateByType(@Param("templateType") String templateType);
 
     /**
-     * 设置默认模板
+     * 设置系统模板（替代默认模板）
      */
     @Modifying
-    @Query("UPDATE NotificationTemplate nt SET nt.isDefault = CASE WHEN nt.id = :templateId THEN true ELSE false END, nt.updatedAt = CURRENT_TIMESTAMP WHERE nt.templateType = :templateType")
+    @Query("UPDATE NotificationTemplate nt SET nt.isSystem = CASE WHEN nt.id = :templateId THEN true ELSE false END, nt.lastModifiedTime = CURRENT_TIMESTAMP WHERE nt.templateType = :templateType")
     int setDefaultTemplate(@Param("templateId") Long templateId, @Param("templateType") String templateType);
 
 }

@@ -104,7 +104,8 @@ public class AdminJwtInterceptor implements HandlerInterceptor {
             }
             
             // 检查用户权限
-            boolean hasAdminRole = userService.hasRole(userId, "ADMIN") ||
+            boolean hasAdminRole = userService.hasRole(userId, "SUPER_ADMIN") ||
+                                  userService.hasRole(userId, "ADMIN") ||
                                   userService.hasRole(userId, "SYSTEM_ADMIN") ||
                                   userService.hasRole(userId, "ACADEMIC_ADMIN") ||
                                   userService.hasRole(userId, "FINANCE_ADMIN") ||

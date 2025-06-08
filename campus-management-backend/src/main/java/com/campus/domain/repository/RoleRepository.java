@@ -137,11 +137,7 @@ public interface RoleRepository extends BaseRepository<Role> {
     // 统计查询方法
     // ================================
 
-    /**
-     * 根据角色类型统计角色数量
-     */
-    @Query("SELECT r.roleType, COUNT(r) FROM Role r WHERE r.deleted = 0 GROUP BY r.roleType ORDER BY r.roleType")
-    List<Object[]> countByRoleType();
+
 
     /**
      * 统计角色数量按状态
@@ -207,11 +203,6 @@ public interface RoleRepository extends BaseRepository<Role> {
     @Query("UPDATE Role r SET r.sortOrder = :sortOrder, r.updatedAt = CURRENT_TIMESTAMP WHERE r.id IN :roleIds")
     int batchUpdateSortOrder(@Param("roleIds") List<Long> roleIds, @Param("sortOrder") Integer sortOrder);
 
-    /**
-     * 更新角色类型
-     */
-    @Modifying
-    @Query("UPDATE Role r SET r.roleType = :roleType, r.updatedAt = CURRENT_TIMESTAMP WHERE r.id = :roleId")
-    int updateRoleType(@Param("roleId") Long roleId, @Param("roleType") String roleType);
+
 
 }

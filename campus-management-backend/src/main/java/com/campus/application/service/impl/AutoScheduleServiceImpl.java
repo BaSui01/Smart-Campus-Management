@@ -1,33 +1,35 @@
 package com.campus.application.service.impl;
 
 import com.campus.application.service.AutoScheduleService;
-import com.campus.application.service.CourseService;
-import com.campus.domain.entity.*;
+import com.campus.domain.entity.Course;
+import com.campus.domain.entity.CourseSchedule;
+import com.campus.domain.entity.Classroom;
+import com.campus.domain.entity.TimeSlot;
+import com.campus.domain.repository.CourseRepository;
 import com.campus.domain.repository.CourseScheduleRepository;
 import com.campus.domain.repository.ClassroomRepository;
 import com.campus.domain.repository.TimeSlotRepository;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
 /**
  * 自动排课服务实现类
- * 
+ *
  * @author Campus Management Team
  * @version 1.0.0
- * @since 2025-06-07
+ * @since 2024-12-07
  */
 @Service
 @Transactional
 public class AutoScheduleServiceImpl implements AutoScheduleService {
 
-    private static final Logger logger = LoggerFactory.getLogger(AutoScheduleServiceImpl.class);
+    @Autowired
+    private CourseRepository courseRepository;
 
     @Autowired
     private CourseScheduleRepository courseScheduleRepository;
@@ -38,65 +40,59 @@ public class AutoScheduleServiceImpl implements AutoScheduleService {
     @Autowired
     private TimeSlotRepository timeSlotRepository;
 
-    @Autowired
-    private CourseService courseService;
+    // ==================== 主要排课方法 ====================
 
     @Override
     public ScheduleResult autoSchedule(ScheduleRequest request) {
-        logger.info("开始自动排课: 学期={}, 学年={}, 课程数={}", 
-                   request.getSemester(), request.getAcademicYear(), 
-                   request.getCourseIds() != null ? request.getCourseIds().size() : 0);
-
         try {
-            // 1. 验证输入参数
+            // 1. 验证请求参数
             if (!validateRequest(request)) {
-                return new ScheduleResult(false, "排课参数验证失败");
+                return new ScheduleResult(false, "请求参数无效");
             }
 
-            // 2. 获取基础数据
-            List<Course> courses = getCourses(request.getCourseIds());
-            List<Classroom> classrooms = getClassrooms(request.getClassroomIds());
-            List<TimeSlot> timeSlots = getTimeSlots(request.getTimeSlotIds());
-            List<CourseSchedule> existingSchedules = getExistingSchedules(request.getSemester(), request.getAcademicYear());
+            // 2. 获取需要排课的课程
+            List<Course> courses = getCoursesByIds(request.getCourseIds());
+            if (courses.isEmpty()) {
+                return new ScheduleResult(false, "没有找到需要排课的课程");
+            }
 
-            // 3. 执行排课算法
-            List<CourseSchedule> newSchedules = new ArrayList<>();
+            // 3. 获取可用资源
+            List<Classroom> availableClassrooms = getAvailableClassrooms(request.getClassroomIds());
+            List<TimeSlot> availableTimeSlots = getAvailableTimeSlots(request.getTimeSlotIds());
+
+            // 4. 执行排课算法
+            List<CourseSchedule> schedules = new ArrayList<>();
             List<ConflictInfo> conflicts = new ArrayList<>();
             
             for (Course course : courses) {
-                ScheduleResult courseResult = scheduleCourse(course, classrooms, timeSlots, 
-                                                           existingSchedules, newSchedules, request);
-                if (courseResult.getSchedules() != null) {
-                    newSchedules.addAll(courseResult.getSchedules());
-                    existingSchedules.addAll(courseResult.getSchedules());
-                }
-                if (courseResult.getConflicts() != null) {
-                    conflicts.addAll(courseResult.getConflicts());
+                ScheduleResult courseResult = scheduleCourse(course, availableClassrooms, 
+                                                           availableTimeSlots, request);
+                if (courseResult.isSuccess() && courseResult.getSchedules() != null) {
+                    schedules.addAll(courseResult.getSchedules());
+                } else {
+                    conflicts.addAll(courseResult.getConflicts() != null ? 
+                                   courseResult.getConflicts() : new ArrayList<>());
                 }
             }
 
-            // 4. 保存排课结果
-            if (!newSchedules.isEmpty()) {
-                courseScheduleRepository.saveAll(newSchedules);
+            // 5. 保存排课结果
+            if (!schedules.isEmpty()) {
+                schedules = courseScheduleRepository.saveAll(schedules);
             }
 
-            // 5. 生成统计信息
-            ScheduleStatistics statistics = generateStatistics(courses, newSchedules, conflicts);
+            // 6. 生成统计信息
+            ScheduleStatistics statistics = generateStatistics(courses, schedules, conflicts);
 
-            // 6. 返回结果
-            ScheduleResult result = new ScheduleResult(true, "自动排课完成");
-            result.setSchedules(newSchedules);
+            // 7. 构建结果
+            ScheduleResult result = new ScheduleResult(true, "排课完成");
+            result.setSchedules(schedules);
             result.setConflicts(conflicts);
             result.setStatistics(statistics);
-
-            logger.info("自动排课完成: 成功排课{}门，冲突{}个", 
-                       newSchedules.size(), conflicts.size());
 
             return result;
 
         } catch (Exception e) {
-            logger.error("自动排课失败: {}", e.getMessage(), e);
-            return new ScheduleResult(false, "自动排课失败: " + e.getMessage());
+            return new ScheduleResult(false, "排课失败：" + e.getMessage());
         }
     }
 
@@ -105,26 +101,37 @@ public class AutoScheduleServiceImpl implements AutoScheduleService {
         List<ConflictInfo> conflicts = new ArrayList<>();
 
         for (CourseSchedule existing : existingSchedules) {
-            if (schedule.conflictsWith(existing)) {
-                ConflictInfo conflict = new ConflictInfo();
-                
-                // 判断冲突类型
-                if (schedule.getTeacherId().equals(existing.getTeacherId())) {
-                    conflict.setType("teacher");
-                    conflict.setDescription("教师时间冲突");
-                } else if (schedule.getClassroomId().equals(existing.getClassroomId())) {
-                    conflict.setType("classroom");
-                    conflict.setDescription("教室时间冲突");
-                } else {
-                    conflict.setType("student");
-                    conflict.setDescription("学生时间冲突");
+            // 检查时间冲突
+            if (hasTimeConflict(schedule, existing)) {
+                // 检查教师冲突
+                if (Objects.equals(schedule.getTeacherId(), existing.getTeacherId())) {
+                    ConflictInfo conflict = new ConflictInfo("teacher", 
+                        "教师时间冲突：" + schedule.getTeacherId());
+                    conflict.setCourseId1(schedule.getCourseId());
+                    conflict.setCourseId2(existing.getCourseId());
+                    conflict.setSuggestion("调整时间或更换教师");
+                    conflicts.add(conflict);
                 }
-                
-                conflict.setCourseId1(schedule.getCourseId());
-                conflict.setCourseId2(existing.getCourseId());
-                conflict.setSuggestion("建议调整时间或教室");
-                
-                conflicts.add(conflict);
+
+                // 检查教室冲突
+                if (Objects.equals(schedule.getClassroomId(), existing.getClassroomId())) {
+                    ConflictInfo conflict = new ConflictInfo("classroom", 
+                        "教室时间冲突：" + schedule.getClassroomId());
+                    conflict.setCourseId1(schedule.getCourseId());
+                    conflict.setCourseId2(existing.getCourseId());
+                    conflict.setSuggestion("调整时间或更换教室");
+                    conflicts.add(conflict);
+                }
+
+                // 检查学生冲突（简化处理）
+                if (hasStudentConflict(schedule, existing)) {
+                    ConflictInfo conflict = new ConflictInfo("student", 
+                        "学生时间冲突");
+                    conflict.setCourseId1(schedule.getCourseId());
+                    conflict.setCourseId2(existing.getCourseId());
+                    conflict.setSuggestion("调整时间");
+                    conflicts.add(conflict);
+                }
             }
         }
 
@@ -137,48 +144,44 @@ public class AutoScheduleServiceImpl implements AutoScheduleService {
         
         for (int i = 0; i < schedules.size(); i++) {
             for (int j = i + 1; j < schedules.size(); j++) {
-                CourseSchedule schedule1 = schedules.get(i);
-                CourseSchedule schedule2 = schedules.get(j);
-                
-                if (schedule1.conflictsWith(schedule2)) {
-                    ConflictInfo conflict = new ConflictInfo();
-                    conflict.setType("schedule");
-                    conflict.setDescription("课程安排冲突");
-                    conflict.setCourseId1(schedule1.getCourseId());
-                    conflict.setCourseId2(schedule2.getCourseId());
-                    allConflicts.add(conflict);
-                }
+                List<ConflictInfo> conflicts = checkConflicts(schedules.get(i), 
+                                                            Arrays.asList(schedules.get(j)));
+                allConflicts.addAll(conflicts);
             }
         }
 
-        ScheduleResult result = new ScheduleResult(allConflicts.isEmpty(), 
-                                                 allConflicts.isEmpty() ? "验证通过" : "发现冲突");
+        boolean isValid = allConflicts.isEmpty();
+        String message = isValid ? "排课方案验证通过" : "发现 " + allConflicts.size() + " 个冲突";
+        
+        ScheduleResult result = new ScheduleResult(isValid, message);
         result.setConflicts(allConflicts);
+        
         return result;
     }
 
     @Override
     public ScheduleResult optimizeSchedule(List<CourseSchedule> schedules, ScheduleRequest request) {
-        // 简化的优化实现
-        logger.info("开始优化排课方案，共{}个安排", schedules.size());
+        // 简化的优化算法：尝试解决冲突
+        List<CourseSchedule> optimizedSchedules = new ArrayList<>(schedules);
+        List<ConflictInfo> conflicts = validateSchedule(schedules).getConflicts();
         
-        // 按优先级重新排序
-        schedules.sort((s1, s2) -> {
-            // 优先级：时间段早的优先，教室容量大的优先
-            int timeCompare = Integer.compare(s1.getPeriodNumber(), s2.getPeriodNumber());
-            if (timeCompare != 0) return timeCompare;
-            
-            return Integer.compare(s1.getDayOfWeek(), s2.getDayOfWeek());
-        });
-
+        // 对于每个冲突，尝试重新安排
+        for (ConflictInfo conflict : conflicts) {
+            // 这里可以实现更复杂的优化算法
+            // 目前只是简单标记
+        }
+        
         ScheduleResult result = new ScheduleResult(true, "优化完成");
-        result.setSchedules(schedules);
+        result.setSchedules(optimizedSchedules);
+        result.setConflicts(conflicts);
+        
         return result;
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<TimeSlot> getAvailableTimeSlots(Long courseId, Long classroomId, Long teacherId, 
-                                               String semester, Integer academicYear) {
+                                              String semester, Integer academicYear) {
         // 获取所有时间段
         List<TimeSlot> allTimeSlots = timeSlotRepository.findAll();
         
@@ -193,36 +196,37 @@ public class AutoScheduleServiceImpl implements AutoScheduleService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Classroom> getRecommendedClassrooms(Course course, TimeSlot timeSlot, Integer studentCount) {
+        // 获取所有教室
         List<Classroom> allClassrooms = classroomRepository.findAll();
         
+        // 根据容量和类型推荐教室
         return allClassrooms.stream()
-            .filter(classroom -> classroom.hasEnoughCapacity(studentCount))
-            .filter(classroom -> classroom.isSuitableForCourseType(course.getCourseType()))
-            .sorted((c1, c2) -> Integer.compare(c1.getCapacity(), c2.getCapacity()))
+            .filter(classroom -> classroom.getCapacity() >= studentCount)
+            .filter(classroom -> isClassroomSuitable(classroom, course))
+            .sorted(Comparator.comparing(Classroom::getCapacity))
             .collect(Collectors.toList());
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Map<String, Object> generateScheduleReport(String semester, Integer academicYear) {
         Map<String, Object> report = new HashMap<>();
         
+        // 获取排课统计
+        ScheduleStatistics statistics = getScheduleStatistics(semester, academicYear);
+        report.put("statistics", statistics);
+        
+        // 获取所有课程安排
         List<CourseSchedule> schedules = courseScheduleRepository
             .findBySemesterAndAcademicYear(semester, academicYear);
+        report.put("schedules", schedules);
         
-        report.put("totalSchedules", schedules.size());
+        // 生成报告时间
+        report.put("generatedAt", LocalDateTime.now());
         report.put("semester", semester);
         report.put("academicYear", academicYear);
-        
-        // 按星期统计
-        Map<Integer, Long> schedulesByDay = schedules.stream()
-            .collect(Collectors.groupingBy(CourseSchedule::getDayOfWeek, Collectors.counting()));
-        report.put("schedulesByDay", schedulesByDay);
-        
-        // 按教室统计
-        Map<Long, Long> schedulesByClassroom = schedules.stream()
-            .collect(Collectors.groupingBy(CourseSchedule::getClassroomId, Collectors.counting()));
-        report.put("schedulesByClassroom", schedulesByClassroom);
         
         return report;
     }
@@ -230,22 +234,22 @@ public class AutoScheduleServiceImpl implements AutoScheduleService {
     @Override
     public ScheduleResult batchImportSchedule(List<CourseSchedule> schedules) {
         try {
-            // 验证导入数据
+            // 验证排课方案
             ScheduleResult validation = validateSchedule(schedules);
             if (!validation.isSuccess()) {
                 return validation;
             }
             
-            // 保存数据
-            courseScheduleRepository.saveAll(schedules);
+            // 保存排课
+            List<CourseSchedule> savedSchedules = courseScheduleRepository.saveAll(schedules);
             
             ScheduleResult result = new ScheduleResult(true, "批量导入成功");
-            result.setSchedules(schedules);
+            result.setSchedules(savedSchedules);
+            
             return result;
             
         } catch (Exception e) {
-            logger.error("批量导入排课失败: {}", e.getMessage(), e);
-            return new ScheduleResult(false, "批量导入失败: " + e.getMessage());
+            return new ScheduleResult(false, "批量导入失败：" + e.getMessage());
         }
     }
 
@@ -253,284 +257,256 @@ public class AutoScheduleServiceImpl implements AutoScheduleService {
     public boolean clearSchedule(String semester, Integer academicYear) {
         try {
             courseScheduleRepository.deleteBySemesterAndAcademicYear(semester, academicYear);
-            logger.info("清空排课成功: 学期={}, 学年={}", semester, academicYear);
             return true;
         } catch (Exception e) {
-            logger.error("清空排课失败: {}", e.getMessage(), e);
             return false;
         }
     }
 
     @Override
     public ScheduleResult copySchedule(String sourceSemester, Integer sourceAcademicYear, 
-                                      String targetSemester, Integer targetAcademicYear) {
+                                     String targetSemester, Integer targetAcademicYear) {
         try {
+            // 获取源学期的排课
             List<CourseSchedule> sourceSchedules = courseScheduleRepository
                 .findBySemesterAndAcademicYear(sourceSemester, sourceAcademicYear);
             
-            List<CourseSchedule> newSchedules = sourceSchedules.stream()
-                .map(this::cloneSchedule)
-                .peek(schedule -> {
-                    schedule.setSemester(targetSemester);
-                    schedule.setAcademicYear(targetAcademicYear);
-                    schedule.setId(null); // 新记录
-                })
+            if (sourceSchedules.isEmpty()) {
+                return new ScheduleResult(false, "源学期没有排课数据");
+            }
+            
+            // 复制到目标学期
+            List<CourseSchedule> targetSchedules = sourceSchedules.stream()
+                .map(schedule -> copyScheduleToNewSemester(schedule, targetSemester, targetAcademicYear))
                 .collect(Collectors.toList());
             
-            courseScheduleRepository.saveAll(newSchedules);
+            // 保存复制的排课
+            targetSchedules = courseScheduleRepository.saveAll(targetSchedules);
             
-            ScheduleResult result = new ScheduleResult(true, "复制排课成功");
-            result.setSchedules(newSchedules);
+            ScheduleResult result = new ScheduleResult(true, "排课复制成功");
+            result.setSchedules(targetSchedules);
+            
             return result;
             
         } catch (Exception e) {
-            logger.error("复制排课失败: {}", e.getMessage(), e);
-            return new ScheduleResult(false, "复制排课失败: " + e.getMessage());
+            return new ScheduleResult(false, "排课复制失败：" + e.getMessage());
         }
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ScheduleStatistics getScheduleStatistics(String semester, Integer academicYear) {
+        ScheduleStatistics statistics = new ScheduleStatistics();
+
+        // 获取所有课程和排课
+        List<Course> allCourses = courseRepository.findAll(); // 简化：获取所有课程
         List<CourseSchedule> schedules = courseScheduleRepository
             .findBySemesterAndAcademicYear(semester, academicYear);
-        
-        ScheduleStatistics statistics = new ScheduleStatistics();
-        statistics.setTotalCourses(schedules.size());
+
+        statistics.setTotalCourses(allCourses.size());
         statistics.setScheduledCourses(schedules.size());
-        statistics.setUnscheduledCourses(0);
-        
-        // 计算冲突
-        List<ConflictInfo> conflicts = new ArrayList<>();
-        for (int i = 0; i < schedules.size(); i++) {
-            for (int j = i + 1; j < schedules.size(); j++) {
-                if (schedules.get(i).conflictsWith(schedules.get(j))) {
-                    ConflictInfo conflict = new ConflictInfo();
-                    conflicts.add(conflict);
-                }
-            }
+        statistics.setUnscheduledCourses(Math.max(0, allCourses.size() - schedules.size()));
+
+        // 计算成功率
+        if (allCourses.size() > 0) {
+            statistics.setSuccessRate((double) schedules.size() / allCourses.size() * 100);
         }
-        
+
+        // 检查冲突
+        ScheduleResult validation = validateSchedule(schedules);
+        List<ConflictInfo> conflicts = validation.getConflicts();
         statistics.setTotalConflicts(conflicts.size());
-        statistics.setSuccessRate(schedules.isEmpty() ? 0.0 : 
-                                 (double)(schedules.size() - conflicts.size()) / schedules.size() * 100);
-        
+
+        // 统计各类冲突
+        long teacherConflicts = conflicts.stream().filter(c -> "teacher".equals(c.getType())).count();
+        long classroomConflicts = conflicts.stream().filter(c -> "classroom".equals(c.getType())).count();
+        long studentConflicts = conflicts.stream().filter(c -> "student".equals(c.getType())).count();
+
+        statistics.setTeacherConflicts((int) teacherConflicts);
+        statistics.setClassroomConflicts((int) classroomConflicts);
+        statistics.setStudentConflicts((int) studentConflicts);
+
         return statistics;
     }
 
     @Override
+    @Transactional(readOnly = true)
     public boolean hasTeacherConflict(Long teacherId, TimeSlot timeSlot, String semester, Integer academicYear) {
-        List<CourseSchedule> teacherSchedules = courseScheduleRepository
+        List<CourseSchedule> existingSchedules = courseScheduleRepository
             .findByTeacherIdAndSemesterAndAcademicYear(teacherId, semester, academicYear);
-        
-        return teacherSchedules.stream()
-            .anyMatch(schedule -> schedule.getDayOfWeek().equals(timeSlot.getDayOfWeek()) 
-                                && schedule.getPeriodNumber().equals(timeSlot.getPeriodNumber()));
+
+        return existingSchedules.stream()
+            .anyMatch(schedule -> hasTimeSlotConflict(schedule, timeSlot));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public boolean hasClassroomConflict(Long classroomId, TimeSlot timeSlot, String semester, Integer academicYear) {
-        List<CourseSchedule> classroomSchedules = courseScheduleRepository
+        List<CourseSchedule> existingSchedules = courseScheduleRepository
             .findByClassroomIdAndSemesterAndAcademicYear(classroomId, semester, academicYear);
-        
-        return classroomSchedules.stream()
-            .anyMatch(schedule -> schedule.getDayOfWeek().equals(timeSlot.getDayOfWeek()) 
-                                && schedule.getPeriodNumber().equals(timeSlot.getPeriodNumber()));
+
+        return existingSchedules.stream()
+            .anyMatch(schedule -> hasTimeSlotConflict(schedule, timeSlot));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public boolean hasStudentConflict(List<String> classList, TimeSlot timeSlot, String semester, Integer academicYear) {
-        // 简化实现，实际应该查询选课记录
+        // 简化实现：检查是否有时间冲突
         List<CourseSchedule> allSchedules = courseScheduleRepository
             .findBySemesterAndAcademicYear(semester, academicYear);
-        
+
+        // 检查时间段冲突
         return allSchedules.stream()
-            .filter(schedule -> schedule.getDayOfWeek().equals(timeSlot.getDayOfWeek()) 
-                              && schedule.getPeriodNumber().equals(timeSlot.getPeriodNumber()))
-            .anyMatch(schedule -> hasClassListOverlap(classList, schedule.getClassArray()));
+            .anyMatch(schedule -> hasTimeSlotConflict(schedule, timeSlot));
     }
 
-    // ================================
-    // 私有辅助方法
-    // ================================
+    // ==================== 私有辅助方法 ====================
 
     private boolean validateRequest(ScheduleRequest request) {
-        return request.getSemester() != null && 
-               request.getAcademicYear() != null && 
-               request.getCourseIds() != null && 
+        return request != null &&
+               request.getSemester() != null &&
+               request.getAcademicYear() != null &&
+               request.getCourseIds() != null &&
                !request.getCourseIds().isEmpty();
     }
 
-    private List<Course> getCourses(List<Long> courseIds) {
-        if (courseIds == null || courseIds.isEmpty()) {
-            return new ArrayList<>();
-        }
-        return courseIds.stream()
-            .map(courseService::findById)
-            .filter(Optional::isPresent)
-            .map(Optional::get)
-            .collect(Collectors.toList());
+    private List<Course> getCoursesByIds(List<Long> courseIds) {
+        return courseRepository.findAllById(courseIds);
     }
 
-    private List<Classroom> getClassrooms(List<Long> classroomIds) {
+    private List<Classroom> getAvailableClassrooms(List<Long> classroomIds) {
         if (classroomIds == null || classroomIds.isEmpty()) {
             return classroomRepository.findAll();
         }
         return classroomRepository.findAllById(classroomIds);
     }
 
-    private List<TimeSlot> getTimeSlots(List<Long> timeSlotIds) {
+    private List<TimeSlot> getAvailableTimeSlots(List<Long> timeSlotIds) {
         if (timeSlotIds == null || timeSlotIds.isEmpty()) {
             return timeSlotRepository.findAll();
         }
         return timeSlotRepository.findAllById(timeSlotIds);
     }
 
-    private List<CourseSchedule> getExistingSchedules(String semester, Integer academicYear) {
-        return courseScheduleRepository.findBySemesterAndAcademicYear(semester, academicYear);
-    }
+    private ScheduleResult scheduleCourse(Course course, List<Classroom> availableClassrooms,
+                                        List<TimeSlot> availableTimeSlots, ScheduleRequest request) {
+        // 简化的排课算法
+        for (TimeSlot timeSlot : availableTimeSlots) {
+            for (Classroom classroom : availableClassrooms) {
+                // 检查是否适合
+                if (isClassroomSuitable(classroom, course)) {
+                    // 创建课程安排
+                    CourseSchedule schedule = new CourseSchedule();
+                    schedule.setCourseId(course.getId());
+                    schedule.setClassroomId(classroom.getId());
+                    schedule.setTimeSlotId(timeSlot.getId());
+                    schedule.setSemester(request.getSemester());
+                    schedule.setAcademicYear(request.getAcademicYear());
+                    schedule.setStartWeek(request.getStartWeek() != null ? request.getStartWeek() : 1);
+                    schedule.setEndWeek(request.getEndWeek() != null ? request.getEndWeek() : 18);
 
-    private ScheduleResult scheduleCourse(Course course, List<Classroom> classrooms, 
-                                        List<TimeSlot> timeSlots, List<CourseSchedule> existingSchedules,
-                                        List<CourseSchedule> newSchedules, ScheduleRequest request) {
-        
-        // 简化的排课逻辑：为课程找到第一个可用的时间和教室
-        for (TimeSlot timeSlot : timeSlots) {
-            for (Classroom classroom : classrooms) {
-                if (isSlotAvailable(course, classroom, timeSlot, existingSchedules, newSchedules)) {
-                    CourseSchedule schedule = createSchedule(course, classroom, timeSlot, request);
-                    
-                    ScheduleResult result = new ScheduleResult(true, "排课成功");
-                    result.setSchedules(Arrays.asList(schedule));
-                    return result;
+                    // 检查冲突
+                    List<CourseSchedule> existingSchedules = courseScheduleRepository
+                        .findBySemesterAndAcademicYear(request.getSemester(), request.getAcademicYear());
+
+                    List<ConflictInfo> conflicts = checkConflicts(schedule, existingSchedules);
+                    if (conflicts.isEmpty()) {
+                        ScheduleResult result = new ScheduleResult(true, "排课成功");
+                        result.setSchedules(Arrays.asList(schedule));
+                        return result;
+                    }
                 }
             }
         }
-        
-        // 没有找到合适的时间段
-        ScheduleResult result = new ScheduleResult(false, "无法为课程找到合适的时间和教室");
-        ConflictInfo conflict = new ConflictInfo("schedule", "无可用时间段");
+
+        // 没有找到合适的安排
+        ConflictInfo conflict = new ConflictInfo("resource", "没有找到合适的时间和教室");
         conflict.setCourseId1(course.getId());
+        conflict.setSuggestion("增加可用时间段或教室");
+
+        ScheduleResult result = new ScheduleResult(false, "排课失败");
         result.setConflicts(Arrays.asList(conflict));
         return result;
     }
 
-    private boolean isSlotAvailable(Course course, Classroom classroom, TimeSlot timeSlot,
-                                   List<CourseSchedule> existingSchedules, List<CourseSchedule> newSchedules) {
-        
-        // 检查教室容量
-        if (!classroom.hasEnoughCapacity(course.getMaxStudents())) {
-            return false;
-        }
-        
-        // 检查教室类型适配
-        if (!classroom.isSuitableForCourseType(course.getCourseType())) {
-            return false;
-        }
-        
-        // 检查时间冲突
-        List<CourseSchedule> allSchedules = new ArrayList<>(existingSchedules);
-        allSchedules.addAll(newSchedules);
-        
-        for (CourseSchedule schedule : allSchedules) {
-            if (schedule.getDayOfWeek().equals(timeSlot.getDayOfWeek()) && 
-                schedule.getPeriodNumber().equals(timeSlot.getPeriodNumber())) {
-                
-                // 检查教师冲突
-                if (schedule.getTeacherId().equals(course.getTeacherId())) {
-                    return false;
-                }
-                
-                // 检查教室冲突
-                if (schedule.getClassroomId().equals(classroom.getId())) {
-                    return false;
-                }
-            }
-        }
-        
-        return true;
+    private boolean hasTimeConflict(CourseSchedule schedule1, CourseSchedule schedule2) {
+        // 简化实现：检查时间段ID是否相同
+        return Objects.equals(schedule1.getTimeSlotId(), schedule2.getTimeSlotId()) &&
+               Objects.equals(schedule1.getDayOfWeek(), schedule2.getDayOfWeek()) &&
+               hasWeekOverlap(schedule1, schedule2);
     }
 
-    private CourseSchedule createSchedule(Course course, Classroom classroom, TimeSlot timeSlot, ScheduleRequest request) {
-        CourseSchedule schedule = new CourseSchedule();
-        schedule.setCourseId(course.getId());
-        schedule.setClassroomId(classroom.getId());
-        schedule.setTeacherId(course.getTeacherId());
-        schedule.setTimeSlotId(timeSlot.getId());
-        schedule.setDayOfWeek(timeSlot.getDayOfWeek());
-        schedule.setPeriodNumber(timeSlot.getPeriodNumber());
-        schedule.setSemester(request.getSemester());
-        schedule.setAcademicYear(request.getAcademicYear());
-        schedule.setStartWeek(request.getStartWeek() != null ? request.getStartWeek() : 1);
-        schedule.setEndWeek(request.getEndWeek() != null ? request.getEndWeek() : 18);
-        schedule.setWeekType(request.getWeekType() != null ? request.getWeekType() : "all");
-        schedule.setStudentCount(course.getEnrolledStudents());
-        schedule.setStatus(1);
-        schedule.setDeleted(0);
-        return schedule;
+    private boolean hasWeekOverlap(CourseSchedule schedule1, CourseSchedule schedule2) {
+        int start1 = schedule1.getStartWeek() != null ? schedule1.getStartWeek() : 1;
+        int end1 = schedule1.getEndWeek() != null ? schedule1.getEndWeek() : 18;
+        int start2 = schedule2.getStartWeek() != null ? schedule2.getStartWeek() : 1;
+        int end2 = schedule2.getEndWeek() != null ? schedule2.getEndWeek() : 18;
+
+        return !(end1 < start2 || end2 < start1);
     }
 
-    private boolean isTimeSlotAvailable(TimeSlot timeSlot, Long classroomId, Long teacherId, 
-                                       List<CourseSchedule> existingSchedules) {
+    private boolean hasStudentConflict(CourseSchedule schedule1, CourseSchedule schedule2) {
+        // 简化实现：假设如果课程不同就可能有学生冲突
+        return !Objects.equals(schedule1.getCourseId(), schedule2.getCourseId());
+    }
+
+    private boolean isTimeSlotAvailable(TimeSlot timeSlot, Long classroomId, Long teacherId,
+                                      List<CourseSchedule> existingSchedules) {
         return existingSchedules.stream()
-            .noneMatch(schedule -> 
-                schedule.getDayOfWeek().equals(timeSlot.getDayOfWeek()) && 
-                schedule.getPeriodNumber().equals(timeSlot.getPeriodNumber()) &&
-                (schedule.getClassroomId().equals(classroomId) || schedule.getTeacherId().equals(teacherId))
-            );
+            .noneMatch(schedule ->
+                Objects.equals(schedule.getTimeSlotId(), timeSlot.getId()) &&
+                (Objects.equals(schedule.getClassroomId(), classroomId) ||
+                 Objects.equals(schedule.getTeacherId(), teacherId)));
     }
 
-    private ScheduleStatistics generateStatistics(List<Course> courses, List<CourseSchedule> schedules, 
-                                                 List<ConflictInfo> conflicts) {
+    private boolean isClassroomSuitable(Classroom classroom, Course course) {
+        // 简化实现：检查容量是否足够
+        return classroom.getCapacity() >= 30; // 假设最少需要30人容量
+    }
+
+    private boolean hasTimeSlotConflict(CourseSchedule schedule, TimeSlot timeSlot) {
+        return Objects.equals(schedule.getTimeSlotId(), timeSlot.getId());
+    }
+
+    private CourseSchedule copyScheduleToNewSemester(CourseSchedule original, String targetSemester, Integer targetAcademicYear) {
+        CourseSchedule copy = new CourseSchedule();
+        copy.setCourseId(original.getCourseId());
+        copy.setClassroomId(original.getClassroomId());
+        copy.setTimeSlotId(original.getTimeSlotId());
+        copy.setTeacherId(original.getTeacherId());
+        copy.setSemester(targetSemester);
+        copy.setAcademicYear(targetAcademicYear);
+        copy.setStartWeek(original.getStartWeek());
+        copy.setEndWeek(original.getEndWeek());
+        copy.setDayOfWeek(original.getDayOfWeek());
+        copy.setWeekType(original.getWeekType());
+        return copy;
+    }
+
+    private ScheduleStatistics generateStatistics(List<Course> courses, List<CourseSchedule> schedules,
+                                                List<ConflictInfo> conflicts) {
         ScheduleStatistics statistics = new ScheduleStatistics();
+
         statistics.setTotalCourses(courses.size());
         statistics.setScheduledCourses(schedules.size());
         statistics.setUnscheduledCourses(courses.size() - schedules.size());
         statistics.setTotalConflicts(conflicts.size());
-        
-        // 统计冲突类型
+
+        // 统计各类冲突
         long teacherConflicts = conflicts.stream().filter(c -> "teacher".equals(c.getType())).count();
         long classroomConflicts = conflicts.stream().filter(c -> "classroom".equals(c.getType())).count();
         long studentConflicts = conflicts.stream().filter(c -> "student".equals(c.getType())).count();
-        
+
         statistics.setTeacherConflicts((int) teacherConflicts);
         statistics.setClassroomConflicts((int) classroomConflicts);
         statistics.setStudentConflicts((int) studentConflicts);
-        
-        statistics.setSuccessRate(courses.isEmpty() ? 0.0 : 
-                                 (double) schedules.size() / courses.size() * 100);
-        
+
+        // 计算成功率
+        if (courses.size() > 0) {
+            statistics.setSuccessRate((double) schedules.size() / courses.size() * 100);
+        }
+
         return statistics;
-    }
-
-    private CourseSchedule cloneSchedule(CourseSchedule original) {
-        CourseSchedule clone = new CourseSchedule();
-        clone.setCourseId(original.getCourseId());
-        clone.setClassroomId(original.getClassroomId());
-        clone.setTeacherId(original.getTeacherId());
-        clone.setTimeSlotId(original.getTimeSlotId());
-        clone.setDayOfWeek(original.getDayOfWeek());
-        clone.setPeriodNumber(original.getPeriodNumber());
-        clone.setStartWeek(original.getStartWeek());
-        clone.setEndWeek(original.getEndWeek());
-        clone.setWeekType(original.getWeekType());
-        if (original.getClassList() != null) {
-            clone.setClassList(original.getClassList());
-        }
-        clone.setStudentCount(original.getStudentCount());
-        clone.setScheduleType(original.getScheduleType());
-        clone.setStatus(original.getStatus());
-        clone.setDeleted(original.getDeleted());
-        return clone;
-    }
-
-    private boolean hasClassListOverlap(List<String> classList1, String[] classList2) {
-        if (classList1 == null || classList2 == null) {
-            return false;
-        }
-        
-        Set<String> set1 = new HashSet<>(classList1);
-        Set<String> set2 = new HashSet<>(Arrays.asList(classList2));
-        
-        return set1.stream().anyMatch(set2::contains);
     }
 }

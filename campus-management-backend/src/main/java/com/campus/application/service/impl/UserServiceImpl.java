@@ -129,8 +129,8 @@ public class UserServiceImpl implements UserService {
     public boolean hasMenuPermission(Long userId, String menuPath) {
         List<String> userRoles = getUserRoles(userId);
 
-        // ADMIN角色拥有所有权限
-        if (userRoles.contains("ADMIN")) {
+        // SUPER_ADMIN和ADMIN角色拥有所有权限
+        if (userRoles.contains("SUPER_ADMIN") || userRoles.contains("ADMIN")) {
             return true;
         }
 
@@ -149,28 +149,29 @@ public class UserServiceImpl implements UserService {
             return true;
         }
 
-        // 系统管理页面 - 只有ADMIN和SYSTEM_ADMIN可以访问
+        // 系统管理页面 - 只有SUPER_ADMIN、ADMIN和SYSTEM_ADMIN可以访问
         if (menuPath.startsWith("/admin/users") ||
             menuPath.startsWith("/admin/roles") ||
             menuPath.startsWith("/admin/permissions") ||
             menuPath.startsWith("/admin/settings")) {
-            return userRoles.contains("ADMIN") || userRoles.contains("SYSTEM_ADMIN");
+            return userRoles.contains("SUPER_ADMIN") || userRoles.contains("ADMIN") || userRoles.contains("SYSTEM_ADMIN");
         }
 
-        // 教务管理页面 - ADMIN、ACADEMIC_ADMIN、TEACHER可以访问
+        // 教务管理页面 - SUPER_ADMIN、ADMIN、ACADEMIC_ADMIN、TEACHER可以访问
         if (menuPath.startsWith("/admin/academic/") ||
             menuPath.startsWith("/admin/students")) {
-            return userRoles.contains("ADMIN") ||
+            return userRoles.contains("SUPER_ADMIN") ||
+                   userRoles.contains("ADMIN") ||
                    userRoles.contains("ACADEMIC_ADMIN") ||
                    userRoles.contains("TEACHER");
         }
 
-        // 财务管理页面 - ADMIN、FINANCE_ADMIN可以访问
+        // 财务管理页面 - SUPER_ADMIN、ADMIN、FINANCE_ADMIN可以访问
         if (menuPath.startsWith("/admin/fee-items") ||
             menuPath.startsWith("/admin/payments") ||
             menuPath.startsWith("/admin/payment-records") ||
             menuPath.startsWith("/admin/reports")) {
-            return userRoles.contains("ADMIN") || userRoles.contains("FINANCE_ADMIN");
+            return userRoles.contains("SUPER_ADMIN") || userRoles.contains("ADMIN") || userRoles.contains("FINANCE_ADMIN");
         }
 
         // 默认拒绝访问

@@ -607,4 +607,68 @@ public class Attendance extends BaseEntity {
     public void setRecorder(User recorder) {
         this.recorder = recorder;
     }
+
+    // ================================
+    // 兼容性方法 - 为了支持 AttendanceApiController
+    // ================================
+
+    /**
+     * 获取考勤时间（兼容性方法）
+     */
+    public java.time.LocalTime getAttendanceTime() {
+        return checkInTime != null ? checkInTime.toLocalTime() : null;
+    }
+
+    /**
+     * 设置考勤时间（兼容性方法）
+     */
+    public void setAttendanceTime(java.time.LocalTime attendanceTime) {
+        if (attendanceTime != null) {
+            LocalDate date = attendanceDate != null ? attendanceDate : LocalDate.now();
+            this.checkInTime = LocalDateTime.of(date, attendanceTime);
+        }
+    }
+
+    /**
+     * 获取位置（兼容性方法）
+     */
+    public String getLocation() {
+        return checkInLocation;
+    }
+
+    /**
+     * 设置位置（兼容性方法）
+     */
+    public void setLocation(String location) {
+        this.checkInLocation = location;
+    }
+
+    /**
+     * 获取记录方式（兼容性方法）
+     */
+    public String getRecordMethod() {
+        return checkInMethod;
+    }
+
+    /**
+     * 设置记录方式（兼容性方法）
+     */
+    public void setRecordMethod(String recordMethod) {
+        this.checkInMethod = recordMethod;
+    }
+
+    /**
+     * 获取证明附件（兼容性方法）
+     */
+    public String getProofAttachment() {
+        // 暂时返回 null，可以后续扩展为独立的附件字段
+        return null;
+    }
+
+    /**
+     * 设置证明附件（兼容性方法）
+     */
+    public void setProofAttachment(String proofAttachment) {
+        // 暂时不做处理，可以后续扩展为独立的附件字段
+    }
 }

@@ -167,7 +167,7 @@ public interface ParentStudentRelationRepository extends BaseRepository<ParentSt
     /**
      * 根据学生统计关系数量
      */
-    @Query("SELECT s.studentNumber, COUNT(psr) FROM ParentStudentRelation psr LEFT JOIN psr.student s WHERE psr.deleted = 0 GROUP BY psr.studentId, s.studentNumber ORDER BY COUNT(psr) DESC")
+    @Query("SELECT s.studentNo, COUNT(psr) FROM ParentStudentRelation psr LEFT JOIN psr.student s WHERE psr.deleted = 0 GROUP BY psr.studentId, s.studentNo ORDER BY COUNT(psr) DESC")
     List<Object[]> countByStudent();
 
     /**

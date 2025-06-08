@@ -193,12 +193,14 @@ public interface CourseScheduleRepository extends BaseRepository<CourseSchedule>
     /**
      * 根据学期和学年删除课程安排
      */
+    @Modifying
     @Query("DELETE FROM CourseSchedule cs WHERE cs.semester = :semester AND cs.academicYear = :academicYear")
     void deleteBySemesterAndAcademicYear(@Param("semester") String semester, @Param("academicYear") Integer academicYear);
 
     /**
      * 软删除：根据学期和学年标记删除
      */
+    @Modifying
     @Query("UPDATE CourseSchedule cs SET cs.deleted = 1 WHERE cs.semester = :semester AND cs.academicYear = :academicYear")
     int softDeleteBySemesterAndAcademicYear(@Param("semester") String semester, @Param("academicYear") Integer academicYear);
 
@@ -283,49 +285,45 @@ public interface CourseScheduleRepository extends BaseRepository<CourseSchedule>
     /**
      * 根据课程ID查找课程安排（兼容性方法）
      */
-    @Query("SELECT cs FROM CourseSchedule cs WHERE cs.courseId = :courseId AND cs.deleted = 0")
-    List<CourseSchedule> findByCourseIdAndDeleted(@Param("courseId") Long courseId, Integer deleted);
+    @Query("SELECT cs FROM CourseSchedule cs WHERE cs.courseId = :courseId AND cs.deleted = :deleted")
+    List<CourseSchedule> findByCourseIdAndDeleted(@Param("courseId") Long courseId, @Param("deleted") Integer deleted);
 
     /**
      * 根据教师ID查找课程安排（兼容性方法）
      */
-    @Query("SELECT cs FROM CourseSchedule cs WHERE cs.teacherId = :teacherId AND cs.deleted = 0")
-    List<CourseSchedule> findByTeacherIdAndDeleted(@Param("teacherId") Long teacherId, Integer deleted);
+    @Query("SELECT cs FROM CourseSchedule cs WHERE cs.teacherId = :teacherId AND cs.deleted = :deleted")
+    List<CourseSchedule> findByTeacherIdAndDeleted(@Param("teacherId") Long teacherId, @Param("deleted") Integer deleted);
 
     /**
      * 根据班级ID查找课程安排（兼容性方法）
      */
-    @Query("SELECT cs FROM CourseSchedule cs WHERE cs.classId = :classId AND cs.deleted = 0")
-    List<CourseSchedule> findByClassIdAndDeleted(@Param("classId") Long classId, Integer deleted);
+    @Query("SELECT cs FROM CourseSchedule cs WHERE cs.classList LIKE CONCAT('%', :className, '%') AND cs.deleted = :deleted")
+    List<CourseSchedule> findByClassIdAndDeleted(@Param("className") String className, @Param("deleted") Integer deleted);
 
     /**
      * 根据学期查找课程安排（兼容性方法）
      */
-    @Query("SELECT cs FROM CourseSchedule cs WHERE cs.semester = :semester AND cs.deleted = 0")
-    List<CourseSchedule> findBySemesterAndDeleted(@Param("semester") String semester, Integer deleted);
+    @Query("SELECT cs FROM CourseSchedule cs WHERE cs.semester = :semester AND cs.deleted = :deleted")
+    List<CourseSchedule> findBySemesterAndDeleted(@Param("semester") String semester, @Param("deleted") Integer deleted);
 
     /**
      * 根据教室查找课程安排（兼容性方法）
      */
-    @Query("SELECT cs FROM CourseSchedule cs WHERE cs.classroom = :classroom AND cs.deleted = 0")
-    List<CourseSchedule> findByClassroomAndDeleted(@Param("classroom") String classroom, Integer deleted);
+    @Query("SELECT cs FROM CourseSchedule cs WHERE cs.classroomId = :classroomId AND cs.deleted = :deleted")
+    List<CourseSchedule> findByClassroomAndDeleted(@Param("classroomId") Long classroomId, @Param("deleted") Integer deleted);
 
     /**
      * 根据课程ID和学期查找课程安排（兼容性方法）
      */
-    @Query("SELECT cs FROM CourseSchedule cs WHERE cs.courseId = :courseId AND cs.semester = :semester AND cs.deleted = 0")
-    List<CourseSchedule> findByCourseIdAndSemesterAndDeleted(@Param("courseId") Long courseId, @Param("semester") String semester, Integer deleted);
+    @Query("SELECT cs FROM CourseSchedule cs WHERE cs.courseId = :courseId AND cs.semester = :semester AND cs.deleted = :deleted")
+    List<CourseSchedule> findByCourseIdAndSemesterAndDeleted(@Param("courseId") Long courseId, @Param("semester") String semester, @Param("deleted") Integer deleted);
 
     /**
      * 根据教师ID和学期查找课程安排（兼容性方法）
      */
-    @Query("SELECT cs FROM CourseSchedule cs WHERE cs.teacherId = :teacherId AND cs.semester = :semester AND cs.deleted = 0")
-    List<CourseSchedule> findByTeacherIdAndSemesterAndDeleted(@Param("teacherId") Long teacherId, @Param("semester") String semester, Integer deleted);
+    @Query("SELECT cs FROM CourseSchedule cs WHERE cs.teacherId = :teacherId AND cs.semester = :semester AND cs.deleted = :deleted")
+    List<CourseSchedule> findByTeacherIdAndSemesterAndDeleted(@Param("teacherId") Long teacherId, @Param("semester") String semester, @Param("deleted") Integer deleted);
 
-    /**
-     * 根据班级ID和学期查找课程安排（兼容性方法）
-     */
-    @Query("SELECT cs FROM CourseSchedule cs WHERE cs.classId = :classId AND cs.semester = :semester AND cs.deleted = 0")
-    List<CourseSchedule> findByClassIdAndSemesterAndDeleted(@Param("classId") Long classId, @Param("semester") String semester, Integer deleted);
+
 
 }

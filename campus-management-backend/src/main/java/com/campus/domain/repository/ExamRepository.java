@@ -30,7 +30,7 @@ public interface ExamRepository extends BaseRepository<Exam> {
     /**
      * 根据课程ID查找考试列表
      */
-    @Query("SELECT e FROM Exam e WHERE e.courseId = :courseId AND e.deleted = 0 ORDER BY e.examDate DESC")
+    @Query("SELECT e FROM Exam e WHERE e.courseId = :courseId AND e.deleted = 0 ORDER BY e.startTime DESC")
     List<Exam> findByCourseId(@Param("courseId") Long courseId);
 
     /**
@@ -42,7 +42,7 @@ public interface ExamRepository extends BaseRepository<Exam> {
     /**
      * 根据教师ID查找考试列表
      */
-    @Query("SELECT e FROM Exam e WHERE e.teacherId = :teacherId AND e.deleted = 0 ORDER BY e.examDate DESC")
+    @Query("SELECT e FROM Exam e WHERE e.teacherId = :teacherId AND e.deleted = 0 ORDER BY e.startTime DESC")
     List<Exam> findByTeacherId(@Param("teacherId") Long teacherId);
 
     /**
@@ -54,19 +54,19 @@ public interface ExamRepository extends BaseRepository<Exam> {
     /**
      * 根据考试类型查找考试列表
      */
-    @Query("SELECT e FROM Exam e WHERE e.examType = :type AND e.deleted = 0 ORDER BY e.examDate DESC")
+    @Query("SELECT e FROM Exam e WHERE e.examType = :type AND e.deleted = 0 ORDER BY e.startTime DESC")
     List<Exam> findByExamType(@Param("type") String examType);
 
     /**
      * 根据考试状态查找考试列表
      */
-    @Query("SELECT e FROM Exam e WHERE e.examStatus = :status AND e.deleted = 0 ORDER BY e.examDate DESC")
+    @Query("SELECT e FROM Exam e WHERE e.examStatus = :status AND e.deleted = 0 ORDER BY e.startTime DESC")
     List<Exam> findByExamStatus(@Param("status") String examStatus);
 
     /**
      * 根据考试日期范围查找考试
      */
-    @Query("SELECT e FROM Exam e WHERE e.examDate BETWEEN :startDate AND :endDate AND e.deleted = 0 ORDER BY e.examDate")
+    @Query("SELECT e FROM Exam e WHERE e.startTime BETWEEN :startDate AND :endDate AND e.deleted = 0 ORDER BY e.startTime")
     List<Exam> findByExamDateBetween(@Param("startDate") LocalDateTime startDate, 
                                     @Param("endDate") LocalDateTime endDate);
 
@@ -93,16 +93,16 @@ public interface ExamRepository extends BaseRepository<Exam> {
      * 搜索考试（根据考试名称、描述等关键词）
      */
     @Query("SELECT e FROM Exam e WHERE " +
-           "(e.examName LIKE %:keyword% OR " +
+           "(e.title LIKE %:keyword% OR " +
            "e.description LIKE %:keyword%) AND " +
-           "e.deleted = 0 ORDER BY e.examDate DESC")
+           "e.deleted = 0 ORDER BY e.startTime DESC")
     List<Exam> searchExams(@Param("keyword") String keyword);
 
     /**
      * 分页搜索考试
      */
     @Query("SELECT e FROM Exam e WHERE " +
-           "(e.examName LIKE %:keyword% OR " +
+           "(e.title LIKE %:keyword% OR " +
            "e.description LIKE %:keyword%) AND " +
            "e.deleted = 0")
     Page<Exam> searchExams(@Param("keyword") String keyword, Pageable pageable);
@@ -167,25 +167,25 @@ public interface ExamRepository extends BaseRepository<Exam> {
     /**
      * 查找即将开始的考试（未来7天内）
      */
-    @Query("SELECT e FROM Exam e WHERE e.examDate BETWEEN CURRENT_TIMESTAMP AND :sevenDaysLater AND e.examStatus = 'scheduled' AND e.deleted = 0 ORDER BY e.examDate")
+    @Query("SELECT e FROM Exam e WHERE e.startTime BETWEEN CURRENT_TIMESTAMP AND :sevenDaysLater AND e.examStatus = 'scheduled' AND e.deleted = 0 ORDER BY e.startTime")
     List<Exam> findUpcomingExams(@Param("sevenDaysLater") LocalDateTime sevenDaysLater);
 
     /**
      * 查找正在进行的考试
      */
-    @Query("SELECT e FROM Exam e WHERE e.examDate <= CURRENT_TIMESTAMP AND e.endTime >= CURRENT_TIMESTAMP AND e.examStatus = 'in_progress' AND e.deleted = 0 ORDER BY e.examDate")
+    @Query("SELECT e FROM Exam e WHERE e.startTime <= CURRENT_TIMESTAMP AND e.endTime >= CURRENT_TIMESTAMP AND e.examStatus = 'in_progress' AND e.deleted = 0 ORDER BY e.startTime")
     List<Exam> findOngoingExams();
 
     /**
      * 查找已结束的考试
      */
-    @Query("SELECT e FROM Exam e WHERE e.endTime < CURRENT_TIMESTAMP AND e.deleted = 0 ORDER BY e.examDate DESC")
+    @Query("SELECT e FROM Exam e WHERE e.endTime < CURRENT_TIMESTAMP AND e.deleted = 0 ORDER BY e.startTime DESC")
     List<Exam> findFinishedExams();
 
     /**
      * 查找今日考试
      */
-    @Query("SELECT e FROM Exam e WHERE DATE(e.examDate) = CURRENT_DATE AND e.deleted = 0 ORDER BY e.examDate")
+    @Query("SELECT e FROM Exam e WHERE DATE(e.startTime) = CURRENT_DATE AND e.deleted = 0 ORDER BY e.startTime")
     List<Exam> findTodayExams();
 
     // ================================
@@ -198,7 +198,7 @@ public interface ExamRepository extends BaseRepository<Exam> {
     @Query("SELECT e FROM Exam e " +
            "INNER JOIN CourseSelection cs ON e.courseId = cs.courseId " +
            "WHERE cs.studentId = :studentId AND cs.deleted = 0 AND e.deleted = 0 " +
-           "ORDER BY e.examDate")
+           "ORDER BY e.startTime")
     List<Exam> findExamsByStudentId(@Param("studentId") Long studentId);
 
     /**
@@ -207,7 +207,7 @@ public interface ExamRepository extends BaseRepository<Exam> {
     @Query("SELECT e FROM Exam e " +
            "INNER JOIN ExamRecord er ON e.id = er.examId " +
            "WHERE er.studentId = :studentId AND er.deleted = 0 AND e.deleted = 0 " +
-           "ORDER BY e.examDate DESC")
+           "ORDER BY e.startTime DESC")
     List<Exam> findTakenExamsByStudentId(@Param("studentId") Long studentId);
 
     /**
@@ -217,7 +217,7 @@ public interface ExamRepository extends BaseRepository<Exam> {
            "INNER JOIN CourseSelection cs ON e.courseId = cs.courseId " +
            "LEFT JOIN ExamRecord er ON e.id = er.examId AND er.studentId = :studentId " +
            "WHERE cs.studentId = :studentId AND cs.deleted = 0 AND e.deleted = 0 AND er.id IS NULL " +
-           "ORDER BY e.examDate")
+           "ORDER BY e.startTime")
     List<Exam> findUntakenExamsByStudentId(@Param("studentId") Long studentId);
 
     // ================================
@@ -227,21 +227,21 @@ public interface ExamRepository extends BaseRepository<Exam> {
     /**
      * 检查考试名称是否存在（同一课程内）
      */
-    @Query("SELECT CASE WHEN COUNT(e) > 0 THEN true ELSE false END FROM Exam e WHERE e.examName = :examName AND e.courseId = :courseId AND e.deleted = 0")
+    @Query("SELECT CASE WHEN COUNT(e) > 0 THEN true ELSE false END FROM Exam e WHERE e.title = :examName AND e.courseId = :courseId AND e.deleted = 0")
     boolean existsByExamNameAndCourseId(@Param("examName") String examName, @Param("courseId") Long courseId);
 
     /**
      * 检查考试名称是否存在（同一课程内，排除指定ID）
      */
-    @Query("SELECT CASE WHEN COUNT(e) > 0 THEN true ELSE false END FROM Exam e WHERE e.examName = :examName AND e.courseId = :courseId AND e.id != :excludeId AND e.deleted = 0")
+    @Query("SELECT CASE WHEN COUNT(e) > 0 THEN true ELSE false END FROM Exam e WHERE e.title = :examName AND e.courseId = :courseId AND e.id != :excludeId AND e.deleted = 0")
     boolean existsByExamNameAndCourseIdAndIdNot(@Param("examName") String examName, @Param("courseId") Long courseId, @Param("excludeId") Long excludeId);
 
     /**
      * 检查指定时间段是否有考试冲突
      */
     @Query("SELECT CASE WHEN COUNT(e) > 0 THEN true ELSE false END FROM Exam e WHERE " +
-           "((e.examDate BETWEEN :startTime AND :endTime) OR (e.endTime BETWEEN :startTime AND :endTime) OR " +
-           "(e.examDate <= :startTime AND e.endTime >= :endTime)) AND e.deleted = 0")
+           "((e.startTime BETWEEN :startTime AND :endTime) OR (e.endTime BETWEEN :startTime AND :endTime) OR " +
+           "(e.startTime <= :startTime AND e.endTime >= :endTime)) AND e.deleted = 0")
     boolean hasTimeConflict(@Param("startTime") LocalDateTime startTime, @Param("endTime") LocalDateTime endTime);
 
     // ================================
@@ -266,8 +266,8 @@ public interface ExamRepository extends BaseRepository<Exam> {
      * 更新考试时间
      */
     @Modifying
-    @Query("UPDATE Exam e SET e.examDate = :examDate, e.endTime = :endTime, e.updatedAt = CURRENT_TIMESTAMP WHERE e.id = :examId")
-    int updateExamTime(@Param("examId") Long examId, @Param("examDate") LocalDateTime examDate, @Param("endTime") LocalDateTime endTime);
+    @Query("UPDATE Exam e SET e.startTime = :startTime, e.endTime = :endTime, e.updatedAt = CURRENT_TIMESTAMP WHERE e.id = :examId")
+    int updateExamTime(@Param("examId") Long examId, @Param("startTime") LocalDateTime startTime, @Param("endTime") LocalDateTime endTime);
 
     /**
      * 更新考试总分

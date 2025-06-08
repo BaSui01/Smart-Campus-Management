@@ -54,7 +54,7 @@ public interface CourseSelectionPeriodRepository extends BaseRepository<CourseSe
     /**
      * 根据适用年级查找选课时间段列表
      */
-    @Query("SELECT csp FROM CourseSelectionPeriod csp WHERE csp.applicableGrade = :applicableGrade AND csp.deleted = 0 ORDER BY csp.startTime ASC")
+    @Query("SELECT csp FROM CourseSelectionPeriod csp WHERE csp.applicableGrades LIKE CONCAT('%', :applicableGrade, '%') AND csp.deleted = 0 ORDER BY csp.startTime ASC")
     List<CourseSelectionPeriod> findByApplicableGrade(@Param("applicableGrade") String applicableGrade);
 
     /**
@@ -86,7 +86,7 @@ public interface CourseSelectionPeriodRepository extends BaseRepository<CourseSe
            "(:periodName IS NULL OR csp.periodName LIKE %:periodName%) AND " +
            "(:semester IS NULL OR csp.semester = :semester) AND " +
            "(:selectionType IS NULL OR csp.selectionType = :selectionType) AND " +
-           "(:applicableGrade IS NULL OR csp.applicableGrade = :applicableGrade) AND " +
+           "(:applicableGrade IS NULL OR csp.applicableGrades LIKE CONCAT('%', :applicableGrade, '%')) AND " +
            "(:status IS NULL OR csp.status = :status) AND " +
            "csp.deleted = 0")
     Page<CourseSelectionPeriod> findByMultipleConditions(@Param("periodName") String periodName,
@@ -202,7 +202,7 @@ public interface CourseSelectionPeriodRepository extends BaseRepository<CourseSe
     /**
      * 根据适用年级统计数量
      */
-    @Query("SELECT csp.applicableGrade, COUNT(csp) FROM CourseSelectionPeriod csp WHERE csp.deleted = 0 GROUP BY csp.applicableGrade ORDER BY csp.applicableGrade")
+    @Query("SELECT csp.applicableGrades, COUNT(csp) FROM CourseSelectionPeriod csp WHERE csp.deleted = 0 GROUP BY csp.applicableGrades ORDER BY csp.applicableGrades")
     List<Object[]> countByApplicableGrade();
 
     /**
@@ -318,7 +318,7 @@ public interface CourseSelectionPeriodRepository extends BaseRepository<CourseSe
     /**
      * 获取所有适用年级
      */
-    @Query("SELECT DISTINCT csp.applicableGrade FROM CourseSelectionPeriod csp WHERE csp.deleted = 0 ORDER BY csp.applicableGrade")
+    @Query("SELECT DISTINCT csp.applicableGrades FROM CourseSelectionPeriod csp WHERE csp.deleted = 0 ORDER BY csp.applicableGrades")
     List<String> findAllApplicableGrades();
 
     /**
@@ -389,7 +389,7 @@ public interface CourseSelectionPeriodRepository extends BaseRepository<CourseSe
            "(csp.startTime < :endTime AND csp.endTime >= :endTime) OR " +
            "(csp.startTime >= :startTime AND csp.endTime <= :endTime)) AND " +
            "csp.id != :excludeId AND csp.selectionType = :selectionType AND " +
-           "csp.semester = :semester AND csp.deleted = 0")
+           "csp.semester = :semester AND csp.academicYear = :academicYear AND csp.deleted = 0")
     long countConflictingPeriods(@Param("excludeId") Long excludeId,
                                 @Param("selectionType") String selectionType,
                                 @Param("semester") String semester,

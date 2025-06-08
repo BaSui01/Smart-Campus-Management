@@ -2,7 +2,7 @@ package com.campus.interfaces.rest.v1;
 
 import com.campus.application.service.CourseSelectionPeriodService;
 import com.campus.domain.entity.CourseSelectionPeriod;
-import com.campus.interfaces.rest.common.ApiResponse;
+import com.campus.shared.common.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -84,7 +84,7 @@ public class CourseSelectionPeriodApiController {
         
         try {
             CourseSelectionPeriod createdPeriod = periodService.createPeriod(period);
-            return ResponseEntity.ok(ApiResponse.success(createdPeriod, "选课时间段创建成功"));
+            return ResponseEntity.ok(ApiResponse.success("选课时间段创建成功", createdPeriod));
         } catch (Exception e) {
             log.error("创建选课时间段失败", e);
             return ResponseEntity.ok(ApiResponse.error("创建失败: " + e.getMessage()));
@@ -101,7 +101,7 @@ public class CourseSelectionPeriodApiController {
         try {
             period.setId(id);
             CourseSelectionPeriod updatedPeriod = periodService.updatePeriod(period);
-            return ResponseEntity.ok(ApiResponse.success(updatedPeriod, "选课时间段更新成功"));
+            return ResponseEntity.ok(ApiResponse.success("选课时间段更新成功", updatedPeriod));
         } catch (Exception e) {
             log.error("更新选课时间段失败: {}", id, e);
             return ResponseEntity.ok(ApiResponse.error("更新失败: " + e.getMessage()));
@@ -116,7 +116,7 @@ public class CourseSelectionPeriodApiController {
         
         try {
             periodService.deleteById(id);
-            return ResponseEntity.ok(ApiResponse.success(null, "选课时间段删除成功"));
+            return ResponseEntity.ok(ApiResponse.success("选课时间段删除成功"));
         } catch (Exception e) {
             log.error("删除选课时间段失败: {}", id, e);
             return ResponseEntity.ok(ApiResponse.error("删除失败: " + e.getMessage()));
@@ -177,7 +177,7 @@ public class CourseSelectionPeriodApiController {
         
         try {
             periodService.enablePeriod(id);
-            return ResponseEntity.ok(ApiResponse.success(null, "选课时间段已启用"));
+            return ResponseEntity.ok(ApiResponse.success("选课时间段已启用"));
         } catch (Exception e) {
             log.error("启用选课时间段失败: {}", id, e);
             return ResponseEntity.ok(ApiResponse.error("启用失败: " + e.getMessage()));
@@ -192,7 +192,7 @@ public class CourseSelectionPeriodApiController {
         
         try {
             periodService.disablePeriod(id);
-            return ResponseEntity.ok(ApiResponse.success(null, "选课时间段已禁用"));
+            return ResponseEntity.ok(ApiResponse.success("选课时间段已禁用"));
         } catch (Exception e) {
             log.error("禁用选课时间段失败: {}", id, e);
             return ResponseEntity.ok(ApiResponse.error("禁用失败: " + e.getMessage()));
@@ -253,7 +253,7 @@ public class CourseSelectionPeriodApiController {
         
         try {
             List<CourseSelectionPeriod> createdPeriods = periodService.batchCreatePeriods(periods);
-            return ResponseEntity.ok(ApiResponse.success(createdPeriods, "批量创建成功"));
+            return ResponseEntity.ok(ApiResponse.success("批量创建成功", createdPeriods));
         } catch (Exception e) {
             log.error("批量创建选课时间段失败", e);
             return ResponseEntity.ok(ApiResponse.error("批量创建失败: " + e.getMessage()));
@@ -272,7 +272,7 @@ public class CourseSelectionPeriodApiController {
         try {
             List<CourseSelectionPeriod> copiedPeriods = periodService.copyPeriodsToNewSemester(
                 fromSemester, fromYear, toSemester, toYear);
-            return ResponseEntity.ok(ApiResponse.success(copiedPeriods, "复制成功"));
+            return ResponseEntity.ok(ApiResponse.success("复制成功", copiedPeriods));
         } catch (Exception e) {
             log.error("复制选课时间段失败", e);
             return ResponseEntity.ok(ApiResponse.error("复制失败: " + e.getMessage()));
@@ -286,7 +286,7 @@ public class CourseSelectionPeriodApiController {
         
         try {
             int closedCount = periodService.autoCloseExpiredPeriods();
-            return ResponseEntity.ok(ApiResponse.success(closedCount, "已关闭 " + closedCount + " 个过期时间段"));
+            return ResponseEntity.ok(ApiResponse.success("已关闭 " + closedCount + " 个过期时间段", closedCount));
         } catch (Exception e) {
             log.error("自动关闭过期选课时间段失败", e);
             return ResponseEntity.ok(ApiResponse.error("操作失败: " + e.getMessage()));
@@ -300,7 +300,7 @@ public class CourseSelectionPeriodApiController {
         
         try {
             periodService.sendSelectionReminders();
-            return ResponseEntity.ok(ApiResponse.success(null, "选课提醒发送成功"));
+            return ResponseEntity.ok(ApiResponse.success("选课提醒发送成功"));
         } catch (Exception e) {
             log.error("发送选课提醒失败", e);
             return ResponseEntity.ok(ApiResponse.error("发送失败: " + e.getMessage()));

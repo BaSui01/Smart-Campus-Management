@@ -65,8 +65,8 @@ public class ScheduleService {
         stats.put("totalSchedules", allSchedules.size());
         
         // 各状态统计
-        List<Schedule> normalSchedules = scheduleRepository.findByStatus("NORMAL");
-        List<Schedule> adjustedSchedules = scheduleRepository.findByStatus("ADJUSTED");
+        List<Schedule> normalSchedules = scheduleRepository.findByStatus(1); // 1表示正常状态
+        List<Schedule> adjustedSchedules = scheduleRepository.findByStatus(0); // 0表示调整状态
         
         stats.put("activeSchedules", normalSchedules.size());
         stats.put("adjustedSchedules", adjustedSchedules.size());
@@ -87,19 +87,19 @@ public class ScheduleService {
     }
 
     /**
-     * 根据教师姓名获取课表
+     * 根据教师ID获取课表
      */
     @Transactional(readOnly = true)
-    public List<Schedule> findByTeacherName(String teacherName, String semester) {
-        return scheduleRepository.findByTeacherNameAndSemesterOrderByWeekdayAscStartTimeAsc(teacherName, semester);
+    public List<Schedule> findByTeacherId(Long teacherId, String semester) {
+        return scheduleRepository.findByTeacherIdAndSemesterOrderByWeekdayAscStartTimeAsc(teacherId, semester);
     }
 
     /**
-     * 根据教室获取课表
+     * 根据教室ID获取课表
      */
     @Transactional(readOnly = true)
-    public List<Schedule> findByClassroom(String classroom, String semester) {
-        return scheduleRepository.findByClassroomAndSemesterOrderByWeekdayAscStartTimeAsc(classroom, semester);
+    public List<Schedule> findByClassroomId(Long classroomId, String semester) {
+        return scheduleRepository.findByClassroomIdAndSemesterOrderByWeekdayAscStartTimeAsc(classroomId, semester);
     }
 
     /**
@@ -122,10 +122,10 @@ public class ScheduleService {
     }
 
     /**
-     * 根据课程名称搜索课表
+     * 根据课程ID搜索课表
      */
     @Transactional(readOnly = true)
-    public List<Schedule> findByCourseNameContaining(String courseName) {
-        return scheduleRepository.findByCourseNameContaining(courseName);
+    public List<Schedule> findByCourseId(Long courseId) {
+        return scheduleRepository.findByCourseId(courseId);
     }
 }

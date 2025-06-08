@@ -41,7 +41,7 @@ public interface GradeRepository extends BaseRepository<Grade> {
     /**
      * 根据课程ID查找成绩记录
      */
-    @Query("SELECT g FROM Grade g WHERE g.courseId = :courseId AND g.deleted = 0 ORDER BY g.score DESC")
+    @Query("SELECT g FROM Grade g WHERE g.courseId = :courseId AND g.deleted = 0 ORDER BY g.totalScore DESC")
     List<Grade> findByCourseId(@Param("courseId") Long courseId);
 
     /**
@@ -77,13 +77,13 @@ public interface GradeRepository extends BaseRepository<Grade> {
     /**
      * 根据课程ID和学期查找成绩记录
      */
-    @Query("SELECT g FROM Grade g WHERE g.courseId = :courseId AND g.semester = :semester AND g.deleted = 0 ORDER BY g.score DESC")
+    @Query("SELECT g FROM Grade g WHERE g.courseId = :courseId AND g.semester = :semester AND g.deleted = 0 ORDER BY g.totalScore DESC")
     List<Grade> findByCourseIdAndSemester(@Param("courseId") Long courseId, @Param("semester") String semester);
 
     /**
      * 根据分数范围查找成绩记录
      */
-    @Query("SELECT g FROM Grade g WHERE g.score BETWEEN :minScore AND :maxScore AND g.deleted = 0 ORDER BY g.score DESC")
+    @Query("SELECT g FROM Grade g WHERE g.totalScore BETWEEN :minScore AND :maxScore AND g.deleted = 0 ORDER BY g.totalScore DESC")
     List<Grade> findByScoreBetween(@Param("minScore") Integer minScore, @Param("maxScore") Integer maxScore);
 
     /**
@@ -133,18 +133,18 @@ public interface GradeRepository extends BaseRepository<Grade> {
      * 计算学生的平均绩点
      */
     @Query("""
-        SELECT COALESCE(SUM(g.gradePoint * c.credits) / SUM(c.credits), 0.0)
+        SELECT COALESCE(SUM(g.gpa * c.credits) / SUM(c.credits), 0.0)
         FROM Grade g
         LEFT JOIN Course c ON g.courseId = c.id AND c.deleted = 0
-        WHERE g.studentId = :studentId AND g.semester = :semester AND g.deleted = 0 AND g.gradePoint IS NOT NULL
+        WHERE g.studentId = :studentId AND g.semester = :semester AND g.deleted = 0 AND g.gpa IS NOT NULL
         """)
     Double calculateStudentGPA(@Param("studentId") Long studentId, @Param("semester") String semester);
 
     /**
      * 计算班级的平均成绩
      */
-    @Query("SELECT AVG(g.score) FROM Grade g LEFT JOIN Student s ON g.studentId = s.id AND s.deleted = 0 " +
-           "WHERE s.classId = :classId AND g.courseId = :courseId AND g.deleted = 0 AND g.score IS NOT NULL")
+    @Query("SELECT AVG(g.totalScore) FROM Grade g LEFT JOIN Student s ON g.studentId = s.id AND s.deleted = 0 " +
+           "WHERE s.classId = :classId AND g.courseId = :courseId AND g.deleted = 0 AND g.totalScore IS NOT NULL")
     Double calculateClassAverageScore(@Param("classId") Long classId, @Param("courseId") Long courseId);
 
     // ================================
@@ -159,8 +159,8 @@ public interface GradeRepository extends BaseRepository<Grade> {
            "(:courseId IS NULL OR g.courseId = :courseId) AND " +
            "(:teacherId IS NULL OR g.teacherId = :teacherId) AND " +
            "(:semester IS NULL OR g.semester = :semester) AND " +
-           "(:minScore IS NULL OR g.score >= :minScore) AND " +
-           "(:maxScore IS NULL OR g.score <= :maxScore) AND " +
+           "(:minScore IS NULL OR g.totalScore >= :minScore) AND " +
+           "(:maxScore IS NULL OR g.totalScore <= :maxScore) AND " +
            "g.deleted = 0")
     Page<Grade> findByMultipleConditions(@Param("studentId") Long studentId,
                                         @Param("courseId") Long courseId,
@@ -205,28 +205,28 @@ public interface GradeRepository extends BaseRepository<Grade> {
      */
     @Query("SELECT " +
            "CASE " +
-           "WHEN g.score >= 90 THEN '优秀(90-100)' " +
-           "WHEN g.score >= 80 THEN '良好(80-89)' " +
-           "WHEN g.score >= 70 THEN '中等(70-79)' " +
-           "WHEN g.score >= 60 THEN '及格(60-69)' " +
+           "WHEN g.totalScore >= 90 THEN '优秀(90-100)' " +
+           "WHEN g.totalScore >= 80 THEN '良好(80-89)' " +
+           "WHEN g.totalScore >= 70 THEN '中等(70-79)' " +
+           "WHEN g.totalScore >= 60 THEN '及格(60-69)' " +
            "ELSE '不及格(0-59)' " +
            "END as gradeLevel, COUNT(g) " +
            "FROM Grade g WHERE g.courseId = :courseId AND g.deleted = 0 " +
            "GROUP BY " +
            "CASE " +
-           "WHEN g.score >= 90 THEN '优秀(90-100)' " +
-           "WHEN g.score >= 80 THEN '良好(80-89)' " +
-           "WHEN g.score >= 70 THEN '中等(70-79)' " +
-           "WHEN g.score >= 60 THEN '及格(60-69)' " +
+           "WHEN g.totalScore >= 90 THEN '优秀(90-100)' " +
+           "WHEN g.totalScore >= 80 THEN '良好(80-89)' " +
+           "WHEN g.totalScore >= 70 THEN '中等(70-79)' " +
+           "WHEN g.totalScore >= 60 THEN '及格(60-69)' " +
            "ELSE '不及格(0-59)' " +
            "END " +
-           "ORDER BY MIN(g.score) DESC")
+           "ORDER BY MIN(g.totalScore) DESC")
     List<Object[]> getGradeDistributionByCourseId(@Param("courseId") Long courseId);
 
     /**
      * 根据学生统计各科成绩
      */
-    @Query("SELECT c.courseName, g.score, g.gradePoint FROM Grade g LEFT JOIN g.course c " +
+    @Query("SELECT c.courseName, g.totalScore, g.gpa FROM Grade g LEFT JOIN g.course c " +
            "WHERE g.studentId = :studentId AND g.semester = :semester AND g.deleted = 0 " +
            "ORDER BY c.courseName")
     List<Object[]> getStudentGradesBySemester(@Param("studentId") Long studentId, @Param("semester") String semester);
@@ -236,10 +236,10 @@ public interface GradeRepository extends BaseRepository<Grade> {
      */
     @Query("SELECT " +
            "COUNT(g) as totalCount, " +
-           "AVG(g.score) as avgScore, " +
-           "MAX(g.score) as maxScore, " +
-           "MIN(g.score) as minScore, " +
-           "COUNT(CASE WHEN g.score >= 60 THEN 1 END) as passCount " +
+           "AVG(g.totalScore) as avgScore, " +
+           "MAX(g.totalScore) as maxScore, " +
+           "MIN(g.totalScore) as minScore, " +
+           "COUNT(CASE WHEN g.totalScore >= 60 THEN 1 END) as passCount " +
            "FROM Grade g WHERE g.courseId = :courseId AND g.semester = :semester AND g.deleted = 0")
     Object[] getCourseGradeStatistics(@Param("courseId") Long courseId, @Param("semester") String semester);
 
@@ -251,43 +251,43 @@ public interface GradeRepository extends BaseRepository<Grade> {
      * 根据课程表ID查找成绩记录（兼容性方法）
      */
     @Query("SELECT g FROM Grade g WHERE g.scheduleId = :scheduleId AND g.deleted = 0")
-    List<Grade> findByScheduleIdAndDeleted(@Param("scheduleId") Long scheduleId, Integer deleted);
+    List<Grade> findByScheduleIdAndDeleted(@Param("scheduleId") Long scheduleId);
 
     /**
      * 根据选课ID查找成绩记录（兼容性方法）
      */
     @Query("SELECT g FROM Grade g WHERE g.selectionId = :selectionId AND g.deleted = 0")
-    Optional<Grade> findBySelectionIdAndDeleted(@Param("selectionId") Long selectionId, Integer deleted);
+    Optional<Grade> findBySelectionIdAndDeleted(@Param("selectionId") Long selectionId);
 
     /**
      * 根据学期查找成绩记录（兼容性方法）
      */
     @Query("SELECT g FROM Grade g WHERE g.semester = :semester AND g.deleted = 0")
-    List<Grade> findBySemesterAndDeleted(@Param("semester") String semester, Integer deleted);
+    List<Grade> findBySemesterAndDeleted(@Param("semester") String semester);
 
     /**
      * 根据学生ID和课程ID查找成绩记录（兼容性方法）
      */
     @Query("SELECT g FROM Grade g WHERE g.studentId = :studentId AND g.courseId = :courseId AND g.deleted = 0")
-    List<Grade> findByStudentIdAndCourseIdAndDeleted(@Param("studentId") Long studentId, @Param("courseId") Long courseId, Integer deleted);
+    List<Grade> findByStudentIdAndCourseIdAndDeleted(@Param("studentId") Long studentId, @Param("courseId") Long courseId);
 
     /**
      * 根据学生ID和学期查找成绩记录（兼容性方法）
      */
     @Query("SELECT g FROM Grade g WHERE g.studentId = :studentId AND g.semester = :semester AND g.deleted = 0")
-    List<Grade> findByStudentIdAndSemesterAndDeleted(@Param("studentId") Long studentId, @Param("semester") String semester, Integer deleted);
+    List<Grade> findByStudentIdAndSemesterAndDeleted(@Param("studentId") Long studentId, @Param("semester") String semester);
 
     /**
      * 根据学生ID查找成绩记录（兼容性方法）
      */
     @Query("SELECT g FROM Grade g WHERE g.studentId = :studentId AND g.deleted = 0")
-    List<Grade> findByStudentIdAndDeleted(@Param("studentId") Long studentId, Integer deleted);
+    List<Grade> findByStudentIdAndDeleted(@Param("studentId") Long studentId);
 
     /**
      * 根据课程ID查找成绩记录（兼容性方法）
      */
     @Query("SELECT g FROM Grade g WHERE g.courseId = :courseId AND g.deleted = 0")
-    List<Grade> findByCourseIdAndDeleted(@Param("courseId") Long courseId, Integer deleted);
+    List<Grade> findByCourseIdAndDeleted(@Param("courseId") Long courseId);
 
     // ================================
     // 更新操作方法
@@ -297,21 +297,21 @@ public interface GradeRepository extends BaseRepository<Grade> {
      * 更新成绩分数
      */
     @Modifying
-    @Query("UPDATE Grade g SET g.score = :score, g.updatedAt = CURRENT_TIMESTAMP WHERE g.id = :gradeId")
+    @Query("UPDATE Grade g SET g.totalScore = :score, g.updatedAt = CURRENT_TIMESTAMP WHERE g.id = :gradeId")
     int updateScore(@Param("gradeId") Long gradeId, @Param("score") Integer score);
 
     /**
      * 批量更新成绩分数
      */
     @Modifying
-    @Query("UPDATE Grade g SET g.score = :score, g.updatedAt = CURRENT_TIMESTAMP WHERE g.id IN :gradeIds")
+    @Query("UPDATE Grade g SET g.totalScore = :score, g.updatedAt = CURRENT_TIMESTAMP WHERE g.id IN :gradeIds")
     int batchUpdateScore(@Param("gradeIds") List<Long> gradeIds, @Param("score") Integer score);
 
     /**
      * 更新绩点
      */
     @Modifying
-    @Query("UPDATE Grade g SET g.gradePoint = :gradePoint, g.updatedAt = CURRENT_TIMESTAMP WHERE g.id = :gradeId")
+    @Query("UPDATE Grade g SET g.gpa = :gradePoint, g.updatedAt = CURRENT_TIMESTAMP WHERE g.id = :gradeId")
     int updateGradePoint(@Param("gradeId") Long gradeId, @Param("gradePoint") Double gradePoint);
 
 }

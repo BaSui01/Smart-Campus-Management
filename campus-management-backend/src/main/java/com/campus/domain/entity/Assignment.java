@@ -165,6 +165,56 @@ public class Assignment extends BaseEntity {
     private Boolean isPublished = false;
 
     /**
+     * 难度等级
+     */
+    @Size(max = 20, message = "难度等级长度不能超过20个字符")
+    @Column(name = "difficulty_level", length = 20)
+    private String difficultyLevel = "medium";
+
+    /**
+     * 预计完成时间（小时）
+     */
+    @Min(value = 1, message = "预计完成时间不能小于1小时")
+    @Max(value = 100, message = "预计完成时间不能大于100小时")
+    @Column(name = "estimated_hours")
+    private Integer estimatedHours = 2;
+
+    /**
+     * 权重（在总成绩中的占比）
+     */
+    @DecimalMin(value = "0.0", message = "权重不能小于0")
+    @DecimalMax(value = "100.0", message = "权重不能大于100")
+    @Column(name = "weight", precision = 5, scale = 2)
+    private java.math.BigDecimal weight = java.math.BigDecimal.valueOf(10.0);
+
+    /**
+     * 提交格式要求
+     */
+    @Size(max = 200, message = "提交格式要求长度不能超过200个字符")
+    @Column(name = "submission_format", length = 200)
+    private String submissionFormat = "文档";
+
+    /**
+     * 是否为小组作业
+     */
+    @Column(name = "is_group_assignment")
+    private Boolean isGroupAssignment = false;
+
+    /**
+     * 小组最大人数
+     */
+    @Min(value = 2, message = "小组最大人数不能小于2")
+    @Max(value = 10, message = "小组最大人数不能大于10")
+    @Column(name = "max_group_size")
+    private Integer maxGroupSize = 4;
+
+    /**
+     * 是否自动评分
+     */
+    @Column(name = "auto_grade")
+    private Boolean autoGrade = false;
+
+    /**
      * 总提交人数
      */
     @Column(name = "total_submissions")
@@ -439,6 +489,79 @@ public class Assignment extends BaseEntity {
 
     public void setSubmissions(List<AssignmentSubmission> submissions) {
         this.submissions = submissions;
+    }
+
+    public String getDifficultyLevel() {
+        return difficultyLevel;
+    }
+
+    public void setDifficultyLevel(String difficultyLevel) {
+        this.difficultyLevel = difficultyLevel;
+    }
+
+    public Integer getEstimatedHours() {
+        return estimatedHours;
+    }
+
+    public void setEstimatedHours(Integer estimatedHours) {
+        this.estimatedHours = estimatedHours;
+    }
+
+    public java.math.BigDecimal getWeight() {
+        return weight;
+    }
+
+    public void setWeight(java.math.BigDecimal weight) {
+        this.weight = weight;
+    }
+
+    public String getSubmissionFormat() {
+        return submissionFormat;
+    }
+
+    public void setSubmissionFormat(String submissionFormat) {
+        this.submissionFormat = submissionFormat;
+    }
+
+    public Boolean getIsGroupAssignment() {
+        return isGroupAssignment;
+    }
+
+    public void setIsGroupAssignment(Boolean isGroupAssignment) {
+        this.isGroupAssignment = isGroupAssignment;
+    }
+
+    public Integer getMaxGroupSize() {
+        return maxGroupSize;
+    }
+
+    public void setMaxGroupSize(Integer maxGroupSize) {
+        this.maxGroupSize = maxGroupSize;
+    }
+
+    public Boolean getAutoGrade() {
+        return autoGrade;
+    }
+
+    public void setAutoGrade(Boolean autoGrade) {
+        this.autoGrade = autoGrade;
+    }
+
+    // 兼容性方法 - 为了支持 AssignmentApiController
+    public Boolean getLateSubmissionAllowed() {
+        return allowLateSubmission;
+    }
+
+    public void setLateSubmissionAllowed(Boolean lateSubmissionAllowed) {
+        this.allowLateSubmission = lateSubmissionAllowed;
+    }
+
+    public java.math.BigDecimal getLatePenaltyRate() {
+        return latePenaltyPercent;
+    }
+
+    public void setLatePenaltyRate(java.math.BigDecimal latePenaltyRate) {
+        this.latePenaltyPercent = latePenaltyRate;
     }
 
     // ================================

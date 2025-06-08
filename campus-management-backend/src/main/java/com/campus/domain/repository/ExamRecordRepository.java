@@ -42,7 +42,7 @@ public interface ExamRecordRepository extends BaseRepository<ExamRecord> {
     /**
      * 根据学生ID查找考试记录
      */
-    @Query("SELECT r FROM ExamRecord r WHERE r.studentId = :studentId AND r.deleted = 0 ORDER BY r.examStartTime DESC")
+    @Query("SELECT r FROM ExamRecord r WHERE r.studentId = :studentId AND r.deleted = 0 ORDER BY r.startTime DESC")
     List<ExamRecord> findByStudentId(@Param("studentId") Long studentId);
 
     /**
@@ -60,7 +60,7 @@ public interface ExamRecordRepository extends BaseRepository<ExamRecord> {
     /**
      * 根据考试状态查找考试记录
      */
-    @Query("SELECT r FROM ExamRecord r WHERE r.examStatus = :status AND r.deleted = 0 ORDER BY r.examStartTime DESC")
+    @Query("SELECT r FROM ExamRecord r WHERE r.examStatus = :status AND r.deleted = 0 ORDER BY r.startTime DESC")
     List<ExamRecord> findByExamStatus(@Param("status") String examStatus);
 
     /**
@@ -94,8 +94,8 @@ public interface ExamRecordRepository extends BaseRepository<ExamRecord> {
      * 搜索考试记录（根据答案内容等关键词）
      */
     @Query("SELECT r FROM ExamRecord r WHERE " +
-           "r.answerContent LIKE %:keyword% AND " +
-           "r.deleted = 0 ORDER BY r.examStartTime DESC")
+           "r.answerDetails LIKE %:keyword% AND " +
+           "r.deleted = 0 ORDER BY r.startTime DESC")
     List<ExamRecord> searchRecords(@Param("keyword") String keyword);
 
     // ================================
@@ -136,7 +136,7 @@ public interface ExamRecordRepository extends BaseRepository<ExamRecord> {
     /**
      * 根据考试统计记录数量
      */
-    @Query("SELECT e.examName, COUNT(r) FROM ExamRecord r LEFT JOIN r.exam e WHERE r.deleted = 0 GROUP BY r.examId, e.examName ORDER BY COUNT(r) DESC")
+    @Query("SELECT e.title, COUNT(r) FROM ExamRecord r LEFT JOIN r.exam e WHERE r.deleted = 0 GROUP BY r.examId, e.title ORDER BY COUNT(r) DESC")
     List<Object[]> countByExam();
 
     /**
@@ -205,7 +205,7 @@ public interface ExamRecordRepository extends BaseRepository<ExamRecord> {
     /**
      * 查找指定时间范围内的考试记录
      */
-    @Query("SELECT r FROM ExamRecord r WHERE r.examStartTime BETWEEN :startTime AND :endTime AND r.deleted = 0 ORDER BY r.examStartTime DESC")
+    @Query("SELECT r FROM ExamRecord r WHERE r.startTime BETWEEN :startTime AND :endTime AND r.deleted = 0 ORDER BY r.startTime DESC")
     List<ExamRecord> findByExamStartTimeBetween(@Param("startTime") LocalDateTime startTime, 
                                                @Param("endTime") LocalDateTime endTime);
 
@@ -213,22 +213,22 @@ public interface ExamRecordRepository extends BaseRepository<ExamRecord> {
      * 查找超时的考试记录
      */
     @Query("SELECT r FROM ExamRecord r LEFT JOIN r.exam e " +
-           "WHERE r.examEndTime > DATEADD(MINUTE, e.duration, r.examStartTime) AND r.deleted = 0 " +
-           "ORDER BY r.examStartTime DESC")
+           "WHERE r.submitTime > FUNCTION('DATEADD', MINUTE, e.durationMinutes, r.startTime) AND r.deleted = 0 " +
+           "ORDER BY r.startTime DESC")
     List<ExamRecord> findOvertimeRecords();
 
     /**
      * 查找正常完成的考试记录
      */
     @Query("SELECT r FROM ExamRecord r LEFT JOIN r.exam e " +
-           "WHERE r.examEndTime <= DATEADD(MINUTE, e.duration, r.examStartTime) AND r.deleted = 0 " +
-           "ORDER BY r.examStartTime DESC")
+           "WHERE r.submitTime <= FUNCTION('DATEADD', MINUTE, e.durationMinutes, r.startTime) AND r.deleted = 0 " +
+           "ORDER BY r.startTime DESC")
     List<ExamRecord> findNormalCompletedRecords();
 
     /**
      * 查找未完成的考试记录
      */
-    @Query("SELECT r FROM ExamRecord r WHERE r.examStatus = 'in_progress' AND r.deleted = 0 ORDER BY r.examStartTime")
+    @Query("SELECT r FROM ExamRecord r WHERE r.examStatus = 'in_progress' AND r.deleted = 0 ORDER BY r.startTime")
     List<ExamRecord> findIncompleteRecords();
 
     // ================================
@@ -276,7 +276,7 @@ public interface ExamRecordRepository extends BaseRepository<ExamRecord> {
      * 更新考试分数
      */
     @Modifying
-    @Query("UPDATE ExamRecord r SET r.score = :score, r.examStatus = 'completed', r.examEndTime = CURRENT_TIMESTAMP, r.updatedAt = CURRENT_TIMESTAMP WHERE r.id = :recordId")
+    @Query("UPDATE ExamRecord r SET r.score = :score, r.examStatus = 'completed', r.submitTime = CURRENT_TIMESTAMP, r.updatedAt = CURRENT_TIMESTAMP WHERE r.id = :recordId")
     int updateScore(@Param("recordId") Long recordId, @Param("score") Integer score);
 
     /**
@@ -297,14 +297,14 @@ public interface ExamRecordRepository extends BaseRepository<ExamRecord> {
      * 更新考试结束时间
      */
     @Modifying
-    @Query("UPDATE ExamRecord r SET r.examEndTime = :endTime, r.updatedAt = CURRENT_TIMESTAMP WHERE r.id = :recordId")
+    @Query("UPDATE ExamRecord r SET r.submitTime = :endTime, r.updatedAt = CURRENT_TIMESTAMP WHERE r.id = :recordId")
     int updateExamEndTime(@Param("recordId") Long recordId, @Param("endTime") LocalDateTime examEndTime);
 
     /**
      * 更新答案内容
      */
     @Modifying
-    @Query("UPDATE ExamRecord r SET r.answerContent = :answerContent, r.updatedAt = CURRENT_TIMESTAMP WHERE r.id = :recordId")
+    @Query("UPDATE ExamRecord r SET r.answerDetails = :answerContent, r.updatedAt = CURRENT_TIMESTAMP WHERE r.id = :recordId")
     int updateAnswerContent(@Param("recordId") Long recordId, @Param("answerContent") String answerContent);
 
 }

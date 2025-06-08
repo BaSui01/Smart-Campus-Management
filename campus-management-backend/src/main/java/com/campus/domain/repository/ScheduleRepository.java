@@ -19,19 +19,19 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
     List<Schedule> findBySemesterOrderByWeekdayAscStartTimeAsc(String semester);
 
     /**
-     * 根据教师姓名和学期查找课表
+     * 根据教师ID和学期查找课表
      */
-    List<Schedule> findByTeacherNameAndSemesterOrderByWeekdayAscStartTimeAsc(String teacherName, String semester);
+    List<Schedule> findByTeacherIdAndSemesterOrderByWeekdayAscStartTimeAsc(Long teacherId, String semester);
 
     /**
-     * 根据教室和学期查找课表
+     * 根据教室ID和学期查找课表
      */
-    List<Schedule> findByClassroomAndSemesterOrderByWeekdayAscStartTimeAsc(String classroom, String semester);
+    List<Schedule> findByClassroomIdAndSemesterOrderByWeekdayAscStartTimeAsc(Long classroomId, String semester);
 
     /**
      * 根据状态查找课表
      */
-    List<Schedule> findByStatus(String status);
+    List<Schedule> findByStatus(Integer status);
 
     /**
      * 查找有冲突的课表
@@ -39,7 +39,7 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
     List<Schedule> findByHasConflictTrueAndSemester(String semester);
 
     /**
-     * 根据课程名称查找课表
+     * 根据课程ID查找课表
      */
-    List<Schedule> findByCourseNameContaining(String courseName);
+    List<Schedule> findByCourseId(Long courseId);
 }

@@ -125,7 +125,7 @@ public interface FeeItemRepository extends BaseRepository<FeeItem> {
      * @param status 状态
      * @return 更新行数
      */
-    @Query("UPDATE FeeItem f SET f.status = :status, f.updatedTime = CURRENT_TIMESTAMP WHERE f.id = :id")
+    @Query("UPDATE FeeItem f SET f.status = :status, f.updatedAt = CURRENT_TIMESTAMP WHERE f.id = :id")
     int updateStatus(@Param("id") Long id, @Param("status") Integer status);
 
     /**
@@ -134,7 +134,7 @@ public interface FeeItemRepository extends BaseRepository<FeeItem> {
      * @param id 项目ID
      * @return 更新行数
      */
-    @Query("UPDATE FeeItem f SET f.deleted = 1, f.updatedTime = CURRENT_TIMESTAMP WHERE f.id = :id")
+    @Query("UPDATE FeeItem f SET f.deleted = 1, f.updatedAt = CURRENT_TIMESTAMP WHERE f.id = :id")
     int softDelete(@Param("id") Long id);
 
     /**
@@ -143,7 +143,7 @@ public interface FeeItemRepository extends BaseRepository<FeeItem> {
      * @param ids 项目ID列表
      * @return 更新行数
      */
-    @Query("UPDATE FeeItem f SET f.deleted = 1, f.updatedTime = CURRENT_TIMESTAMP WHERE f.id IN :ids")
+    @Query("UPDATE FeeItem f SET f.deleted = 1, f.updatedAt = CURRENT_TIMESTAMP WHERE f.id IN :ids")
     int batchSoftDelete(@Param("ids") List<Long> ids);
 
     /**
@@ -153,7 +153,7 @@ public interface FeeItemRepository extends BaseRepository<FeeItem> {
      * @param status 状态
      * @return 更新行数
      */
-    @Query("UPDATE FeeItem f SET f.status = :status, f.updatedTime = CURRENT_TIMESTAMP WHERE f.id IN :ids")
+    @Query("UPDATE FeeItem f SET f.status = :status, f.updatedAt = CURRENT_TIMESTAMP WHERE f.id IN :ids")
     int batchUpdateStatus(@Param("ids") List<Long> ids, @Param("status") Integer status);
 
     /**
@@ -168,7 +168,7 @@ public interface FeeItemRepository extends BaseRepository<FeeItem> {
         AND (f.itemName LIKE %:keyword%
              OR f.itemCode LIKE %:keyword%
              OR f.description LIKE %:keyword%)
-        ORDER BY f.createdTime DESC
+        ORDER BY f.createdAt DESC
         """)
     List<FeeItem> searchByKeyword(@Param("keyword") String keyword);
 

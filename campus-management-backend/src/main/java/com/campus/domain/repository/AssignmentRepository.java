@@ -1,204 +1,212 @@
 package com.campus.domain.repository;
 
+import com.campus.domain.entity.Assignment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import com.campus.domain.entity.Assignment;
-
 import java.time.LocalDateTime;
 import java.util.List;
 
-
 /**
- * 作业Repository接口
- * 提供作业相关的数据访问方法
+ * 作业数据访问接口
  *
  * @author Campus Management Team
  * @version 1.0.0
- * @since 2025-06-07
+ * @since 2024-12-07
  */
 @Repository
-public interface AssignmentRepository extends BaseRepository<Assignment> {
+public interface AssignmentRepository extends JpaRepository<Assignment, Long> {
 
-    // ================================
-    // 基础查询方法
-    // ================================
+    // ==================== 基础查询方法 ====================
 
     /**
-     * 根据课程ID查找作业列表
+     * 根据课程ID查找作业
      */
-    @Query("SELECT a FROM Assignment a WHERE a.courseId = :courseId AND a.deleted = 0 ORDER BY a.dueDate DESC")
-    List<Assignment> findByCourseId(@Param("courseId") Long courseId);
+    List<Assignment> findByCourseIdAndDeleted(Long courseId, Integer deleted);
 
     /**
-     * 分页根据课程ID查找作业列表
+     * 根据课程ID分页查找作业
      */
-    @Query("SELECT a FROM Assignment a WHERE a.courseId = :courseId AND a.deleted = 0")
-    Page<Assignment> findByCourseId(@Param("courseId") Long courseId, Pageable pageable);
+    Page<Assignment> findByCourseIdAndDeleted(Long courseId, Integer deleted, Pageable pageable);
 
     /**
-     * 根据教师ID查找作业列表
+     * 根据教师ID查找作业
      */
-    @Query("SELECT a FROM Assignment a WHERE a.teacherId = :teacherId AND a.deleted = 0 ORDER BY a.dueDate DESC")
-    List<Assignment> findByTeacherId(@Param("teacherId") Long teacherId);
+    List<Assignment> findByTeacherIdAndDeleted(Long teacherId, Integer deleted);
 
     /**
-     * 分页根据教师ID查找作业列表
+     * 根据教师ID分页查找作业
      */
-    @Query("SELECT a FROM Assignment a WHERE a.teacherId = :teacherId AND a.deleted = 0")
-    Page<Assignment> findByTeacherId(@Param("teacherId") Long teacherId, Pageable pageable);
+    Page<Assignment> findByTeacherIdAndDeleted(Long teacherId, Integer deleted, Pageable pageable);
 
     /**
-     * 根据作业类型查找作业列表
+     * 根据班级ID查找作业
      */
-    @Query("SELECT a FROM Assignment a WHERE a.assignmentType = :type AND a.deleted = 0 ORDER BY a.dueDate DESC")
-    List<Assignment> findByAssignmentType(@Param("type") String assignmentType);
+    List<Assignment> findByClassIdAndDeleted(Long classId, Integer deleted);
 
     /**
-     * 根据截止日期范围查找作业
+     * 根据班级ID分页查找作业
      */
-    @Query("SELECT a FROM Assignment a WHERE a.dueDate BETWEEN :startDate AND :endDate AND a.deleted = 0 ORDER BY a.dueDate")
-    List<Assignment> findByDueDateBetween(@Param("startDate") LocalDateTime startDate, 
-                                         @Param("endDate") LocalDateTime endDate);
-
-    // ================================
-    // 复合查询方法
-    // ================================
+    Page<Assignment> findByClassIdAndDeleted(Long classId, Integer deleted, Pageable pageable);
 
     /**
-     * 根据多个条件查找作业
+     * 根据作业类型查找作业
      */
-    @Query("SELECT a FROM Assignment a WHERE " +
-           "(:courseId IS NULL OR a.courseId = :courseId) AND " +
-           "(:teacherId IS NULL OR a.teacherId = :teacherId) AND " +
-           "(:assignmentType IS NULL OR a.assignmentType = :assignmentType) AND " +
-           "a.deleted = 0")
-    Page<Assignment> findByMultipleConditions(@Param("courseId") Long courseId,
-                                             @Param("teacherId") Long teacherId,
-                                             @Param("assignmentType") String assignmentType,
-                                             Pageable pageable);
+    List<Assignment> findByAssignmentTypeAndDeleted(String assignmentType, Integer deleted);
 
     /**
-     * 搜索作业（根据标题、描述等关键词）
+     * 查找已发布的作业
      */
-    @Query("SELECT a FROM Assignment a WHERE " +
-           "(a.title LIKE %:keyword% OR " +
-           "a.description LIKE %:keyword%) AND " +
-           "a.deleted = 0 ORDER BY a.dueDate DESC")
-    List<Assignment> searchAssignments(@Param("keyword") String keyword);
+    List<Assignment> findByIsPublishedTrueAndDeleted(Integer deleted);
 
     /**
-     * 分页搜索作业
+     * 查找未发布的作业
      */
-    @Query("SELECT a FROM Assignment a WHERE " +
-           "(a.title LIKE %:keyword% OR " +
-           "a.description LIKE %:keyword%) AND " +
-           "a.deleted = 0")
-    Page<Assignment> searchAssignments(@Param("keyword") String keyword, Pageable pageable);
-
-    // ================================
-    // 关联查询方法
-    // ================================
+    List<Assignment> findByIsPublishedFalseAndDeleted(Integer deleted);
 
     /**
-     * 查找作业并预加载课程信息
+     * 根据截止时间范围查找作业
      */
-    @Query("SELECT DISTINCT a FROM Assignment a LEFT JOIN FETCH a.course WHERE a.deleted = 0")
-    List<Assignment> findAllWithCourse();
-
-    /**
-     * 查找作业并预加载教师信息
-     */
-    @Query("SELECT DISTINCT a FROM Assignment a LEFT JOIN FETCH a.teacher WHERE a.deleted = 0")
-    List<Assignment> findAllWithTeacher();
-
-    // ================================
-    // 统计查询方法
-    // ================================
-
-    /**
-     * 根据课程统计作业数量
-     */
-    @Query("SELECT c.courseName, COUNT(a) FROM Assignment a LEFT JOIN a.course c WHERE a.deleted = 0 GROUP BY a.courseId, c.courseName ORDER BY COUNT(a) DESC")
-    List<Object[]> countByCourse();
-
-    /**
-     * 根据作业类型统计数量
-     */
-    @Query("SELECT a.assignmentType, COUNT(a) FROM Assignment a WHERE a.deleted = 0 GROUP BY a.assignmentType ORDER BY COUNT(a) DESC")
-    List<Object[]> countByType();
-
-    /**
-     * 根据教师统计作业数量
-     */
-    @Query("SELECT u.realName, COUNT(a) FROM Assignment a LEFT JOIN a.teacher u WHERE a.deleted = 0 GROUP BY a.teacherId, u.realName ORDER BY COUNT(a) DESC")
-    List<Object[]> countByTeacher();
-
-    // ================================
-    // 时间相关查询
-    // ================================
-
-    /**
-     * 查找即将到期的作业（未来7天内）
-     */
-    @Query("SELECT a FROM Assignment a WHERE a.dueDate BETWEEN CURRENT_TIMESTAMP AND :sevenDaysLater AND a.deleted = 0 ORDER BY a.dueDate")
-    List<Assignment> findUpcomingAssignments(@Param("sevenDaysLater") LocalDateTime sevenDaysLater);
+    List<Assignment> findByDueDateBetweenAndDeleted(LocalDateTime startDate, LocalDateTime endDate, Integer deleted);
 
     /**
      * 查找已过期的作业
      */
-    @Query("SELECT a FROM Assignment a WHERE a.dueDate < CURRENT_TIMESTAMP AND a.deleted = 0 ORDER BY a.dueDate DESC")
-    List<Assignment> findOverdueAssignments();
+    List<Assignment> findByDueDateBeforeAndDeleted(LocalDateTime dueDate, Integer deleted);
+
+    // ==================== 统计查询方法 ====================
 
     /**
-     * 查找今日到期的作业
+     * 统计课程作业数量
      */
-    @Query("SELECT a FROM Assignment a WHERE DATE(a.dueDate) = CURRENT_DATE AND a.deleted = 0 ORDER BY a.dueDate")
-    List<Assignment> findTodayDueAssignments();
-
-    // ================================
-    // 存在性检查方法
-    // ================================
+    long countByCourseIdAndDeleted(Long courseId, Integer deleted);
 
     /**
-     * 检查作业标题是否存在（同一课程内）
+     * 统计教师作业数量
      */
-    @Query("SELECT CASE WHEN COUNT(a) > 0 THEN true ELSE false END FROM Assignment a WHERE a.title = :title AND a.courseId = :courseId AND a.deleted = 0")
-    boolean existsByTitleAndCourseId(@Param("title") String title, @Param("courseId") Long courseId);
+    long countByTeacherIdAndDeleted(Long teacherId, Integer deleted);
 
     /**
-     * 检查作业标题是否存在（同一课程内，排除指定ID）
+     * 统计已发布作业数量
      */
-    @Query("SELECT CASE WHEN COUNT(a) > 0 THEN true ELSE false END FROM Assignment a WHERE a.title = :title AND a.courseId = :courseId AND a.id != :excludeId AND a.deleted = 0")
-    boolean existsByTitleAndCourseIdAndIdNot(@Param("title") String title, @Param("courseId") Long courseId, @Param("excludeId") Long excludeId);
-
-    // ================================
-    // 更新操作方法
-    // ================================
+    long countByIsPublishedTrueAndDeleted(Integer deleted);
 
     /**
-     * 更新作业截止日期
+     * 统计未发布作业数量
+     */
+    long countByIsPublishedFalseAndDeleted(Integer deleted);
+
+    /**
+     * 统计截止时间范围内的作业数量
+     */
+    long countByDueDateBetweenAndDeleted(LocalDateTime startDate, LocalDateTime endDate, Integer deleted);
+
+    /**
+     * 统计已过期作业数量
+     */
+    long countByDueDateBeforeAndDeleted(LocalDateTime dueDate, Integer deleted);
+
+    // ==================== 验证方法 ====================
+
+    /**
+     * 检查作业标题是否存在
+     */
+    boolean existsByTitleAndDeleted(String title, Integer deleted);
+
+    /**
+     * 检查作业标题是否存在（排除指定ID）
+     */
+    boolean existsByTitleAndIdNotAndDeleted(String title, Long excludeId, Integer deleted);
+
+    // ==================== 复杂查询方法 ====================
+
+    /**
+     * 根据条件分页查询作业
+     */
+    @Query("SELECT a FROM Assignment a WHERE " +
+           "(:title IS NULL OR a.title LIKE %:title%) AND " +
+           "(:courseId IS NULL OR a.courseId = :courseId) AND " +
+           "(:teacherId IS NULL OR a.teacherId = :teacherId) AND " +
+           "(:assignmentType IS NULL OR a.assignmentType = :assignmentType) AND " +
+           "(:isPublished IS NULL OR a.isPublished = :isPublished) AND " +
+           "a.deleted = 0")
+    Page<Assignment> findByConditions(@Param("title") String title,
+                                    @Param("courseId") Long courseId,
+                                    @Param("teacherId") Long teacherId,
+                                    @Param("assignmentType") String assignmentType,
+                                    @Param("isPublished") Boolean isPublished,
+                                    Pageable pageable);
+
+    /**
+     * 获取作业提交统计
+     */
+    @Query("SELECT " +
+           "COUNT(s) as totalSubmissions, " +
+           "COUNT(CASE WHEN s.submissionStatus = 'graded' THEN 1 END) as gradedSubmissions, " +
+           "COUNT(CASE WHEN s.submissionStatus != 'graded' THEN 1 END) as ungradedSubmissions, " +
+           "AVG(s.score) as averageScore " +
+           "FROM AssignmentSubmission s WHERE s.assignmentId = :assignmentId AND s.deleted = 0")
+    List<Object[]> getSubmissionStatistics(@Param("assignmentId") Long assignmentId);
+
+    /**
+     * 获取课程作业统计
+     */
+    @Query("SELECT " +
+           "COUNT(a) as totalAssignments, " +
+           "COUNT(CASE WHEN a.isPublished = true THEN 1 END) as publishedAssignments, " +
+           "COUNT(CASE WHEN a.dueDate < CURRENT_TIMESTAMP THEN 1 END) as overdueAssignments " +
+           "FROM Assignment a WHERE a.courseId = :courseId AND a.deleted = 0")
+    List<Object[]> getCourseAssignmentStatistics(@Param("courseId") Long courseId);
+
+    /**
+     * 获取教师作业统计
+     */
+    @Query("SELECT " +
+           "COUNT(a) as totalAssignments, " +
+           "COUNT(CASE WHEN a.isPublished = true THEN 1 END) as publishedAssignments, " +
+           "COUNT(CASE WHEN a.dueDate < CURRENT_TIMESTAMP THEN 1 END) as overdueAssignments " +
+           "FROM Assignment a WHERE a.teacherId = :teacherId AND a.deleted = 0")
+    List<Object[]> getTeacherAssignmentStatistics(@Param("teacherId") Long teacherId);
+
+    // ==================== 更新方法 ====================
+
+    /**
+     * 更新发布状态
      */
     @Modifying
-    @Query("UPDATE Assignment a SET a.dueDate = :dueDate, a.updatedAt = CURRENT_TIMESTAMP WHERE a.id = :assignmentId")
-    int updateDueDate(@Param("assignmentId") Long assignmentId, @Param("dueDate") LocalDateTime dueDate);
+    @Query("UPDATE Assignment a SET a.isPublished = :isPublished, a.updatedAt = CURRENT_TIMESTAMP WHERE a.id = :id")
+    int updatePublishStatus(@Param("id") Long id, @Param("isPublished") Boolean isPublished);
 
     /**
-     * 批量更新作业截止日期
+     * 批量更新发布状态
      */
     @Modifying
-    @Query("UPDATE Assignment a SET a.dueDate = :dueDate, a.updatedAt = CURRENT_TIMESTAMP WHERE a.id IN :assignmentIds")
-    int batchUpdateDueDate(@Param("assignmentIds") List<Long> assignmentIds, @Param("dueDate") LocalDateTime dueDate);
+    @Query("UPDATE Assignment a SET a.isPublished = :isPublished, a.updatedAt = CURRENT_TIMESTAMP WHERE a.id IN :ids")
+    int batchUpdatePublishStatus(@Param("ids") List<Long> ids, @Param("isPublished") Boolean isPublished);
 
     /**
-     * 更新作业最大分数
+     * 更新截止时间
      */
     @Modifying
-    @Query("UPDATE Assignment a SET a.maxScore = :maxScore, a.updatedAt = CURRENT_TIMESTAMP WHERE a.id = :assignmentId")
-    int updateMaxScore(@Param("assignmentId") Long assignmentId, @Param("maxScore") Integer maxScore);
+    @Query("UPDATE Assignment a SET a.dueDate = :dueDate, a.updatedAt = CURRENT_TIMESTAMP WHERE a.id = :id")
+    int updateDueDate(@Param("id") Long id, @Param("dueDate") LocalDateTime dueDate);
 
+    /**
+     * 更新状态
+     */
+    @Modifying
+    @Query("UPDATE Assignment a SET a.status = :status, a.updatedAt = CURRENT_TIMESTAMP WHERE a.id = :id")
+    int updateStatus(@Param("id") Long id, @Param("status") Integer status);
+
+    /**
+     * 批量更新状态
+     */
+    @Modifying
+    @Query("UPDATE Assignment a SET a.status = :status, a.updatedAt = CURRENT_TIMESTAMP WHERE a.id IN :ids")
+    int batchUpdateStatus(@Param("ids") List<Long> ids, @Param("status") Integer status);
 }

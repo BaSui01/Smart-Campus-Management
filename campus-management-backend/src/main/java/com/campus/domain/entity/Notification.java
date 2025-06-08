@@ -390,4 +390,172 @@ public class Notification extends BaseEntity {
     public void setSender(User sender) {
         this.sender = sender;
     }
+
+    // ================================
+    // 兼容性方法 - 为了支持 NotificationApiController
+    // ================================
+
+    /**
+     * 获取通知类型（兼容性方法）
+     */
+    public String getNotificationType() {
+        return type;
+    }
+
+    /**
+     * 设置通知类型（兼容性方法）
+     */
+    public void setNotificationType(String notificationType) {
+        this.type = notificationType;
+    }
+
+    /**
+     * 获取目标类型（兼容性方法）
+     */
+    public String getTargetType() {
+        return targetAudience;
+    }
+
+    /**
+     * 设置目标类型（兼容性方法）
+     */
+    public void setTargetType(String targetType) {
+        this.targetAudience = targetType;
+    }
+
+    /**
+     * 获取目标ID列表（兼容性方法）
+     */
+    public String getTargetIds() {
+        // 如果没有专门的字段，可以返回空字符串或根据targetAudience生成
+        return "[]"; // 返回空的JSON数组
+    }
+
+    /**
+     * 设置目标ID列表（兼容性方法）
+     */
+    public void setTargetIds(String targetIds) {
+        // 可以根据需要处理目标ID列表
+    }
+
+    /**
+     * 获取附件URL列表（兼容性方法）
+     */
+    public String getAttachmentUrls() {
+        return attachmentUrl != null ? "[\"" + attachmentUrl + "\"]" : "[]";
+    }
+
+    /**
+     * 设置附件URL列表（兼容性方法）
+     */
+    public void setAttachmentUrls(String attachmentUrls) {
+        // 简单处理：如果是JSON数组格式，取第一个URL
+        if (attachmentUrls != null && attachmentUrls.startsWith("[") && attachmentUrls.endsWith("]")) {
+            String content = attachmentUrls.substring(1, attachmentUrls.length() - 1);
+            if (!content.trim().isEmpty()) {
+                // 简单解析第一个URL
+                String[] urls = content.split(",");
+                if (urls.length > 0) {
+                    this.attachmentUrl = urls[0].trim().replace("\"", "");
+                }
+            }
+        } else {
+            this.attachmentUrl = attachmentUrls;
+        }
+    }
+
+    /**
+     * 获取外部链接（兼容性方法）
+     */
+    public String getExternalLink() {
+        // 如果没有专门的字段，可以返回null或空字符串
+        return null;
+    }
+
+    /**
+     * 设置外部链接（兼容性方法）
+     */
+    public void setExternalLink(String externalLink) {
+        // 可以根据需要处理外部链接
+    }
+
+    /**
+     * 获取是否自动发送（兼容性方法）
+     */
+    public Boolean getAutoSend() {
+        // 默认返回false
+        return false;
+    }
+
+    /**
+     * 设置是否自动发送（兼容性方法）
+     */
+    public void setAutoSend(Boolean autoSend) {
+        // 可以根据需要处理自动发送设置
+    }
+
+    /**
+     * 获取是否发送邮件（兼容性方法）
+     */
+    public Boolean getSendEmail() {
+        // 默认返回false
+        return false;
+    }
+
+    /**
+     * 设置是否发送邮件（兼容性方法）
+     */
+    public void setSendEmail(Boolean sendEmail) {
+        // 可以根据需要处理邮件发送设置
+    }
+
+    /**
+     * 获取是否发送短信（兼容性方法）
+     */
+    public Boolean getSendSms() {
+        // 默认返回false
+        return false;
+    }
+
+    /**
+     * 设置是否发送短信（兼容性方法）
+     */
+    public void setSendSms(Boolean sendSms) {
+        // 可以根据需要处理短信发送设置
+    }
+
+    /**
+     * 设置是否发布（兼容性方法）
+     */
+    public void setIsPublished(int isPublished) {
+        if (isPublished == 1) {
+            this.notificationStatus = "PUBLISHED";
+            if (this.publishTime == null) {
+                this.publishTime = LocalDateTime.now();
+            }
+        } else {
+            this.notificationStatus = "DRAFT";
+        }
+    }
+
+    /**
+     * 获取是否发布（兼容性方法）
+     */
+    public int getIsPublished() {
+        return "PUBLISHED".equals(notificationStatus) ? 1 : 0;
+    }
+
+    /**
+     * 设置是否置顶（兼容性方法）
+     */
+    public void setIsTop(int isTop) {
+        this.isPinned = (isTop == 1);
+    }
+
+    /**
+     * 获取是否置顶（兼容性方法）
+     */
+    public int getIsTop() {
+        return Boolean.TRUE.equals(isPinned) ? 1 : 0;
+    }
 }

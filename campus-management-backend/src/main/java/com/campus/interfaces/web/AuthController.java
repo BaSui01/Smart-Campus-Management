@@ -117,7 +117,8 @@ public class AuthController {
             }
 
             // 检查用户角色（只允许管理员和教师登录后台）
-            boolean hasAdminRole = userService.hasRole(user.getId(), "ADMIN") ||
+            boolean hasAdminRole = userService.hasRole(user.getId(), "SUPER_ADMIN") ||
+                                 userService.hasRole(user.getId(), "ADMIN") ||
                                  userService.hasRole(user.getId(), "SYSTEM_ADMIN") ||
                                  userService.hasRole(user.getId(), "ACADEMIC_ADMIN") ||
                                  userService.hasRole(user.getId(), "FINANCE_ADMIN") ||

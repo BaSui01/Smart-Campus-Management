@@ -902,4 +902,208 @@ public class Exam extends BaseEntity {
                 ", deleted=" + getDeleted() +
                 '}';
     }
+
+    // ================================
+    // 兼容性方法 - 为了支持 ExamApiController
+    // ================================
+
+    /**
+     * 获取考试名称（兼容性方法）
+     */
+    public String getExamName() {
+        return title;
+    }
+
+    /**
+     * 设置考试名称（兼容性方法）
+     */
+    public void setExamName(String examName) {
+        this.title = examName;
+    }
+
+    /**
+     * 获取教室ID（兼容性方法）
+     */
+    public Long getClassroomId() {
+        return classId;
+    }
+
+    /**
+     * 设置教室ID（兼容性方法）
+     */
+    public void setClassroomId(Long classroomId) {
+        this.classId = classroomId;
+    }
+
+    /**
+     * 获取及格分数（兼容性方法）
+     */
+    public Integer getPassingScore() {
+        return passScore;
+    }
+
+    /**
+     * 设置及格分数（兼容性方法）
+     */
+    public void setPassingScore(Integer passingScore) {
+        this.passScore = passingScore;
+    }
+
+    /**
+     * 获取最大参与人数（兼容性方法）
+     */
+    public Integer getMaxParticipants() {
+        // 如果没有专门的字段，可以返回一个默认值或者 null
+        return null;
+    }
+
+    /**
+     * 设置最大参与人数（兼容性方法）
+     */
+    public void setMaxParticipants(Integer maxParticipants) {
+        // 如果没有专门的字段，可以暂时不做处理
+    }
+
+    /**
+     * 获取是否在线考试（兼容性方法）
+     */
+    public Boolean getIsOnline() {
+        // 根据防作弊模式或其他字段判断，这里简单返回 true
+        return true;
+    }
+
+    /**
+     * 设置是否在线考试（兼容性方法）
+     */
+    public void setIsOnline(Boolean isOnline) {
+        // 可以根据需要设置相关字段
+    }
+
+    /**
+     * 设置是否发布（兼容性方法）
+     */
+    public void setIsPublished(int isPublished) {
+        if (isPublished == 1) {
+            this.examStatus = "published";
+            this.publishedTime = LocalDateTime.now();
+        } else {
+            this.examStatus = "draft";
+            this.publishedTime = null;
+        }
+    }
+
+    /**
+     * 获取是否发布（兼容性方法）
+     */
+    public int getIsPublished() {
+        return "published".equals(examStatus) ? 1 : 0;
+    }
+
+    /**
+     * 设置题目数量（兼容性方法）
+     */
+    public void setQuestionCount(int questionCount) {
+        // 题目数量通常由关联的题目列表决定，这里可以暂时不做处理
+        // 或者可以添加一个字段来存储预期的题目数量
+    }
+
+    /**
+     * 获取是否随机题目（兼容性方法）
+     */
+    public Boolean getShuffleQuestions() {
+        return randomQuestions;
+    }
+
+    /**
+     * 设置是否随机题目（兼容性方法）
+     */
+    public void setShuffleQuestions(Boolean shuffleQuestions) {
+        this.randomQuestions = shuffleQuestions;
+    }
+
+    /**
+     * 获取是否随机选项（兼容性方法）
+     */
+    public Boolean getShuffleOptions() {
+        return randomOptions;
+    }
+
+    /**
+     * 设置是否随机选项（兼容性方法）
+     */
+    public void setShuffleOptions(Boolean shuffleOptions) {
+        this.randomOptions = shuffleOptions;
+    }
+
+    /**
+     * 获取是否启用防作弊（兼容性方法）
+     */
+    public Boolean getAntiCheatEnabled() {
+        return !"none".equals(antiCheatMode);
+    }
+
+    /**
+     * 设置是否启用防作弊（兼容性方法）
+     */
+    public void setAntiCheatEnabled(Boolean antiCheatEnabled) {
+        this.antiCheatMode = Boolean.TRUE.equals(antiCheatEnabled) ? "basic" : "none";
+    }
+
+    /**
+     * 获取是否需要摄像头（兼容性方法）
+     */
+    public Boolean getCameraRequired() {
+        return recordExam;
+    }
+
+    /**
+     * 设置是否需要摄像头（兼容性方法）
+     */
+    public void setCameraRequired(Boolean cameraRequired) {
+        this.recordExam = cameraRequired;
+    }
+
+    /**
+     * 获取是否锁定屏幕（兼容性方法）
+     */
+    public Boolean getScreenLock() {
+        return fullscreenMode;
+    }
+
+    /**
+     * 设置是否锁定屏幕（兼容性方法）
+     */
+    public void setScreenLock(Boolean screenLock) {
+        this.fullscreenMode = screenLock;
+    }
+
+    /**
+     * 获取是否自动提交（兼容性方法）
+     */
+    public Boolean getAutoSubmit() {
+        // 可以根据需要返回一个默认值，这里假设总是自动提交
+        return true;
+    }
+
+    /**
+     * 设置是否自动提交（兼容性方法）
+     */
+    public void setAutoSubmit(Boolean autoSubmit) {
+        // 可以根据需要设置相关字段
+    }
+
+    /**
+     * 获取是否允许迟交（兼容性方法）
+     */
+    public Boolean getLateSubmissionAllowed() {
+        // 可以根据需要返回一个默认值，这里假设不允许迟交
+        return false;
+    }
+
+    /**
+     * 设置是否允许迟交（兼容性方法）
+     */
+    public void setLateSubmissionAllowed(Boolean lateSubmissionAllowed) {
+        // 可以根据需要设置相关字段
+    }
 }

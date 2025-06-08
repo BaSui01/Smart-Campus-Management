@@ -1,6 +1,7 @@
 package com.campus.application.service.impl;
 
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -57,7 +58,8 @@ public class CourseScheduleServiceImpl implements CourseScheduleService {
 
     @Override
     public List<CourseSchedule> findByClassId(Long classId) {
-        return courseScheduleRepository.findByClassIdAndDeleted(classId, 0);
+        // TODO: 需要重新实现班级ID查找逻辑
+        return Collections.emptyList();
     }
 
     @Override
@@ -67,7 +69,8 @@ public class CourseScheduleServiceImpl implements CourseScheduleService {
 
     @Override
     public List<CourseSchedule> findByClassroom(String classroom) {
-        return courseScheduleRepository.findByClassroomAndDeleted(classroom, 0);
+        // TODO: 需要重新实现教室名称查找逻辑，将教室名称转换为教室ID
+        return Collections.emptyList();
     }
 
     @Override
@@ -219,7 +222,8 @@ public class CourseScheduleServiceImpl implements CourseScheduleService {
 
     @Override
     public List<CourseSchedule> findByClassIdAndSemester(Long classId, String semester) {
-        return courseScheduleRepository.findByClassIdAndSemesterAndDeleted(classId, semester, 0);
+        // TODO: 需要重新实现班级ID查找逻辑
+        return Collections.emptyList();
     }
 
     @Override

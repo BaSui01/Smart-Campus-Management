@@ -9,7 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
+
 
 /**
  * 考试题目Repository接口
@@ -132,7 +132,7 @@ public interface ExamQuestionRepository extends BaseRepository<ExamQuestion> {
     /**
      * 根据考试统计题目数量
      */
-    @Query("SELECT e.examName, COUNT(q) FROM ExamQuestion q LEFT JOIN q.exam e WHERE q.deleted = 0 GROUP BY q.examId, e.examName ORDER BY COUNT(q) DESC")
+    @Query("SELECT e.title, COUNT(q) FROM ExamQuestion q LEFT JOIN q.exam e WHERE q.deleted = 0 GROUP BY q.examId, e.title ORDER BY COUNT(q) DESC")
     List<Object[]> countByExam();
 
     /**

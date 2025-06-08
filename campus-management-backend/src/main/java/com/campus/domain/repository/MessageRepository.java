@@ -58,10 +58,10 @@ public interface MessageRepository extends BaseRepository<Message> {
     List<Message> findByMessageType(@Param("messageType") String messageType);
 
     /**
-     * 根据消息状态查找消息
+     * 根据阅读状态查找消息
      */
-    @Query("SELECT m FROM Message m WHERE m.messageStatus = :status AND m.deleted = 0 ORDER BY m.sendTime DESC")
-    List<Message> findByMessageStatus(@Param("status") String messageStatus);
+    @Query("SELECT m FROM Message m WHERE m.isRead = :isRead AND m.deleted = 0 ORDER BY m.sendTime DESC")
+    List<Message> findByMessageStatus(@Param("isRead") Boolean isRead);
 
     /**
      * 根据优先级查找消息
@@ -86,13 +86,13 @@ public interface MessageRepository extends BaseRepository<Message> {
            "(:senderId IS NULL OR m.senderId = :senderId) AND " +
            "(:receiverId IS NULL OR m.receiverId = :receiverId) AND " +
            "(:messageType IS NULL OR m.messageType = :messageType) AND " +
-           "(:messageStatus IS NULL OR m.messageStatus = :messageStatus) AND " +
+           "(:isRead IS NULL OR m.isRead = :isRead) AND " +
            "(:priority IS NULL OR m.priority = :priority) AND " +
            "m.deleted = 0")
     Page<Message> findByMultipleConditions(@Param("senderId") Long senderId,
                                           @Param("receiverId") Long receiverId,
                                           @Param("messageType") String messageType,
-                                          @Param("messageStatus") String messageStatus,
+                                          @Param("isRead") Boolean isRead,
                                           @Param("priority") String priority,
                                           Pageable pageable);
 
@@ -257,9 +257,9 @@ public interface MessageRepository extends BaseRepository<Message> {
     List<Object[]> countByMessageType();
 
     /**
-     * 根据消息状态统计数量
+     * 根据阅读状态统计数量
      */
-    @Query("SELECT m.messageStatus, COUNT(m) FROM Message m WHERE m.deleted = 0 GROUP BY m.messageStatus")
+    @Query("SELECT m.isRead, COUNT(m) FROM Message m WHERE m.deleted = 0 GROUP BY m.isRead")
     List<Object[]> countByMessageStatus();
 
     /**
@@ -349,18 +349,18 @@ public interface MessageRepository extends BaseRepository<Message> {
     int markAllAsReadByReceiverId(@Param("receiverId") Long receiverId);
 
     /**
-     * 更新消息状态
+     * 更新消息阅读状态
      */
     @Modifying
-    @Query("UPDATE Message m SET m.messageStatus = :status, m.updatedAt = CURRENT_TIMESTAMP WHERE m.id = :messageId")
-    int updateMessageStatus(@Param("messageId") Long messageId, @Param("status") String messageStatus);
+    @Query("UPDATE Message m SET m.isRead = :isRead WHERE m.id = :messageId")
+    int updateMessageStatus(@Param("messageId") Long messageId, @Param("isRead") Boolean isRead);
 
     /**
-     * 批量更新消息状态
+     * 批量更新消息阅读状态
      */
     @Modifying
-    @Query("UPDATE Message m SET m.messageStatus = :status, m.updatedAt = CURRENT_TIMESTAMP WHERE m.id IN :messageIds")
-    int batchUpdateMessageStatus(@Param("messageIds") List<Long> messageIds, @Param("status") String messageStatus);
+    @Query("UPDATE Message m SET m.isRead = :isRead WHERE m.id IN :messageIds")
+    int batchUpdateMessageStatus(@Param("messageIds") List<Long> messageIds, @Param("isRead") Boolean isRead);
 
     // ================================
     // 数据清理方法

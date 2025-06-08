@@ -29,13 +29,13 @@ public interface NotificationRepository extends BaseRepository<Notification> {
     /**
      * 根据通知类型查找通知
      */
-    @Query("SELECT n FROM Notification n WHERE n.notificationType = :type AND n.deleted = 0 ORDER BY n.createdAt DESC")
+    @Query("SELECT n FROM Notification n WHERE n.type = :type AND n.deleted = 0 ORDER BY n.createdAt DESC")
     List<Notification> findByNotificationType(@Param("type") String notificationType);
 
     /**
      * 分页根据通知类型查找通知
      */
-    @Query("SELECT n FROM Notification n WHERE n.notificationType = :type AND n.deleted = 0")
+    @Query("SELECT n FROM Notification n WHERE n.type = :type AND n.deleted = 0")
     Page<Notification> findByNotificationType(@Param("type") String notificationType, Pageable pageable);
 
     /**
@@ -82,7 +82,7 @@ public interface NotificationRepository extends BaseRepository<Notification> {
      * 根据多个条件查找通知
      */
     @Query("SELECT n FROM Notification n WHERE " +
-           "(:notificationType IS NULL OR n.notificationType = :notificationType) AND " +
+           "(:notificationType IS NULL OR n.type = :notificationType) AND " +
            "(:notificationStatus IS NULL OR n.notificationStatus = :notificationStatus) AND " +
            "(:targetAudience IS NULL OR n.targetAudience = :targetAudience) AND " +
            "(:senderId IS NULL OR n.senderId = :senderId) AND " +
@@ -169,11 +169,7 @@ public interface NotificationRepository extends BaseRepository<Notification> {
     @Query("SELECT DISTINCT n FROM Notification n LEFT JOIN FETCH n.sender WHERE n.deleted = 0")
     List<Notification> findAllWithSender();
 
-    /**
-     * 查找通知并预加载模板信息
-     */
-    @Query("SELECT DISTINCT n FROM Notification n LEFT JOIN FETCH n.template WHERE n.deleted = 0")
-    List<Notification> findAllWithTemplate();
+
 
     // ================================
     // 统计查询方法
@@ -182,7 +178,7 @@ public interface NotificationRepository extends BaseRepository<Notification> {
     /**
      * 根据通知类型统计数量
      */
-    @Query("SELECT n.notificationType, COUNT(n) FROM Notification n WHERE n.deleted = 0 GROUP BY n.notificationType ORDER BY COUNT(n) DESC")
+    @Query("SELECT n.type, COUNT(n) FROM Notification n WHERE n.deleted = 0 GROUP BY n.type ORDER BY COUNT(n) DESC")
     List<Object[]> countByNotificationType();
 
     /**

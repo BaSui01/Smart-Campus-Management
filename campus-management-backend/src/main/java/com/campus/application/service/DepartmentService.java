@@ -142,4 +142,19 @@ public interface DepartmentService {
      * 移动院系到新的上级院系
      */
     void moveDepartment(Long id, Long newParentId);
+
+    /**
+     * 根据院系代码检查是否存在
+     */
+    boolean existsByCode(String departmentCode);
+
+    /**
+     * 获取所有活跃院系
+     */
+    List<Department> findActiveDepartments();
+
+    /**
+     * 获取院系层级结构
+     */
+    Object getDepartmentHierarchy();
 }

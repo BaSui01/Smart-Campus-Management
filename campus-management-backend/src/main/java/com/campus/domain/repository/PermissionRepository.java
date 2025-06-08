@@ -337,4 +337,18 @@ public interface PermissionRepository extends BaseRepository<Permission> {
         return List.of();
     }
 
+    /**
+     * 根据资源类型统计权限数量（兼容性方法）
+     */
+    default long countByResourceType(String resourceType) {
+        return findByPermissionType(resourceType).size();
+    }
+
+    /**
+     * 按资源类型分组统计权限数量（兼容性方法）
+     */
+    default List<Object[]> countByResourceTypeGroupBy() {
+        return countByPermissionType();
+    }
+
 }

@@ -100,3 +100,46 @@ campus-management-frontend/.output/
 campus-management-frontend/.env
 campus-management-frontend/.env.local
 campus-management-frontend/.env.*.local
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Security
+*.key
+*.pem
+*.p12
+*.jks
+
+# Backup files
+*.bak
+*.backup
+*.orig
+
+# OS generated files
+.DS_Store?
+ehthumbs_vista.db
+
+# JetBrains IDEs
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Spring Boot
+application-*.yml
+!application.yml
+!application-example.yml
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Temporary files
+*.tmp
+*.temp
+*~
+
+# GitHub specific
+.github/workflows/*.yml.bak

@@ -349,7 +349,76 @@ public class DepartmentServiceImpl implements DepartmentService {
         
         department.setParentId(newParentId);
         departmentRepository.save(department);
-        
+
         log.info("Department moved successfully");
+    }
+
+    @Override
+    public boolean existsByCode(String departmentCode) {
+        return existsByDeptCode(departmentCode);
+    }
+
+    @Override
+    @Cacheable(value = "departments", key = "'active'")
+    public List<Department> findActiveDepartments() {
+        return departmentRepository.findByStatusAndDeletedOrderBySortOrderAsc(1, 0);
+    }
+
+    @Override
+    @Cacheable(value = "departmentHierarchy")
+    public Object getDepartmentHierarchy() {
+        try {
+            List<Department> allDepartments = getAllDepartments();
+            return buildDepartmentHierarchy(allDepartments);
+        } catch (Exception e) {
+            log.error("获取院系层级结构失败", e);
+            return new java.util.ArrayList<>();
+        }
+    }
+
+    /**
+     * 构建院系层级结构
+     */
+    private Object buildDepartmentHierarchy(List<Department> departments) {
+        java.util.Map<Long, java.util.List<Department>> parentMap = new java.util.HashMap<>();
+
+        // 按父级ID分组
+        for (Department dept : departments) {
+            Long parentId = dept.getParentId();
+            if (parentId == null) {
+                parentId = 0L; // 顶级院系
+            }
+            parentMap.computeIfAbsent(parentId, k -> new java.util.ArrayList<>()).add(dept);
+        }
+
+        // 构建层级结构
+        java.util.List<java.util.Map<String, Object>> hierarchy = new java.util.ArrayList<>();
+        buildHierarchyRecursive(hierarchy, parentMap, 0L);
+
+        return hierarchy;
+    }
+
+    private void buildHierarchyRecursive(java.util.List<java.util.Map<String, Object>> result,
+                                       java.util.Map<Long, java.util.List<Department>> parentMap,
+                                       Long parentId) {
+        java.util.List<Department> children = parentMap.get(parentId);
+        if (children != null) {
+            for (Department dept : children) {
+                java.util.Map<String, Object> node = new java.util.HashMap<>();
+                node.put("id", dept.getId());
+                node.put("name", dept.getDeptName());
+                node.put("code", dept.getDeptCode());
+                node.put("type", dept.getDeptType());
+                node.put("level", dept.getDeptLevel());
+
+                java.util.List<java.util.Map<String, Object>> childNodes = new java.util.ArrayList<>();
+                buildHierarchyRecursive(childNodes, parentMap, dept.getId());
+                if (!childNodes.isEmpty()) {
+                    node.put("children", childNodes);
+                }
+
+                result.add(node);
+            }
+        }
     }
 }

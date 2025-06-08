@@ -4,6 +4,7 @@ import com.campus.domain.entity.Permission;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * 权限管理服务接口
@@ -27,6 +28,11 @@ public interface PermissionService {
      * @return 权限列表
      */
     List<Permission> getAllPermissions();
+
+    /**
+     * 分页获取所有权限
+     */
+    org.springframework.data.domain.Page<Permission> findAllPermissions(org.springframework.data.domain.Pageable pageable);
 
     /**
      * 根据ID获取权限
@@ -131,4 +137,108 @@ public interface PermissionService {
      * @return 模块列表
      */
     List<String> getPermissionModules();
+
+    /**
+     * 根据权限代码检查是否存在
+     */
+    boolean existsByCode(String permissionCode);
+
+    /**
+     * 统计权限总数
+     */
+    long countTotalPermissions();
+
+    /**
+     * 获取所有权限
+     */
+    List<Permission> findAllPermissions();
+
+    // ================================
+    // Web控制器需要的方法
+    // ================================
+
+    /**
+     * 搜索权限（带分页）
+     *
+     * @param keyword 关键字
+     * @param pageable 分页参数
+     * @return 权限分页结果
+     */
+    org.springframework.data.domain.Page<Permission> searchPermissions(String keyword, org.springframework.data.domain.Pageable pageable);
+
+    /**
+     * 根据模块查找权限
+     *
+     * @param module 模块名称
+     * @return 权限列表
+     */
+    List<Permission> findPermissionsByModule(String module);
+
+    /**
+     * 根据类型查找权限
+     *
+     * @param type 权限类型
+     * @return 权限列表
+     */
+    List<Permission> findPermissionsByType(String type);
+
+    /**
+     * 统计系统权限数量
+     *
+     * @return 系统权限数量
+     */
+    long countSystemPermissions();
+
+    /**
+     * 按模块统计权限数量
+     *
+     * @return 模块统计结果
+     */
+    List<Object[]> countPermissionsByModule();
+
+    /**
+     * 按类型统计权限数量
+     *
+     * @return 类型统计结果
+     */
+    List<Object[]> countPermissionsByType();
+
+    /**
+     * 根据ID查找权限
+     *
+     * @param id 权限ID
+     * @return 权限信息
+     */
+    Optional<Permission> findPermissionById(Long id);
+
+    /**
+     * 更新权限（不带ID参数）
+     *
+     * @param permission 权限信息
+     * @return 更新的权限
+     */
+    Permission updatePermission(Permission permission);
+
+    /**
+     * 启用权限
+     *
+     * @param id 权限ID
+     * @return 是否成功
+     */
+    boolean enablePermission(Long id);
+
+    /**
+     * 禁用权限
+     *
+     * @param id 权限ID
+     * @return 是否成功
+     */
+    boolean disablePermission(Long id);
+
+    /**
+     * 获取权限树结构
+     *
+     * @return 权限树结构
+     */
+    Object getPermissionTree();
 }

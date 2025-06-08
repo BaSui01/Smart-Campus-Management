@@ -421,4 +421,20 @@ public interface CourseRepository extends BaseRepository<Course> {
            "WHERE c.id = :courseId AND c.deleted = 0")
     Optional<Object[]> findCourseDetailById(@Param("courseId") Long courseId);
 
+    // ================================
+    // CacheWarmupServiceImpl需要的方法
+    // ================================
+
+    /**
+     * 根据状态和删除状态查找课程
+     */
+    @Query("SELECT c FROM Course c WHERE c.status = :status AND c.deleted = :deleted ORDER BY c.courseName")
+    List<Course> findByStatusAndDeleted(@Param("status") Integer status, @Param("deleted") Integer deleted);
+
+    /**
+     * 根据状态和删除状态统计课程数量
+     */
+    @Query("SELECT COUNT(c) FROM Course c WHERE c.status = :status AND c.deleted = :deleted")
+    long countByStatusAndDeleted(@Param("status") Integer status, @Param("deleted") Integer deleted);
+
 }

@@ -87,11 +87,17 @@
                                 活动日志
                             </a>
                         </li>
+                        <li th:if="${@permissionUtil.isSuperAdmin()}">
+                            <a href="/admin/diagnostic/permissions" th:classappend="${currentPage == 'diagnostic' ? 'active' : ''}">
+                                <i class="fas fa-stethoscope"></i>
+                                权限诊断
+                            </a>
+                        </li>
                     </ul>
                 </li>
 
-                <!-- 学术管理 - 只有ADMIN和ACADEMIC_ADMIN可以看到 -->
-                <li th:if="${session.userRole == 'ADMIN' or session.userRole == 'ACADEMIC_ADMIN'}">
+                <!-- 学术管理 - 只有SUPER_ADMIN、ADMIN和ACADEMIC_ADMIN可以看到 -->
+                <li th:if="${@permissionUtil.isAcademicAdmin()}">
                     <a href="#academicSubmenu" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle">
                         <i class="fas fa-graduation-cap"></i>
                         学术管理
@@ -118,16 +124,16 @@
                     </ul>
                 </li>
 
-                <!-- 学生管理 - 只有ADMIN和STUDENT_ADMIN可以看到 -->
-                <li th:if="${session.userRole == 'ADMIN' or session.userRole == 'STUDENT_ADMIN'}">
+                <!-- 学生管理 - 只有SUPER_ADMIN、ADMIN和ACADEMIC_ADMIN可以看到 -->
+                <li th:if="${@permissionUtil.isAcademicAdmin()}">
                     <a href="/admin/students" th:classappend="${currentPage == 'students' ? 'active' : ''}">
                         <i class="fas fa-user-graduate"></i>
                         学生管理
                     </a>
                 </li>
 
-                <!-- 财务管理 - 只有ADMIN和FINANCE_ADMIN可以看到 -->
-                <li th:if="${session.userRole == 'ADMIN' or session.userRole == 'FINANCE_ADMIN'}">
+                <!-- 财务管理 - 只有SUPER_ADMIN、ADMIN和FINANCE_ADMIN可以看到 -->
+                <li th:if="${@permissionUtil.isFinanceAdmin()}">
                     <a href="#financeSubmenu" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle">
                         <i class="fas fa-money-bill-wave"></i>
                         财务管理

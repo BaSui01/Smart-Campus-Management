@@ -74,4 +74,135 @@ public interface ReportService {
      * @return 退费金额
      */
     BigDecimal getRefundAmount(Integer year, Integer month);
+
+    // ================================
+    // 报表管理页面需要的方法
+    // ================================
+
+    /**
+     * 获取报表分类
+     *
+     * @return 报表分类列表
+     */
+    List<Map<String, Object>> getReportCategories();
+
+    /**
+     * 获取最近的报表
+     *
+     * @return 最近报表列表
+     */
+    List<Map<String, Object>> getRecentReports();
+
+    /**
+     * 获取收藏的报表
+     *
+     * @return 收藏报表列表
+     */
+    List<Map<String, Object>> getFavoriteReports();
+
+    /**
+     * 获取可用的学期列表
+     *
+     * @return 学期列表
+     */
+    List<String> getAvailableSemesters();
+
+    /**
+     * 获取支付类型列表
+     *
+     * @return 支付类型列表
+     */
+    List<Map<String, Object>> getPaymentTypes();
+
+    /**
+     * 获取招生年份列表
+     *
+     * @return 招生年份列表
+     */
+    List<Integer> getEnrollmentYears();
+
+    /**
+     * 获取自定义报表列表
+     *
+     * @return 自定义报表列表
+     */
+    List<Map<String, Object>> getCustomReports();
+
+    /**
+     * 获取报表模板列表
+     *
+     * @return 报表模板列表
+     */
+    List<Map<String, Object>> getReportTemplates();
+
+    /**
+     * 获取可用的数据源
+     *
+     * @return 数据源列表
+     */
+    List<Map<String, Object>> getAvailableDataSources();
+
+    /**
+     * 获取图表类型列表
+     *
+     * @return 图表类型列表
+     */
+    List<Map<String, Object>> getChartTypes();
+
+    /**
+     * 根据ID获取自定义报表
+     *
+     * @param id 报表ID
+     * @return 自定义报表
+     */
+    Map<String, Object> getCustomReportById(Long id);
+
+    /**
+     * 获取计划报表列表
+     *
+     * @return 计划报表列表
+     */
+    List<Map<String, Object>> getScheduledReports();
+
+    /**
+     * 获取导出历史
+     *
+     * @return 导出历史列表
+     */
+    List<Map<String, Object>> getExportHistory();
+
+    /**
+     * 获取分析数据
+     *
+     * @return 分析数据
+     */
+    Map<String, Object> getAnalyticsData();
+
+    /**
+     * 获取KPI指标
+     *
+     * @return KPI指标数据
+     */
+    Map<String, Object> getKPIMetrics();
+
+    /**
+     * 获取仪表板小部件
+     *
+     * @return 仪表板小部件列表
+     */
+    List<Map<String, Object>> getDashboardWidgets();
+
+    /**
+     * 获取可用的小部件
+     *
+     * @return 可用小部件列表
+     */
+    List<Map<String, Object>> getAvailableWidgets();
+
+    /**
+     * 获取模板分类
+     *
+     * @return 模板分类列表
+     */
+    List<Map<String, Object>> getTemplateCategories();
 }

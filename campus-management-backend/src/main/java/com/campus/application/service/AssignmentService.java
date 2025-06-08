@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -14,7 +15,7 @@ import java.util.Optional;
  * 
  * @author Campus Management Team
  * @version 1.0.0
- * @since 2024-12-07
+ * @since 2025-06-06
  */
 public interface AssignmentService {
 
@@ -280,4 +281,104 @@ public interface AssignmentService {
      * 批量禁用作业
      */
     void disableAssignments(List<Long> ids);
+
+    // ================================
+    // API控制器需要的方法
+    // ================================
+
+    /**
+     * 提交作业
+     *
+     * @param submission 作业提交信息
+     * @return 提交的作业
+     */
+    AssignmentSubmission submitAssignment(AssignmentSubmission submission);
+
+    /**
+     * 上传作业文件
+     *
+     * @param submissionId 提交ID
+     * @param file 文件
+     * @return 文件URL
+     */
+    String uploadSubmissionFile(Long submissionId, org.springframework.web.multipart.MultipartFile file);
+
+    /**
+     * 根据ID获取作业提交
+     *
+     * @param submissionId 提交ID
+     * @return 作业提交信息
+     */
+    AssignmentSubmission getSubmissionById(Long submissionId);
+
+    /**
+     * 更新作业提交
+     *
+     * @param submission 作业提交信息
+     * @return 更新的作业提交
+     */
+    AssignmentSubmission updateSubmission(AssignmentSubmission submission);
+
+    /**
+     * 删除作业提交
+     *
+     * @param submissionId 提交ID
+     * @return 删除结果
+     */
+    boolean deleteSubmission(Long submissionId);
+
+    /**
+     * 分页查找作业提交
+     *
+     * @param pageable 分页参数
+     * @param assignmentId 作业ID
+     * @param studentId 学生ID
+     * @param status 状态
+     * @return 分页结果
+     */
+    Page<AssignmentSubmission> findSubmissions(Pageable pageable, Long assignmentId, Long studentId, String status);
+
+    /**
+     * 根据作业ID获取所有提交
+     *
+     * @param assignmentId 作业ID
+     * @return 提交列表
+     */
+    List<AssignmentSubmission> getSubmissionsByAssignment(Long assignmentId);
+
+    /**
+     * 根据学生ID获取所有提交
+     *
+     * @param studentId 学生ID
+     * @return 提交列表
+     */
+    List<AssignmentSubmission> getSubmissionsByStudent(Long studentId);
+
+    /**
+     * 作业评分
+     *
+     * @param submissionId 提交ID
+     * @param score 分数
+     * @param feedback 反馈
+     * @param teacherId 教师ID
+     * @return 评分后的作业提交
+     */
+    AssignmentSubmission gradeSubmission(Long submissionId, Double score, String feedback, Long teacherId);
+
+    /**
+     * 获取逾期未提交作业
+     *
+     * @param courseId 课程ID
+     * @param studentId 学生ID
+     * @return 逾期作业列表
+     */
+    List<Map<String, Object>> getOverdueSubmissions(Long courseId, Long studentId);
+
+    /**
+     * 批量评分
+     *
+     * @param batchGradeData 批量评分数据
+     * @return 评分结果
+     */
+    Map<String, Object> batchGradeSubmissions(Map<String, Object> batchGradeData);
 }

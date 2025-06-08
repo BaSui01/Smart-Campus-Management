@@ -1,6 +1,8 @@
 package com.campus.domain.repository;
 
 import com.campus.domain.entity.Classroom;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -197,4 +199,74 @@ public interface ClassroomRepository extends JpaRepository<Classroom, Long> {
            "(SELECT COUNT(cs) FROM CourseSchedule cs WHERE cs.classroomId = c.id AND cs.deleted = 0) as scheduleCount " +
            "FROM Classroom c WHERE c.id = :id")
     Optional<Object[]> findDetailById(@Param("id") Long id);
+
+    // ================================
+    // ClassroomServiceImpl需要的方法
+    // ================================
+
+    /**
+     * 根据教室名称和删除状态检查是否存在
+     */
+    boolean existsByClassroomNameAndDeleted(String classroomName, Integer deleted);
+
+    /**
+     * 根据ID和删除状态查找教室
+     */
+    Optional<Classroom> findByIdAndDeleted(Long id, Integer deleted);
+
+    /**
+     * 根据删除状态分页查询教室（按创建时间倒序）
+     */
+    Page<Classroom> findByDeletedOrderByCreatedAtDesc(Integer deleted, Pageable pageable);
+
+    /**
+     * 根据状态和删除状态查找教室（按教室名称排序）
+     */
+    List<Classroom> findByStatusAndDeletedOrderByClassroomName(Integer status, Integer deleted);
+
+    /**
+     * 根据建筑和删除状态查找教室（按楼层和教室名称排序）
+     */
+    List<Classroom> findByBuildingAndDeletedOrderByFloorAscClassroomNameAsc(String building, Integer deleted);
+
+    /**
+     * 根据容量范围和删除状态查找教室（按容量排序）
+     */
+    List<Classroom> findByCapacityBetweenAndDeletedOrderByCapacityAsc(Integer minCapacity, Integer maxCapacity, Integer deleted);
+
+    /**
+     * 根据建筑、楼层和删除状态查找教室（按教室名称排序）
+     */
+    List<Classroom> findByBuildingAndFloorAndDeletedOrderByClassroomName(String building, Integer floor, Integer deleted);
+
+    /**
+     * 根据删除状态统计教室数量
+     */
+    long countByDeleted(Integer deleted);
+
+    /**
+     * 根据状态和删除状态统计教室数量
+     */
+    long countByStatusAndDeleted(Integer status, Integer deleted);
+
+    /**
+     * 按建筑统计教室数量
+     */
+    @Query("SELECT c.building, COUNT(c) FROM Classroom c WHERE c.deleted = 0 GROUP BY c.building")
+    List<Object[]> countByBuilding();
+
+    /**
+     * 根据教室名称模糊查询（忽略大小写，按教室名称排序）
+     */
+    Page<Classroom> findByClassroomNameContainingIgnoreCaseAndDeletedOrderByClassroomName(String classroomName, Integer deleted, Pageable pageable);
+
+    /**
+     * 根据设备模糊查询（忽略大小写）
+     */
+    List<Classroom> findByEquipmentContainingIgnoreCaseAndDeleted(String equipment, Integer deleted);
+
+    /**
+     * 根据删除状态查找教室（按建筑、楼层、教室名称排序）
+     */
+    List<Classroom> findByDeletedOrderByBuildingAscFloorAscClassroomNameAsc(Integer deleted);
 }

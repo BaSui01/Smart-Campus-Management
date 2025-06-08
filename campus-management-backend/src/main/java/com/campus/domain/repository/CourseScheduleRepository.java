@@ -324,6 +324,28 @@ public interface CourseScheduleRepository extends BaseRepository<CourseSchedule>
     @Query("SELECT cs FROM CourseSchedule cs WHERE cs.teacherId = :teacherId AND cs.semester = :semester AND cs.deleted = :deleted")
     List<CourseSchedule> findByTeacherIdAndSemesterAndDeleted(@Param("teacherId") Long teacherId, @Param("semester") String semester, @Param("deleted") Integer deleted);
 
+    /**
+     * 根据教室ID和删除状态查找课程安排（兼容性方法）
+     */
+    @Query("SELECT cs FROM CourseSchedule cs WHERE cs.classroomId = :classroomId AND cs.deleted = :deleted")
+    List<CourseSchedule> findByClassroomIdAndDeleted(@Param("classroomId") Long classroomId, @Param("deleted") Integer deleted);
 
+    /**
+     * 根据计划日期范围和删除状态查找课程安排（兼容性方法）
+     */
+    @Query("SELECT cs FROM CourseSchedule cs WHERE cs.scheduleDate BETWEEN :startDate AND :endDate AND cs.deleted = :deleted")
+    List<CourseSchedule> findByScheduleDateBetweenAndDeleted(@Param("startDate") java.time.LocalDate startDate, @Param("endDate") java.time.LocalDate endDate, @Param("deleted") Integer deleted);
+
+    /**
+     * 根据星期几和删除状态查找课程安排（兼容性方法）
+     */
+    @Query("SELECT cs FROM CourseSchedule cs WHERE cs.dayOfWeek = :dayOfWeek AND cs.deleted = :deleted")
+    List<CourseSchedule> findByDayOfWeekAndDeleted(@Param("dayOfWeek") Integer dayOfWeek, @Param("deleted") Integer deleted);
+
+    /**
+     * 根据状态和删除状态统计课程安排数量（兼容性方法）
+     */
+    @Query("SELECT COUNT(cs) FROM CourseSchedule cs WHERE cs.status = :status AND cs.deleted = :deleted")
+    long countByStatusAndDeleted(@Param("status") Integer status, @Param("deleted") Integer deleted);
 
 }

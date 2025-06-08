@@ -18,7 +18,7 @@ import java.util.Optional;
  *
  * @author Campus Management Team
  * @version 1.0.0
- * @since 2024-12-07
+ * @since 2025-06-06
  */
 @Repository
 public interface AssignmentSubmissionRepository extends JpaRepository<AssignmentSubmission, Long> {
@@ -211,4 +211,21 @@ public interface AssignmentSubmissionRepository extends JpaRepository<Assignment
      */
     @Query("SELECT CASE WHEN s.submissionStatus = 'graded' THEN false ELSE true END FROM AssignmentSubmission s WHERE s.id = :id")
     Boolean canDeleteSubmission(@Param("id") Long id);
+
+    // ==================== AssignmentServiceImpl需要的额外方法 ====================
+
+    /**
+     * 根据删除状态排序查找提交记录（按提交时间倒序）
+     */
+    Page<AssignmentSubmission> findByDeletedOrderBySubmissionTimeDesc(Integer deleted, Pageable pageable);
+
+    /**
+     * 根据作业ID和删除状态排序查找提交记录（按提交时间倒序）
+     */
+    List<AssignmentSubmission> findByAssignmentIdAndDeletedOrderBySubmissionTimeDesc(Long assignmentId, Integer deleted);
+
+    /**
+     * 根据学生ID和删除状态排序查找提交记录（按提交时间倒序）
+     */
+    List<AssignmentSubmission> findByStudentIdAndDeletedOrderBySubmissionTimeDesc(Long studentId, Integer deleted);
 }

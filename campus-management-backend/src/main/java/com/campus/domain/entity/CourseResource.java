@@ -41,6 +41,12 @@ public class CourseResource extends BaseEntity {
     private Long teacherId;
 
     /**
+     * 上传者ID（兼容性属性，指向teacherId）
+     */
+    @Column(name = "uploaded_by")
+    private Long uploadedBy;
+
+    /**
      * 资源名称
      */
     @NotBlank(message = "资源名称不能为空")
@@ -436,6 +442,16 @@ public class CourseResource extends BaseEntity {
 
     public void setTeacherId(Long teacherId) {
         this.teacherId = teacherId;
+        // 同时设置uploadedBy以保持兼容性
+        this.uploadedBy = teacherId;
+    }
+
+    public Long getUploadedBy() {
+        return uploadedBy != null ? uploadedBy : teacherId;
+    }
+
+    public void setUploadedBy(Long uploadedBy) {
+        this.uploadedBy = uploadedBy;
     }
 
     public String getResourceName() {

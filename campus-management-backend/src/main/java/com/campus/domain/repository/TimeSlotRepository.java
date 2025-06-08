@@ -256,4 +256,130 @@ public interface TimeSlotRepository extends JpaRepository<TimeSlot, Long> {
      */
     @Query("SELECT MAX(t.sortOrder) FROM TimeSlot t WHERE t.deleted = 0")
     Integer findMaxSortOrder();
+
+    // ================================
+    // TimeSlotServiceImpl需要的方法
+    // ================================
+
+    /**
+     * 根据ID和删除状态查找时间段
+     */
+    @Query("SELECT t FROM TimeSlot t WHERE t.id = :id AND t.deleted = :deleted")
+    Optional<TimeSlot> findByIdAndDeleted(@Param("id") Long id, @Param("deleted") Integer deleted);
+
+    /**
+     * 根据删除状态查找所有时间段，按开始时间排序
+     */
+    @Query("SELECT t FROM TimeSlot t WHERE t.deleted = :deleted ORDER BY t.startTime ASC")
+    List<TimeSlot> findByDeletedOrderByStartTimeAsc(@Param("deleted") Integer deleted);
+
+    /**
+     * 分页根据删除状态查找时间段，按开始时间排序
+     */
+    @Query("SELECT t FROM TimeSlot t WHERE t.deleted = :deleted ORDER BY t.startTime ASC")
+    org.springframework.data.domain.Page<TimeSlot> findByDeletedOrderByStartTimeAsc(@Param("deleted") Integer deleted, org.springframework.data.domain.Pageable pageable);
+
+    /**
+     * 根据状态和删除状态查找时间段，按开始时间排序
+     */
+    @Query("SELECT t FROM TimeSlot t WHERE t.status = :status AND t.deleted = :deleted ORDER BY t.startTime ASC")
+    List<TimeSlot> findByStatusAndDeletedOrderByStartTimeAsc(@Param("status") Integer status, @Param("deleted") Integer deleted);
+
+    /**
+     * 根据时间段名称和删除状态查找
+     */
+    @Query("SELECT t FROM TimeSlot t WHERE t.slotName = :slotName AND t.deleted = :deleted")
+    Optional<TimeSlot> findBySlotNameAndDeleted(@Param("slotName") String slotName, @Param("deleted") Integer deleted);
+
+    /**
+     * 根据开始时间范围和删除状态查找时间段，按开始时间排序
+     */
+    @Query("SELECT t FROM TimeSlot t WHERE t.startTime BETWEEN :startTime AND :endTime AND t.deleted = :deleted ORDER BY t.startTime ASC")
+    List<TimeSlot> findByStartTimeBetweenAndDeletedOrderByStartTimeAsc(@Param("startTime") LocalTime startTime, @Param("endTime") LocalTime endTime, @Param("deleted") Integer deleted);
+
+    /**
+     * 根据时间段类型和删除状态查找，按开始时间排序
+     */
+    @Query("SELECT t FROM TimeSlot t WHERE t.slotType = :slotType AND t.deleted = :deleted ORDER BY t.startTime ASC")
+    List<TimeSlot> findBySlotTypeAndDeletedOrderByStartTimeAsc(@Param("slotType") String slotType, @Param("deleted") Integer deleted);
+
+    /**
+     * 根据学期和删除状态查找，按开始时间排序
+     */
+    @Query("SELECT t FROM TimeSlot t WHERE t.semester = :semester AND t.deleted = :deleted ORDER BY t.startTime ASC")
+    List<TimeSlot> findBySemesterAndDeletedOrderByStartTimeAsc(@Param("semester") String semester, @Param("deleted") Integer deleted);
+
+    /**
+     * 查找时间冲突的时间段
+     */
+    @Query("SELECT t FROM TimeSlot t WHERE " +
+           "((t.startTime <= :startTime AND t.endTime > :startTime) OR " +
+           "(t.startTime < :endTime AND t.endTime >= :endTime) OR " +
+           "(t.startTime >= :startTime AND t.endTime <= :endTime)) AND " +
+           "t.deleted = :deleted")
+    List<TimeSlot> findConflictingTimeSlots(@Param("startTime") LocalTime startTime, @Param("endTime") LocalTime endTime, @Param("deleted") Integer deleted);
+
+    /**
+     * 查找时间冲突的时间段（排除指定ID）
+     */
+    @Query("SELECT t FROM TimeSlot t WHERE " +
+           "((t.startTime <= :startTime AND t.endTime > :startTime) OR " +
+           "(t.startTime < :endTime AND t.endTime >= :endTime) OR " +
+           "(t.startTime >= :startTime AND t.endTime <= :endTime)) AND " +
+           "t.id != :excludeId AND t.deleted = :deleted")
+    List<TimeSlot> findConflictingTimeSlotsExcluding(@Param("startTime") LocalTime startTime, @Param("endTime") LocalTime endTime, @Param("excludeId") Long excludeId, @Param("deleted") Integer deleted);
+
+    /**
+     * 检查时间段名称和删除状态是否存在
+     */
+    @Query("SELECT CASE WHEN COUNT(t) > 0 THEN true ELSE false END FROM TimeSlot t WHERE t.slotName = :slotName AND t.deleted = :deleted")
+    boolean existsBySlotNameAndDeleted(@Param("slotName") String slotName, @Param("deleted") Integer deleted);
+
+    /**
+     * 根据时间查找时间段
+     */
+    @Query("SELECT t FROM TimeSlot t WHERE :time BETWEEN t.startTime AND t.endTime AND t.deleted = :deleted")
+    Optional<TimeSlot> findByTimeInRange(@Param("time") LocalTime time, @Param("deleted") Integer deleted);
+
+    /**
+     * 查找下一个时间段
+     */
+    @Query("SELECT t FROM TimeSlot t WHERE t.startTime >= :endTime AND t.deleted = :deleted ORDER BY t.startTime ASC")
+    Optional<TimeSlot> findNextTimeSlot(@Param("endTime") LocalTime endTime, @Param("deleted") Integer deleted);
+
+    /**
+     * 查找上一个时间段
+     */
+    @Query("SELECT t FROM TimeSlot t WHERE t.endTime <= :startTime AND t.deleted = :deleted ORDER BY t.endTime DESC")
+    Optional<TimeSlot> findPreviousTimeSlot(@Param("startTime") LocalTime startTime, @Param("deleted") Integer deleted);
+
+    /**
+     * 根据删除状态统计数量
+     */
+    @Query("SELECT COUNT(t) FROM TimeSlot t WHERE t.deleted = :deleted")
+    long countByDeleted(@Param("deleted") Integer deleted);
+
+    /**
+     * 根据状态和删除状态统计数量
+     */
+    @Query("SELECT COUNT(t) FROM TimeSlot t WHERE t.status = :status AND t.deleted = :deleted")
+    long countByStatusAndDeleted(@Param("status") Integer status, @Param("deleted") Integer deleted);
+
+    /**
+     * 获取使用统计
+     */
+    @Query("SELECT t.slotType, COUNT(t) as count FROM TimeSlot t WHERE t.deleted = 0 GROUP BY t.slotType")
+    List<Object[]> getUsageStatistics();
+
+    /**
+     * 根据时间段名称模糊查询，按开始时间排序
+     */
+    @Query("SELECT t FROM TimeSlot t WHERE t.slotName LIKE %:slotName% AND t.deleted = :deleted ORDER BY t.startTime ASC")
+    org.springframework.data.domain.Page<TimeSlot> findBySlotNameContainingIgnoreCaseAndDeletedOrderByStartTimeAsc(@Param("slotName") String slotName, @Param("deleted") Integer deleted, org.springframework.data.domain.Pageable pageable);
+
+    /**
+     * 查找无效时间段
+     */
+    @Query("SELECT t FROM TimeSlot t WHERE t.startTime >= t.endTime OR t.deleted = 1")
+    List<TimeSlot> findInvalidTimeSlots();
 }

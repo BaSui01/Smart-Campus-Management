@@ -156,6 +156,24 @@ public class Classroom extends BaseEntity {
     private String buildingName;
 
     /**
+     * 建筑（兼容性属性）
+     */
+    @Column(name = "building", length = 50)
+    private String building;
+
+    /**
+     * 设备信息（兼容性属性）
+     */
+    @Column(name = "equipment", length = 500)
+    private String equipment;
+
+    /**
+     * 描述信息（兼容性属性）
+     */
+    @Column(name = "description", length = 1000)
+    private String description;
+
+    /**
      * 管理员
      */
     @ManyToOne(fetch = FetchType.LAZY)
@@ -438,6 +456,34 @@ public class Classroom extends BaseEntity {
 
     public void setBuildingName(String buildingName) {
         this.buildingName = buildingName;
+    }
+
+    public String getBuilding() {
+        return building;
+    }
+
+    public void setBuilding(String building) {
+        this.building = building;
+        // 同时设置buildingName以保持兼容性
+        if (building != null) {
+            this.buildingName = building;
+        }
+    }
+
+    public String getEquipment() {
+        return equipment;
+    }
+
+    public void setEquipment(String equipment) {
+        this.equipment = equipment;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public User getAdministrator() {

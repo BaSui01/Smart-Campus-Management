@@ -17,7 +17,7 @@ import java.util.List;
  *
  * @author Campus Management Team
  * @version 1.0.0
- * @since 2024-12-07
+ * @since 2025-06-06
  */
 @Repository
 public interface AssignmentRepository extends JpaRepository<Assignment, Long> {

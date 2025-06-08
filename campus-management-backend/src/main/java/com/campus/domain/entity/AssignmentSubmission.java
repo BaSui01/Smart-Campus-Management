@@ -373,6 +373,34 @@ public class AssignmentSubmission extends BaseEntity {
         this.grader = grader;
     }
 
+    /**
+     * 设置反馈信息（别名方法，用于兼容）
+     */
+    public void setFeedback(String feedback) {
+        this.teacherComment = feedback;
+    }
+
+    /**
+     * 获取反馈信息（别名方法，用于兼容）
+     */
+    public String getFeedback() {
+        return this.teacherComment;
+    }
+
+    /**
+     * 设置批改时间（别名方法，用于兼容）
+     */
+    public void setGradedAt(LocalDateTime gradedAt) {
+        this.gradedTime = gradedAt;
+    }
+
+    /**
+     * 获取批改时间（别名方法，用于兼容）
+     */
+    public LocalDateTime getGradedAt() {
+        return this.gradedTime;
+    }
+
     // ================================
     // 业务方法
     // ================================

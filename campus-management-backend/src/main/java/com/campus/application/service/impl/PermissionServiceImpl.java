@@ -261,4 +261,190 @@ public class PermissionServiceImpl implements PermissionService {
             return Arrays.asList("用户管理", "角色管理", "权限管理", "课程管理", "学生管理", "财务管理");
         }
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean existsByCode(String permissionCode) {
+        return existsByPermissionCode(permissionCode);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countTotalPermissions() {
+        try {
+            return permissionRepository.count();
+        } catch (Exception e) {
+            logger.error("统计权限总数失败", e);
+            return 0;
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Permission> findAllPermissions() {
+        return getAllPermissions();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Object getPermissionTree() {
+        try {
+            List<Permission> permissions = getAllPermissions();
+            // 构建权限树结构
+            return buildPermissionTree(permissions);
+        } catch (Exception e) {
+            logger.error("获取权限树结构失败", e);
+            return new ArrayList<>();
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<Permission> findAllPermissions(org.springframework.data.domain.Pageable pageable) {
+        try {
+            return permissionRepository.findAll(pageable);
+        } catch (Exception e) {
+            logger.error("分页获取权限列表失败", e);
+            return org.springframework.data.domain.Page.empty();
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<Permission> searchPermissions(String keyword, org.springframework.data.domain.Pageable pageable) {
+        try {
+            if (keyword == null || keyword.trim().isEmpty()) {
+                return findAllPermissions(pageable);
+            }
+            return permissionRepository.findByPermissionNameContaining(keyword.trim(), pageable);
+        } catch (Exception e) {
+            logger.error("搜索权限失败: {}", keyword, e);
+            return org.springframework.data.domain.Page.empty();
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Permission> findPermissionsByModule(String module) {
+        try {
+            return permissionRepository.findByResourceTypeOrderByPermissionCode(module);
+        } catch (Exception e) {
+            logger.error("根据模块查找权限失败: {}", module, e);
+            return new ArrayList<>();
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Permission> findPermissionsByType(String type) {
+        try {
+            return permissionRepository.findByResourceTypeOrderByPermissionCode(type);
+        } catch (Exception e) {
+            logger.error("根据类型查找权限失败: {}", type, e);
+            return new ArrayList<>();
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countSystemPermissions() {
+        try {
+            return permissionRepository.countByResourceType("SYSTEM");
+        } catch (Exception e) {
+            logger.error("统计系统权限数量失败", e);
+            return 0;
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Object[]> countPermissionsByModule() {
+        try {
+            return permissionRepository.countByResourceTypeGroupBy();
+        } catch (Exception e) {
+            logger.error("按模块统计权限数量失败", e);
+            return new ArrayList<>();
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Object[]> countPermissionsByType() {
+        try {
+            return permissionRepository.countByResourceTypeGroupBy();
+        } catch (Exception e) {
+            logger.error("按类型统计权限数量失败", e);
+            return new ArrayList<>();
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<Permission> findPermissionById(Long id) {
+        try {
+            return permissionRepository.findById(id);
+        } catch (Exception e) {
+            logger.error("根据ID查找权限失败: {}", id, e);
+            return Optional.empty();
+        }
+    }
+
+    @Override
+    public Permission updatePermission(Permission permission) {
+        return updatePermission(permission.getId(), permission);
+    }
+
+    @Override
+    public boolean enablePermission(Long id) {
+        try {
+            Permission permission = getPermissionById(id);
+            if (permission == null) {
+                return false;
+            }
+            permission.setStatus(1);
+            permission.setUpdatedAt(LocalDateTime.now());
+            permissionRepository.save(permission);
+            return true;
+        } catch (Exception e) {
+            logger.error("启用权限失败: {}", id, e);
+            return false;
+        }
+    }
+
+    @Override
+    public boolean disablePermission(Long id) {
+        try {
+            Permission permission = getPermissionById(id);
+            if (permission == null) {
+                return false;
+            }
+            permission.setStatus(0);
+            permission.setUpdatedAt(LocalDateTime.now());
+            permissionRepository.save(permission);
+            return true;
+        } catch (Exception e) {
+            logger.error("禁用权限失败: {}", id, e);
+            return false;
+        }
+    }
+
+    /**
+     * 构建权限树结构
+     */
+    private Object buildPermissionTree(List<Permission> permissions) {
+        // 按模块分组
+        Map<String, List<Permission>> moduleMap = permissions.stream()
+            .filter(p -> p.getResourceType() != null)
+            .collect(Collectors.groupingBy(Permission::getResourceType));
+
+        List<Object> tree = new ArrayList<>();
+        for (Map.Entry<String, List<Permission>> entry : moduleMap.entrySet()) {
+            Map<String, Object> moduleNode = new HashMap<>();
+            moduleNode.put("name", entry.getKey());
+            moduleNode.put("permissions", entry.getValue());
+            tree.add(moduleNode);
+        }
+
+        return tree;
+    }
 }

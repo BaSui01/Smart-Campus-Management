@@ -6,8 +6,10 @@ import com.campus.domain.entity.ExamRecord;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -15,7 +17,7 @@ import java.util.Optional;
  * 
  * @author Campus Management Team
  * @version 1.0.0
- * @since 2024-12-07
+ * @since 2025-06-06
  */
 public interface ExamService {
 
@@ -380,4 +382,288 @@ public interface ExamService {
      * 标记可疑行为
      */
     void markSuspiciousBehavior(Long recordId, String behaviorType, String details);
+
+    // ================================
+    // ExamQuestionApiController需要的方法
+    // ================================
+
+    /**
+     * 创建考试题目
+     *
+     * @param question 题目信息
+     * @return 创建的题目
+     */
+    ExamQuestion createExamQuestion(ExamQuestion question);
+
+    /**
+     * 根据ID获取考试题目
+     *
+     * @param questionId 题目ID
+     * @return 题目信息
+     */
+    ExamQuestion getExamQuestionById(Long questionId);
+
+    /**
+     * 更新考试题目
+     *
+     * @param question 题目信息
+     * @return 更新的题目
+     */
+    ExamQuestion updateExamQuestion(ExamQuestion question);
+
+    /**
+     * 删除考试题目
+     *
+     * @param questionId 题目ID
+     * @return 是否删除成功
+     */
+    boolean deleteExamQuestion(Long questionId);
+
+    /**
+     * 分页查询考试题目
+     *
+     * @param pageable 分页参数
+     * @param examId 考试ID
+     * @param questionType 题目类型
+     * @param difficulty 难度级别
+     * @return 分页结果
+     */
+    Page<ExamQuestion> findExamQuestions(Pageable pageable, Long examId, String questionType, String difficulty);
+
+    /**
+     * 根据考试ID获取题目列表
+     *
+     * @param examId 考试ID
+     * @param randomOrder 是否随机排序
+     * @return 题目列表
+     */
+    List<ExamQuestion> getQuestionsByExam(Long examId, boolean randomOrder);
+
+    /**
+     * 根据类型获取题目列表
+     *
+     * @param questionType 题目类型
+     * @param examId 考试ID
+     * @return 题目列表
+     */
+    List<ExamQuestion> getQuestionsByType(String questionType, Long examId);
+
+    /**
+     * 批量导入考试题目
+     *
+     * @param questions 题目列表
+     * @return 导入结果
+     */
+    Map<String, Object> importExamQuestions(List<ExamQuestion> questions);
+
+    /**
+     * 导出考试题目
+     *
+     * @param examId 考试ID
+     * @param questionType 题目类型
+     * @return 题目列表
+     */
+    List<ExamQuestion> exportExamQuestions(Long examId, String questionType);
+
+    /**
+     * 复制题目到其他考试
+     *
+     * @param questionIds 题目ID列表
+     * @param targetExamId 目标考试ID
+     * @return 复制的题目列表
+     */
+    List<ExamQuestion> duplicateQuestions(List<Long> questionIds, Long targetExamId);
+
+    /**
+     * 获取题目统计信息
+     *
+     * @param examId 考试ID
+     * @return 统计信息
+     */
+    Map<String, Object> getQuestionStatistics(Long examId);
+
+    /**
+     * 获取题目难度分析
+     *
+     * @param examId 考试ID
+     * @return 难度分析结果
+     */
+    Map<String, Object> getQuestionDifficultyAnalysis(Long examId);
+
+    /**
+     * 批量更新题目
+     *
+     * @param updateData 更新数据
+     * @return 更新结果
+     */
+    Map<String, Object> batchUpdateQuestions(Map<String, Object> updateData);
+
+    /**
+     * 批量删除题目
+     *
+     * @param questionIds 题目ID列表
+     * @return 删除是否成功
+     */
+    boolean batchDeleteQuestions(List<Long> questionIds);
+
+    /**
+     * 验证题目格式和内容
+     *
+     * @param questions 题目列表
+     * @return 验证结果
+     */
+    Map<String, Object> validateQuestions(List<ExamQuestion> questions);
+
+    // ================================
+    // Web控制器需要的方法
+    // ================================
+
+    /**
+     * 搜索考试
+     *
+     * @param keyword 关键词
+     * @param pageable 分页参数
+     * @return 考试分页结果
+     */
+    Page<Exam> searchExams(String keyword, Pageable pageable);
+
+    /**
+     * 根据课程查找考试
+     *
+     * @param courseId 课程ID
+     * @param pageable 分页参数
+     * @return 考试分页结果
+     */
+    Page<Exam> findExamsByCourse(Long courseId, Pageable pageable);
+
+    /**
+     * 根据考试类型查找考试
+     *
+     * @param examType 考试类型
+     * @param pageable 分页参数
+     * @return 考试分页结果
+     */
+    Page<Exam> findExamsByType(String examType, Pageable pageable);
+
+    /**
+     * 根据考试状态查找考试
+     *
+     * @param status 考试状态
+     * @param pageable 分页参数
+     * @return 考试分页结果
+     */
+    Page<Exam> findExamsByStatus(String status, Pageable pageable);
+
+    /**
+     * 分页查找所有考试
+     *
+     * @param pageable 分页参数
+     * @return 考试分页结果
+     */
+    Page<Exam> findAllExams(Pageable pageable);
+
+    /**
+     * 统计考试总数
+     *
+     * @return 考试总数
+     */
+    long countTotalExams();
+
+    /**
+     * 统计即将到来的考试数量
+     *
+     * @return 即将到来的考试数量
+     */
+    long countUpcomingExams();
+
+    /**
+     * 获取所有考试类型
+     *
+     * @return 考试类型列表
+     */
+    List<String> findAllExamTypes();
+
+    /**
+     * 获取所有考试状态
+     *
+     * @return 考试状态列表
+     */
+    List<String> findAllExamStatuses();
+
+    /**
+     * 根据ID查找考试
+     *
+     * @param id 考试ID
+     * @return 考试信息
+     */
+    Optional<Exam> findExamById(Long id);
+
+    /**
+     * 统计考试提交数量
+     *
+     * @param examId 考试ID
+     * @return 提交数量
+     */
+    long countExamSubmissions(Long examId);
+
+    /**
+     * 创建考试
+     *
+     * @param exam 考试信息
+     * @return 创建的考试
+     */
+    Exam createExam(Exam exam);
+
+    /**
+     * 更新考试
+     *
+     * @param exam 考试信息
+     * @return 更新的考试
+     */
+    Exam updateExam(Exam exam);
+
+    /**
+     * 删除考试
+     *
+     * @param examId 考试ID
+     * @return 删除结果
+     */
+    boolean deleteExam(Long examId);
+
+    /**
+     * 取消考试
+     *
+     * @param examId 考试ID
+     * @return 取消结果
+     */
+    boolean cancelExam(Long examId);
+
+    /**
+     * 统计已完成的考试数量
+     *
+     * @return 已完成的考试数量
+     */
+    long countCompletedExams();
+
+    /**
+     * 按类型统计考试数量
+     *
+     * @return 按类型统计结果
+     */
+    List<Object[]> countExamsByType();
+
+    /**
+     * 获取月度考试统计
+     *
+     * @return 月度统计数据
+     */
+    List<Object[]> getMonthlyExamStatistics();
+
+    /**
+     * 根据月份查找考试
+     *
+     * @param month 月份
+     * @return 考试列表
+     */
+    List<Exam> findExamsByMonth(LocalDate month);
 }

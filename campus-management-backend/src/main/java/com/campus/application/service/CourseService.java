@@ -212,4 +212,123 @@ public interface CourseService {
      * @return 课程列表
      */
     List<Course> exportCourses(Map<String, Object> params);
+
+    /**
+     * 获取活跃课程列表
+     *
+     * @return 活跃课程列表
+     */
+    List<Course> findActiveCourses();
+
+    /**
+     * 获取课程统计信息
+     *
+     * @return 课程统计信息
+     */
+    Object getCourseStatistics();
+
+    // ================================
+    // Web控制器需要的方法
+    // ================================
+
+    /**
+     * 查找未排课的课程
+     *
+     * @return 未排课的课程列表
+     */
+    List<Course> findUnscheduledCourses();
+
+    /**
+     * 根据ID查找课程
+     *
+     * @param id 课程ID
+     * @return 课程信息
+     */
+    Optional<Course> findCourseById(Long id);
+
+    /**
+     * 查找所有课程（不分页）
+     *
+     * @return 所有课程列表
+     */
+    List<Course> findAllCourses();
+
+    /**
+     * 根据课程代码查找课程
+     *
+     * @param courseCode 课程代码
+     * @return 课程信息
+     */
+    Course findByCourseCodeString(String courseCode);
+
+    /**
+     * 获取课程选择列表（用于下拉框）
+     *
+     * @return 课程选择列表
+     */
+    List<Map<String, Object>> getCourseOptions();
+
+    /**
+     * 根据教师ID查找授课课程
+     *
+     * @param teacherId 教师ID
+     * @return 课程列表
+     */
+    List<Course> findCoursesByTeacher(Long teacherId);
+
+    /**
+     * 根据学期查找课程
+     *
+     * @param semester 学期
+     * @return 课程列表
+     */
+    List<Course> findCoursesBySemester(String semester);
+
+    /**
+     * 获取当前学期的课程
+     *
+     * @return 当前学期课程列表
+     */
+    List<Course> findCurrentSemesterCourses();
+
+    /**
+     * 获取课程分类列表
+     *
+     * @return 课程分类列表
+     */
+    List<Map<String, Object>> getCourseCategories();
+
+    /**
+     * 检查课程是否可以删除
+     *
+     * @param courseId 课程ID
+     * @return 是否可以删除
+     */
+    boolean canDeleteCourse(Long courseId);
+
+    /**
+     * 启用课程
+     *
+     * @param courseId 课程ID
+     * @return 操作结果
+     */
+    boolean enableCourse(Long courseId);
+
+    /**
+     * 禁用课程
+     *
+     * @param courseId 课程ID
+     * @return 操作结果
+     */
+    boolean disableCourse(Long courseId);
+
+    /**
+     * 复制课程
+     *
+     * @param courseId 源课程ID
+     * @param newCourseCode 新课程代码
+     * @param newCourseName 新课程名称
+     * @return 复制的课程
+     */
+    Course copyCourse(Long courseId, String newCourseCode, String newCourseName);
 }

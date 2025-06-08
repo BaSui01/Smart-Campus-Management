@@ -208,7 +208,7 @@
     ('academic.current_year', '2024', '当前学年', 'INTEGER', 'ACADEMIC', 1, '当前学年'),
     ('academic.current_semester', '2', '当前学期', 'INTEGER', 'ACADEMIC', 1, '当前学期(1春季,2秋季)'),
     ('academic.semester_start_date', '2024-09-01', '学期开始日期', 'DATE', 'ACADEMIC', 1, '当前学期开始日期'),
-    ('academic.semester_end_date', '2025-01-15', '学期结束日期', 'DATE', 'ACADEMIC', 1, '当前学期结束日期'),
+    ('academic.semester_end_date', '2025-06-07', '学期结束日期', 'DATE', 'ACADEMIC', 1, '当前学期结束日期'),
 
     -- 选课配置
     ('course.selection.max_courses', '8', '最大选课数量', 'INTEGER', 'COURSE', 1, '学生每学期最大选课数量'),

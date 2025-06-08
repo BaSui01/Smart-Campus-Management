@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 
 import java.time.LocalTime;
+import java.time.LocalDateTime;
 
 /**
  * 课表实体类
@@ -141,6 +142,63 @@ public class Schedule extends BaseEntity {
     @Size(max = 500, message = "备注长度不能超过500个字符")
     @Column(name = "remarks", length = 500)
     private String remarks;
+
+    // ================================
+    // 日程管理相关属性 (用于ScheduleServiceImpl)
+    // ================================
+
+    /**
+     * 日程标题
+     */
+    @Size(max = 200, message = "日程标题长度不能超过200个字符")
+    @Column(name = "title", length = 200)
+    private String title;
+
+    /**
+     * 日程描述
+     */
+    @Size(max = 1000, message = "日程描述长度不能超过1000个字符")
+    @Column(name = "description", length = 1000)
+    private String description;
+
+    /**
+     * 用户ID (日程所属用户)
+     */
+    @Column(name = "user_id")
+    private Long userId;
+
+    /**
+     * 地点
+     */
+    @Size(max = 200, message = "地点长度不能超过200个字符")
+    @Column(name = "location", length = 200)
+    private String location;
+
+    /**
+     * 优先级 (1-低, 2-中, 3-高)
+     */
+    @Min(value = 1, message = "优先级不能小于1")
+    @Max(value = 3, message = "优先级不能大于3")
+    @Column(name = "priority")
+    private Integer priority = 2;
+
+    /**
+     * 提醒时间
+     */
+    @Column(name = "remind_time")
+    private LocalDateTime remindTime;
+
+    /**
+     * 日程开始时间 (完整日期时间，用于日程管理)
+     */
+    @Column(name = "schedule_start_time")
+    private LocalDateTime scheduleStartTime;
+
+    /**
+     * 日程结束时间 (完整日期时间，用于日程管理)
+     */
+    @Column(name = "schedule_end_time")
+    private LocalDateTime scheduleEndTime;
 
     // ================================
     // 关联关系
@@ -485,6 +543,97 @@ public class Schedule extends BaseEntity {
 
     public void setAcademicYear(Integer academicYear) {
         this.academicYear = academicYear;
+    }
+
+    // ================================
+    // 日程管理相关属性的Getter/Setter方法
+    // ================================
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
+    public Integer getPriority() {
+        return priority;
+    }
+
+    public void setPriority(Integer priority) {
+        this.priority = priority;
+    }
+
+    public LocalDateTime getRemindTime() {
+        return remindTime;
+    }
+
+    public void setRemindTime(LocalDateTime remindTime) {
+        this.remindTime = remindTime;
+    }
+
+    public LocalDateTime getScheduleStartTime() {
+        return scheduleStartTime;
+    }
+
+    public void setScheduleStartTime(LocalDateTime scheduleStartTime) {
+        this.scheduleStartTime = scheduleStartTime;
+    }
+
+    public LocalDateTime getScheduleEndTime() {
+        return scheduleEndTime;
+    }
+
+    public void setScheduleEndTime(LocalDateTime scheduleEndTime) {
+        this.scheduleEndTime = scheduleEndTime;
+    }
+
+    // 兼容性方法：为ScheduleServiceImpl提供LocalDateTime接口
+    public LocalDateTime getStartDateTime() {
+        return scheduleStartTime;
+    }
+
+    public void setStartDateTime(LocalDateTime startDateTime) {
+        this.scheduleStartTime = startDateTime;
+        if (startDateTime != null) {
+            this.startTime = startDateTime.toLocalTime();
+        }
+    }
+
+    public LocalDateTime getEndDateTime() {
+        return scheduleEndTime;
+    }
+
+    public void setEndDateTime(LocalDateTime endDateTime) {
+        this.scheduleEndTime = endDateTime;
+        if (endDateTime != null) {
+            this.endTime = endDateTime.toLocalTime();
+        }
     }
 
     @Override

@@ -215,7 +215,21 @@ public class Role extends BaseEntity {
         this.sortOrder = sortOrder;
     }
 
+    public Boolean getIsSystem() {
+        return isSystem;
+    }
 
+    public void setIsSystem(Boolean isSystem) {
+        this.isSystem = isSystem;
+    }
+
+    public Integer getRoleLevel() {
+        return roleLevel;
+    }
+
+    public void setRoleLevel(Integer roleLevel) {
+        this.roleLevel = roleLevel;
+    }
 
     public List<UserRole> getUserRoles() {
         return userRoles;

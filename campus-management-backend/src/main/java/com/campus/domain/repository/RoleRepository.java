@@ -185,6 +185,18 @@ public interface RoleRepository extends BaseRepository<Role> {
     @Query("SELECT CASE WHEN COUNT(r) > 0 THEN true ELSE false END FROM Role r WHERE r.roleName = :roleName AND r.id != :excludeId AND r.deleted = 0")
     boolean existsByRoleNameAndIdNot(@Param("roleName") String roleName, @Param("excludeId") Long excludeId);
 
+    /**
+     * 检查角色代码是否存在
+     */
+    @Query("SELECT CASE WHEN COUNT(r) > 0 THEN true ELSE false END FROM Role r WHERE r.roleCode = :roleCode AND r.deleted = 0")
+    boolean existsByRoleCode(@Param("roleCode") String roleCode);
+
+    /**
+     * 根据角色代码查找角色
+     */
+    @Query("SELECT r FROM Role r WHERE r.roleCode = :roleCode AND r.deleted = 0")
+    Role findByRoleCode(@Param("roleCode") String roleCode);
+
     // ================================
     // 更新操作方法
     // ================================

@@ -78,28 +78,28 @@ public class PermissionUtil {
      * 检查是否为系统管理员
      */
     public boolean isSystemAdmin() {
-        return hasAnyRole("ADMIN", "SYSTEM_ADMIN");
+        return hasAnyRole("SUPER_ADMIN", "ADMIN", "SYSTEM_ADMIN");
     }
 
     /**
      * 检查是否为教务管理员
      */
     public boolean isAcademicAdmin() {
-        return hasAnyRole("ADMIN", "ACADEMIC_ADMIN", "TEACHER");
+        return hasAnyRole("SUPER_ADMIN", "ADMIN", "ACADEMIC_ADMIN", "TEACHER");
     }
 
     /**
      * 检查是否为财务管理员
      */
     public boolean isFinanceAdmin() {
-        return hasAnyRole("ADMIN", "FINANCE_ADMIN");
+        return hasAnyRole("SUPER_ADMIN", "ADMIN", "FINANCE_ADMIN");
     }
 
     /**
      * 检查是否为超级管理员
      */
     public boolean isSuperAdmin() {
-        return hasRole("ADMIN");
+        return hasRole("SUPER_ADMIN");
     }
 
     /**

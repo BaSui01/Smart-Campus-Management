@@ -99,6 +99,21 @@ public interface RoleService {
     boolean existsByRoleName(String roleName);
 
     /**
+     * 根据角色代码检查是否存在
+     */
+    boolean existsByCode(String roleCode);
+
+    /**
+     * 根据角色代码查找角色
+     */
+    Role findByCode(String roleCode);
+
+    /**
+     * 统计角色总数
+     */
+    long countTotalRoles();
+
+    /**
      * 角色统计信息
      */
     class RoleStatistics {

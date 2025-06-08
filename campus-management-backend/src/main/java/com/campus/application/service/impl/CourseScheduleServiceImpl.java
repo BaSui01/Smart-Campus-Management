@@ -354,4 +354,191 @@ public class CourseScheduleServiceImpl implements CourseScheduleService {
     public List<CourseSchedule> findAll() {
         return courseScheduleRepository.findAll();
     }
+
+    // ================================
+    // Web控制器需要的方法实现
+    // ================================
+
+    @Override
+    @Transactional(readOnly = true)
+    public CourseSchedule getScheduleById(Long id) {
+        return courseScheduleRepository.findById(id).orElse(null);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<String, Object> getScheduleCalendar() {
+        // TODO: 实现课程表日历数据获取逻辑
+        return Map.of("calendar", Collections.emptyList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<String, Object> getTimetableData() {
+        // TODO: 实现课程表数据获取逻辑
+        return Map.of("timetable", Collections.emptyList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> getScheduleConflicts() {
+        // TODO: 实现课程表冲突检查逻辑
+        return Collections.emptyList();
+    }
+
+    // ================================
+    // API控制器需要的方法实现
+    // ================================
+
+    @Override
+    @Transactional
+    public CourseSchedule createCourseSchedule(CourseSchedule courseSchedule) {
+        return createSchedule(courseSchedule);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<CourseSchedule> findCourseScheduleById(Long id) {
+        return findById(id);
+    }
+
+    @Override
+    @Transactional
+    public CourseSchedule updateCourseSchedule(CourseSchedule courseSchedule) {
+        updateSchedule(courseSchedule);
+        return courseSchedule;
+    }
+
+    @Override
+    @Transactional
+    public boolean deleteCourseSchedule(Long id) {
+        return deleteSchedule(id);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<CourseSchedule> findAllCourseSchedules(Pageable pageable) {
+        return courseScheduleRepository.findAll(pageable);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CourseSchedule> findSchedulesByCourse(Long courseId) {
+        return findByCourseId(courseId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CourseSchedule> findSchedulesByTeacher(Long teacherId) {
+        return findByTeacherId(teacherId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CourseSchedule> findSchedulesByClassroom(Long classroomId) {
+        return courseScheduleRepository.findByClassroomIdAndDeleted(classroomId, 0);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CourseSchedule> findSchedulesByDateRange(java.time.LocalDate startDate, java.time.LocalDate endDate) {
+        return courseScheduleRepository.findByScheduleDateBetweenAndDeleted(startDate, endDate, 0);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CourseSchedule> findSchedulesByDayOfWeek(String dayOfWeek) {
+        try {
+            int day = Integer.parseInt(dayOfWeek);
+            return courseScheduleRepository.findByDayOfWeekAndDeleted(day, 0);
+        } catch (NumberFormatException e) {
+            return Collections.emptyList();
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CourseSchedule> checkScheduleConflicts(Long courseId, Long teacherId, Long classroomId, String dayOfWeek, String timeSlot) {
+        // TODO: 实现课程安排冲突检查逻辑
+        return Collections.emptyList();
+    }
+
+    @Override
+    @Transactional
+    public List<CourseSchedule> batchCreateSchedules(List<CourseSchedule> courseSchedules) {
+        return courseScheduleRepository.saveAll(courseSchedules);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Object getTeacherWeeklySchedule(Long teacherId, java.time.LocalDate weekStart) {
+        // TODO: 实现教师周课表获取逻辑
+        return Map.of("weeklySchedule", Collections.emptyList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countTotalSchedules() {
+        return courseScheduleRepository.count();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countActiveSchedules() {
+        return courseScheduleRepository.countByStatusAndDeleted(1, 0);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<String, Long> countSchedulesByDay() {
+        // TODO: 实现按天统计课程安排数逻辑
+        return Map.of();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<String, Long> countSchedulesByTimeSlot() {
+        // TODO: 实现按时间段统计课程安排数逻辑
+        return Map.of();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CourseSchedule> getTeacherSchedule(Long teacherId) {
+        return findByTeacherId(teacherId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CourseSchedule> getClassroomSchedule(Long classroomId) {
+        return findSchedulesByClassroom(classroomId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> getScheduleTemplates() {
+        // TODO: 实现课程表模板获取逻辑
+        return Collections.emptyList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<String, Object> getScheduleStatistics() {
+        // TODO: 实现课程表统计信息获取逻辑
+        return Map.of("totalSchedules", countTotalSchedules(), "activeSchedules", countActiveSchedules());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<String, Object> getClassroomUtilizationStats() {
+        // TODO: 实现教室利用率统计逻辑
+        return Map.of("utilizationRate", 0.0);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<String, Object> getTeacherWorkloadStats() {
+        // TODO: 实现教师工作量统计逻辑
+        return Map.of("totalWorkload", 0, "averageWorkload", 0.0);
+    }
 }

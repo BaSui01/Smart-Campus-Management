@@ -411,4 +411,37 @@ public class RoleServiceImpl implements RoleService {
             return false;
         }
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean existsByCode(String roleCode) {
+        try {
+            return roleRepository.existsByRoleCode(roleCode);
+        } catch (Exception e) {
+            System.err.println("检查角色代码是否存在失败: " + e.getMessage());
+            return false;
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Role findByCode(String roleCode) {
+        try {
+            return roleRepository.findByRoleCode(roleCode);
+        } catch (Exception e) {
+            System.err.println("根据角色代码查找角色失败: " + e.getMessage());
+            return null;
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countTotalRoles() {
+        try {
+            return roleRepository.count();
+        } catch (Exception e) {
+            System.err.println("统计角色总数失败: " + e.getMessage());
+            return 0;
+        }
+    }
 }

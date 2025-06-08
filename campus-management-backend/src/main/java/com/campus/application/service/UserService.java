@@ -245,11 +245,44 @@ public interface UserService {
     boolean assignRoleToUser(Long userId, Long roleId);
 
     /**
+     * 分配角色给用户（简化方法）
+     */
+    void assignRole(Long userId, Long roleId);
+
+    /**
      * 移除用户角色
      */
     boolean removeRoleFromUser(Long userId, Long roleId);
 
+    /**
+     * 获取用户权限
+     */
+    Object getUserPermissions(Long userId);
 
+    /**
+     * 获取所有活跃用户
+     */
+    List<User> findActiveUsers();
+
+    /**
+     * 获取所有用户（不分页）
+     */
+    List<User> findAllUsers();
+
+    /**
+     * 获取教师用户列表
+     */
+    List<User> findTeachers();
+
+    /**
+     * 获取学生用户列表
+     */
+    List<User> findStudents();
+
+    /**
+     * 获取所有部门列表
+     */
+    List<Map<String, Object>> getDepartments();
 
     /**
      * 用户统计信息类

@@ -55,14 +55,16 @@ public class PermissionController {
                 model.addAttribute("keyword", keyword);
             } else if (module != null && !module.trim().isEmpty()) {
                 List<Permission> modulePermissions = permissionService.findPermissionsByModule(module);
-                // 转换为Page对象
+                // 注意：当前使用所有权限的分页结果，模块过滤功能待完善
                 permissions = permissionService.findAllPermissions(pageable);
                 model.addAttribute("module", module);
+                model.addAttribute("modulePermissionsCount", modulePermissions.size());
             } else if (type != null && !type.trim().isEmpty()) {
                 List<Permission> typePermissions = permissionService.findPermissionsByType(type);
-                // 转换为Page对象
+                // 注意：当前使用所有权限的分页结果，类型过滤功能待完善
                 permissions = permissionService.findAllPermissions(pageable);
                 model.addAttribute("type", type);
+                model.addAttribute("typePermissionsCount", typePermissions.size());
             } else {
                 permissions = permissionService.findAllPermissions(pageable);
             }
@@ -310,7 +312,7 @@ public class PermissionController {
     public String exportPermissions(Model model, RedirectAttributes redirectAttributes) {
         try {
             List<Permission> permissions = permissionService.findAllPermissions();
-            // TODO: 实现实际的导出功能（Excel、CSV等）
+            // 注意：实际的导出功能（Excel、CSV等）待实现
             redirectAttributes.addFlashAttribute("success", "权限数据导出成功，共 " + permissions.size() + " 条记录");
         } catch (Exception e) {
             logger.error("导出权限数据失败", e);

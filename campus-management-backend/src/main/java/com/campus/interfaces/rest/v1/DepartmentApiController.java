@@ -16,7 +16,10 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -207,30 +210,249 @@ public class DepartmentApiController extends BaseController {
         }
     }
 
+    // ==================== 统计端点 ====================
+
+    /**
+     * 获取院系统计信息
+     */
+    @GetMapping("/stats")
+    @Operation(summary = "获取院系统计信息", description = "获取院系模块的统计数据")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN', 'TEACHER')")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getDepartmentStats() {
+        try {
+            log.info("获取院系统计信息");
+
+            Map<String, Object> stats = new HashMap<>();
+
+            // 基础统计
+            long totalDepartments = departmentService.countTotalDepartments();
+            stats.put("totalDepartments", totalDepartments);
+
+            long activeDepartments = departmentService.countActiveDepartments();
+            stats.put("activeDepartments", activeDepartments);
+
+            long inactiveDepartments = totalDepartments - activeDepartments;
+            stats.put("inactiveDepartments", inactiveDepartments);
+
+            // 按类型统计（简化实现）
+            Map<String, Long> typeStats = new HashMap<>();
+            typeStats.put("COLLEGE", 0L);
+            typeStats.put("DEPARTMENT", 0L);
+            typeStats.put("INSTITUTE", 0L);
+            typeStats.put("CENTER", 0L);
+            stats.put("typeStats", typeStats);
+
+            // 顶级院系数量
+            List<Department> topLevelDepartments = departmentService.getTopLevelDepartments();
+            stats.put("topLevelCount", (long) topLevelDepartments.size());
+
+            // 按级别统计（简化实现）
+            Map<String, Long> levelStats = new HashMap<>();
+            levelStats.put("1", (long) topLevelDepartments.size());
+            levelStats.put("2", 0L);
+            levelStats.put("3", 0L);
+            stats.put("levelStats", levelStats);
+
+            // 时间统计（简化实现）
+            stats.put("todayDepartments", 0L);
+            stats.put("weekDepartments", 0L);
+            stats.put("monthDepartments", 0L);
+
+            // 最近活动（简化实现）
+            List<Map<String, Object>> recentActivity = new ArrayList<>();
+            stats.put("recentActivity", recentActivity);
+
+            return success("获取院系统计信息成功", stats);
+
+        } catch (Exception e) {
+            log.error("获取院系统计信息失败: ", e);
+            return error("获取院系统计信息失败: " + e.getMessage());
+        }
+    }
+
+    // ==================== 批量操作端点 ====================
+
     /**
      * 批量删除院系
      */
     @DeleteMapping("/batch")
-    @Operation(summary = "批量删除院系", description = "批量软删除院系信息")
-    @PreAuthorize("hasAnyRole('ADMIN', 'ACADEMIC_ADMIN')")
-    public ResponseEntity<ApiResponse<Void>> deleteDepartments(
+    @Operation(summary = "批量删除院系", description = "根据ID列表批量删除院系")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN')")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> batchDeleteDepartments(
             @Parameter(description = "院系ID列表") @RequestBody List<Long> ids) {
 
         try {
-            log.info("批量删除院系 - IDs: {}", ids);
+            logOperation("批量删除院系", ids.size());
 
+            // 验证参数
             if (ids == null || ids.isEmpty()) {
                 return badRequest("院系ID列表不能为空");
             }
 
-            // 批量删除院系
+            if (ids.size() > 100) {
+                return badRequest("单次批量操作不能超过100条记录");
+            }
+
+            // 验证所有ID
+            for (Long id : ids) {
+                validateId(id, "院系");
+            }
+
+            // 执行批量删除
             departmentService.deleteDepartments(ids);
 
-            return success("批量删除院系成功");
+            Map<String, Object> responseData = new HashMap<>();
+            responseData.put("deletedCount", ids.size());
+            responseData.put("totalRequested", ids.size());
+
+            return success("批量删除院系成功", responseData);
 
         } catch (Exception e) {
-            log.error("批量删除院系失败 - IDs: {}", ids, e);
+            log.error("批量删除院系失败: ", e);
             return error("批量删除院系失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 批量更新院系状态
+     */
+    @PutMapping("/batch/status")
+    @Operation(summary = "批量更新院系状态", description = "批量更新院系的启用/禁用状态")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN')")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> batchUpdateDepartmentStatus(
+            @Parameter(description = "批量更新请求") @RequestBody Map<String, Object> request) {
+
+        try {
+            @SuppressWarnings("unchecked")
+            List<Long> ids = (List<Long>) request.get("ids");
+            Integer status = (Integer) request.get("status");
+
+            logOperation("批量更新院系状态", ids.size(), "状态: " + status);
+
+            // 验证参数
+            if (ids == null || ids.isEmpty()) {
+                return badRequest("院系ID列表不能为空");
+            }
+
+            if (status == null || (status != 0 && status != 1)) {
+                return badRequest("状态值必须为0（禁用）或1（启用）");
+            }
+
+            if (ids.size() > 100) {
+                return badRequest("单次批量操作不能超过100条记录");
+            }
+
+            // 验证所有ID
+            for (Long id : ids) {
+                validateId(id, "院系");
+            }
+
+            // 执行批量状态更新
+            int successCount = 0;
+            int failCount = 0;
+            List<String> failReasons = new ArrayList<>();
+
+            for (Long id : ids) {
+                try {
+                    if (status == 1) {
+                        departmentService.enableDepartment(id);
+                    } else {
+                        departmentService.disableDepartment(id);
+                    }
+                    successCount++;
+                } catch (Exception e) {
+                    failCount++;
+                    failReasons.add("院系ID " + id + ": " + e.getMessage());
+                    log.warn("更新院系{}状态失败: {}", id, e.getMessage());
+                }
+            }
+
+            Map<String, Object> responseData = new HashMap<>();
+            responseData.put("successCount", successCount);
+            responseData.put("failCount", failCount);
+            responseData.put("totalRequested", ids.size());
+            responseData.put("status", status == 1 ? "启用" : "禁用");
+            responseData.put("failReasons", failReasons);
+
+            if (failCount == 0) {
+                return success("批量更新院系状态成功", responseData);
+            } else if (successCount > 0) {
+                return success("批量更新院系状态部分成功", responseData);
+            } else {
+                return error("批量更新院系状态失败");
+            }
+
+        } catch (Exception e) {
+            log.error("批量更新院系状态失败: ", e);
+            return error("批量更新院系状态失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 批量导入院系
+     */
+    @PostMapping("/batch/import")
+    @Operation(summary = "批量导入院系", description = "批量导入院系数据")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN')")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> batchImportDepartments(
+            @Parameter(description = "院系数据列表") @RequestBody List<Department> departments) {
+
+        try {
+            logOperation("批量导入院系", departments.size());
+
+            // 验证参数
+            if (departments == null || departments.isEmpty()) {
+                return badRequest("院系数据列表不能为空");
+            }
+
+            if (departments.size() > 100) {
+                return badRequest("单次批量导入不能超过100条记录");
+            }
+
+            // 执行批量导入
+            int successCount = 0;
+            int failCount = 0;
+            List<String> failReasons = new ArrayList<>();
+
+            for (Department department : departments) {
+                try {
+                    // 验证院系数据
+                    validateDepartmentData(department);
+
+                    // 检查院系代码是否已存在
+                    if (departmentService.existsByDeptCode(department.getDeptCode())) {
+                        failCount++;
+                        failReasons.add("院系代码 " + department.getDeptCode() + " 已存在");
+                        continue;
+                    }
+
+                    // 检查院系名称是否已存在
+                    if (departmentService.existsByDeptName(department.getDeptName())) {
+                        failCount++;
+                        failReasons.add("院系名称 " + department.getDeptName() + " 已存在");
+                        continue;
+                    }
+
+                    departmentService.createDepartment(department);
+                    successCount++;
+                } catch (Exception e) {
+                    failCount++;
+                    failReasons.add("院系 " + department.getDeptName() + ": " + e.getMessage());
+                    log.warn("导入院系{}失败: {}", department.getDeptName(), e.getMessage());
+                }
+            }
+
+            Map<String, Object> result = new HashMap<>();
+            result.put("successCount", successCount);
+            result.put("failCount", failCount);
+            result.put("totalRequested", departments.size());
+            result.put("failReasons", failReasons);
+
+            return success("批量导入院系完成", result);
+
+        } catch (Exception e) {
+            log.error("批量导入院系失败: ", e);
+            return error("批量导入院系失败: " + e.getMessage());
         }
     }
 

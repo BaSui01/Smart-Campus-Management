@@ -1,7 +1,7 @@
 package com.campus.interfaces.rest.v1;
 
 import com.campus.application.service.NotificationService;
-import com.campus.common.controller.BaseController;
+import com.campus.interfaces.rest.common.BaseController;
 import com.campus.domain.entity.Notification;
 import com.campus.shared.common.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -21,6 +21,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -50,7 +52,7 @@ public class NotificationApiController extends BaseController {
      */
     @GetMapping
     @Operation(summary = "分页查询通知列表", description = "支持按条件搜索和分页查询通知")
-    @PreAuthorize("hasAuthority('system:notification:list')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN', 'TEACHER')")
     public ResponseEntity<ApiResponse<List<Notification>>> getNotifications(
             @Parameter(description = "页码", example = "1") @RequestParam(defaultValue = "1") int page,
             @Parameter(description = "每页大小", example = "20") @RequestParam(defaultValue = "20") int size,
@@ -91,7 +93,7 @@ public class NotificationApiController extends BaseController {
      */
     @GetMapping("/{id}")
     @Operation(summary = "查询通知详情", description = "根据ID查询通知的详细信息")
-    @PreAuthorize("hasAuthority('system:notification:list')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN', 'TEACHER')")
     public ResponseEntity<ApiResponse<Notification>> getNotification(
             @Parameter(description = "通知ID", required = true) @PathVariable Long id) {
 
@@ -102,7 +104,7 @@ public class NotificationApiController extends BaseController {
 
             Optional<Notification> notification = notificationService.findById(id);
             if (notification.isPresent()) {
-                return success(notification.get(), "查询通知详情成功");
+                return success("查询通知详情成功", notification.get());
             } else {
                 return error("通知不存在");
             }
@@ -118,7 +120,7 @@ public class NotificationApiController extends BaseController {
      */
     @PostMapping
     @Operation(summary = "创建通知", description = "创建新的通知")
-    @PreAuthorize("hasAuthority('system:notification:add')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN')")
     public ResponseEntity<ApiResponse<Notification>> createNotification(
             @RequestBody Notification notification,
             HttpServletRequest request) {
@@ -146,7 +148,7 @@ public class NotificationApiController extends BaseController {
             notification.setReadCount(0);
 
             Notification savedNotification = notificationService.save(notification);
-            return success(savedNotification, "通知创建成功");
+            return success("通知创建成功", savedNotification);
 
         } catch (Exception e) {
             log.error("创建通知失败: ", e);
@@ -159,7 +161,7 @@ public class NotificationApiController extends BaseController {
      */
     @PutMapping("/{id}")
     @Operation(summary = "更新通知", description = "更新通知信息")
-    @PreAuthorize("hasAuthority('system:notification:edit')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN')")
     public ResponseEntity<ApiResponse<Notification>> updateNotification(
             @Parameter(description = "通知ID", required = true) @PathVariable Long id,
             @RequestBody Notification notification,
@@ -207,7 +209,7 @@ public class NotificationApiController extends BaseController {
             existing.setSendSms(notification.getSendSms());
 
             Notification updatedNotification = notificationService.save(existing);
-            return success(updatedNotification, "通知更新成功");
+            return success("通知更新成功", updatedNotification);
 
         } catch (Exception e) {
             log.error("更新通知失败 - ID: {}", id, e);
@@ -220,7 +222,7 @@ public class NotificationApiController extends BaseController {
      */
     @DeleteMapping("/{id}")
     @Operation(summary = "删除通知", description = "删除指定的通知")
-    @PreAuthorize("hasAuthority('system:notification:delete')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN')")
     public ResponseEntity<ApiResponse<Void>> deleteNotification(
             @Parameter(description = "通知ID", required = true) @PathVariable Long id) {
 
@@ -241,7 +243,7 @@ public class NotificationApiController extends BaseController {
             }
 
             notificationService.deleteById(id);
-            return success(null, "通知删除成功");
+            return success("通知删除成功");
 
         } catch (Exception e) {
             log.error("删除通知失败 - ID: {}", id, e);
@@ -256,7 +258,7 @@ public class NotificationApiController extends BaseController {
      */
     @PostMapping("/{id}/publish")
     @Operation(summary = "发布通知", description = "发布指定的通知")
-    @PreAuthorize("hasAuthority('system:notification:publish')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN')")
     public ResponseEntity<ApiResponse<Void>> publishNotification(
             @Parameter(description = "通知ID", required = true) @PathVariable Long id) {
 
@@ -272,7 +274,7 @@ public class NotificationApiController extends BaseController {
             }
 
             notificationService.publishNotification(id);
-            return success(null, "通知发布成功");
+            return success("通知发布成功");
 
         } catch (Exception e) {
             log.error("发布通知失败 - ID: {}", id, e);
@@ -285,7 +287,7 @@ public class NotificationApiController extends BaseController {
      */
     @PostMapping("/{id}/unpublish")
     @Operation(summary = "取消发布通知", description = "取消发布指定的通知")
-    @PreAuthorize("hasAuthority('system:notification:publish')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN')")
     public ResponseEntity<ApiResponse<Void>> unpublishNotification(
             @Parameter(description = "通知ID", required = true) @PathVariable Long id) {
 
@@ -295,7 +297,7 @@ public class NotificationApiController extends BaseController {
             validateId(id, "通知");
 
             notificationService.unpublishNotification(id);
-            return success(null, "取消发布通知成功");
+            return success("取消发布通知成功");
 
         } catch (Exception e) {
             log.error("取消发布通知失败 - ID: {}", id, e);
@@ -308,7 +310,7 @@ public class NotificationApiController extends BaseController {
      */
     @PostMapping("/{id}/top")
     @Operation(summary = "置顶通知", description = "置顶指定的通知")
-    @PreAuthorize("hasAuthority('system:notification:top')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN')")
     public ResponseEntity<ApiResponse<Void>> topNotification(
             @Parameter(description = "通知ID", required = true) @PathVariable Long id) {
 
@@ -318,7 +320,7 @@ public class NotificationApiController extends BaseController {
             validateId(id, "通知");
 
             notificationService.topNotification(id);
-            return success(null, "置顶通知成功");
+            return success("置顶通知成功");
 
         } catch (Exception e) {
             log.error("置顶通知失败 - ID: {}", id, e);
@@ -331,7 +333,7 @@ public class NotificationApiController extends BaseController {
      */
     @PostMapping("/{id}/untop")
     @Operation(summary = "取消置顶通知", description = "取消置顶指定的通知")
-    @PreAuthorize("hasAuthority('system:notification:top')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN')")
     public ResponseEntity<ApiResponse<Void>> untopNotification(
             @Parameter(description = "通知ID", required = true) @PathVariable Long id) {
 
@@ -341,7 +343,7 @@ public class NotificationApiController extends BaseController {
             validateId(id, "通知");
 
             notificationService.untopNotification(id);
-            return success(null, "取消置顶通知成功");
+            return success("取消置顶通知成功");
 
         } catch (Exception e) {
             log.error("取消置顶通知失败 - ID: {}", id, e);
@@ -431,11 +433,274 @@ public class NotificationApiController extends BaseController {
             validateId(id, "通知");
 
             notificationService.markAsRead(id, userId);
-            return success(null, "标记为已读成功");
+            return success("标记为已读成功");
 
         } catch (Exception e) {
             log.error("标记通知为已读失败 - ID: {}", id, e);
             return error("标记通知为已读失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 获取通知统计信息
+     */
+    @GetMapping("/stats")
+    @Operation(summary = "获取通知统计信息", description = "获取通知模块的统计数据")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN', 'TEACHER')")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getNotificationStats() {
+        try {
+            log.info("获取通知统计信息");
+
+            Map<String, Object> stats = new HashMap<>();
+
+            // 总通知数
+            long totalNotifications = notificationService.count();
+            stats.put("totalNotifications", totalNotifications);
+
+            // 已发布通知数
+            long publishedNotifications = notificationService.findAll().stream()
+                .filter(n -> n.getIsPublished() == 1)
+                .count();
+            stats.put("publishedNotifications", publishedNotifications);
+
+            // 草稿通知数
+            long draftNotifications = notificationService.findAll().stream()
+                .filter(n -> n.getIsPublished() == 0)
+                .count();
+            stats.put("draftNotifications", draftNotifications);
+
+            // 置顶通知数
+            long topNotifications = notificationService.findAll().stream()
+                .filter(n -> n.getIsTop() == 1)
+                .count();
+            stats.put("topNotifications", topNotifications);
+
+            // 今日新增通知数
+            long todayNotifications = 0; // 暂时设为0，需要服务层实现
+            stats.put("todayNotifications", todayNotifications);
+
+            // 按类型统计 - 使用简单的统计
+            Map<String, Long> typeStats = new HashMap<>();
+            List<Notification> allNotifications = notificationService.findAll();
+            typeStats.put("SYSTEM", allNotifications.stream().filter(n -> "system".equals(n.getNotificationType())).count());
+            typeStats.put("ACADEMIC", allNotifications.stream().filter(n -> "academic".equals(n.getNotificationType())).count());
+            typeStats.put("ACTIVITY", allNotifications.stream().filter(n -> "activity".equals(n.getNotificationType())).count());
+            stats.put("typeStats", typeStats);
+
+            // 最近活动 - 暂时返回空列表
+            List<Map<String, Object>> recentActivity = new ArrayList<>();
+            stats.put("recentActivity", recentActivity);
+
+            return success("获取通知统计信息成功", stats);
+
+        } catch (Exception e) {
+            log.error("获取通知统计信息失败: ", e);
+            return error("获取通知统计信息失败: " + e.getMessage());
+        }
+    }
+
+    // ==================== 批量操作端点 ====================
+
+    /**
+     * 批量删除通知
+     */
+    @DeleteMapping("/batch")
+    @Operation(summary = "批量删除通知", description = "根据ID列表批量删除通知")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN')")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> batchDeleteNotifications(
+            @Parameter(description = "通知ID列表") @RequestBody List<Long> ids) {
+
+        try {
+            logOperation("批量删除通知", ids.size());
+
+            // 验证参数
+            if (ids == null || ids.isEmpty()) {
+                return badRequest("通知ID列表不能为空");
+            }
+
+            if (ids.size() > 100) {
+                return badRequest("单次批量操作不能超过100条记录");
+            }
+
+            // 验证所有ID
+            for (Long id : ids) {
+                validateId(id, "通知");
+            }
+
+            // 执行批量删除
+            int successCount = 0;
+            int failCount = 0;
+            List<String> failReasons = new ArrayList<>();
+
+            for (Long id : ids) {
+                try {
+                    // 检查是否可以删除
+                    if (!notificationService.canDeleteNotification(id)) {
+                        failCount++;
+                        failReasons.add("通知ID " + id + ": 已发布，无法删除");
+                        continue;
+                    }
+
+                    notificationService.deleteById(id);
+                    successCount++;
+                } catch (Exception e) {
+                    failCount++;
+                    failReasons.add("通知ID " + id + ": " + e.getMessage());
+                    log.warn("删除通知{}失败: {}", id, e.getMessage());
+                }
+            }
+
+            Map<String, Object> responseData = new HashMap<>();
+            responseData.put("successCount", successCount);
+            responseData.put("failCount", failCount);
+            responseData.put("totalRequested", ids.size());
+            responseData.put("failReasons", failReasons);
+
+            if (failCount == 0) {
+                return success("批量删除通知成功", responseData);
+            } else if (successCount > 0) {
+                return success("批量删除通知部分成功", responseData);
+            } else {
+                return error("批量删除通知失败");
+            }
+
+        } catch (Exception e) {
+            log.error("批量删除通知失败: ", e);
+            return error("批量删除通知失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 批量发布通知
+     */
+    @PutMapping("/batch/publish")
+    @Operation(summary = "批量发布通知", description = "批量发布通知")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN')")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> batchPublishNotifications(
+            @Parameter(description = "通知ID列表") @RequestBody List<Long> ids) {
+
+        try {
+            logOperation("批量发布通知", ids.size());
+
+            // 验证参数
+            if (ids == null || ids.isEmpty()) {
+                return badRequest("通知ID列表不能为空");
+            }
+
+            if (ids.size() > 100) {
+                return badRequest("单次批量操作不能超过100条记录");
+            }
+
+            // 验证所有ID
+            for (Long id : ids) {
+                validateId(id, "通知");
+            }
+
+            // 执行批量发布
+            int successCount = 0;
+            int failCount = 0;
+            List<String> failReasons = new ArrayList<>();
+
+            for (Long id : ids) {
+                try {
+                    notificationService.publishNotification(id);
+                    successCount++;
+                } catch (Exception e) {
+                    failCount++;
+                    failReasons.add("通知ID " + id + ": " + e.getMessage());
+                    log.warn("发布通知{}失败: {}", id, e.getMessage());
+                }
+            }
+
+            Map<String, Object> responseData = new HashMap<>();
+            responseData.put("successCount", successCount);
+            responseData.put("failCount", failCount);
+            responseData.put("totalRequested", ids.size());
+            responseData.put("failReasons", failReasons);
+
+            if (failCount == 0) {
+                return success("批量发布通知成功", responseData);
+            } else if (successCount > 0) {
+                return success("批量发布通知部分成功", responseData);
+            } else {
+                return error("批量发布通知失败");
+            }
+
+        } catch (Exception e) {
+            log.error("批量发布通知失败: ", e);
+            return error("批量发布通知失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 批量导入通知
+     */
+    @PostMapping("/batch/import")
+    @Operation(summary = "批量导入通知", description = "批量导入通知数据")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN')")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> batchImportNotifications(
+            @Parameter(description = "通知数据列表") @RequestBody List<Notification> notifications) {
+
+        try {
+            logOperation("批量导入通知", notifications.size());
+
+            // 验证参数
+            if (notifications == null || notifications.isEmpty()) {
+                return badRequest("通知数据列表不能为空");
+            }
+
+            if (notifications.size() > 100) {
+                return badRequest("单次批量导入不能超过100条记录");
+            }
+
+            // 执行批量导入
+            int successCount = 0;
+            int failCount = 0;
+            List<String> failReasons = new ArrayList<>();
+
+            for (Notification notification : notifications) {
+                try {
+                    // 验证通知数据
+                    validateNotification(notification);
+
+                    // 检查标题是否重复
+                    if (notificationService.existsByTitle(notification.getTitle())) {
+                        failCount++;
+                        failReasons.add("通知标题 " + notification.getTitle() + " 已存在");
+                        continue;
+                    }
+
+                    // 设置默认值
+                    notification.setIsPublished(0);
+                    notification.setIsTop(0);
+                    notification.setReadCount(0);
+
+                    // 设置发送人
+                    Long userId = getCurrentUserId();
+                    if (userId != null) {
+                        notification.setSenderId(userId);
+                    }
+
+                    notificationService.save(notification);
+                    successCount++;
+                } catch (Exception e) {
+                    failCount++;
+                    failReasons.add("通知 " + notification.getTitle() + ": " + e.getMessage());
+                    log.warn("导入通知{}失败: {}", notification.getTitle(), e.getMessage());
+                }
+            }
+
+            Map<String, Object> result = new HashMap<>();
+            result.put("successCount", successCount);
+            result.put("failCount", failCount);
+            result.put("totalRequested", notifications.size());
+            result.put("failReasons", failReasons);
+
+            return success("批量导入通知完成", result);
+
+        } catch (Exception e) {
+            log.error("批量导入通知失败: ", e);
+            return error("批量导入通知失败: " + e.getMessage());
         }
     }
 

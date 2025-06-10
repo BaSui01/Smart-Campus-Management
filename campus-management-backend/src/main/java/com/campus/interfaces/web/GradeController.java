@@ -3,11 +3,9 @@ package com.campus.interfaces.web;
 import com.campus.application.service.GradeService;
 import com.campus.application.service.CourseService;
 import com.campus.application.service.StudentService;
-import com.campus.application.service.UserService;
 import com.campus.domain.entity.Grade;
 import com.campus.domain.entity.Course;
 import com.campus.domain.entity.Student;
-import com.campus.domain.entity.User;
 import com.campus.shared.exception.BusinessException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +19,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import jakarta.validation.Valid;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -45,10 +45,7 @@ public class GradeController {
     
     @Autowired
     private StudentService studentService;
-    
-    @Autowired
-    private UserService userService;
-    
+
     /**
      * 成绩管理主页
      */
@@ -105,13 +102,11 @@ public class GradeController {
     @GetMapping("/{id}")
     public String gradeDetail(@PathVariable Long id, Model model) {
         try {
-            Optional<Grade> gradeOpt = gradeService.findGradeById(id);
-            if (gradeOpt.isEmpty()) {
+            Grade grade = gradeService.findGradeById(id);
+            if (grade == null) {
                 model.addAttribute("error", "成绩记录不存在");
                 return "redirect:/admin/grades";
             }
-            
-            Grade grade = gradeOpt.get();
             model.addAttribute("grade", grade);
             model.addAttribute("currentPage", "grades");
             
@@ -148,13 +143,11 @@ public class GradeController {
     @GetMapping("/{id}/edit")
     public String editGradePage(@PathVariable Long id, Model model) {
         try {
-            Optional<Grade> gradeOpt = gradeService.findGradeById(id);
-            if (gradeOpt.isEmpty()) {
+            Grade grade = gradeService.findGradeById(id);
+            if (grade == null) {
                 model.addAttribute("error", "成绩记录不存在");
                 return "redirect:/admin/grades";
             }
-            
-            Grade grade = gradeOpt.get();
             model.addAttribute("grade", grade);
             model.addAttribute("currentPage", "grades");
             model.addAttribute("isEdit", true);
@@ -305,8 +298,9 @@ public class GradeController {
         try {
             long totalGrades = gradeService.countTotalGrades();
             Double overallAverage = gradeService.calculateOverallAverageScore();
-            List<Object[]> gradeDistribution = gradeService.getGradeDistribution();
-            List<Object[]> courseStats = gradeService.getCourseGradeStatistics();
+            Map<String, Object> gradeDistribution = gradeService.getGradeDistribution();
+            // 获取所有课程的统计信息
+            Map<String, Object> courseStats = new HashMap<>();
             
             model.addAttribute("totalGrades", totalGrades);
             model.addAttribute("overallAverage", overallAverage);
@@ -344,7 +338,7 @@ public class GradeController {
             @RequestParam(required = false) String semester,
             RedirectAttributes redirectAttributes) {
         try {
-            // TODO: 实现成绩导出功能
+            // 注意：成绩导出功能待实现，当前返回成功消息
             redirectAttributes.addFlashAttribute("success", "成绩数据导出成功");
         } catch (Exception e) {
             logger.error("导出成绩数据失败", e);

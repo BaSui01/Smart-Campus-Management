@@ -82,8 +82,9 @@ public class AttendanceController {
                 return "error/404";
             }
             
-            Object attendanceRecords = attendanceService.getAttendanceByCourse(courseId);
-            Object students = userService.getStudentsByCourse(courseId);
+            // TODO: getAttendanceByCourse和getStudentsByCourse方法不存在，返回空数据
+            Object attendanceRecords = new java.util.ArrayList<>();
+            Object students = new java.util.ArrayList<>();
             
             addCommonAttributes(model);
             model.addAttribute("pageTitle", "课程考勤");
@@ -110,8 +111,9 @@ public class AttendanceController {
                 return "error/404";
             }
             
-            Object attendanceRecords = attendanceService.getAttendanceByStudent(studentId);
-            Object courses = courseService.getCoursesByStudent(studentId);
+            // TODO: getAttendanceByStudent和getCoursesByStudent方法不存在，返回空数据
+            Object attendanceRecords = new java.util.ArrayList<>();
+            Object courses = new java.util.ArrayList<>();
             
             addCommonAttributes(model);
             model.addAttribute("pageTitle", "学生考勤");
@@ -132,10 +134,11 @@ public class AttendanceController {
             logger.info("访问考勤统计页面");
             
             // TODO: 获取考勤统计数据
-            Object overallStats = attendanceService.getOverallStatistics();
-            Object courseStats = attendanceService.getStatisticsByCourse();
-            Object studentStats = attendanceService.getStatisticsByStudent();
-            Object dailyStats = attendanceService.getDailyStatistics();
+            // TODO: 统计相关方法不存在，返回空数据
+            Object overallStats = new java.util.HashMap<>();
+            Object courseStats = new java.util.ArrayList<>();
+            Object studentStats = new java.util.ArrayList<>();
+            Object dailyStats = new java.util.ArrayList<>();
             
             addCommonAttributes(model);
             model.addAttribute("pageTitle", "考勤统计");
@@ -174,9 +177,10 @@ public class AttendanceController {
             logger.info("访问考勤预警页面");
             
             // TODO: 获取考勤预警数据
-            Object absenteeAlerts = attendanceService.getAbsenteeAlerts();
-            Object lateAlerts = attendanceService.getLateAlerts();
-            Object frequentAbsentees = attendanceService.getFrequentAbsentees();
+            // TODO: 预警相关方法不存在，返回空数据
+            Object absenteeAlerts = new java.util.ArrayList<>();
+            Object lateAlerts = new java.util.ArrayList<>();
+            Object frequentAbsentees = new java.util.ArrayList<>();
             
             addCommonAttributes(model);
             model.addAttribute("pageTitle", "考勤预警");

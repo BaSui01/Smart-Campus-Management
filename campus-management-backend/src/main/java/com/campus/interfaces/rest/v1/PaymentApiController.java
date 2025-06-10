@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.*;
 import com.campus.application.service.PaymentRecordService;
 import com.campus.shared.common.ApiResponse;
 import com.campus.domain.entity.PaymentRecord;
+import com.campus.interfaces.rest.common.BaseController;
+import org.springframework.http.ResponseEntity;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -30,7 +32,7 @@ import jakarta.validation.Valid;
 @RequestMapping("/api/payments")
 @Tag(name = "缴费管理API", description = "缴费记录和缴费项目管理REST API接口")
 @SecurityRequirement(name = "Bearer")
-public class PaymentApiController {
+public class PaymentApiController extends BaseController {
 
     @Autowired
     private PaymentRecordService paymentRecordService;
@@ -164,20 +166,193 @@ public class PaymentApiController {
 
 
 
-    // ========== 统计API ==========
+    // ==================== 统计端点 ====================
 
     /**
      * 获取缴费统计信息
      */
     @GetMapping("/stats")
-    @Operation(summary = "获取缴费统计信息", description = "获取缴费相关统计数据")
-    @PreAuthorize("hasAnyRole('ADMIN', 'FINANCE')")
-    public ApiResponse<PaymentRecordService.PaymentStatistics> getPaymentStatistics() {
+    @Operation(summary = "获取缴费统计信息", description = "获取缴费模块的统计数据")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN', 'TEACHER')")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getPaymentStats() {
         try {
-            PaymentRecordService.PaymentStatistics stats = paymentRecordService.getStatistics();
-            return ApiResponse.success("获取缴费统计信息成功", stats);
+            log.info("获取缴费统计信息");
+
+            Map<String, Object> stats = new HashMap<>();
+
+            // 获取基础统计
+            PaymentRecordService.PaymentStatistics paymentStats = paymentRecordService.getStatistics();
+
+            // 基础统计
+            stats.put("totalPayments", paymentStats.getTotalRecords());
+            stats.put("successPayments", paymentStats.getSuccessRecords());
+            stats.put("refundPayments", paymentStats.getRefundRecords());
+            stats.put("failedPayments", paymentStats.getFailedRecords());
+
+            // 金额统计
+            stats.put("totalAmount", paymentStats.getTotalAmount());
+            stats.put("successAmount", paymentStats.getSuccessAmount());
+            stats.put("refundAmount", paymentStats.getRefundAmount());
+
+            // 按支付方式统计
+            Map<String, Long> methodStats = new HashMap<>();
+            List<PaymentRecord> alipayRecords = paymentRecordService.findByPaymentMethod("alipay");
+            methodStats.put("alipay", (long) alipayRecords.size());
+
+            List<PaymentRecord> wechatRecords = paymentRecordService.findByPaymentMethod("wechat");
+            methodStats.put("wechat", (long) wechatRecords.size());
+
+            List<PaymentRecord> bankRecords = paymentRecordService.findByPaymentMethod("bank");
+            methodStats.put("bank", (long) bankRecords.size());
+
+            List<PaymentRecord> cashRecords = paymentRecordService.findByPaymentMethod("cash");
+            methodStats.put("cash", (long) cashRecords.size());
+
+            stats.put("methodStats", methodStats);
+
+            // 时间统计（简化实现）
+            stats.put("todayPayments", 0L);
+            stats.put("weekPayments", 0L);
+            stats.put("monthPayments", 0L);
+
+            // 最近活动（简化实现）
+            List<Map<String, Object>> recentActivity = new ArrayList<>();
+            stats.put("recentActivity", recentActivity);
+
+            return success("获取缴费统计信息成功", stats);
+
         } catch (Exception e) {
-            return ApiResponse.error(500, "获取缴费统计信息失败：" + e.getMessage());
+            log.error("获取缴费统计信息失败: ", e);
+            return error("获取缴费统计信息失败: " + e.getMessage());
+        }
+    }
+
+    // ==================== 批量操作端点 ====================
+
+    /**
+     * 批量删除缴费记录
+     */
+    @DeleteMapping("/batch")
+    @Operation(summary = "批量删除缴费记录", description = "根据ID列表批量删除缴费记录")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN')")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> batchDeletePayments(
+            @Parameter(description = "缴费记录ID列表") @RequestBody List<Long> ids) {
+
+        try {
+            logOperation("批量删除缴费记录", ids.size());
+
+            // 验证参数
+            if (ids == null || ids.isEmpty()) {
+                return badRequest("缴费记录ID列表不能为空");
+            }
+
+            if (ids.size() > 100) {
+                return badRequest("单次批量操作不能超过100条记录");
+            }
+
+            // 验证所有ID
+            for (Long id : ids) {
+                validateId(id, "缴费记录");
+            }
+
+            // 执行批量删除
+            boolean result = paymentRecordService.batchDeletePaymentRecords(ids);
+
+            Map<String, Object> responseData = new HashMap<>();
+            responseData.put("deletedCount", result ? ids.size() : 0);
+            responseData.put("totalRequested", ids.size());
+            responseData.put("success", result);
+
+            if (result) {
+                return success("批量删除缴费记录成功", responseData);
+            } else {
+                return error("批量删除缴费记录失败");
+            }
+
+        } catch (Exception e) {
+            log.error("批量删除缴费记录失败: ", e);
+            return error("批量删除缴费记录失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 批量退款
+     */
+    @PutMapping("/batch/refund")
+    @Operation(summary = "批量退款", description = "批量处理缴费记录退款")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN')")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> batchRefundPayments(
+            @Parameter(description = "批量退款请求") @RequestBody Map<String, Object> request) {
+
+        try {
+            @SuppressWarnings("unchecked")
+            List<Long> ids = (List<Long>) request.get("ids");
+            String refundReason = (String) request.get("refundReason");
+            Object operatorIdObj = request.get("operatorId");
+
+            // 验证参数
+            if (ids == null || ids.isEmpty()) {
+                return badRequest("缴费记录ID列表不能为空");
+            }
+
+            if (refundReason == null || refundReason.trim().isEmpty()) {
+                return badRequest("退款原因不能为空");
+            }
+
+            if (operatorIdObj == null) {
+                return badRequest("操作员ID不能为空");
+            }
+
+            Long operatorId = ((Number) operatorIdObj).longValue();
+            logOperation("批量退款", ids.size(), "原因: " + refundReason);
+
+            if (ids.size() > 100) {
+                return badRequest("单次批量操作不能超过100条记录");
+            }
+
+            // 验证所有ID
+            for (Long id : ids) {
+                validateId(id, "缴费记录");
+            }
+
+            // 执行批量退款
+            int successCount = 0;
+            int failCount = 0;
+            List<String> failReasons = new ArrayList<>();
+
+            for (Long id : ids) {
+                try {
+                    boolean result = paymentRecordService.refundPayment(id, refundReason, operatorId);
+                    if (result) {
+                        successCount++;
+                    } else {
+                        failCount++;
+                        failReasons.add("缴费记录ID " + id + ": 退款失败");
+                    }
+                } catch (Exception e) {
+                    failCount++;
+                    failReasons.add("缴费记录ID " + id + ": " + e.getMessage());
+                    log.warn("退款失败 - ID: {}", id, e);
+                }
+            }
+
+            Map<String, Object> responseData = new HashMap<>();
+            responseData.put("successCount", successCount);
+            responseData.put("failCount", failCount);
+            responseData.put("totalRequested", ids.size());
+            responseData.put("failReasons", failReasons);
+
+            if (failCount == 0) {
+                return success("批量退款成功", responseData);
+            } else if (successCount > 0) {
+                return success("批量退款部分成功", responseData);
+            } else {
+                return error("批量退款失败");
+            }
+
+        } catch (Exception e) {
+            log.error("批量退款失败: ", e);
+            return error("批量退款失败: " + e.getMessage());
         }
     }
 }

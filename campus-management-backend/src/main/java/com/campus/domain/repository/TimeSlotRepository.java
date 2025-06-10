@@ -304,12 +304,6 @@ public interface TimeSlotRepository extends JpaRepository<TimeSlot, Long> {
     List<TimeSlot> findBySlotTypeAndDeletedOrderByStartTimeAsc(@Param("slotType") String slotType, @Param("deleted") Integer deleted);
 
     /**
-     * 根据学期和删除状态查找，按开始时间排序
-     */
-    @Query("SELECT t FROM TimeSlot t WHERE t.semester = :semester AND t.deleted = :deleted ORDER BY t.startTime ASC")
-    List<TimeSlot> findBySemesterAndDeletedOrderByStartTimeAsc(@Param("semester") String semester, @Param("deleted") Integer deleted);
-
-    /**
      * 查找时间冲突的时间段
      */
     @Query("SELECT t FROM TimeSlot t WHERE " +

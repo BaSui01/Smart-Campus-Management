@@ -12,8 +12,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -35,8 +33,6 @@ import org.springframework.cache.annotation.CacheEvict;
 @Tag(name = "仪表盘API", description = "仪表盘数据管理REST API接口")
 @SecurityRequirement(name = "Bearer")
 public class DashboardApiController {
-
-    private static final Logger log = LoggerFactory.getLogger(DashboardApiController.class);
 
     @Autowired
     private DashboardService dashboardService;

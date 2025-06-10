@@ -360,6 +360,93 @@ public interface NotificationService {
      */
     void deleteTemplate(Long id);
 
+    // ==================== 模板查询方法 ====================
+
+    /**
+     * 分页查询模板
+     */
+    Page<NotificationTemplate> findTemplates(Pageable pageable, Map<String, Object> params);
+
+    /**
+     * 根据ID获取模板
+     */
+    NotificationTemplate getTemplateById(Long id);
+
+    /**
+     * 根据类型获取模板
+     */
+    List<NotificationTemplate> getTemplatesByType(String templateType);
+
+    /**
+     * 检查模板名称是否存在
+     */
+    boolean existsByTemplateName(String templateName);
+
+    /**
+     * 更新模板
+     */
+    NotificationTemplate updateTemplate(NotificationTemplate template);
+
+    /**
+     * 复制模板
+     */
+    NotificationTemplate copyTemplate(Long templateId, String newTemplateName);
+
+    /**
+     * 预览模板
+     */
+    Map<String, Object> previewTemplate(Long templateId, Map<String, Object> variables);
+
+    /**
+     * 获取模板变量
+     */
+    List<String> getTemplateVariables(Long templateId);
+
+    /**
+     * 批量更新模板状态
+     */
+    int batchUpdateTemplateStatus(List<Long> templateIds, String status);
+
+    /**
+     * 获取所有模板类型
+     */
+    List<String> getAllTemplateTypes();
+
+    /**
+     * 获取所有通知渠道
+     */
+    List<String> getAllNotificationChannels();
+
+    /**
+     * 统计模板总数
+     */
+    long countTotalTemplates();
+
+    /**
+     * 统计活跃模板数
+     */
+    long countActiveTemplates();
+
+    /**
+     * 统计非活跃模板数
+     */
+    long countInactiveTemplates();
+
+    /**
+     * 获取模板类型统计
+     */
+    Map<String, Object> getTemplateTypeStatistics();
+
+    /**
+     * 获取渠道统计
+     */
+    Map<String, Object> getChannelStatistics();
+
+    /**
+     * 获取模板使用统计
+     */
+    Map<String, Object> getTemplateUsageStatistics();
+
     // ==================== 自动化通知 ====================
 
     /**

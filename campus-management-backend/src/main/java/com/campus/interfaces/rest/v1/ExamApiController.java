@@ -1,7 +1,7 @@
 package com.campus.interfaces.rest.v1;
 
 import com.campus.application.service.ExamService;
-import com.campus.common.controller.BaseController;
+import com.campus.interfaces.rest.common.BaseController;
 import com.campus.domain.entity.Exam;
 import com.campus.domain.entity.ExamQuestion;
 import com.campus.domain.entity.ExamRecord;
@@ -22,7 +22,10 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -50,7 +53,7 @@ public class ExamApiController extends BaseController {
      */
     @GetMapping
     @Operation(summary = "分页查询考试列表", description = "支持按条件搜索和分页查询考试")
-    @PreAuthorize("hasAuthority('exam:manage:list')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN', 'TEACHER')")
     public ResponseEntity<ApiResponse<List<Exam>>> getExams(
             @Parameter(description = "页码", example = "1") @RequestParam(defaultValue = "1") int page,
             @Parameter(description = "每页大小", example = "20") @RequestParam(defaultValue = "20") int size,
@@ -92,7 +95,7 @@ public class ExamApiController extends BaseController {
      */
     @GetMapping("/{id}")
     @Operation(summary = "查询考试详情", description = "根据ID查询考试的详细信息")
-    @PreAuthorize("hasAuthority('exam:manage:list')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN', 'TEACHER')")
     public ResponseEntity<ApiResponse<Exam>> getExam(
             @Parameter(description = "考试ID", required = true) @PathVariable Long id) {
 
@@ -103,7 +106,7 @@ public class ExamApiController extends BaseController {
 
             Optional<Exam> exam = examService.findById(id);
             if (exam.isPresent()) {
-                return success(exam.get(), "查询考试详情成功");
+                return success("查询考试详情成功", exam.get());
             } else {
                 return error("考试不存在");
             }
@@ -119,7 +122,7 @@ public class ExamApiController extends BaseController {
      */
     @PostMapping
     @Operation(summary = "创建考试", description = "创建新的考试")
-    @PreAuthorize("hasAuthority('exam:manage:add')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN', 'TEACHER')")
     public ResponseEntity<ApiResponse<Exam>> createExam(
             @RequestBody Exam exam,
             HttpServletRequest request) {
@@ -147,7 +150,7 @@ public class ExamApiController extends BaseController {
             exam.setQuestionCount(0);
 
             Exam savedExam = examService.save(exam);
-            return success(savedExam, "考试创建成功");
+            return success("考试创建成功", savedExam);
 
         } catch (Exception e) {
             log.error("创建考试失败: ", e);
@@ -160,7 +163,7 @@ public class ExamApiController extends BaseController {
      */
     @PutMapping("/{id}")
     @Operation(summary = "更新考试", description = "更新考试信息")
-    @PreAuthorize("hasAuthority('exam:manage:edit')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN', 'TEACHER')")
     public ResponseEntity<ApiResponse<Exam>> updateExam(
             @Parameter(description = "考试ID", required = true) @PathVariable Long id,
             @RequestBody Exam exam,
@@ -221,7 +224,7 @@ public class ExamApiController extends BaseController {
             existing.setLateSubmissionAllowed(exam.getLateSubmissionAllowed());
 
             Exam updatedExam = examService.save(existing);
-            return success(updatedExam, "考试更新成功");
+            return success("考试更新成功", updatedExam);
 
         } catch (Exception e) {
             log.error("更新考试失败 - ID: {}", id, e);
@@ -234,7 +237,7 @@ public class ExamApiController extends BaseController {
      */
     @DeleteMapping("/{id}")
     @Operation(summary = "删除考试", description = "删除指定的考试")
-    @PreAuthorize("hasAuthority('exam:manage:delete')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN')")
     public ResponseEntity<ApiResponse<Void>> deleteExam(
             @Parameter(description = "考试ID", required = true) @PathVariable Long id) {
 
@@ -255,7 +258,7 @@ public class ExamApiController extends BaseController {
             }
 
             examService.deleteById(id);
-            return success(null, "考试删除成功");
+            return success("考试删除成功");
 
         } catch (Exception e) {
             log.error("删除考试失败 - ID: {}", id, e);
@@ -270,7 +273,7 @@ public class ExamApiController extends BaseController {
      */
     @PostMapping("/{id}/publish")
     @Operation(summary = "发布考试", description = "发布指定的考试")
-    @PreAuthorize("hasAuthority('exam:manage:publish')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN', 'TEACHER')")
     public ResponseEntity<ApiResponse<Void>> publishExam(
             @Parameter(description = "考试ID", required = true) @PathVariable Long id) {
 
@@ -286,7 +289,7 @@ public class ExamApiController extends BaseController {
             }
 
             examService.publishExam(id);
-            return success(null, "考试发布成功");
+            return success("考试发布成功");
 
         } catch (Exception e) {
             log.error("发布考试失败 - ID: {}", id, e);
@@ -299,7 +302,7 @@ public class ExamApiController extends BaseController {
      */
     @PostMapping("/{id}/start")
     @Operation(summary = "开始考试", description = "开始指定的考试")
-    @PreAuthorize("hasAuthority('exam:manage:control')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN', 'TEACHER')")
     public ResponseEntity<ApiResponse<Void>> startExam(
             @Parameter(description = "考试ID", required = true) @PathVariable Long id) {
 
@@ -309,7 +312,7 @@ public class ExamApiController extends BaseController {
             validateId(id, "考试");
 
             examService.startExam(id);
-            return success(null, "考试开始成功");
+            return success("考试开始成功");
 
         } catch (Exception e) {
             log.error("开始考试失败 - ID: {}", id, e);
@@ -322,7 +325,7 @@ public class ExamApiController extends BaseController {
      */
     @PostMapping("/{id}/end")
     @Operation(summary = "结束考试", description = "结束指定的考试")
-    @PreAuthorize("hasAuthority('exam:manage:control')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN', 'TEACHER')")
     public ResponseEntity<ApiResponse<Void>> endExam(
             @Parameter(description = "考试ID", required = true) @PathVariable Long id) {
 
@@ -332,7 +335,7 @@ public class ExamApiController extends BaseController {
             validateId(id, "考试");
 
             examService.endExam(id);
-            return success(null, "考试结束成功");
+            return success("考试结束成功");
 
         } catch (Exception e) {
             log.error("结束考试失败 - ID: {}", id, e);
@@ -347,7 +350,7 @@ public class ExamApiController extends BaseController {
      */
     @GetMapping("/{id}/questions")
     @Operation(summary = "获取考试题目列表", description = "获取指定考试的所有题目")
-    @PreAuthorize("hasAuthority('exam:question:list')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN', 'TEACHER')")
     public ResponseEntity<ApiResponse<List<ExamQuestion>>> getExamQuestions(
             @Parameter(description = "考试ID", required = true) @PathVariable Long id,
             @Parameter(description = "页码", example = "1") @RequestParam(defaultValue = "1") int page,
@@ -375,7 +378,7 @@ public class ExamApiController extends BaseController {
      */
     @PostMapping("/{id}/questions")
     @Operation(summary = "添加考试题目", description = "为指定考试添加题目")
-    @PreAuthorize("hasAuthority('exam:question:add')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN', 'TEACHER')")
     public ResponseEntity<ApiResponse<ExamQuestion>> addExamQuestion(
             @Parameter(description = "考试ID", required = true) @PathVariable Long id,
             @RequestBody ExamQuestion question) {
@@ -386,7 +389,7 @@ public class ExamApiController extends BaseController {
             validateId(id, "考试");
 
             ExamQuestion savedQuestion = examService.addQuestion(id, question);
-            return success(savedQuestion, "添加考试题目成功");
+            return success("添加考试题目成功", savedQuestion);
 
         } catch (Exception e) {
             log.error("添加考试题目失败 - 考试ID: {}", id, e);
@@ -401,7 +404,7 @@ public class ExamApiController extends BaseController {
      */
     @GetMapping("/{id}/records")
     @Operation(summary = "获取考试记录列表", description = "获取指定考试的所有考试记录")
-    @PreAuthorize("hasAuthority('exam:record:list')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN', 'TEACHER')")
     public ResponseEntity<ApiResponse<List<ExamRecord>>> getExamRecords(
             @Parameter(description = "考试ID", required = true) @PathVariable Long id,
             @Parameter(description = "页码", example = "1") @RequestParam(defaultValue = "1") int page,
@@ -421,6 +424,197 @@ public class ExamApiController extends BaseController {
         } catch (Exception e) {
             log.error("获取考试记录列表失败 - 考试ID: {}", id, e);
             return error("获取考试记录列表失败: " + e.getMessage());
+        }
+    }
+
+    // ==================== 统计端点 ====================
+
+    /**
+     * 获取考试统计信息
+     */
+    @GetMapping("/stats")
+    @Operation(summary = "获取考试统计信息", description = "获取考试模块的统计数据")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN', 'TEACHER')")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getExamStats() {
+        try {
+            log.info("获取考试统计信息");
+
+            Map<String, Object> stats = new HashMap<>();
+
+            // 基础统计
+            long totalExams = examService.count();
+            stats.put("totalExams", totalExams);
+
+            // 简化统计实现
+            stats.put("publishedExams", 0L);
+            stats.put("draftExams", 0L);
+
+            // 按考试类型统计（简化）
+            Map<String, Long> typeStats = new HashMap<>();
+            typeStats.put("MIDTERM", 0L);
+            typeStats.put("FINAL", 0L);
+            typeStats.put("QUIZ", 0L);
+            typeStats.put("ASSIGNMENT", 0L);
+            stats.put("typeStats", typeStats);
+
+            // 在线/线下考试统计（简化）
+            stats.put("onlineExams", 0L);
+            stats.put("offlineExams", 0L);
+
+            // 今日、本周、本月统计（简化）
+            stats.put("todayExams", 0L);
+            stats.put("weekExams", 0L);
+            stats.put("monthExams", 0L);
+
+            // 考试通过率统计（简化）
+            Map<String, Object> passRateStats = new HashMap<>();
+            passRateStats.put("totalParticipants", 0);
+            passRateStats.put("passedParticipants", 0);
+            passRateStats.put("passRate", 0.0);
+            stats.put("passRateStats", passRateStats);
+
+            // 最近活动（简化）
+            List<Map<String, Object>> recentActivity = new ArrayList<>();
+            stats.put("recentActivity", recentActivity);
+
+            return success("获取考试统计信息成功", stats);
+
+        } catch (Exception e) {
+            log.error("获取考试统计信息失败: ", e);
+            return error("获取考试统计信息失败: " + e.getMessage());
+        }
+    }
+
+    // ==================== 批量操作端点 ====================
+
+    /**
+     * 批量删除考试
+     */
+    @DeleteMapping("/batch")
+    @Operation(summary = "批量删除考试", description = "根据ID列表批量删除考试")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN')")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> batchDeleteExams(
+            @Parameter(description = "考试ID列表") @RequestBody List<Long> ids) {
+
+        try {
+            logOperation("批量删除考试", ids.size());
+
+            // 验证参数
+            if (ids == null || ids.isEmpty()) {
+                return badRequest("考试ID列表不能为空");
+            }
+
+            if (ids.size() > 100) {
+                return badRequest("单次批量操作不能超过100条记录");
+            }
+
+            // 验证所有ID
+            for (Long id : ids) {
+                validateId(id, "考试");
+            }
+
+            // 执行批量删除
+            int successCount = 0;
+            int failCount = 0;
+            List<String> failReasons = new ArrayList<>();
+
+            for (Long id : ids) {
+                try {
+                    // 检查是否可以删除
+                    if (!examService.canDeleteExam(id)) {
+                        failCount++;
+                        failReasons.add("考试ID " + id + ": 已有考试记录，无法删除");
+                        continue;
+                    }
+
+                    examService.deleteById(id);
+                    successCount++;
+                } catch (Exception e) {
+                    failCount++;
+                    failReasons.add("考试ID " + id + ": " + e.getMessage());
+                    log.warn("删除考试{}失败: {}", id, e.getMessage());
+                }
+            }
+
+            Map<String, Object> responseData = new HashMap<>();
+            responseData.put("successCount", successCount);
+            responseData.put("failCount", failCount);
+            responseData.put("totalRequested", ids.size());
+            responseData.put("failReasons", failReasons);
+
+            if (failCount == 0) {
+                return success("批量删除考试成功", responseData);
+            } else if (successCount > 0) {
+                return success("批量删除考试部分成功", responseData);
+            } else {
+                return error("批量删除考试失败");
+            }
+
+        } catch (Exception e) {
+            log.error("批量删除考试失败: ", e);
+            return error("批量删除考试失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 批量发布考试
+     */
+    @PutMapping("/batch/publish")
+    @Operation(summary = "批量发布考试", description = "批量发布考试")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN', 'TEACHER')")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> batchPublishExams(
+            @Parameter(description = "考试ID列表") @RequestBody List<Long> ids) {
+
+        try {
+            logOperation("批量发布考试", ids.size());
+
+            // 验证参数
+            if (ids == null || ids.isEmpty()) {
+                return badRequest("考试ID列表不能为空");
+            }
+
+            if (ids.size() > 100) {
+                return badRequest("单次批量操作不能超过100条记录");
+            }
+
+            // 验证所有ID
+            for (Long id : ids) {
+                validateId(id, "考试");
+            }
+
+            // 执行批量发布
+            int successCount = 0;
+            int failCount = 0;
+            List<String> failReasons = new ArrayList<>();
+
+            for (Long id : ids) {
+                try {
+                    examService.publishExam(id);
+                    successCount++;
+                } catch (Exception e) {
+                    failCount++;
+                    failReasons.add("考试ID " + id + ": " + e.getMessage());
+                    log.warn("发布考试{}失败: {}", id, e.getMessage());
+                }
+            }
+
+            Map<String, Object> responseData = new HashMap<>();
+            responseData.put("successCount", successCount);
+            responseData.put("failCount", failCount);
+            responseData.put("totalRequested", ids.size());
+            responseData.put("failReasons", failReasons);
+
+            if (failCount == 0) {
+                return success("批量发布考试成功", responseData);
+            } else if (successCount > 0) {
+                return success("批量发布考试部分成功", responseData);
+            } else {
+                return error("批量发布考试失败");
+            }
+
+        } catch (Exception e) {
+            log.error("批量发布考试失败: ", e);
+            return error("批量发布考试失败: " + e.getMessage());
         }
     }
 

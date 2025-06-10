@@ -18,7 +18,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import jakarta.validation.Valid;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * 院系管理Web控制器
@@ -80,13 +79,11 @@ public class DepartmentController {
     @GetMapping("/{id}")
     public String departmentDetail(@PathVariable Long id, Model model) {
         try {
-            Optional<Department> departmentOpt = departmentService.findDepartmentById(id);
-            if (departmentOpt.isEmpty()) {
+            Department department = departmentService.findDepartmentById(id);
+            if (department == null) {
                 model.addAttribute("error", "院系不存在");
                 return "redirect:/admin/departments";
             }
-            
-            Department department = departmentOpt.get();
             
             // 获取院系相关统计信息
             long teacherCount = departmentService.countTeachersByDepartment(id);
@@ -130,13 +127,11 @@ public class DepartmentController {
     @GetMapping("/{id}/edit")
     public String editDepartmentPage(@PathVariable Long id, Model model) {
         try {
-            Optional<Department> departmentOpt = departmentService.findDepartmentById(id);
-            if (departmentOpt.isEmpty()) {
+            Department department = departmentService.findDepartmentById(id);
+            if (department == null) {
                 model.addAttribute("error", "院系不存在");
                 return "redirect:/admin/departments";
             }
-            
-            Department department = departmentOpt.get();
             model.addAttribute("department", department);
             model.addAttribute("currentPage", "departments");
             model.addAttribute("isEdit", true);
@@ -245,14 +240,13 @@ public class DepartmentController {
     @GetMapping("/{id}/teachers")
     public String departmentTeachers(@PathVariable Long id, Model model) {
         try {
-            Optional<Department> departmentOpt = departmentService.findDepartmentById(id);
-            if (departmentOpt.isEmpty()) {
+            Department department = departmentService.findDepartmentById(id);
+            if (department == null) {
                 model.addAttribute("error", "院系不存在");
                 return "redirect:/admin/departments";
             }
-            
-            Department department = departmentOpt.get();
-            List<User> teachers = departmentService.findTeachersByDepartment(id);
+
+            List<Object> teachers = departmentService.findTeachersByDepartment(id);
             
             model.addAttribute("department", department);
             model.addAttribute("teachers", teachers);
@@ -273,14 +267,13 @@ public class DepartmentController {
     @GetMapping("/{id}/students")
     public String departmentStudents(@PathVariable Long id, Model model) {
         try {
-            Optional<Department> departmentOpt = departmentService.findDepartmentById(id);
-            if (departmentOpt.isEmpty()) {
+            Department department = departmentService.findDepartmentById(id);
+            if (department == null) {
                 model.addAttribute("error", "院系不存在");
                 return "redirect:/admin/departments";
             }
-            
-            Department department = departmentOpt.get();
-            // TODO: 获取院系学生列表
+
+            // 注意：院系学生列表功能待实现
             
             model.addAttribute("department", department);
             model.addAttribute("currentPage", "departments");
@@ -300,14 +293,13 @@ public class DepartmentController {
     @GetMapping("/{id}/courses")
     public String departmentCourses(@PathVariable Long id, Model model) {
         try {
-            Optional<Department> departmentOpt = departmentService.findDepartmentById(id);
-            if (departmentOpt.isEmpty()) {
+            Department department = departmentService.findDepartmentById(id);
+            if (department == null) {
                 model.addAttribute("error", "院系不存在");
                 return "redirect:/admin/departments";
             }
-            
-            Department department = departmentOpt.get();
-            // TODO: 获取院系课程列表
+
+            // 注意：院系课程列表功能待实现
             
             model.addAttribute("department", department);
             model.addAttribute("currentPage", "departments");
@@ -329,7 +321,7 @@ public class DepartmentController {
         try {
             long totalDepartments = departmentService.countTotalDepartments();
             long activeDepartments = departmentService.countActiveDepartments();
-            List<Object[]> departmentStats = departmentService.getDepartmentStatistics();
+            Object departmentStats = departmentService.getDepartmentStatistics();
             
             model.addAttribute("totalDepartments", totalDepartments);
             model.addAttribute("activeDepartments", activeDepartments);

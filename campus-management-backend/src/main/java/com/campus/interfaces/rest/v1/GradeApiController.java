@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.*;
 import com.campus.application.service.GradeService;
 import com.campus.shared.common.ApiResponse;
 import com.campus.domain.entity.Grade;
+import com.campus.interfaces.rest.common.BaseController;
+import org.springframework.http.ResponseEntity;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -30,7 +32,7 @@ import jakarta.validation.Valid;
 @RequestMapping("/api/grades")
 @Tag(name = "成绩管理API", description = "学生成绩管理REST API接口")
 @SecurityRequirement(name = "Bearer")
-public class GradeApiController {
+public class GradeApiController extends BaseController {
 
     @Autowired
     private GradeService gradeService;
@@ -139,6 +141,60 @@ public class GradeApiController {
     }
 
     /**
+     * 获取成绩统计信息
+     */
+    @GetMapping("/stats")
+    @Operation(summary = "获取成绩统计信息", description = "获取成绩模块的统计数据")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN', 'TEACHER')")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getGradeStats() {
+        try {
+            log.info("获取成绩统计信息");
+
+            Map<String, Object> stats = new HashMap<>();
+
+            // 基础统计
+            long totalGrades = gradeService.count();
+            stats.put("totalGrades", totalGrades);
+
+            // 整体平均分
+            Double overallAverage = gradeService.calculateOverallAverageScore();
+            stats.put("overallAverageScore", overallAverage != null ? overallAverage : 0.0);
+
+            // 成绩分布统计
+            Map<String, Object> gradeDistribution = gradeService.getGradeDistribution();
+            stats.put("gradeDistribution", gradeDistribution);
+
+            // 综合统计
+            Map<String, Object> comprehensiveStats = gradeService.generateComprehensiveStatistics();
+            stats.put("comprehensiveStats", comprehensiveStats);
+
+            // 时间统计（简化实现）
+            stats.put("todayGrades", 0L);
+            stats.put("weekGrades", 0L);
+            stats.put("monthGrades", 0L);
+
+            // 学期统计
+            List<String> semesters = gradeService.findAllSemesters();
+            Map<String, Long> semesterStats = new HashMap<>();
+            for (String semester : semesters) {
+                List<Grade> semesterGrades = gradeService.findBySemester(semester);
+                semesterStats.put(semester, (long) semesterGrades.size());
+            }
+            stats.put("semesterStats", semesterStats);
+
+            // 最近活动（简化实现）
+            List<Map<String, Object>> recentActivity = new ArrayList<>();
+            stats.put("recentActivity", recentActivity);
+
+            return success("获取成绩统计信息成功", stats);
+
+        } catch (Exception e) {
+            log.error("获取成绩统计信息失败: ", e);
+            return error("获取成绩统计信息失败: " + e.getMessage());
+        }
+    }
+
+    /**
      * 获取学生成绩统计
      */
     @GetMapping("/student/{studentId}/stats")
@@ -221,25 +277,126 @@ public class GradeApiController {
      */
     @DeleteMapping("/batch")
     @Operation(summary = "批量删除成绩记录", description = "批量删除多个成绩记录")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ApiResponse<Void> batchDeleteGrades(@Parameter(description = "成绩ID列表") @RequestBody List<Long> ids) {
-        boolean result = gradeService.batchDeleteGrades(ids);
-        if (result) {
-            return ApiResponse.success("批量删除成绩记录成功");
-        } else {
-            return ApiResponse.error(500, "批量删除成绩记录失败");
+    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN')")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> batchDeleteGrades(
+            @Parameter(description = "成绩ID列表") @RequestBody List<Long> ids) {
+
+        try {
+            logOperation("批量删除成绩记录", ids.size());
+
+            // 验证参数
+            if (ids == null || ids.isEmpty()) {
+                return badRequest("成绩ID列表不能为空");
+            }
+
+            if (ids.size() > 100) {
+                return badRequest("单次批量操作不能超过100条记录");
+            }
+
+            // 验证所有ID
+            for (Long id : ids) {
+                validateId(id, "成绩记录");
+            }
+
+            // 执行批量删除
+            boolean result = gradeService.batchDeleteGrades(ids);
+
+            Map<String, Object> responseData = new HashMap<>();
+            responseData.put("deletedCount", result ? ids.size() : 0);
+            responseData.put("totalRequested", ids.size());
+            responseData.put("success", result);
+
+            if (result) {
+                return success("批量删除成绩记录成功", responseData);
+            } else {
+                return error("批量删除成绩记录失败");
+            }
+
+        } catch (Exception e) {
+            log.error("批量删除成绩记录失败: ", e);
+            return error("批量删除成绩记录失败: " + e.getMessage());
         }
     }
 
     /**
      * 批量导入成绩
      */
-    @PostMapping("/import")
+    @PostMapping("/batch/import")
     @Operation(summary = "批量导入成绩", description = "批量导入成绩数据")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
-    public ApiResponse<Map<String, Object>> importGrades(@Parameter(description = "成绩列表") @RequestBody List<Grade> grades) {
-        Map<String, Object> result = gradeService.importGrades(grades);
-        return ApiResponse.success("导入成绩数据完成", result);
+    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN')")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> batchImportGrades(
+            @Parameter(description = "成绩数据列表") @RequestBody List<Grade> grades) {
+
+        try {
+            logOperation("批量导入成绩", grades.size());
+
+            // 验证参数
+            if (grades == null || grades.isEmpty()) {
+                return badRequest("成绩数据列表不能为空");
+            }
+
+            if (grades.size() > 100) {
+                return badRequest("单次批量导入不能超过100条记录");
+            }
+
+            // 执行批量导入
+            Map<String, Object> result = gradeService.importGrades(grades);
+
+            return success("批量导入成绩完成", result);
+
+        } catch (Exception e) {
+            log.error("批量导入成绩失败: ", e);
+            return error("批量导入成绩失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 批量更新成绩
+     */
+    @PutMapping("/batch/update")
+    @Operation(summary = "批量更新成绩", description = "批量更新成绩数据")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'TEACHER')")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> batchUpdateGrades(
+            @Parameter(description = "成绩数据列表") @RequestBody List<Grade> grades) {
+
+        try {
+            logOperation("批量更新成绩", grades.size());
+
+            // 验证参数
+            if (grades == null || grades.isEmpty()) {
+                return badRequest("成绩数据列表不能为空");
+            }
+
+            if (grades.size() > 100) {
+                return badRequest("单次批量操作不能超过100条记录");
+            }
+
+            // 验证所有ID
+            for (Grade grade : grades) {
+                if (grade.getId() == null) {
+                    return badRequest("成绩记录ID不能为空");
+                }
+                validateId(grade.getId(), "成绩记录");
+            }
+
+            // 执行批量更新
+            boolean result = gradeService.batchUpdateGrades(grades);
+
+            Map<String, Object> responseData = new HashMap<>();
+            responseData.put("updatedCount", result ? grades.size() : 0);
+            responseData.put("totalRequested", grades.size());
+            responseData.put("success", result);
+
+            if (result) {
+                return success("批量更新成绩成功", responseData);
+            } else {
+                return error("批量更新成绩失败");
+            }
+
+        } catch (Exception e) {
+            log.error("批量更新成绩失败: ", e);
+            return error("批量更新成绩失败: " + e.getMessage());
+        }
     }
 
     /**

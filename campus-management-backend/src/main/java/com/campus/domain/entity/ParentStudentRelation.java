@@ -17,10 +17,10 @@ import java.time.LocalDateTime;
  * @since 2025-06-07
  */
 @Entity
-@Table(name = "parent_student_relations", indexes = {
+@Table(name = "tb_parent_student_relation", indexes = {
     @Index(name = "idx_parent_id", columnList = "parent_id"),
     @Index(name = "idx_student_id", columnList = "student_id"),
-    @Index(name = "idx_relation_type", columnList = "relation_type"),
+    @Index(name = "idx_relationship", columnList = "relationship"),
     @Index(name = "idx_is_primary", columnList = "is_primary")
 })
 public class ParentStudentRelation extends BaseEntity {
@@ -44,8 +44,15 @@ public class ParentStudentRelation extends BaseEntity {
      */
     @NotBlank(message = "关系类型不能为空")
     @Size(max = 20, message = "关系类型长度不能超过20个字符")
-    @Column(name = "relation_type", nullable = false, length = 20)
+    @Column(name = "relationship", nullable = false, length = 20)
     private String relationType;
+
+    /**
+     * 关系状态
+     */
+    @Size(max = 20, message = "关系状态长度不能超过20个字符")
+    @Column(name = "relation_status", length = 20)
+    private String relationStatus = "active";
 
     /**
      * 是否为主要联系人
@@ -394,6 +401,14 @@ public class ParentStudentRelation extends BaseEntity {
 
     public void setRelationType(String relationType) {
         this.relationType = relationType;
+    }
+
+    public String getRelationStatus() {
+        return relationStatus;
+    }
+
+    public void setRelationStatus(String relationStatus) {
+        this.relationStatus = relationStatus;
     }
 
     public Boolean getIsPrimary() {

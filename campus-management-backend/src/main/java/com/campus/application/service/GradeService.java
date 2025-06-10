@@ -300,4 +300,93 @@ public interface GradeService {
      * @return 成绩列表
      */
     List<Grade> exportGrades(Map<String, Object> params);
+
+    // ================================
+    // GradeController 需要的特定方法
+    // ================================
+
+    /**
+     * 根据课程ID分页查找成绩记录
+     */
+    Page<Grade> findGradesByCourse(Long courseId, Pageable pageable);
+
+    /**
+     * 根据学生ID分页查找成绩记录
+     */
+    Page<Grade> findGradesByStudent(Long studentId, Pageable pageable);
+
+    /**
+     * 根据学期分页查找成绩记录
+     */
+    Page<Grade> findGradesBySemester(String semester, Pageable pageable);
+
+    /**
+     * 分页查找所有成绩记录
+     */
+    Page<Grade> findAllGrades(Pageable pageable);
+
+    /**
+     * 统计成绩总数
+     */
+    long countTotalGrades();
+
+    /**
+     * 获取所有学期列表
+     */
+    List<String> findAllSemesters();
+
+    /**
+     * 根据ID查找成绩记录
+     */
+    Grade findGradeById(Long id);
+
+    /**
+     * 根据学生ID查找成绩记录（无分页）
+     */
+    List<Grade> findGradesByStudent(Long studentId);
+
+    /**
+     * 计算学生平均分
+     */
+    Double calculateAverageScore(Long studentId);
+
+    /**
+     * 计算学生GPA
+     */
+    Double calculateGPA(Long studentId);
+
+    /**
+     * 计算学生总学分
+     */
+    Integer calculateTotalCredits(Long studentId);
+
+    /**
+     * 根据课程ID查找成绩记录（无分页）
+     */
+    List<Grade> findGradesByCourse(Long courseId);
+
+    /**
+     * 计算课程平均分
+     */
+    Double calculateCourseAverageScore(Long courseId);
+
+    /**
+     * 统计课程及格人数
+     */
+    long countPassingGrades(Long courseId);
+
+    /**
+     * 统计课程不及格人数
+     */
+    long countFailingGrades(Long courseId);
+
+    /**
+     * 计算整体平均分
+     */
+    Double calculateOverallAverageScore();
+
+    /**
+     * 获取成绩分布统计
+     */
+    Map<String, Object> getGradeDistribution();
 }

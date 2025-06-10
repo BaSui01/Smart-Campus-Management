@@ -305,8 +305,51 @@ public class ActivityLogServiceImpl implements ActivityLogService {
     public byte[] exportActivityLogs(String activityType, String module, String level,
                                    String result, String username,
                                    LocalDateTime startTime, LocalDateTime endTime) {
-        // TODO: 实现导出功能
-        throw new UnsupportedOperationException("导出功能暂未实现");
+        try {
+            // 注意：当前实现基础的CSV导出功能，后续可扩展为Excel等格式
+            // 使用大分页获取所有符合条件的日志记录
+            Pageable pageable = PageRequest.of(0, 10000, Sort.by(Sort.Direction.DESC, "createTime"));
+            Page<ActivityLog> logPage = findByConditions(activityType, module, level, result, username, startTime, endTime, pageable);
+            List<ActivityLog> logs = logPage.getContent();
+
+            StringBuilder csvContent = new StringBuilder();
+            // CSV头部
+            csvContent.append("ID,活动类型,模块,级别,结果,用户名,IP地址,描述,创建时间\n");
+
+            // 数据行
+            for (ActivityLog log : logs) {
+                csvContent.append(String.format("%d,%s,%s,%s,%s,%s,%s,%s,%s\n",
+                    log.getId(),
+                    escapeCSV(log.getActivityType()),
+                    escapeCSV(log.getModule()),
+                    escapeCSV(log.getLevel()),
+                    escapeCSV(log.getResult()),
+                    escapeCSV(log.getUsername()),
+                    escapeCSV(log.getIpAddress()),
+                    escapeCSV(log.getDescription()),
+                    log.getCreatedAt() != null ? log.getCreatedAt().toString() : ""
+                ));
+            }
+
+            return csvContent.toString().getBytes("UTF-8");
+        } catch (Exception e) {
+            System.err.println("导出活动日志失败: " + e.getMessage());
+            throw new RuntimeException("导出活动日志失败", e);
+        }
+    }
+
+    /**
+     * CSV字段转义处理
+     */
+    private String escapeCSV(String value) {
+        if (value == null) {
+            return "";
+        }
+        // 如果包含逗号、引号或换行符，需要用引号包围并转义内部引号
+        if (value.contains(",") || value.contains("\"") || value.contains("\n")) {
+            return "\"" + value.replace("\"", "\"\"") + "\"";
+        }
+        return value;
     }
 
     @Override

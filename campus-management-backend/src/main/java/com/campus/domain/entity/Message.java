@@ -475,6 +475,31 @@ public class Message extends BaseEntity {
         this.readTime = readTime;
     }
 
+    // ================================
+    // 别名方法 (为了兼容 MessageServiceImpl)
+    // ================================
+
+    /**
+     * getSentAt 别名方法
+     */
+    public LocalDateTime getSentAt() {
+        return this.sendTime;
+    }
+
+    /**
+     * setSentAt 别名方法
+     */
+    public void setSentAt(LocalDateTime sentAt) {
+        this.sendTime = sentAt;
+    }
+
+    /**
+     * setReadAt 别名方法
+     */
+    public void setReadAt(LocalDateTime readAt) {
+        this.readTime = readAt;
+    }
+
     public String getPriority() {
         return priority;
     }

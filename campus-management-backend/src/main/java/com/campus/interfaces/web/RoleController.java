@@ -18,7 +18,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import jakarta.validation.Valid;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 
 /**
  * 角色管理Web控制器
@@ -80,14 +80,13 @@ public class RoleController {
     @GetMapping("/{id}")
     public String roleDetail(@PathVariable Long id, Model model) {
         try {
-            Optional<Role> roleOpt = roleService.findRoleById(id);
-            if (roleOpt.isEmpty()) {
+            Role role = roleService.findRoleById(id);
+            if (role == null) {
                 model.addAttribute("error", "角色不存在");
                 return "redirect:/admin/roles";
             }
-            
-            Role role = roleOpt.get();
-            List<Permission> rolePermissions = roleService.getRolePermissions(id);
+
+            List<Map<String, Object>> rolePermissions = roleService.getRolePermissions(id);
             List<Permission> allPermissions = permissionService.findAllPermissions();
             
             model.addAttribute("role", role);
@@ -122,14 +121,13 @@ public class RoleController {
     @GetMapping("/{id}/edit")
     public String editRolePage(@PathVariable Long id, Model model) {
         try {
-            Optional<Role> roleOpt = roleService.findRoleById(id);
-            if (roleOpt.isEmpty()) {
+            Role role = roleService.findRoleById(id);
+            if (role == null) {
                 model.addAttribute("error", "角色不存在");
                 return "redirect:/admin/roles";
             }
-            
-            Role role = roleOpt.get();
-            List<Permission> rolePermissions = roleService.getRolePermissions(id);
+
+            List<Map<String, Object>> rolePermissions = roleService.getRolePermissions(id);
             List<Permission> allPermissions = permissionService.findAllPermissions();
             
             model.addAttribute("role", role);
@@ -247,14 +245,13 @@ public class RoleController {
     @GetMapping("/{id}/permissions")
     public String rolePermissions(@PathVariable Long id, Model model) {
         try {
-            Optional<Role> roleOpt = roleService.findRoleById(id);
-            if (roleOpt.isEmpty()) {
+            Role role = roleService.findRoleById(id);
+            if (role == null) {
                 model.addAttribute("error", "角色不存在");
                 return "redirect:/admin/roles";
             }
-            
-            Role role = roleOpt.get();
-            List<Permission> rolePermissions = roleService.getRolePermissions(id);
+
+            List<Map<String, Object>> rolePermissions = roleService.getRolePermissions(id);
             List<Permission> allPermissions = permissionService.findAllPermissions();
             
             model.addAttribute("role", role);
@@ -301,14 +298,13 @@ public class RoleController {
     @GetMapping("/{id}/users")
     public String roleUsers(@PathVariable Long id, Model model) {
         try {
-            Optional<Role> roleOpt = roleService.findRoleById(id);
-            if (roleOpt.isEmpty()) {
+            Role role = roleService.findRoleById(id);
+            if (role == null) {
                 model.addAttribute("error", "角色不存在");
                 return "redirect:/admin/roles";
             }
-            
-            Role role = roleOpt.get();
-            // TODO: 获取拥有该角色的用户列表
+
+            // 注意：获取拥有该角色的用户列表功能待实现
             
             model.addAttribute("role", role);
             model.addAttribute("currentPage", "roles");

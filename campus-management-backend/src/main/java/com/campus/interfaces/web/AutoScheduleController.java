@@ -206,8 +206,9 @@ public class AutoScheduleController {
         
         if (!semester.isEmpty() && !academicYear.isEmpty()) {
             try {
-                Integer year = Integer.parseInt(academicYear);
-                
+                // 验证学年格式
+                Integer.parseInt(academicYear);
+
                 // 获取冲突信息（这里需要实现具体的冲突检查逻辑）
                 List<AutoScheduleService.ConflictInfo> conflicts = List.of();
                 model.addAttribute("conflicts", conflicts);

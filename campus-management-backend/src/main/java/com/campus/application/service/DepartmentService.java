@@ -157,4 +157,63 @@ public interface DepartmentService {
      * 获取院系层级结构
      */
     Object getDepartmentHierarchy();
+
+    // ================================
+    // DepartmentController 需要的方法
+    // ================================
+
+    /**
+     * 搜索院系
+     */
+    Page<Department> searchDepartments(String keyword, Pageable pageable);
+
+    /**
+     * 分页查找所有院系
+     */
+    Page<Department> findAllDepartments(Pageable pageable);
+
+    /**
+     * 统计院系总数
+     */
+    long countTotalDepartments();
+
+    /**
+     * 统计活跃院系数量
+     */
+    long countActiveDepartments();
+
+    /**
+     * 根据ID查找院系
+     */
+    Department findDepartmentById(Long id);
+
+    /**
+     * 统计院系教师数量
+     */
+    long countTeachersByDepartment(Long departmentId);
+
+    /**
+     * 统计院系学生数量
+     */
+    long countStudentsByDepartment(Long departmentId);
+
+    /**
+     * 统计院系课程数量
+     */
+    long countCoursesByDepartment(Long departmentId);
+
+    /**
+     * 查找院系教师列表
+     */
+    List<Object> findTeachersByDepartment(Long departmentId);
+
+    /**
+     * 获取院系统计信息
+     */
+    Object getDepartmentStatistics();
+
+    /**
+     * 更新院系信息（重载方法）
+     */
+    Department updateDepartment(Department department);
 }

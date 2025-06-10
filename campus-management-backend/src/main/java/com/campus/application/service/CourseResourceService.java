@@ -308,4 +308,123 @@ public interface CourseResourceService {
             this.count = count;
         }
     }
+
+    // ================================
+    // CourseResourceController 需要的方法
+    // ================================
+
+    /**
+     * 获取资源类型列表
+     */
+    List<String> getResourceTypes();
+
+    /**
+     * 获取最大文件大小限制
+     */
+    Long getMaxFileSize();
+
+    /**
+     * 获取允许的文件类型
+     */
+    List<String> getAllowedFileTypes();
+
+    /**
+     * 根据ID获取资源
+     */
+    CourseResource getResourceById(Long id);
+
+    /**
+     * 获取资源访问日志
+     */
+    List<Object> getResourceAccessLogs(Long resourceId, int page, int size);
+
+    /**
+     * 获取资源下载统计
+     */
+    Object getResourceDownloadStats(Long resourceId);
+
+    /**
+     * 根据课程获取资源列表
+     */
+    List<CourseResource> getResourcesByCourse(Long courseId, String resourceType);
+
+    /**
+     * 获取资源统计信息
+     */
+    Object getResourceStatistics(Long courseId);
+
+    /**
+     * 获取资源分类列表
+     */
+    List<String> getResourceCategories();
+
+    /**
+     * 获取所有资源
+     */
+    List<CourseResource> getAllResources();
+
+    /**
+     * 获取存储信息
+     */
+    Object getStorageInfo();
+
+    /**
+     * 获取存储统计
+     */
+    Object getStorageStatistics();
+
+    /**
+     * 获取大文件列表
+     */
+    List<CourseResource> getLargeFiles();
+
+    /**
+     * 获取最大批量处理大小
+     */
+    Integer getMaxBatchSize();
+
+    /**
+     * 获取整体统计信息
+     */
+    Object getOverallStatistics();
+
+    /**
+     * 获取资源类型统计
+     */
+    List<Object> getResourceTypeStatistics();
+
+    /**
+     * 获取资源使用统计
+     */
+    List<Object> getResourceUsageStatistics();
+
+    /**
+     * 获取下载趋势
+     */
+    List<Object[]> getDownloadTrends();
+
+    /**
+     * 获取搜索过滤器
+     */
+    List<String> getSearchFilters();
+
+    /**
+     * 获取已删除的资源
+     */
+    List<CourseResource> getDeletedResources();
+
+    /**
+     * 获取资源设置
+     */
+    Object getResourceSettings();
+
+    /**
+     * 获取存储设置
+     */
+    Object getStorageSettings();
+
+    /**
+     * 检查资源访问权限
+     */
+    boolean checkResourceAccess(Long resourceId, Long userId);
 }

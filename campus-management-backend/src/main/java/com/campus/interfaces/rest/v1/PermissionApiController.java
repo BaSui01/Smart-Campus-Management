@@ -41,7 +41,7 @@ public class PermissionApiController {
     public ResponseEntity<ApiResponse<Permission>> createPermission(@Valid @RequestBody Permission permission) {
         try {
             Permission created = permissionService.createPermission(permission);
-            return ResponseEntity.ok(ApiResponse.success(created, "权限创建成功"));
+            return ResponseEntity.ok(ApiResponse.success("权限创建成功", created));
         } catch (Exception e) {
             logger.error("创建权限失败", e);
             return ResponseEntity.badRequest().body(ApiResponse.error("创建权限失败: " + e.getMessage()));
@@ -73,7 +73,7 @@ public class PermissionApiController {
         try {
             permission.setId(id);
             Permission updated = permissionService.updatePermission(permission);
-            return ResponseEntity.ok(ApiResponse.success(updated, "权限更新成功"));
+            return ResponseEntity.ok(ApiResponse.success("权限更新成功", updated));
         } catch (Exception e) {
             logger.error("更新权限失败", e);
             return ResponseEntity.badRequest().body(ApiResponse.error("更新权限失败: " + e.getMessage()));
@@ -86,7 +86,7 @@ public class PermissionApiController {
             @Parameter(description = "权限ID") @PathVariable Long id) {
         try {
             permissionService.deletePermission(id);
-            return ResponseEntity.ok(ApiResponse.success(null, "权限删除成功"));
+            return ResponseEntity.ok(ApiResponse.success("权限删除成功"));
         } catch (Exception e) {
             logger.error("删除权限失败", e);
             return ResponseEntity.badRequest().body(ApiResponse.error("删除权限失败: " + e.getMessage()));
@@ -168,7 +168,7 @@ public class PermissionApiController {
             @Parameter(description = "权限ID") @PathVariable Long id) {
         try {
             permissionService.enablePermission(id);
-            return ResponseEntity.ok(ApiResponse.success(null, "权限启用成功"));
+            return ResponseEntity.ok(ApiResponse.success("权限启用成功"));
         } catch (Exception e) {
             logger.error("启用权限失败", e);
             return ResponseEntity.badRequest().body(ApiResponse.error("启用权限失败: " + e.getMessage()));
@@ -181,7 +181,7 @@ public class PermissionApiController {
             @Parameter(description = "权限ID") @PathVariable Long id) {
         try {
             permissionService.disablePermission(id);
-            return ResponseEntity.ok(ApiResponse.success(null, "权限禁用成功"));
+            return ResponseEntity.ok(ApiResponse.success("权限禁用成功"));
         } catch (Exception e) {
             logger.error("禁用权限失败", e);
             return ResponseEntity.badRequest().body(ApiResponse.error("禁用权限失败: " + e.getMessage()));
@@ -192,7 +192,10 @@ public class PermissionApiController {
     @Operation(summary = "获取权限树", description = "获取权限的树形结构")
     public ResponseEntity<ApiResponse<List<Object>>> getPermissionTree() {
         try {
-            List<Object> permissionTree = permissionService.getPermissionTree();
+            // getPermissionTree返回Object，需要进行类型转换
+            Object treeData = permissionService.getPermissionTree();
+            @SuppressWarnings("unchecked")
+            List<Object> permissionTree = (List<Object>) treeData;
             return ResponseEntity.ok(ApiResponse.success(permissionTree));
         } catch (Exception e) {
             logger.error("获取权限树失败", e);
@@ -210,13 +213,9 @@ public class PermissionApiController {
             List<Object[]> moduleStats = permissionService.countPermissionsByModule();
             List<Object[]> typeStats = permissionService.countPermissionsByType();
             
-            Object statistics = new Object() {
-                public final long total = totalPermissions;
-                public final long system = systemPermissions;
-                public final long custom = customPermissions;
-                public final List<Object[]> byModule = moduleStats;
-                public final List<Object[]> byType = typeStats;
-            };
+            PermissionStatistics statistics = new PermissionStatistics(
+                totalPermissions, systemPermissions, customPermissions, moduleStats, typeStats
+            );
             
             return ResponseEntity.ok(ApiResponse.success(statistics));
         } catch (Exception e) {
@@ -229,8 +228,12 @@ public class PermissionApiController {
     @Operation(summary = "批量创建权限", description = "批量创建多个权限")
     public ResponseEntity<ApiResponse<List<Permission>>> batchCreatePermissions(@RequestBody List<Permission> permissions) {
         try {
-            List<Permission> created = permissionService.batchCreatePermissions(permissions);
-            return ResponseEntity.ok(ApiResponse.success(created, "批量创建权限成功"));
+            // TODO: PermissionService中缺少batchCreatePermissions方法
+            List<Permission> created = new java.util.ArrayList<>();
+            for (Permission permission : permissions) {
+                created.add(permissionService.createPermission(permission));
+            }
+            return ResponseEntity.ok(ApiResponse.success("批量创建权限成功", created));
         } catch (Exception e) {
             logger.error("批量创建权限失败", e);
             return ResponseEntity.badRequest().body(ApiResponse.error("批量创建权限失败: " + e.getMessage()));
@@ -242,10 +245,36 @@ public class PermissionApiController {
     public ResponseEntity<ApiResponse<Void>> batchDeletePermissions(@RequestBody List<Long> permissionIds) {
         try {
             permissionService.batchDeletePermissions(permissionIds);
-            return ResponseEntity.ok(ApiResponse.success(null, "批量删除权限成功"));
+            return ResponseEntity.ok(ApiResponse.success("批量删除权限成功"));
         } catch (Exception e) {
             logger.error("批量删除权限失败", e);
             return ResponseEntity.badRequest().body(ApiResponse.error("批量删除权限失败: " + e.getMessage()));
         }
+    }
+
+    /**
+     * 权限统计数据对象
+     */
+    public static class PermissionStatistics {
+        private final long total;
+        private final long system;
+        private final long custom;
+        private final List<Object[]> byModule;
+        private final List<Object[]> byType;
+
+        public PermissionStatistics(long total, long system, long custom,
+                                  List<Object[]> byModule, List<Object[]> byType) {
+            this.total = total;
+            this.system = system;
+            this.custom = custom;
+            this.byModule = byModule;
+            this.byType = byType;
+        }
+
+        public long getTotal() { return total; }
+        public long getSystem() { return system; }
+        public long getCustom() { return custom; }
+        public List<Object[]> getByModule() { return byModule; }
+        public List<Object[]> getByType() { return byType; }
     }
 }

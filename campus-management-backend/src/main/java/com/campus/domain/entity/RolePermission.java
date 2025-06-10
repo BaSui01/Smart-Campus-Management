@@ -242,7 +242,37 @@ public class RolePermission extends BaseEntity {
         this.permissionId = permissionId;
     }
 
+    public String getGrantType() {
+        return grantType;
+    }
 
+    public void setGrantType(String grantType) {
+        this.grantType = grantType;
+    }
+
+    public Long getGrantedBy() {
+        return grantedBy;
+    }
+
+    public void setGrantedBy(Long grantedBy) {
+        this.grantedBy = grantedBy;
+    }
+
+    public java.time.LocalDateTime getGrantedAt() {
+        return grantedAt;
+    }
+
+    public void setGrantedAt(java.time.LocalDateTime grantedAt) {
+        this.grantedAt = grantedAt;
+    }
+
+    public java.time.LocalDateTime getExpiresAt() {
+        return expiresAt;
+    }
+
+    public void setExpiresAt(java.time.LocalDateTime expiresAt) {
+        this.expiresAt = expiresAt;
+    }
 
     public Role getRole() {
         return role;

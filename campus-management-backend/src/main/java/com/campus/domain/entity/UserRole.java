@@ -280,7 +280,45 @@ public class UserRole extends BaseEntity {
         this.roleId = roleId;
     }
 
+    public String getAssignType() {
+        return assignType;
+    }
 
+    public void setAssignType(String assignType) {
+        this.assignType = assignType;
+    }
+
+    public Long getAssignedBy() {
+        return assignedBy;
+    }
+
+    public void setAssignedBy(Long assignedBy) {
+        this.assignedBy = assignedBy;
+    }
+
+    public java.time.LocalDateTime getAssignedAt() {
+        return assignedAt;
+    }
+
+    public void setAssignedAt(java.time.LocalDateTime assignedAt) {
+        this.assignedAt = assignedAt;
+    }
+
+    public java.time.LocalDateTime getExpiresAt() {
+        return expiresAt;
+    }
+
+    public void setExpiresAt(java.time.LocalDateTime expiresAt) {
+        this.expiresAt = expiresAt;
+    }
+
+    public Boolean getIsPrimary() {
+        return isPrimary;
+    }
+
+    public void setIsPrimary(Boolean isPrimary) {
+        this.isPrimary = isPrimary;
+    }
 
     public User getUser() {
         return user;

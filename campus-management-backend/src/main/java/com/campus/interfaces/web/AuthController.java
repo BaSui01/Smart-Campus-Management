@@ -2,7 +2,6 @@ package com.campus.interfaces.web;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -43,7 +42,6 @@ public class AuthController {
     private final JwtUtil jwtUtil;
     private final CaptchaUtil captchaUtil;
 
-    @Autowired
     public AuthController(UserService userService, JwtUtil jwtUtil, CaptchaUtil captchaUtil) {
         this.userService = userService;
         this.jwtUtil = jwtUtil;

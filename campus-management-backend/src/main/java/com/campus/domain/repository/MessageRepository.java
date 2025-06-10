@@ -394,4 +394,112 @@ public interface MessageRepository extends BaseRepository<Message> {
     @Query("UPDATE Message m SET m.deleted = 1, m.updatedAt = CURRENT_TIMESTAMP WHERE m.sendTime < :cutoffDate")
     int cleanupExpiredMessages(@Param("cutoffDate") LocalDateTime cutoffDate);
 
+    // ================================
+    // MessageServiceImpl 需要的特定方法
+    // ================================
+
+    /**
+     * 根据ID和删除状态查找消息
+     */
+    @Query("SELECT m FROM Message m WHERE m.id = :id AND m.deleted = :deleted")
+    List<Message> findByIdAndDeleted(@Param("id") Long id, @Param("deleted") int deleted);
+
+    /**
+     * 根据接收者ID和删除状态查找消息（按创建时间降序）
+     */
+    @Query("SELECT m FROM Message m WHERE m.receiverId = :receiverId AND m.deleted = :deleted ORDER BY m.createdAt DESC")
+    Page<Message> findByReceiverIdAndDeletedOrderByCreatedAtDesc(@Param("receiverId") Long receiverId,
+                                                                @Param("deleted") int deleted,
+                                                                Pageable pageable);
+
+    /**
+     * 根据发送者ID和删除状态查找消息（按创建时间降序）
+     */
+    @Query("SELECT m FROM Message m WHERE m.senderId = :senderId AND m.deleted = :deleted ORDER BY m.createdAt DESC")
+    Page<Message> findBySenderIdAndDeletedOrderByCreatedAtDesc(@Param("senderId") Long senderId,
+                                                              @Param("deleted") int deleted,
+                                                              Pageable pageable);
+
+    /**
+     * 根据接收者ID、阅读状态和删除状态查找消息（按创建时间降序）
+     */
+    @Query("SELECT m FROM Message m WHERE m.receiverId = :receiverId AND m.isRead = :isRead AND m.deleted = :deleted ORDER BY m.createdAt DESC")
+    List<Message> findByReceiverIdAndIsReadAndDeletedOrderByCreatedAtDesc(@Param("receiverId") Long receiverId,
+                                                                         @Param("isRead") boolean isRead,
+                                                                         @Param("deleted") int deleted);
+
+    /**
+     * 根据接收者ID、阅读状态和删除状态查找消息（分页，按创建时间降序）
+     */
+    @Query("SELECT m FROM Message m WHERE m.receiverId = :receiverId AND m.isRead = :isRead AND m.deleted = :deleted ORDER BY m.createdAt DESC")
+    Page<Message> findByReceiverIdAndIsReadAndDeletedOrderByCreatedAtDesc(@Param("receiverId") Long receiverId,
+                                                                         @Param("isRead") boolean isRead,
+                                                                         @Param("deleted") int deleted,
+                                                                         Pageable pageable);
+
+    /**
+     * 根据接收者ID、消息类型和删除状态查找消息（按创建时间降序）
+     */
+    @Query("SELECT m FROM Message m WHERE m.receiverId = :receiverId AND m.messageType = :messageType AND m.deleted = :deleted ORDER BY m.createdAt DESC")
+    Page<Message> findByReceiverIdAndMessageTypeAndDeletedOrderByCreatedAtDesc(@Param("receiverId") Long receiverId,
+                                                                              @Param("messageType") String messageType,
+                                                                              @Param("deleted") int deleted,
+                                                                              Pageable pageable);
+
+    /**
+     * 统计接收者的未读消息数量
+     */
+    @Query("SELECT COUNT(m) FROM Message m WHERE m.receiverId = :receiverId AND m.isRead = :isRead AND m.deleted = :deleted")
+    long countByReceiverIdAndIsReadAndDeleted(@Param("receiverId") Long receiverId,
+                                             @Param("isRead") boolean isRead,
+                                             @Param("deleted") int deleted);
+
+    /**
+     * 统计接收者的消息数量
+     */
+    @Query("SELECT COUNT(m) FROM Message m WHERE m.receiverId = :receiverId AND m.deleted = :deleted")
+    long countByReceiverIdAndDeleted(@Param("receiverId") Long receiverId, @Param("deleted") int deleted);
+
+    /**
+     * 统计发送者的消息数量
+     */
+    @Query("SELECT COUNT(m) FROM Message m WHERE m.senderId = :senderId AND m.deleted = :deleted")
+    long countBySenderIdAndDeleted(@Param("senderId") Long senderId, @Param("deleted") int deleted);
+
+    /**
+     * 按消息类型统计用户消息数量
+     */
+    @Query("SELECT m.messageType, COUNT(m) FROM Message m WHERE (m.senderId = :userId OR m.receiverId = :userId) AND m.deleted = 0 GROUP BY m.messageType")
+    List<Object[]> countByMessageTypeForUser(@Param("userId") Long userId);
+
+    /**
+     * 搜索用户相关消息
+     */
+    @Query("SELECT m FROM Message m WHERE (m.senderId = :userId OR m.receiverId = :userId) AND (m.title LIKE %:keyword% OR m.content LIKE %:keyword%) AND m.deleted = 0 ORDER BY m.createdAt DESC")
+    Page<Message> searchMessagesForUser(@Param("userId") Long userId, @Param("keyword") String keyword, Pageable pageable);
+
+    /**
+     * 搜索收件箱消息
+     */
+    @Query("SELECT m FROM Message m WHERE m.receiverId = :userId AND (m.title LIKE %:keyword% OR m.content LIKE %:keyword%) AND m.deleted = 0 ORDER BY m.createdAt DESC")
+    Page<Message> searchInboxMessages(@Param("userId") Long userId, @Param("keyword") String keyword, Pageable pageable);
+
+    /**
+     * 搜索发件箱消息
+     */
+    @Query("SELECT m FROM Message m WHERE m.senderId = :userId AND (m.title LIKE %:keyword% OR m.content LIKE %:keyword%) AND m.deleted = 0 ORDER BY m.createdAt DESC")
+    Page<Message> searchOutboxMessages(@Param("userId") Long userId, @Param("keyword") String keyword, Pageable pageable);
+
+    /**
+     * 根据删除状态查找消息
+     */
+    @Query("SELECT m FROM Message m WHERE m.deleted = :deleted")
+    List<Message> findByDeleted(@Param("deleted") int deleted);
+
+    /**
+     * 根据创建时间和删除状态查找消息
+     */
+    @Query("SELECT m FROM Message m WHERE m.createdAt < :beforeTime AND m.deleted = :deleted")
+    List<Message> findByCreatedAtBeforeAndDeleted(@Param("beforeTime") LocalDateTime beforeTime, @Param("deleted") int deleted);
+
 }

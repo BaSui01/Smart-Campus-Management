@@ -1,15 +1,20 @@
 package com.campus.interfaces.rest.v1;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.campus.application.service.UserService;
 import com.campus.shared.common.ApiResponse;
 import com.campus.domain.entity.User;
 import com.campus.shared.util.JwtUtil;
+import com.campus.interfaces.rest.common.BaseController;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -27,7 +32,7 @@ import jakarta.validation.Valid;
 @RestController
 @RequestMapping("/api/auth")
 @Tag(name = "认证API", description = "用户认证相关REST API接口")
-public class AuthApiController {
+public class AuthApiController extends BaseController {
 
     @Autowired
     private UserService userService;
@@ -245,6 +250,187 @@ public class AuthApiController {
             }
         } catch (Exception e) {
             return ApiResponse.error(500, "密码修改失败：" + e.getMessage());
+        }
+    }
+
+    // ==================== 统计端点 ====================
+
+    /**
+     * 获取认证统计信息
+     */
+    @GetMapping("/stats")
+    @Operation(summary = "获取认证统计信息", description = "获取认证模块的统计数据")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN', 'TEACHER')")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getAuthStats() {
+        try {
+            log.info("获取认证统计信息");
+
+            Map<String, Object> stats = new HashMap<>();
+
+            // 基础统计
+            long totalUsers = userService.countTotalUsers();
+            stats.put("totalUsers", totalUsers);
+
+            long activeUsers = userService.countActiveUsers();
+            stats.put("activeUsers", activeUsers);
+
+            long inactiveUsers = totalUsers - activeUsers;
+            stats.put("inactiveUsers", inactiveUsers);
+
+            // 时间统计（简化实现）
+            stats.put("todayLogins", 0L);
+            stats.put("weekLogins", 0L);
+            stats.put("monthLogins", 0L);
+
+            // 登录方式统计（简化实现）
+            Map<String, Long> loginTypeStats = new HashMap<>();
+            loginTypeStats.put("username", totalUsers);
+            loginTypeStats.put("email", 0L);
+            loginTypeStats.put("phone", 0L);
+            stats.put("loginTypeStats", loginTypeStats);
+
+            // 用户状态统计
+            Map<String, Long> statusStats = new HashMap<>();
+            statusStats.put("active", activeUsers);
+            statusStats.put("inactive", inactiveUsers);
+            statusStats.put("locked", 0L);
+            stats.put("statusStats", statusStats);
+
+            // 最近活动（简化实现）
+            List<Map<String, Object>> recentActivity = new ArrayList<>();
+            stats.put("recentActivity", recentActivity);
+
+            return success("获取认证统计信息成功", stats);
+
+        } catch (Exception e) {
+            log.error("获取认证统计信息失败: ", e);
+            return error("获取认证统计信息失败: " + e.getMessage());
+        }
+    }
+
+    // ==================== 批量操作端点 ====================
+
+    /**
+     * 批量锁定用户
+     */
+    @PutMapping("/batch/lock")
+    @Operation(summary = "批量锁定用户", description = "批量锁定用户账户")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN')")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> batchLockUsers(
+            @Parameter(description = "用户ID列表") @RequestBody List<Long> ids) {
+
+        try {
+            logOperation("批量锁定用户", ids.size());
+
+            // 验证参数
+            if (ids == null || ids.isEmpty()) {
+                return badRequest("用户ID列表不能为空");
+            }
+
+            if (ids.size() > 100) {
+                return badRequest("单次批量操作不能超过100条记录");
+            }
+
+            // 验证所有ID
+            for (Long id : ids) {
+                validateId(id, "用户");
+            }
+
+            // 执行批量锁定
+            int successCount = 0;
+            int failCount = 0;
+            List<String> failReasons = new ArrayList<>();
+
+            for (Long id : ids) {
+                try {
+                    userService.updateUserStatus(id, 0); // 0表示禁用
+                    successCount++;
+                } catch (Exception e) {
+                    failCount++;
+                    failReasons.add("用户ID " + id + ": " + e.getMessage());
+                    log.warn("锁定用户{}失败: {}", id, e.getMessage());
+                }
+            }
+
+            Map<String, Object> responseData = new HashMap<>();
+            responseData.put("successCount", successCount);
+            responseData.put("failCount", failCount);
+            responseData.put("totalRequested", ids.size());
+            responseData.put("failReasons", failReasons);
+
+            if (failCount == 0) {
+                return success("批量锁定用户成功", responseData);
+            } else if (successCount > 0) {
+                return success("批量锁定用户部分成功", responseData);
+            } else {
+                return error("批量锁定用户失败");
+            }
+
+        } catch (Exception e) {
+            log.error("批量锁定用户失败: ", e);
+            return error("批量锁定用户失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 批量解锁用户
+     */
+    @PutMapping("/batch/unlock")
+    @Operation(summary = "批量解锁用户", description = "批量解锁用户账户")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN')")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> batchUnlockUsers(
+            @Parameter(description = "用户ID列表") @RequestBody List<Long> ids) {
+
+        try {
+            logOperation("批量解锁用户", ids.size());
+
+            // 验证参数
+            if (ids == null || ids.isEmpty()) {
+                return badRequest("用户ID列表不能为空");
+            }
+
+            if (ids.size() > 100) {
+                return badRequest("单次批量操作不能超过100条记录");
+            }
+
+            // 验证所有ID
+            for (Long id : ids) {
+                validateId(id, "用户");
+            }
+
+            // 执行批量解锁
+            int successCount = 0;
+            int failCount = 0;
+            List<String> failReasons = new ArrayList<>();
+
+            for (Long id : ids) {
+                try {
+                    userService.updateUserStatus(id, 1); // 1表示启用
+                    successCount++;
+                } catch (Exception e) {
+                    failCount++;
+                    failReasons.add("用户ID " + id + ": " + e.getMessage());
+                    log.warn("解锁用户{}失败: {}", id, e.getMessage());
+                }
+            }
+
+            Map<String, Object> responseData = new HashMap<>();
+            responseData.put("successCount", successCount);
+            responseData.put("failCount", failCount);
+            responseData.put("totalRequested", ids.size());
+            responseData.put("failReasons", failReasons);
+
+            if (failCount == 0) {
+                return success("批量解锁用户成功", responseData);
+            } else if (successCount > 0) {
+                return success("批量解锁用户部分成功", responseData);
+            } else {
+                return error("批量解锁用户失败");
+            }
+
+        } catch (Exception e) {
+            log.error("批量解锁用户失败: ", e);
+            return error("批量解锁用户失败: " + e.getMessage());
         }
     }
 

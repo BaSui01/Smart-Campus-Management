@@ -1,5 +1,6 @@
 package com.campus.application.service.impl;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -341,20 +342,10 @@ public class CourseServiceImpl implements CourseService {
             Map<String, Long> typeStats = countCoursesByType();
             Map<String, Long> semesterStats = getCourseSemesterStatistics();
 
-            return new Object() {
-                public final long total = totalCourses;
-                public final long active = activeCourses;
-                public final Map<String, Long> byType = typeStats;
-                public final Map<String, Long> bySemester = semesterStats;
-            };
+            return new CourseStatistics(totalCourses, activeCourses, typeStats, semesterStats);
         } catch (Exception e) {
             // 返回默认统计信息
-            return new Object() {
-                public final long total = 0;
-                public final long active = 0;
-                public final Map<String, Long> byType = new HashMap<>();
-                public final Map<String, Long> bySemester = new HashMap<>();
-            };
+            return new CourseStatistics(0L, 0L, new HashMap<>(), new HashMap<>());
         }
     }
 
@@ -486,6 +477,69 @@ public class CourseServiceImpl implements CourseService {
         newCourse.setDeleted(0);
         
         return save(newCourse);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> getCourseCategories() {
+        // TODO: 实现获取课程分类逻辑
+        // 可以从数据库查询或返回预定义的分类
+        List<String> categories = java.util.Arrays.asList("必修课", "选修课", "专业课", "通识课", "实践课");
+        return categories.stream().map(category -> {
+            Map<String, Object> categoryMap = new HashMap<>();
+            categoryMap.put("value", category);
+            categoryMap.put("label", category);
+            return categoryMap;
+        }).collect(java.util.stream.Collectors.toList());
+    }
+
+    // ================================
+    // CourseResourceController 需要的方法实现
+    // ================================
+
+    @Override
+    @Transactional(readOnly = true)
+    public Course getCourseById(Long id) {
+        try {
+            Optional<Course> courseOpt = findById(id);
+            return courseOpt.orElse(null);
+        } catch (Exception e) {
+            // 可以记录日志
+            return null;
+        }
+    }
+
+    // ================================
+    // CourseSelectionController 需要的方法实现
+    // ================================
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Course> findSelectableCourses() {
+        try {
+            // 查找状态为启用且未删除的课程
+            return courseRepository.findByStatusAndDeleted(1, 0);
+        } catch (Exception e) {
+            // 记录日志并返回空列表
+            return new ArrayList<>();
+        }
+    }
+
+    /**
+     * 课程统计信息类
+     */
+    public static class CourseStatistics {
+        public final long total;
+        public final long active;
+        public final Map<String, Long> byType;
+        public final Map<String, Long> bySemester;
+
+        public CourseStatistics(long total, long active, Map<String, Long> byType, Map<String, Long> bySemester) {
+            this.total = total;
+            this.active = active;
+            this.byType = byType;
+            this.bySemester = bySemester;
+        }
     }
 
 }

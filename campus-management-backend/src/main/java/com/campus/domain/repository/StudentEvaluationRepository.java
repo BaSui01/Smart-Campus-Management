@@ -50,14 +50,14 @@ public interface StudentEvaluationRepository extends JpaRepository<StudentEvalua
     /**
      * 根据评分范围查找评价
      */
-    @Query("SELECT se FROM StudentEvaluation se WHERE se.score BETWEEN :minScore AND :maxScore AND se.deleted = 0")
+    @Query("SELECT se FROM StudentEvaluation se WHERE se.overallScore BETWEEN :minScore AND :maxScore AND se.deleted = 0")
     List<StudentEvaluation> findByScoreRange(@Param("minScore") Double minScore, @Param("maxScore") Double maxScore);
     
     /**
-     * 根据课程查找评价
+     * 根据学期查找评价
      */
-    @Query("SELECT se FROM StudentEvaluation se WHERE se.course.id = :courseId AND se.deleted = 0")
-    List<StudentEvaluation> findByCourse(@Param("courseId") Long courseId);
+    @Query("SELECT se FROM StudentEvaluation se WHERE se.semester = :semester AND se.deleted = 0")
+    List<StudentEvaluation> findBySemester(@Param("semester") String semester);
     
     /**
      * 统计学生评价数量
@@ -72,7 +72,7 @@ public interface StudentEvaluationRepository extends JpaRepository<StudentEvalua
     /**
      * 计算学生平均分
      */
-    @Query("SELECT AVG(se.score) FROM StudentEvaluation se WHERE se.student.id = :studentId AND se.deleted = 0")
+    @Query("SELECT AVG(se.overallScore) FROM StudentEvaluation se WHERE se.student.id = :studentId AND se.deleted = 0")
     Double calculateAverageScore(@Param("studentId") Long studentId);
     
     /**
@@ -111,19 +111,19 @@ public interface StudentEvaluationRepository extends JpaRepository<StudentEvalua
     /**
      * 根据评分范围和删除状态查找评价，按评分倒序
      */
-    @Query("SELECT se FROM StudentEvaluation se WHERE se.score BETWEEN :minScore AND :maxScore AND se.deleted = :deleted ORDER BY se.score DESC")
+    @Query("SELECT se FROM StudentEvaluation se WHERE se.overallScore BETWEEN :minScore AND :maxScore AND se.deleted = :deleted ORDER BY se.overallScore DESC")
     List<StudentEvaluation> findByScoreBetweenAndDeletedOrderByScoreDesc(@Param("minScore") Double minScore, @Param("maxScore") Double maxScore, @Param("deleted") Integer deleted);
 
     /**
-     * 根据课程ID和删除状态查找评价，按创建时间倒序
+     * 根据学期和删除状态查找评价，按创建时间倒序
      */
-    @Query("SELECT se FROM StudentEvaluation se WHERE se.courseId = :courseId AND se.deleted = :deleted ORDER BY se.createdAt DESC")
-    List<StudentEvaluation> findByCourseIdAndDeletedOrderByCreatedAtDesc(@Param("courseId") Long courseId, @Param("deleted") Integer deleted);
+    @Query("SELECT se FROM StudentEvaluation se WHERE se.semester = :semester AND se.deleted = :deleted ORDER BY se.createdAt DESC")
+    List<StudentEvaluation> findBySemesterAndDeletedOrderByCreatedAtDesc(@Param("semester") String semester, @Param("deleted") Integer deleted);
 
     /**
      * 计算学生指定类型平均分
      */
-    @Query("SELECT AVG(se.score) FROM StudentEvaluation se WHERE se.studentId = :studentId AND se.evaluationType = :evaluationType AND se.deleted = 0")
+    @Query("SELECT AVG(se.overallScore) FROM StudentEvaluation se WHERE se.studentId = :studentId AND se.evaluationType = :evaluationType AND se.deleted = 0")
     Double calculateAverageScoreByType(@Param("studentId") Long studentId, @Param("evaluationType") String evaluationType);
 
     /**
@@ -141,13 +141,13 @@ public interface StudentEvaluationRepository extends JpaRepository<StudentEvalua
     /**
      * 根据评价内容模糊查询，按创建时间倒序
      */
-    @Query("SELECT se FROM StudentEvaluation se WHERE se.comment LIKE %:keyword% AND se.deleted = :deleted ORDER BY se.createdAt DESC")
+    @Query("SELECT se FROM StudentEvaluation se WHERE (se.strengths LIKE %:keyword% OR se.improvements LIKE %:keyword% OR se.developmentSuggestions LIKE %:keyword% OR se.remarks LIKE %:keyword%) AND se.deleted = :deleted ORDER BY se.createdAt DESC")
     org.springframework.data.domain.Page<StudentEvaluation> findByCommentContainingIgnoreCaseAndDeletedOrderByCreatedAtDesc(@Param("keyword") String keyword, @Param("deleted") Integer deleted, org.springframework.data.domain.Pageable pageable);
 
     /**
      * 根据评价内容模糊查询
      */
-    @Query("SELECT se FROM StudentEvaluation se WHERE se.comment LIKE %:content% AND se.deleted = :deleted")
+    @Query("SELECT se FROM StudentEvaluation se WHERE (se.strengths LIKE %:content% OR se.improvements LIKE %:content% OR se.developmentSuggestions LIKE %:content% OR se.remarks LIKE %:content%) AND se.deleted = :deleted")
     List<StudentEvaluation> findByCommentContainingIgnoreCaseAndDeleted(@Param("content") String content, @Param("deleted") Integer deleted);
 
     /**

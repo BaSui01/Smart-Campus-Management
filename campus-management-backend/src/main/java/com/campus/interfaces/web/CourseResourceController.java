@@ -104,7 +104,9 @@ public class CourseResourceController {
         try {
             logger.info("访问编辑资源页面: resourceId={}", resourceId);
             
-            Object resource = courseResourceService.getResourceById(resourceId);
+            // 使用findById方法替代
+            java.util.Optional<com.campus.domain.entity.CourseResource> resourceOpt = courseResourceService.findById(resourceId);
+            Object resource = resourceOpt.orElse(null);
             if (resource == null) {
                 model.addAttribute("error", "资源不存在");
                 return "error/404";
@@ -222,7 +224,8 @@ public class CourseResourceController {
             addCommonAttributes(model);
             model.addAttribute("pageTitle", "批量上传");
             model.addAttribute("courses", courseService.findActiveCourses());
-            model.addAttribute("resourceTypes", courseResourceService.getResourceTypes());
+            // TODO: CourseResourceService缺少getResourceTypes方法
+            model.addAttribute("resourceTypes", courseResourceService.getSupportedFileTypes());
             model.addAttribute("maxBatchSize", courseResourceService.getMaxBatchSize());
             
             return "admin/course-resources/batch-upload";

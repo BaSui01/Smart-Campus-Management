@@ -605,4 +605,74 @@ public class NotificationTemplate extends BaseEntity {
     public void setRemarks(String remarks) {
         this.remarks = remarks;
     }
+
+    // ================================
+    // 兼容性方法 - 为控制器提供别名
+    // ================================
+
+    /**
+     * 设置创建时间（别名方法）
+     */
+    public void setCreateTime(LocalDateTime createTime) {
+        this.setCreatedAt(createTime);
+    }
+
+    /**
+     * 获取创建时间（别名方法）
+     */
+    public LocalDateTime getCreateTime() {
+        return this.getCreatedAt();
+    }
+
+    /**
+     * 设置更新时间（别名方法）
+     */
+    public void setUpdateTime(LocalDateTime updateTime) {
+        this.setUpdatedAt(updateTime);
+    }
+
+    /**
+     * 获取更新时间（别名方法）
+     */
+    public LocalDateTime getUpdateTime() {
+        return this.getUpdatedAt();
+    }
+
+    /**
+     * 设置模板状态（别名方法）
+     */
+    public void setTemplateStatus(String templateStatus) {
+        if ("active".equals(templateStatus) || "1".equals(templateStatus)) {
+            this.setIsActive(true);
+            this.setStatus(1);
+        } else {
+            this.setIsActive(false);
+            this.setStatus(0);
+        }
+    }
+
+    /**
+     * 获取模板状态（别名方法）
+     */
+    public String getTemplateStatus() {
+        if (Boolean.TRUE.equals(this.getIsActive()) && this.getStatus() == 1) {
+            return "active";
+        } else {
+            return "inactive";
+        }
+    }
+
+    /**
+     * 获取模板内容（别名方法）
+     */
+    public String getTemplateContent() {
+        return this.getContent();
+    }
+
+    /**
+     * 获取通知渠道（别名方法）
+     */
+    public String getNotificationChannel() {
+        return this.getChannel();
+    }
 }

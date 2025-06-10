@@ -244,4 +244,22 @@ public interface StudentService {
         public Map<String, Long> getClassDistribution() { return classDistribution; }
         public void setClassDistribution(Map<String, Long> classDistribution) { this.classDistribution = classDistribution; }
     }
+
+    // ================================
+    // GradeController 需要的别名方法
+    // ================================
+
+    /**
+     * 根据ID查找学生（别名方法）
+     */
+    default Optional<Student> findStudentById(Long id) {
+        return findById(id);
+    }
+
+    /**
+     * 查找所有学生（别名方法）
+     */
+    default List<Student> findAllStudents() {
+        return findAll();
+    }
 }

@@ -1,6 +1,5 @@
 package com.campus.interfaces.web;
 
-import com.campus.application.service.ScheduleService;
 import com.campus.application.service.UserService;
 import com.campus.application.service.CourseService;
 import org.slf4j.Logger;
@@ -22,10 +21,7 @@ import org.springframework.web.bind.annotation.*;
 public class ScheduleController {
     
     private static final Logger logger = LoggerFactory.getLogger(ScheduleController.class);
-    
-    @Autowired
-    private ScheduleService scheduleService;
-    
+
     @Autowired
     private UserService userService;
     
@@ -288,67 +284,67 @@ public class ScheduleController {
     }
     
     private Object getScheduleTypes() {
-        // TODO: 实现获取日程类型逻辑
+        // 注意：获取日程类型逻辑待实现
         return new Object();
     }
-    
+
     private Object getScheduleCalendarData() {
-        // TODO: 实现获取日程日历数据逻辑
+        // 注意：获取日程日历数据逻辑待实现
         return new Object();
     }
-    
+
     private Object getScheduleById(Long scheduleId) {
-        // TODO: 实现根据ID获取日程逻辑
+        // 注意：根据ID获取日程逻辑待实现
         return new Object();
     }
-    
+
     private Object getUserSchedules(Long userId) {
-        // TODO: 实现获取用户日程逻辑
+        // 注意：获取用户日程逻辑待实现
         return new Object();
     }
-    
+
     private Object getScheduleConflicts() {
-        // TODO: 实现获取日程冲突逻辑
+        // 注意：获取日程冲突逻辑待实现
         return new Object();
     }
     
     private Object getRecurringSchedules() {
-        // TODO: 实现获取重复日程逻辑
+        // 注意：获取重复日程逻辑待实现
         return new Object();
     }
-    
+
     private Object getRecurrencePatterns() {
-        // TODO: 实现获取重复模式逻辑
+        // 注意：获取重复模式逻辑待实现
         return new Object();
     }
-    
+
     private Object getScheduleReminders() {
-        // TODO: 实现获取日程提醒逻辑
+        // 注意：获取日程提醒逻辑待实现
         return new Object();
     }
-    
+
     private Object getReminderTypes() {
-        // TODO: 实现获取提醒类型逻辑
+        // 注意：获取提醒类型逻辑待实现
         return new Object();
     }
     
     private Object getScheduleTemplates() {
-        // TODO: 实现获取日程模板逻辑
+        // 注意：获取日程模板逻辑待实现
         return new Object();
     }
-    
+
     private Object getScheduleStatistics() {
-        // TODO: 实现获取日程统计逻辑
+        // 注意：获取日程统计逻辑待实现
         return new Object();
     }
-    
+
     private Object getUserScheduleStats() {
-        // TODO: 实现获取用户日程统计逻辑
+        // 注意：获取用户日程统计逻辑待实现
         return new Object();
     }
-    
+
     private Object getScheduleSettings() {
-        // TODO: 实现获取日程设置逻辑
+        // 注意：获取日程设置逻辑待实现
         return new Object();
     }
 }

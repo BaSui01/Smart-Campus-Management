@@ -279,4 +279,43 @@ public interface AttendanceService {
      * 获取班级考勤统计
      */
     Map<String, Object> getClassAttendanceStatistics(Long classId, LocalDate startDate, LocalDate endDate);
+
+    // ================================
+    // AttendanceController 需要的方法
+    // ================================
+
+    /**
+     * 获取考勤日历数据
+     */
+    Object getAttendanceCalendar();
+
+    /**
+     * 获取考勤设置
+     */
+    Object getAttendanceSettings();
+
+    /**
+     * 获取待补考勤记录
+     */
+    List<Object> getPendingMakeups();
+
+    /**
+     * 根据课程获取考勤记录
+     */
+    List<Attendance> getAttendanceByCourse(Long courseId);
+
+    /**
+     * 根据学生获取考勤记录
+     */
+    List<Attendance> getAttendanceByStudent(Long studentId);
+
+    /**
+     * 获取考勤预警数据
+     */
+    List<Object> getAttendanceAlerts();
+
+    /**
+     * 获取考勤统计数据
+     */
+    Object getAttendanceStatisticsData();
 }

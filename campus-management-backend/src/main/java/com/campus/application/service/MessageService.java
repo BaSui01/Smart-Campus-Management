@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -194,4 +195,113 @@ public interface MessageService {
      * 批量标记为未读
      */
     void batchMarkAsUnread(List<Long> messageIds);
+
+    // ================================
+    // 消息管理页面需要的方法
+    // ================================
+
+    /**
+     * 获取消息类型列表
+     */
+    List<Map<String, Object>> getMessageTypes();
+
+    /**
+     * 获取消息模板列表
+     */
+    List<Map<String, Object>> getMessageTemplates();
+
+    /**
+     * 根据ID获取消息
+     */
+    Map<String, Object> getMessageById(Long messageId);
+
+    /**
+     * 获取消息接收者列表
+     */
+    List<Map<String, Object>> getMessageRecipients(Long messageId);
+
+    /**
+     * 获取消息阅读状态
+     */
+    Map<String, Object> getMessageReadStatus(Long messageId);
+
+    /**
+     * 获取收件箱消息
+     */
+    List<Map<String, Object>> getInboxMessages();
+
+    /**
+     * 获取未读消息数量
+     */
+    long getUnreadMessageCount();
+
+    /**
+     * 获取已发送消息
+     */
+    List<Map<String, Object>> getSentMessages();
+
+    /**
+     * 获取草稿消息
+     */
+    List<Map<String, Object>> getDraftMessages();
+
+    /**
+     * 获取系统通知
+     */
+    List<Map<String, Object>> getSystemNotifications();
+
+    /**
+     * 获取通知类型列表
+     */
+    List<Map<String, Object>> getNotificationTypes();
+
+    /**
+     * 获取模板分类
+     */
+    List<Map<String, Object>> getTemplateCategories();
+
+    /**
+     * 根据ID获取模板
+     */
+    Map<String, Object> getTemplateById(Long templateId);
+
+    /**
+     * 获取整体统计信息
+     */
+    Map<String, Object> getOverallStatistics();
+
+    /**
+     * 获取用户消息统计
+     */
+    List<Map<String, Object>> getUserMessageStats();
+
+    /**
+     * 获取消息类型统计
+     */
+    List<Map<String, Object>> getMessageTypeStats();
+
+    /**
+     * 获取消息趋势统计
+     */
+    List<Map<String, Object>> getMessageTrendStats();
+
+    /**
+     * 获取消息设置
+     */
+    Map<String, Object> getMessageSettings();
+
+    /**
+     * 获取通知设置
+     */
+    Map<String, Object> getNotificationSettings();
+
+    /**
+     * 获取计划消息
+     */
+    List<Map<String, Object>> getScheduledMessages();
+
+    /**
+     * 获取归档消息
+     */
+    List<Map<String, Object>> getArchivedMessages();
 }

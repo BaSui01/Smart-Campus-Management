@@ -207,4 +207,117 @@ public interface CourseSelectionService {
      * @return 选课人数
      */
     long countByScheduleId(Long scheduleId);
+
+    // ================================
+    // CourseSelectionController 需要的方法
+    // ================================
+
+    /**
+     * 获取选课时间段列表
+     */
+    List<Object> getSelectionPeriods();
+
+    /**
+     * 根据ID获取选课时间段
+     */
+    Object getSelectionPeriodById(Long id);
+
+    /**
+     * 获取学生选课记录
+     */
+    Object getStudentSelections(Long studentId);
+
+    /**
+     * 获取学生可选课程
+     */
+    List<Object> getAvailableCoursesForStudent(Long studentId);
+
+    /**
+     * 获取课程选课记录
+     */
+    Object getCourseSelections(Long courseId);
+
+    /**
+     * 获取课程选课统计
+     */
+    Object getCourseSelectionStatistics(Long courseId);
+
+    /**
+     * 获取选课冲突
+     */
+    List<Object> getSelectionConflicts();
+
+    /**
+     * 获取抽签数据
+     */
+    Object getLotteryData();
+
+    /**
+     * 获取超额选课课程
+     */
+    List<Object> getOversubscribedCourses();
+
+    /**
+     * 获取候补名单数据
+     */
+    Object getWaitlistData();
+
+    /**
+     * 获取整体统计
+     */
+    Object getOverallStatistics();
+
+    /**
+     * 获取课程选课统计
+     */
+    Object getCourseSelectionStats();
+
+    /**
+     * 获取学生选课统计
+     */
+    Object getStudentSelectionStats();
+
+    /**
+     * 获取选课趋势统计
+     */
+    Object getSelectionTrendStats();
+
+    /**
+     * 获取选课规则
+     */
+    List<Object> getSelectionRules();
+
+    // ================================
+    // CourseSelectionApiController 需要的方法
+    // ================================
+
+    /**
+     * 确认选课
+     */
+    void confirmSelection(Long id);
+
+    /**
+     * 拒绝选课
+     */
+    void rejectSelection(Long id, String reason);
+
+    /**
+     * 统计总选课数
+     */
+    long countTotalSelections();
+
+    /**
+     * 统计已确认选课数
+     */
+    long countConfirmedSelections();
+
+    /**
+     * 统计待处理选课数
+     */
+    long countPendingSelections();
+
+    /**
+     * 获取热门课程
+     */
+    List<Object[]> getPopularCourses();
 }

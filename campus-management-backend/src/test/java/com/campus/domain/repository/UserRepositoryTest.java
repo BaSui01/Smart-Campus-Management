@@ -213,8 +213,6 @@ class UserRepositoryTest {
     @Test
     void testSoftDelete() {
         // 测试软删除功能
-        Long userId = testUser1.getId();
-
         // 手动设置状态为-1（软删除）
         testUser1.setStatus(-1);
         userRepository.save(testUser1);

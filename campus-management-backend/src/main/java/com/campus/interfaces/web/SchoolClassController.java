@@ -20,7 +20,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import jakarta.validation.Valid;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 
 /**
  * 班级管理Web控制器
@@ -101,13 +101,11 @@ public class SchoolClassController {
     @GetMapping("/{id}")
     public String classDetail(@PathVariable Long id, Model model) {
         try {
-            Optional<SchoolClass> classOpt = schoolClassService.findClassById(id);
-            if (classOpt.isEmpty()) {
+            SchoolClass schoolClass = schoolClassService.findClassById(id);
+            if (schoolClass == null) {
                 model.addAttribute("error", "班级不存在");
                 return "redirect:/admin/classes";
             }
-            
-            SchoolClass schoolClass = classOpt.get();
             
             // 获取班级相关统计信息
             long studentCount = schoolClassService.countStudentsByClass(id);
@@ -153,13 +151,11 @@ public class SchoolClassController {
     @GetMapping("/{id}/edit")
     public String editClassPage(@PathVariable Long id, Model model) {
         try {
-            Optional<SchoolClass> classOpt = schoolClassService.findClassById(id);
-            if (classOpt.isEmpty()) {
+            SchoolClass schoolClass = schoolClassService.findClassById(id);
+            if (schoolClass == null) {
                 model.addAttribute("error", "班级不存在");
                 return "redirect:/admin/classes";
             }
-            
-            SchoolClass schoolClass = classOpt.get();
             model.addAttribute("schoolClass", schoolClass);
             model.addAttribute("currentPage", "classes");
             model.addAttribute("isEdit", true);
@@ -272,14 +268,13 @@ public class SchoolClassController {
     @GetMapping("/{id}/students")
     public String classStudents(@PathVariable Long id, Model model) {
         try {
-            Optional<SchoolClass> classOpt = schoolClassService.findClassById(id);
-            if (classOpt.isEmpty()) {
+            SchoolClass schoolClass = schoolClassService.findClassById(id);
+            if (schoolClass == null) {
                 model.addAttribute("error", "班级不存在");
                 return "redirect:/admin/classes";
             }
-            
-            SchoolClass schoolClass = classOpt.get();
-            // TODO: 获取班级学生列表
+
+            // 注意：获取班级学生列表功能待实现
             
             model.addAttribute("schoolClass", schoolClass);
             model.addAttribute("currentPage", "classes");
@@ -299,14 +294,13 @@ public class SchoolClassController {
     @GetMapping("/{id}/courses")
     public String classCourses(@PathVariable Long id, Model model) {
         try {
-            Optional<SchoolClass> classOpt = schoolClassService.findClassById(id);
-            if (classOpt.isEmpty()) {
+            SchoolClass schoolClass = schoolClassService.findClassById(id);
+            if (schoolClass == null) {
                 model.addAttribute("error", "班级不存在");
                 return "redirect:/admin/classes";
             }
-            
-            SchoolClass schoolClass = classOpt.get();
-            // TODO: 获取班级课程列表
+
+            // 注意：获取班级课程列表功能待实现
             
             model.addAttribute("schoolClass", schoolClass);
             model.addAttribute("currentPage", "classes");
@@ -329,7 +323,7 @@ public class SchoolClassController {
             long totalClasses = schoolClassService.countTotalClasses();
             long activeClasses = schoolClassService.countActiveClasses();
             List<Object[]> gradeStats = schoolClassService.countClassesByGrade();
-            List<Object[]> departmentStats = schoolClassService.countClassesByDepartment();
+            Map<String, Long> departmentStats = schoolClassService.countClassesByDepartment();
             
             model.addAttribute("totalClasses", totalClasses);
             model.addAttribute("activeClasses", activeClasses);
@@ -362,7 +356,7 @@ public class SchoolClassController {
     public String exportClasses(Model model, RedirectAttributes redirectAttributes) {
         try {
             List<SchoolClass> classes = schoolClassService.findAllClasses();
-            // TODO: 实现实际的导出功能（Excel、CSV等）
+            // 注意：实际的导出功能（Excel、CSV等）待实现
             redirectAttributes.addFlashAttribute("success", "班级数据导出成功，共 " + classes.size() + " 条记录");
         } catch (Exception e) {
             logger.error("导出班级数据失败", e);

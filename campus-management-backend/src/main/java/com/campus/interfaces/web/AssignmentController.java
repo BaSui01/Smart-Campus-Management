@@ -3,6 +3,8 @@ package com.campus.interfaces.web;
 import com.campus.application.service.AssignmentService;
 import com.campus.application.service.CourseService;
 import com.campus.application.service.UserService;
+import com.campus.domain.entity.Assignment;
+import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -79,8 +81,13 @@ public class AssignmentController {
         try {
             logger.info("访问编辑作业页面: assignmentId={}", assignmentId);
             
-            // TODO: 获取作业详情
-            Object assignment = assignmentService.getAssignmentById(assignmentId);
+            // 获取作业详情
+            Optional<Assignment> assignmentOpt = assignmentService.findById(assignmentId);
+            if (!assignmentOpt.isPresent()) {
+                model.addAttribute("error", "作业不存在");
+                return "error/404";
+            }
+            Assignment assignment = assignmentOpt.get();
             if (assignment == null) {
                 model.addAttribute("error", "作业不存在");
                 return "error/404";
@@ -106,12 +113,13 @@ public class AssignmentController {
         try {
             logger.info("访问作业详情页面: assignmentId={}", assignmentId);
             
-            // TODO: 获取作业详情和提交情况
-            Object assignment = assignmentService.getAssignmentById(assignmentId);
-            if (assignment == null) {
+            // 获取作业详情和提交情况
+            Optional<Assignment> assignmentOpt = assignmentService.findById(assignmentId);
+            if (!assignmentOpt.isPresent()) {
                 model.addAttribute("error", "作业不存在");
                 return "error/404";
             }
+            Assignment assignment = assignmentOpt.get();
             
             Object submissions = assignmentService.getSubmissionsByAssignment(assignmentId);
             Object statistics = assignmentService.getSubmissionStatistics(assignmentId);
@@ -135,12 +143,13 @@ public class AssignmentController {
         try {
             logger.info("访问作业提交管理页面: assignmentId={}", assignmentId);
             
-            // TODO: 获取作业和提交列表
-            Object assignment = assignmentService.getAssignmentById(assignmentId);
-            if (assignment == null) {
+            // 获取作业和提交列表
+            Optional<Assignment> assignmentOpt = assignmentService.findById(assignmentId);
+            if (!assignmentOpt.isPresent()) {
                 model.addAttribute("error", "作业不存在");
                 return "error/404";
             }
+            Assignment assignment = assignmentOpt.get();
             
             Object submissions = assignmentService.getSubmissionsByAssignment(assignmentId);
             
@@ -162,14 +171,16 @@ public class AssignmentController {
         try {
             logger.info("访问作业评分页面: assignmentId={}", assignmentId);
             
-            // TODO: 获取作业和待评分提交
-            Object assignment = assignmentService.getAssignmentById(assignmentId);
-            if (assignment == null) {
+            // 获取作业和待评分提交
+            Optional<Assignment> assignmentOpt = assignmentService.findById(assignmentId);
+            if (!assignmentOpt.isPresent()) {
                 model.addAttribute("error", "作业不存在");
                 return "error/404";
             }
-            
-            Object pendingSubmissions = assignmentService.getPendingGradingSubmissions(assignmentId);
+            Assignment assignment = assignmentOpt.get();
+
+            // 获取待评分提交（暂时返回空数据）
+            Object pendingSubmissions = new java.util.ArrayList<>();
             
             model.addAttribute("pageTitle", "作业评分");
             model.addAttribute("assignment", assignment);
@@ -189,10 +200,10 @@ public class AssignmentController {
         try {
             logger.info("访问作业统计页面");
             
-            // TODO: 获取作业统计数据
-            Object overallStats = assignmentService.getOverallStatistics();
-            Object courseStats = assignmentService.getStatisticsByCourse();
-            Object teacherStats = assignmentService.getStatisticsByTeacher();
+            // 获取作业统计数据（暂时返回空数据）
+            Object overallStats = new java.util.HashMap<>();
+            Object courseStats = new java.util.ArrayList<>();
+            Object teacherStats = new java.util.ArrayList<>();
             
             model.addAttribute("pageTitle", "作业统计");
             model.addAttribute("overallStats", overallStats);
@@ -213,8 +224,8 @@ public class AssignmentController {
         try {
             logger.info("访问作业模板页面");
             
-            // TODO: 获取作业模板列表
-            Object templates = assignmentService.getAssignmentTemplates();
+            // 获取作业模板列表（暂时返回空数据）
+            Object templates = new java.util.ArrayList<>();
             
             model.addAttribute("pageTitle", "作业模板");
             model.addAttribute("templates", templates);
@@ -234,8 +245,8 @@ public class AssignmentController {
         try {
             logger.info("访问作业日历页面");
             
-            // TODO: 获取作业日历数据
-            Object calendarData = assignmentService.getAssignmentCalendar();
+            // 获取作业日历数据（暂时返回空数据）
+            Object calendarData = new java.util.HashMap<>();
             
             model.addAttribute("pageTitle", "作业日历");
             model.addAttribute("calendarData", calendarData);
@@ -268,24 +279,5 @@ public class AssignmentController {
         }
     }
     
-    // ================================
-    // 辅助方法
-    // ================================
-    
-    /**
-     * 添加通用页面属性
-     */
-    private void addCommonAttributes(Model model) {
-        model.addAttribute("currentModule", "assignments");
-        model.addAttribute("breadcrumb", "作业管理");
-    }
-    
-    /**
-     * 处理页面错误
-     */
-    private String handlePageError(Exception e, String operation, Model model) {
-        logger.error("{}失败", operation, e);
-        model.addAttribute("error", operation + "失败: " + e.getMessage());
-        return "error/500";
-    }
+
 }

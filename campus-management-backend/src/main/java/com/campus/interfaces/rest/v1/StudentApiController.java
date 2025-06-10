@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.campus.application.service.SchoolClassService;
@@ -13,6 +14,7 @@ import com.campus.application.service.StudentService;
 import com.campus.shared.common.ApiResponse;
 import com.campus.domain.entity.SchoolClass;
 import com.campus.domain.entity.Student;
+import com.campus.interfaces.rest.common.BaseController;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -32,7 +34,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 @RequestMapping("/api/students")
 @Tag(name = "学生管理API", description = "学生信息管理REST API接口")
 @SecurityRequirement(name = "Bearer")
-public class StudentApiController {
+public class StudentApiController extends BaseController {
 
     @Autowired
     private StudentService studentService;
@@ -46,7 +48,7 @@ public class StudentApiController {
     @GetMapping
     @Operation(summary = "获取学生列表", description = "分页查询学生信息")
     @PreAuthorize("hasAnyRole('ADMIN', 'ACADEMIC_ADMIN', 'TEACHER')")
-    public ApiResponse<Map<String, Object>> getStudents(
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getStudents(
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") int page,
             @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") int size,
             @Parameter(description = "学号") @RequestParam(required = false) String studentNo,
@@ -81,7 +83,7 @@ public class StudentApiController {
         result.put("size", pageResult.getSize());
         result.put("records", pageResult.getContent());
 
-        return ApiResponse.success("获取学生列表成功", result);
+        return success("获取学生列表成功", result);
     }
 
     /**
@@ -90,12 +92,20 @@ public class StudentApiController {
     @GetMapping("/{id}")
     @Operation(summary = "获取学生详情", description = "根据ID查询学生详细信息")
     @PreAuthorize("hasAnyRole('ADMIN', 'ACADEMIC_ADMIN', 'TEACHER')")
-    public ApiResponse<Object[]> getStudentById(@Parameter(description = "学生ID") @PathVariable Long id) {
-        Optional<Object[]> student = studentService.findStudentWithUser(id);
-        if (student.isPresent()) {
-            return ApiResponse.success(student.get());
-        } else {
-            return ApiResponse.error(404, "学生不存在");
+    public ResponseEntity<ApiResponse<Object[]>> getStudentById(@Parameter(description = "学生ID") @PathVariable Long id) {
+        try {
+            logOperation("查询学生详情", id);
+            validateId(id, "学生");
+
+            Optional<Object[]> student = studentService.findStudentWithUser(id);
+            if (student.isPresent()) {
+                return success("查询学生详情成功", student.get());
+            } else {
+                return notFound("学生不存在");
+            }
+        } catch (Exception e) {
+            log.error("查询学生详情失败: ", e);
+            return error("查询学生详情失败: " + e.getMessage());
         }
     }
 
@@ -105,7 +115,7 @@ public class StudentApiController {
     @GetMapping("/form-data")
     @Operation(summary = "获取学生表单数据", description = "获取创建/编辑学生表单所需的数据")
     @PreAuthorize("hasAnyRole('ADMIN', 'ACADEMIC_ADMIN', 'TEACHER')")
-    public ApiResponse<Map<String, Object>> getStudentFormData() {
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getStudentFormData() {
         try {
             Map<String, Object> formData = new HashMap<>();
 
@@ -136,9 +146,10 @@ public class StudentApiController {
             formData.put("grades", grades);
             formData.put("majors", majors);
 
-            return ApiResponse.success("获取表单数据成功", formData);
+            return success("获取表单数据成功", formData);
         } catch (Exception e) {
-            return ApiResponse.error(500, "获取学生表单数据失败：" + e.getMessage());
+            log.error("获取学生表单数据失败: ", e);
+            return error("获取学生表单数据失败：" + e.getMessage());
         }
     }
 
@@ -148,14 +159,150 @@ public class StudentApiController {
     @PostMapping
     @Operation(summary = "创建学生", description = "添加新学生信息")
     @PreAuthorize("hasAnyRole('ADMIN', 'ACADEMIC_ADMIN')")
-    public ApiResponse<Student> createStudent(@Parameter(description = "学生信息") @Valid @RequestBody Student student) {
+    public ResponseEntity<ApiResponse<Student>> createStudent(@Parameter(description = "学生信息") @Valid @RequestBody Student student) {
         try {
+            logOperation("创建学生", student.getName(), student.getStudentNo());
             Student createdStudent = studentService.createStudent(student);
-            return ApiResponse.success("创建学生成功", createdStudent);
+            return success("创建学生成功", createdStudent);
         } catch (IllegalArgumentException e) {
-            return ApiResponse.error(400, e.getMessage());
+            log.error("创建学生参数错误: ", e);
+            return badRequest(e.getMessage());
         } catch (Exception e) {
-            return ApiResponse.error(500, "创建学生失败：" + e.getMessage());
+            log.error("创建学生失败: ", e);
+            return error("创建学生失败：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 获取学生统计信息
+     */
+    @GetMapping("/stats")
+    @Operation(summary = "获取学生统计信息", description = "获取学生模块的统计数据")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN', 'TEACHER')")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getStudentStats() {
+        try {
+            log.info("获取学生统计信息");
+
+            Map<String, Object> stats = new HashMap<>();
+
+            // 获取学生统计信息
+            StudentService.StudentStatistics studentStats = studentService.getStudentStatistics();
+
+            // 基础统计
+            stats.put("totalStudents", studentStats.getTotalStudents());
+            stats.put("activeStudents", studentStats.getActiveStudents());
+            stats.put("inactiveStudents", studentStats.getInactiveStudents());
+            stats.put("maleStudents", studentStats.getMaleStudents());
+            stats.put("femaleStudents", studentStats.getFemaleStudents());
+
+            // 按年级统计
+            stats.put("gradeDistribution", studentStats.getGradeDistribution());
+
+            // 按班级统计
+            stats.put("classDistribution", studentStats.getClassDistribution());
+
+            // 按年级统计（使用现有方法）
+            List<Object[]> gradeStats = studentService.countStudentsByGrade();
+            Map<String, Long> gradeStatsMap = new HashMap<>();
+            for (Object[] row : gradeStats) {
+                gradeStatsMap.put((String) row[0], ((Number) row[1]).longValue());
+            }
+            stats.put("gradeStats", gradeStatsMap);
+
+            // 今日、本周、本月统计（简化实现）
+            stats.put("todayStudents", 0L);
+            stats.put("weekStudents", 0L);
+            stats.put("monthStudents", 0L);
+
+            // 最近活动（简化实现）
+            List<Map<String, Object>> recentActivity = new ArrayList<>();
+            stats.put("recentActivity", recentActivity);
+
+            return success("获取学生统计信息成功", stats);
+
+        } catch (Exception e) {
+            log.error("获取学生统计信息失败: ", e);
+            return error("获取学生统计信息失败: " + e.getMessage());
+        }
+    }
+
+    // ==================== 批量操作端点 ====================
+
+    /**
+     * 批量删除学生
+     */
+    @DeleteMapping("/batch")
+    @Operation(summary = "批量删除学生", description = "根据ID列表批量删除学生")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN')")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> batchDeleteStudents(
+            @Parameter(description = "学生ID列表") @RequestBody List<Long> ids) {
+
+        try {
+            logOperation("批量删除学生", ids.size());
+
+            // 验证参数
+            if (ids == null || ids.isEmpty()) {
+                return badRequest("学生ID列表不能为空");
+            }
+
+            if (ids.size() > 100) {
+                return badRequest("单次批量操作不能超过100条记录");
+            }
+
+            // 验证所有ID
+            for (Long id : ids) {
+                validateId(id, "学生");
+            }
+
+            // 执行批量删除
+            boolean result = studentService.batchDeleteStudents(ids);
+
+            Map<String, Object> responseData = new HashMap<>();
+            responseData.put("deletedCount", result ? ids.size() : 0);
+            responseData.put("totalRequested", ids.size());
+            responseData.put("success", result);
+
+            if (result) {
+                return success("批量删除学生成功", responseData);
+            } else {
+                return error("批量删除学生失败");
+            }
+
+        } catch (Exception e) {
+            log.error("批量删除学生失败: ", e);
+            return error("批量删除学生失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 批量导入学生
+     */
+    @PostMapping("/batch/import")
+    @Operation(summary = "批量导入学生", description = "批量导入学生数据")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN')")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> batchImportStudents(
+            @Parameter(description = "学生数据列表") @RequestBody List<Student> students) {
+
+        try {
+            logOperation("批量导入学生", students.size());
+
+            // 验证参数
+            if (students == null || students.isEmpty()) {
+                return badRequest("学生数据列表不能为空");
+            }
+
+            if (students.size() > 100) {
+                return badRequest("单次批量导入不能超过100条记录");
+            }
+
+            // 执行批量导入
+            Map<String, Object> result = studentService.importStudents(students);
+
+            return success("批量导入学生完成", result);
+
+        } catch (Exception e) {
+            log.error("批量导入学生失败: ", e);
+            return error("批量导入学生失败: " + e.getMessage());
         }
     }
 

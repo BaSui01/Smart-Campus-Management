@@ -318,6 +318,99 @@ public interface UserService {
      */
     Map<String, Object> countParentStudentRelationsByType();
 
+    // ================================
+    // 消息管理页面需要的方法
+    // ================================
+
+    /**
+     * 获取用户组列表
+     */
+    List<Map<String, Object>> getUserGroups();
+
+    /**
+     * 获取所有角色列表
+     */
+    List<Map<String, Object>> getAllRoles();
+
+    // ================================
+    // ParentStudentRelationApiController 需要的方法
+    // ================================
+
+    /**
+     * 创建家长学生关系
+     */
+    com.campus.domain.entity.ParentStudentRelation createParentStudentRelation(com.campus.domain.entity.ParentStudentRelation relation);
+
+    /**
+     * 更新家长学生关系
+     */
+    com.campus.domain.entity.ParentStudentRelation updateParentStudentRelation(com.campus.domain.entity.ParentStudentRelation relation);
+
+    /**
+     * 删除家长学生关系
+     */
+    void deleteParentStudentRelation(Long relationId);
+
+    /**
+     * 分页查找家长学生关系
+     */
+    Page<com.campus.domain.entity.ParentStudentRelation> findParentStudentRelations(Pageable pageable, Long parentId, Long studentId, String relationType);
+
+    /**
+     * 根据关系类型获取关系列表
+     */
+    List<com.campus.domain.entity.ParentStudentRelation> getRelationsByType(String relationType);
+
+    /**
+     * 验证家长学生关系
+     */
+    boolean verifyParentStudentRelation(Long parentId, Long studentId);
+
+    /**
+     * 验证家长学生关系数据
+     */
+    Map<String, Object> validateParentStudentRelation(com.campus.domain.entity.ParentStudentRelation relation);
+
+    /**
+     * 批量创建家长学生关系
+     */
+    Map<String, Object> batchCreateParentStudentRelations(List<com.campus.domain.entity.ParentStudentRelation> relations);
+
+    /**
+     * 批量删除家长学生关系
+     */
+    void batchDeleteParentStudentRelations(List<Long> relationIds);
+
+    /**
+     * 导入家长学生关系
+     */
+    Map<String, Object> importParentStudentRelations(List<com.campus.domain.entity.ParentStudentRelation> relations);
+
+    /**
+     * 导出家长学生关系
+     */
+    List<com.campus.domain.entity.ParentStudentRelation> exportParentStudentRelations(Long parentId, Long studentId, String relationType);
+
+    /**
+     * 激活家长学生关系
+     */
+    void activateParentStudentRelation(Long relationId);
+
+    /**
+     * 停用家长学生关系
+     */
+    void deactivateParentStudentRelation(Long relationId);
+
+    /**
+     * 获取孤儿学生列表
+     */
+    List<Map<String, Object>> getOrphanedStudents();
+
+    /**
+     * 获取无子女家长列表
+     */
+    List<Map<String, Object>> getChildlessParents();
+
     /**
      * 用户统计信息类
      */

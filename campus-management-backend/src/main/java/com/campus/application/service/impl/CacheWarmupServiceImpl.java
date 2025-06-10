@@ -8,10 +8,15 @@ import com.campus.application.service.PermissionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
+import org.springframework.core.env.Environment;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -44,6 +49,9 @@ public class CacheWarmupServiceImpl implements CacheWarmupService {
     
     @Autowired
     private PermissionService permissionService;
+
+    @Autowired
+    private Environment environment;
     
     @Override
     public void warmupCache() {
@@ -255,7 +263,10 @@ public class CacheWarmupServiceImpl implements CacheWarmupService {
         try {
             // 清理Spring Cache
             cacheManager.getCacheNames().forEach(cacheName -> {
-                cacheManager.getCache(cacheName).clear();
+                Cache cache = cacheManager.getCache(cacheName);
+                if (cache != null) {
+                    cache.clear();
+                }
             });
             
             // 清理Redis缓存
@@ -298,19 +309,46 @@ public class CacheWarmupServiceImpl implements CacheWarmupService {
     
     public Object getCacheStatistics() {
         try {
-            Long totalKeys = redisTemplate.execute((org.springframework.data.redis.core.RedisCallback<Long>) connection -> connection.dbSize());
-            
-            return new Object() {
-                public final long totalCacheKeys = totalKeys;
-                public final boolean isWarmedUp = isCacheWarmedUp();
-                public final String status = isWarmedUp ? "已预热" : "未预热";
-            };
-            
+            // 使用RedisTemplate的高级API统计缓存键数量
+            Long totalKeys = 0L;
+            try {
+                // 统计各种缓存模式的键数量
+                String[] patterns = {"user:*", "course:*", "department:*", "permission:*", "system:*", "dict:*"};
+                for (String pattern : patterns) {
+                    Set<String> keys = redisTemplate.keys(pattern);
+                    if (keys != null) {
+                        totalKeys += keys.size();
+                    }
+                }
+            } catch (Exception e) {
+                logger.warn("获取Redis键数量失败，返回默认值", e);
+                totalKeys = 0L;
+            }
+
+            // 防止空指针异常
+            long keyCount = totalKeys != null ? totalKeys : 0L;
+            boolean warmedUp = isCacheWarmedUp();
+
+            return new CacheStatistics(keyCount, warmedUp, warmedUp ? "已预热" : "未预热");
+
         } catch (Exception e) {
             logger.error("获取缓存统计失败", e);
-            return new Object() {
-                public final String error = "获取统计失败";
-            };
+            return new CacheStatistics(0L, false, "获取统计失败");
+        }
+    }
+
+    /**
+     * 缓存统计信息类
+     */
+    public static class CacheStatistics {
+        public final long totalCacheKeys;
+        public final boolean isWarmedUp;
+        public final String status;
+
+        public CacheStatistics(long totalCacheKeys, boolean isWarmedUp, String status) {
+            this.totalCacheKeys = totalCacheKeys;
+            this.isWarmedUp = isWarmedUp;
+            this.status = status;
         }
     }
     
@@ -353,22 +391,113 @@ public class CacheWarmupServiceImpl implements CacheWarmupService {
      * 获取系统配置
      */
     private Object getSystemConfiguration() {
-        // TODO: 实现系统配置获取逻辑
-        return new Object() {
-            public final String version = "1.0.0";
-            public final String environment = "production";
-            public final boolean maintenanceMode = false;
-        };
+        try {
+            // 注意：当前实现基础的系统配置获取，后续可从配置服务或数据库获取
+            Map<String, Object> config = new HashMap<>();
+            config.put("version", "1.0.0");
+            config.put("environment", getActiveProfile());
+            config.put("maintenanceMode", false);
+            config.put("maxUploadSize", "10MB");
+            config.put("sessionTimeout", 30);
+            config.put("enableCache", true);
+            config.put("logLevel", "INFO");
+
+            logger.debug("系统配置已加载: {}", config);
+            return new SystemConfiguration(
+                (String) config.get("version"),
+                (String) config.get("environment"),
+                (Boolean) config.get("maintenanceMode")
+            );
+        } catch (Exception e) {
+            logger.error("获取系统配置失败", e);
+            return new SystemConfiguration("1.0.0", "unknown", false);
+        }
     }
-    
+
     /**
      * 获取字典数据
      */
     private Object getDictionaryData(String dictType) {
-        // TODO: 实现字典数据获取逻辑
-        return new Object() {
-            public final String type = dictType;
-            public final String status = "loaded";
-        };
+        try {
+            // 注意：当前实现基础的字典数据获取，后续可从字典服务获取
+            Map<String, Object> dictData = new HashMap<>();
+
+            switch (dictType) {
+                case "user_status":
+                    dictData.put("1", "启用");
+                    dictData.put("0", "禁用");
+                    dictData.put("-1", "删除");
+                    break;
+                case "gender":
+                    dictData.put("M", "男");
+                    dictData.put("F", "女");
+                    dictData.put("U", "未知");
+                    break;
+                case "grade_level":
+                    dictData.put("1", "一年级");
+                    dictData.put("2", "二年级");
+                    dictData.put("3", "三年级");
+                    dictData.put("4", "四年级");
+                    break;
+                default:
+                    dictData.put("default", "默认值");
+                    break;
+            }
+
+            logger.debug("字典数据已加载: {} -> {}", dictType, dictData);
+            return new DictionaryData(dictType, "loaded", dictData);
+        } catch (Exception e) {
+            logger.error("获取字典数据失败: {}", dictType, e);
+            return new DictionaryData(dictType, "error", new HashMap<>());
+        }
+    }
+
+    /**
+     * 获取当前激活的配置文件
+     */
+    private String getActiveProfile() {
+        try {
+            String[] profiles = environment.getActiveProfiles();
+            return profiles.length > 0 ? profiles[0] : "default";
+        } catch (Exception e) {
+            logger.warn("获取激活配置文件失败", e);
+            return "default";
+        }
+    }
+
+    /**
+     * 系统配置类
+     */
+    public static class SystemConfiguration {
+        public final String version;
+        public final String environment;
+        public final boolean maintenanceMode;
+
+        public SystemConfiguration(String version, String environment, boolean maintenanceMode) {
+            this.version = version;
+            this.environment = environment;
+            this.maintenanceMode = maintenanceMode;
+        }
+    }
+
+    /**
+     * 字典数据类
+     */
+    public static class DictionaryData {
+        public final String type;
+        public final String status;
+        public final Map<String, Object> data;
+
+        public DictionaryData(String type, String status) {
+            this.type = type;
+            this.status = status;
+            this.data = new HashMap<>();
+        }
+
+        public DictionaryData(String type, String status, Map<String, Object> data) {
+            this.type = type;
+            this.status = status;
+            this.data = data != null ? data : new HashMap<>();
+        }
     }
 }

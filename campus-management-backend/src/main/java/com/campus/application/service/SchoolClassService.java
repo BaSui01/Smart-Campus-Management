@@ -236,4 +236,14 @@ public interface SchoolClassService {
      * 禁用班级
      */
     boolean disableClass(Long classId);
+
+    /**
+     * 按部门统计班级数量
+     */
+    Map<String, Long> countClassesByDepartment();
+
+    /**
+     * 获取所有班级（无分页）
+     */
+    List<SchoolClass> findAllClasses();
 }

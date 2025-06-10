@@ -395,6 +395,50 @@ public class StudentEvaluation extends BaseEntity {
     }
 
     /**
+     * 获取综合评分（通用方法）
+     */
+    public BigDecimal getScore() {
+        return this.overallScore;
+    }
+
+    /**
+     * 设置综合评分（通用方法）
+     */
+    public void setScore(BigDecimal score) {
+        this.overallScore = score;
+    }
+
+    /**
+     * 获取评价意见（通用方法）
+     */
+    public String getComment() {
+        StringBuilder comment = new StringBuilder();
+
+        if (strengths != null && !strengths.trim().isEmpty()) {
+            comment.append("优点：").append(strengths);
+        }
+
+        if (improvements != null && !improvements.trim().isEmpty()) {
+            if (comment.length() > 0) comment.append("；");
+            comment.append("改进建议：").append(improvements);
+        }
+
+        if (developmentSuggestions != null && !developmentSuggestions.trim().isEmpty()) {
+            if (comment.length() > 0) comment.append("；");
+            comment.append("发展建议：").append(developmentSuggestions);
+        }
+
+        return comment.length() > 0 ? comment.toString() : null;
+    }
+
+    /**
+     * 设置评价意见（通用方法）
+     */
+    public void setComment(String comment) {
+        this.developmentSuggestions = comment;
+    }
+
+    /**
      * 验证评价数据
      */
     @PrePersist

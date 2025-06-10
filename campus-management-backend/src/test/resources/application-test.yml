@@ -1,97 +1,85 @@
-# 测试环境配置文件
+# 智慧校园管理系统 - 测试环境配置
+server:
+  port: 0  # 随机端口，避免冲突
+
 spring:
-  # 数据源配置 - 使用H2内存数据库进行测试
+  application:
+    name: smart-campus-management-test
+
+  # 数据库配置 - 使用H2内存数据库
   datasource:
-    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=MySQL;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE
     driver-class-name: org.h2.Driver
     username: sa
-    password: 
-    
-  # H2控制台配置（测试时可选）
+    password:
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 1
+      connection-timeout: 30000
+      # 移除MySQL特定的连接初始化SQL
+
+  # JPA配置
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
+        implicit-strategy: org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: false
+        hbm2ddl:
+          auto: create-drop
+    open-in-view: false
+
+  # H2控制台配置
   h2:
     console:
       enabled: true
       path: /h2-console
-      
-  # JPA配置
-  jpa:
-    hibernate:
-      ddl-auto: create-drop  # 测试时每次重新创建表
-    show-sql: true          # 显示SQL语句
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.H2Dialect
-        format_sql: true    # 格式化SQL输出
-        use_sql_comments: true
-    defer-datasource-initialization: true
-    
-  # SQL初始化配置
-  sql:
-    init:
-      mode: always
-      schema-locations: classpath:schema-test.sql
-      data-locations: classpath:data-test.sql
-      continue-on-error: false
-      
-  # 缓存配置 - 测试时禁用Redis
+
+  # 缓存配置
   cache:
     type: simple
-    
-  # 测试时禁用Redis
-  redis:
-    host: localhost
-    port: 6379
-    timeout: 2000ms
-    lettuce:
-      pool:
-        max-active: 8
-        max-idle: 8
-        min-idle: 0
-        max-wait: -1ms
-        
+
+  # 禁用Redis和其他不需要的自动配置
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
+      - org.springframework.boot.autoconfigure.quartz.QuartzAutoConfiguration
+      - org.springframework.boot.autoconfigure.mail.MailSenderAutoConfiguration
+
+# JWT配置
+jwt:
+  secret: test-jwt-secret-key-for-testing-only
+  expiration: 3600000  # 1小时
+  refresh-expiration: 7200000  # 2小时
+  header: Authorization
+  prefix: Bearer
+
+# 应用配置
+app:
+  jwt:
+    secret: test-secret-key-for-jwt-token-generation-in-test-environment
+    expiration: 3600
+
 # 日志配置
 logging:
   level:
-    com.campus: DEBUG
-    org.springframework.security: DEBUG
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
-    org.springframework.transaction: DEBUG
+    "[com.campus]": INFO
+    "[org.springframework.security]": WARN
+    "[org.springframework.web]": WARN
+    "[org.hibernate.SQL]": WARN
+    "[org.springframework.transaction]": WARN
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
-    
-# 安全配置
-security:
-  jwt:
-    secret: test-secret-key-for-jwt-token-generation-in-test-environment
-    expiration: 3600000  # 1小时
-    
-# 应用配置
-app:
-  name: Smart Campus Management Test
-  version: 1.0.0-TEST
-  
+
 # 测试专用配置
 test:
-  # 是否启用测试数据初始化
   data:
-    init: true
-  # 测试用户配置
-  users:
-    admin:
-      username: admin
-      password: admin123
-      email: admin@test.com
-    teacher:
-      username: teacher
-      password: teacher123
-      email: teacher@test.com
-    student:
-      username: student
-      password: student123
-      email: student@test.com
-      
-# 禁用不必要的自动配置
-spring.autoconfigure.exclude:
-  - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
-  - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
+    init: true  # 是否初始化测试数据
+  security:
+    enabled: false  # 是否启用安全认证（测试时可关闭）

@@ -2,7 +2,6 @@ package com.campus.application.service;
 
 import com.campus.application.service.impl.UserServiceImpl;
 import com.campus.domain.entity.User;
-import com.campus.domain.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,9 +32,6 @@ class UserServiceTest {
 
     @Autowired
     private TestEntityManager entityManager;
-
-    @Autowired
-    private UserRepository userRepository;
 
     @Autowired
     private UserService userService;

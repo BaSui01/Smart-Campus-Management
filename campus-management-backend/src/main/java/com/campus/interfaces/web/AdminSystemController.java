@@ -4,7 +4,7 @@ import com.campus.application.service.CourseService;
 import com.campus.application.service.PaymentRecordService;
 import com.campus.application.service.StudentService;
 import com.campus.application.service.UserService;
-import com.campus.application.service.RoleService;
+
 import com.campus.application.service.FeeItemService;
 
 import com.campus.domain.entity.PaymentRecord;
@@ -44,7 +44,7 @@ public class AdminSystemController {
     private final StudentService studentService;
     private final CourseService courseService;
     private final PaymentRecordService paymentRecordService;
-    private final RoleService roleService;
+
     private final FeeItemService feeItemService;
 
     @Autowired
@@ -52,13 +52,11 @@ public class AdminSystemController {
                                 StudentService studentService,
                                 CourseService courseService,
                                 PaymentRecordService paymentRecordService,
-                                RoleService roleService,
                                 FeeItemService feeItemService) {
         this.userService = userService;
         this.studentService = studentService;
         this.courseService = courseService;
         this.paymentRecordService = paymentRecordService;
-        this.roleService = roleService;
         this.feeItemService = feeItemService;
     }
 
@@ -417,248 +415,9 @@ public class AdminSystemController {
         }
     }
 
-    /**
-     * 角色管理页面
-     */
-    @GetMapping("/roles")
-    public String roles(@RequestParam(defaultValue = "0") int page,
-                       @RequestParam(defaultValue = "20") int size,
-                       @RequestParam(defaultValue = "") String search,
-                       @RequestParam(defaultValue = "") String status,
-                       Model model) {
-        try {
-            // 获取角色统计信息
-            RoleService.RoleStatistics roleStatistics = roleService.getRoleStatistics();
 
-            // 构建查询参数
-            Map<String, Object> params = new HashMap<>();
-            if (!search.isEmpty()) {
-                params.put("search", search);
-            }
-            if (!status.isEmpty()) {
-                params.put("status", status);
-            }
 
-            // 分页查询角色
-            Pageable pageable = PageRequest.of(page, size);
-            Page<Role> rolePage = roleService.findRolesByPage(pageable, params);
 
-            // 转换为Map格式以供模板使用
-            List<Map<String, Object>> roleList = new ArrayList<>();
-            for (Role role : rolePage.getContent()) {
-                Map<String, Object> roleMap = new HashMap<>();
-                roleMap.put("id", role.getId());
-                roleMap.put("roleName", role.getRoleName());
-                roleMap.put("roleKey", role.getRoleKey());
-                roleMap.put("roleDescription", role.getDescription());
-                roleMap.put("status", role.getStatus());
-                roleMap.put("userCount", role.getUserCount());
-                roleMap.put("createdTime", role.getCreatedAt());
-                roleMap.put("updatedTime", role.getUpdatedAt());
-                roleList.add(roleMap);
-            }
-
-            // 构建角色统计数据
-            List<Map<String, Object>> roleStats = new ArrayList<>();
-            roleStats.add(Map.of(
-                "title", "总角色数",
-                "value", roleStatistics.getTotalRoles(),
-                "icon", "fas fa-user-tag",
-                "color", "primary"
-            ));
-            roleStats.add(Map.of(
-                "title", "启用角色",
-                "value", roleStatistics.getActiveRoles(),
-                "icon", "fas fa-check-circle",
-                "color", "success"
-            ));
-            roleStats.add(Map.of(
-                "title", "系统角色",
-                "value", roleStatistics.getSystemRoles(),
-                "icon", "fas fa-cog",
-                "color", "info"
-            ));
-            roleStats.add(Map.of(
-                "title", "禁用角色",
-                "value", roleStatistics.getInactiveRoles(),
-                "icon", "fas fa-times-circle",
-                "color", "warning"
-            ));
-
-            // 构建表格配置
-            Map<String, Object> roleTableConfig = new HashMap<>();
-            roleTableConfig.put("title", "角色列表");
-            roleTableConfig.put("icon", "fas fa-user-tag");
-
-            // 表格列配置
-            List<Map<String, Object>> columns = new ArrayList<>();
-            columns.add(Map.of("field", "id", "title", "ID", "class", "text-center", "width", "80px"));
-            columns.add(Map.of("field", "roleName", "title", "角色名称", "icon", "fas fa-user-tag"));
-            columns.add(Map.of("field", "roleKey", "title", "角色键", "icon", "fas fa-key"));
-            columns.add(Map.of("field", "roleDescription", "title", "角色描述", "class", ""));
-            columns.add(Map.of(
-                "field", "status",
-                "title", "状态",
-                "type", "badge",
-                "class", "text-center",
-                "width", "100px"
-            ));
-            columns.add(Map.of("field", "userCount", "title", "用户数", "class", "text-center", "width", "100px"));
-            columns.add(Map.of("field", "createdTime", "title", "创建时间", "type", "datetime", "icon", "fas fa-calendar"));
-            roleTableConfig.put("columns", columns);
-
-            // 操作按钮配置
-            List<Map<String, Object>> actions = new ArrayList<>();
-            actions.add(Map.of("function", "viewRole", "title", "查看", "icon", "fas fa-eye", "type", "info"));
-            actions.add(Map.of("function", "editRole", "title", "编辑", "icon", "fas fa-edit", "type", "primary"));
-            actions.add(Map.of("function", "viewPermissions", "title", "权限", "icon", "fas fa-key", "type", "success"));
-            actions.add(Map.of("function", "toggleStatus", "title", "切换状态", "icon", "fas fa-toggle-on", "type", "warning"));
-            actions.add(Map.of("function", "deleteRole", "title", "删除", "icon", "fas fa-trash", "type", "danger"));
-            roleTableConfig.put("actions", actions);
-
-            // 构建筛选配置
-            Map<String, Object> roleFilters = new HashMap<>();
-            roleFilters.put("search", Map.of(
-                "name", "search",
-                "placeholder", "搜索角色名称、角色键、描述...",
-                "value", search
-            ));
-
-            List<Map<String, Object>> selectFilters = new ArrayList<>();
-            selectFilters.add(Map.of(
-                "name", "status",
-                "label", "状态",
-                "icon", "fas fa-toggle-on",
-                "selectedValue", status,
-                "options", List.of(
-                    Map.of("value", "1", "text", "启用"),
-                    Map.of("value", "0", "text", "禁用")
-                )
-            ));
-            roleFilters.put("selects", selectFilters);
-
-            // 创建分页对象
-            Map<String, Object> pageData = new HashMap<>();
-            pageData.put("content", roleList);
-            pageData.put("totalElements", rolePage.getTotalElements());
-            pageData.put("totalPages", rolePage.getTotalPages());
-            pageData.put("number", rolePage.getNumber());
-            pageData.put("size", rolePage.getSize());
-            pageData.put("numberOfElements", rolePage.getNumberOfElements());
-            pageData.put("first", rolePage.isFirst());
-            pageData.put("last", rolePage.isLast());
-            pageData.put("empty", rolePage.isEmpty());
-
-            model.addAttribute("roles", pageData);
-            model.addAttribute("roleStats", roleStats);
-            model.addAttribute("roleTableConfig", roleTableConfig);
-            model.addAttribute("roleFilters", roleFilters);
-            model.addAttribute("search", search);
-            model.addAttribute("status", status);
-            model.addAttribute("pageTitle", "角色管理");
-            model.addAttribute("currentPage", "roles");
-            return "admin/system/roles";
-        } catch (Exception e) {
-            System.err.println("加载角色列表失败: " + e.getMessage());
-            e.printStackTrace();
-            model.addAttribute("error", "加载角色列表失败：" + e.getMessage());
-            return "admin/system/roles";
-        }
-    }
-
-    /**
-     * 权限管理页面
-     */
-    @GetMapping("/permissions")
-    public String permissions(Model model) {
-        try {
-            // 获取所有权限（简化实现）
-            List<Map<String, Object>> permissions = new ArrayList<>();
-            permissions.add(Map.of("id", 1, "permissionName", "USER_MANAGE", "permissionDescription", "用户管理", "module", "系统管理", "status", 1));
-            permissions.add(Map.of("id", 2, "permissionName", "STUDENT_MANAGE", "permissionDescription", "学生管理", "module", "学生管理", "status", 1));
-            permissions.add(Map.of("id", 3, "permissionName", "COURSE_MANAGE", "permissionDescription", "课程管理", "module", "课程管理", "status", 1));
-            permissions.add(Map.of("id", 4, "permissionName", "FINANCE_MANAGE", "permissionDescription", "财务管理", "module", "财务管理", "status", 1));
-            permissions.add(Map.of("id", 5, "permissionName", "ROLE_MANAGE", "permissionDescription", "角色管理", "module", "系统管理", "status", 1));
-            permissions.add(Map.of("id", 6, "permissionName", "PERMISSION_MANAGE", "permissionDescription", "权限管理", "module", "系统管理", "status", 1));
-
-            // 构建权限统计数据
-            List<Map<String, Object>> permissionStats = new ArrayList<>();
-            permissionStats.add(Map.of(
-                "title", "总权限数",
-                "value", permissions.size(),
-                "icon", "fas fa-key",
-                "color", "primary"
-            ));
-            permissionStats.add(Map.of(
-                "title", "启用权限",
-                "value", permissions.stream().mapToInt(p -> (Integer) p.get("status")).sum(),
-                "icon", "fas fa-check-circle",
-                "color", "success"
-            ));
-
-            // 统计模块数量
-            long moduleCount = permissions.stream()
-                .map(p -> (String) p.get("module"))
-                .distinct()
-                .count();
-            permissionStats.add(Map.of(
-                "title", "权限模块",
-                "value", moduleCount,
-                "icon", "fas fa-layer-group",
-                "color", "info"
-            ));
-            permissionStats.add(Map.of(
-                "title", "系统权限",
-                "value", permissions.stream()
-                    .mapToInt(p -> "系统管理".equals(p.get("module")) ? 1 : 0)
-                    .sum(),
-                "icon", "fas fa-cog",
-                "color", "warning"
-            ));
-
-            // 构建表格配置
-            Map<String, Object> permissionTableConfig = new HashMap<>();
-            permissionTableConfig.put("title", "权限列表");
-            permissionTableConfig.put("icon", "fas fa-key");
-
-            // 表格列配置
-            List<Map<String, Object>> columns = new ArrayList<>();
-            columns.add(Map.of("field", "id", "title", "ID", "class", "text-center"));
-            columns.add(Map.of("field", "permissionName", "title", "权限名称", "class", ""));
-            columns.add(Map.of("field", "permissionDescription", "title", "权限描述", "class", ""));
-            columns.add(Map.of("field", "module", "title", "所属模块", "class", ""));
-            columns.add(Map.of("field", "status", "title", "状态", "class", "text-center"));
-            permissionTableConfig.put("columns", columns);
-
-            // 操作按钮配置
-            List<Map<String, Object>> actions = new ArrayList<>();
-            actions.add(Map.of("function", "editPermission", "title", "编辑", "icon", "fas fa-edit", "type", "primary"));
-            actions.add(Map.of("function", "deletePermission", "title", "删除", "icon", "fas fa-trash", "type", "danger"));
-            permissionTableConfig.put("actions", actions);
-
-            // 创建分页对象（模拟）
-            Map<String, Object> pageData = new HashMap<>();
-            pageData.put("content", permissions);
-            pageData.put("totalElements", permissions.size());
-            pageData.put("totalPages", 1);
-            pageData.put("number", 0);
-            pageData.put("size", 20);
-            pageData.put("numberOfElements", permissions.size());
-            pageData.put("first", true);
-            pageData.put("last", true);
-            pageData.put("empty", permissions.isEmpty());
-
-            model.addAttribute("permissions", pageData);
-            model.addAttribute("permissionStats", permissionStats);
-            model.addAttribute("permissionTableConfig", permissionTableConfig);
-            model.addAttribute("pageTitle", "权限管理");
-            model.addAttribute("currentPage", "permissions");
-            return "admin/system/permissions";
-        } catch (Exception e) {
-            model.addAttribute("error", "加载权限列表失败：" + e.getMessage());
-            return "admin/system/permissions";
-        }
-    }
 
     /**
      * 缴费项目管理页面 - 使用真实数据库数据
@@ -1101,20 +860,7 @@ public class AdminSystemController {
         }
     }
 
-    /**
-     * 报表管理页面
-     */
-    @GetMapping("/reports")
-    public String reports(Model model) {
-        try {
-            model.addAttribute("pageTitle", "报表管理");
-            model.addAttribute("currentPage", "reports");
-            return "admin/finance/reports";
-        } catch (Exception e) {
-            model.addAttribute("error", "加载报表页面失败：" + e.getMessage());
-            return "admin/finance/reports";
-        }
-    }
+
 
     /**
      * 系统日志页面

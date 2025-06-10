@@ -32,6 +32,27 @@ public class ResourceAccessLog extends BaseEntity {
     private Long resourceId;
 
     /**
+     * 资源类型
+     */
+    @Size(max = 50, message = "资源类型长度不能超过50个字符")
+    @Column(name = "resource_type", length = 50)
+    private String resourceType;
+
+    /**
+     * 资源名称
+     */
+    @Size(max = 200, message = "资源名称长度不能超过200个字符")
+    @Column(name = "resource_name", length = 200)
+    private String resourceName;
+
+    /**
+     * 用户名
+     */
+    @Size(max = 50, message = "用户名长度不能超过50个字符")
+    @Column(name = "username", length = 50)
+    private String username;
+
+    /**
      * 用户ID
      */
     @NotNull(message = "用户ID不能为空")
@@ -45,6 +66,26 @@ public class ResourceAccessLog extends BaseEntity {
     @Size(max = 20, message = "访问类型长度不能超过20个字符")
     @Column(name = "access_type", nullable = false, length = 20)
     private String accessType;
+
+    /**
+     * 访问方式
+     */
+    @Size(max = 50, message = "访问方式长度不能超过50个字符")
+    @Column(name = "access_method", length = 50)
+    private String accessMethod;
+
+    /**
+     * 访问状态
+     */
+    @Size(max = 20, message = "访问状态长度不能超过20个字符")
+    @Column(name = "access_status", length = 20)
+    private String accessStatus;
+
+    /**
+     * 访问时长（毫秒）
+     */
+    @Column(name = "access_duration")
+    private Long accessDuration;
 
     /**
      * 访问时间
@@ -202,9 +243,9 @@ public class ResourceAccessLog extends BaseEntity {
     }
 
     /**
-     * 获取资源名称
+     * 获取关联资源名称
      */
-    public String getResourceName() {
+    public String getRelatedResourceName() {
         return resource != null ? resource.getResourceName() : null;
     }
 
@@ -265,6 +306,30 @@ public class ResourceAccessLog extends BaseEntity {
         this.resourceId = resourceId;
     }
 
+    public String getResourceType() {
+        return resourceType;
+    }
+
+    public void setResourceType(String resourceType) {
+        this.resourceType = resourceType;
+    }
+
+    public String getResourceName() {
+        return resourceName;
+    }
+
+    public void setResourceName(String resourceName) {
+        this.resourceName = resourceName;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
     public Long getUserId() {
         return userId;
     }
@@ -279,6 +344,30 @@ public class ResourceAccessLog extends BaseEntity {
 
     public void setAccessType(String accessType) {
         this.accessType = accessType;
+    }
+
+    public String getAccessMethod() {
+        return accessMethod;
+    }
+
+    public void setAccessMethod(String accessMethod) {
+        this.accessMethod = accessMethod;
+    }
+
+    public String getAccessStatus() {
+        return accessStatus;
+    }
+
+    public void setAccessStatus(String accessStatus) {
+        this.accessStatus = accessStatus;
+    }
+
+    public Long getAccessDuration() {
+        return accessDuration;
+    }
+
+    public void setAccessDuration(Long accessDuration) {
+        this.accessDuration = accessDuration;
     }
 
     public LocalDateTime getAccessTime() {

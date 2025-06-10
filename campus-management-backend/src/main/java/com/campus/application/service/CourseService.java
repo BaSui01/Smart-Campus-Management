@@ -331,4 +331,27 @@ public interface CourseService {
      * @return 复制的课程
      */
     Course copyCourse(Long courseId, String newCourseCode, String newCourseName);
+
+    // ================================
+    // CourseResourceController 需要的方法
+    // ================================
+
+    /**
+     * 根据ID获取课程
+     *
+     * @param id 课程ID
+     * @return 课程信息
+     */
+    Course getCourseById(Long id);
+
+    // ================================
+    // CourseSelectionController 需要的方法
+    // ================================
+
+    /**
+     * 查找可选课程
+     *
+     * @return 可选课程列表
+     */
+    List<Course> findSelectableCourses();
 }

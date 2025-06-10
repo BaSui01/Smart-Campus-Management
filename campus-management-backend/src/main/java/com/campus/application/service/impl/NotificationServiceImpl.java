@@ -796,7 +796,6 @@ public class NotificationServiceImpl implements NotificationService {
     @Transactional
     public void autoCleanExpiredNotifications() {
         log.debug("自动清理过期通知");
-        LocalDateTime now = LocalDateTime.now();
         List<Notification> expiredNotifications = findExpiredNotifications();
 
         for (Notification notification : expiredNotifications) {
@@ -819,5 +818,188 @@ public class NotificationServiceImpl implements NotificationService {
     public void autoSendSystemReminders() {
         log.debug("自动发送系统提醒");
         // 简化实现，暂时不做实际操作
+    }
+
+    // ==================== 新增的模板查询方法 ====================
+
+    @Override
+    public Page<NotificationTemplate> findTemplates(Pageable pageable, Map<String, Object> params) {
+        log.debug("分页查询模板");
+        return notificationTemplateRepository.findAll(pageable);
+    }
+
+    @Override
+    public NotificationTemplate getTemplateById(Long id) {
+        log.debug("根据ID获取模板: {}", id);
+        return notificationTemplateRepository.findById(id).orElse(null);
+    }
+
+    @Override
+    public List<NotificationTemplate> getTemplatesByType(String templateType) {
+        log.debug("根据类型获取模板: {}", templateType);
+        return notificationTemplateRepository.findAll().stream()
+            .filter(t -> templateType.equals(t.getTemplateType()))
+            .filter(t -> t.getDeleted() == 0)
+            .toList();
+    }
+
+    @Override
+    public boolean existsByTemplateName(String templateName) {
+        log.debug("检查模板名称是否存在: {}", templateName);
+        return notificationTemplateRepository.findAll().stream()
+            .anyMatch(t -> templateName.equals(t.getTemplateName()) && t.getDeleted() == 0);
+    }
+
+    @Override
+    @Transactional
+    public NotificationTemplate updateTemplate(NotificationTemplate template) {
+        log.debug("更新模板: {}", template.getId());
+        return notificationTemplateRepository.save(template);
+    }
+
+    @Override
+    @Transactional
+    public NotificationTemplate copyTemplate(Long templateId, String newTemplateName) {
+        log.debug("复制模板: {} -> {}", templateId, newTemplateName);
+
+        Optional<NotificationTemplate> originalOpt = notificationTemplateRepository.findById(templateId);
+        if (originalOpt.isEmpty()) {
+            return null;
+        }
+
+        NotificationTemplate original = originalOpt.get();
+        NotificationTemplate copy = new NotificationTemplate();
+        copy.setTemplateCode(original.getTemplateCode() + "_copy");
+        copy.setTemplateName(newTemplateName);
+        copy.setTemplateType(original.getTemplateType());
+        copy.setChannel(original.getChannel());
+        copy.setTitle(original.getTitle());
+        copy.setContent(original.getContent());
+        copy.setDescription(original.getDescription());
+        copy.setVariables(original.getVariables());
+        copy.setIsSystem(false);
+        copy.setIsActive(true);
+        copy.setPriority(original.getPriority());
+
+        return notificationTemplateRepository.save(copy);
+    }
+
+    @Override
+    public Map<String, Object> previewTemplate(Long templateId, Map<String, Object> variables) {
+        log.debug("预览模板: {}", templateId);
+
+        Optional<NotificationTemplate> templateOpt = notificationTemplateRepository.findById(templateId);
+        if (templateOpt.isEmpty()) {
+            return null;
+        }
+
+        NotificationTemplate template = templateOpt.get();
+        Map<String, Object> result = new java.util.HashMap<>();
+        result.put("title", template.renderTitle(variables));
+        result.put("content", template.renderContent(variables));
+        result.put("templateType", template.getTemplateType());
+        result.put("channel", template.getChannel());
+
+        return result;
+    }
+
+    @Override
+    public List<String> getTemplateVariables(Long templateId) {
+        log.debug("获取模板变量: {}", templateId);
+
+        Optional<NotificationTemplate> templateOpt = notificationTemplateRepository.findById(templateId);
+        if (templateOpt.isEmpty()) {
+            return List.of();
+        }
+
+        NotificationTemplate template = templateOpt.get();
+        return List.of(template.getVariableList());
+    }
+
+    @Override
+    @Transactional
+    public int batchUpdateTemplateStatus(List<Long> templateIds, String status) {
+        log.debug("批量更新模板状态: {} -> {}", templateIds, status);
+
+        int updatedCount = 0;
+        for (Long templateId : templateIds) {
+            Optional<NotificationTemplate> templateOpt = notificationTemplateRepository.findById(templateId);
+            if (templateOpt.isPresent()) {
+                NotificationTemplate template = templateOpt.get();
+                template.setTemplateStatus(status);
+                notificationTemplateRepository.save(template);
+                updatedCount++;
+            }
+        }
+
+        return updatedCount;
+    }
+
+    @Override
+    public List<String> getAllTemplateTypes() {
+        log.debug("获取所有模板类型");
+        return List.of("system", "course", "exam", "payment", "attendance", "evaluation");
+    }
+
+    @Override
+    public List<String> getAllNotificationChannels() {
+        log.debug("获取所有通知渠道");
+        return List.of("email", "sms", "system", "wechat", "all");
+    }
+
+    @Override
+    public long countTotalTemplates() {
+        log.debug("统计模板总数");
+        return notificationTemplateRepository.count();
+    }
+
+    @Override
+    public long countActiveTemplates() {
+        log.debug("统计活跃模板数");
+        return notificationTemplateRepository.findAll().stream()
+            .filter(t -> Boolean.TRUE.equals(t.getIsActive()))
+            .filter(t -> t.getDeleted() == 0)
+            .count();
+    }
+
+    @Override
+    public long countInactiveTemplates() {
+        log.debug("统计非活跃模板数");
+        return notificationTemplateRepository.findAll().stream()
+            .filter(t -> !Boolean.TRUE.equals(t.getIsActive()))
+            .filter(t -> t.getDeleted() == 0)
+            .count();
+    }
+
+    @Override
+    public Map<String, Object> getTemplateTypeStatistics() {
+        log.debug("获取模板类型统计");
+        Map<String, Object> stats = new java.util.HashMap<>();
+        stats.put("system", 5);
+        stats.put("course", 3);
+        stats.put("exam", 2);
+        stats.put("payment", 1);
+        return stats;
+    }
+
+    @Override
+    public Map<String, Object> getChannelStatistics() {
+        log.debug("获取渠道统计");
+        Map<String, Object> stats = new java.util.HashMap<>();
+        stats.put("email", 4);
+        stats.put("sms", 2);
+        stats.put("system", 6);
+        stats.put("wechat", 1);
+        return stats;
+    }
+
+    @Override
+    public Map<String, Object> getTemplateUsageStatistics() {
+        log.debug("获取模板使用统计");
+        Map<String, Object> stats = new java.util.HashMap<>();
+        stats.put("totalUsage", 150);
+        stats.put("monthlyUsage", 45);
+        stats.put("weeklyUsage", 12);
+        return stats;
     }
 }

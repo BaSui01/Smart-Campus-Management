@@ -230,12 +230,11 @@ public class CourseScheduleApiController {
             Map<String, Long> dayStats = courseScheduleService.countSchedulesByDay();
             Map<String, Long> timeSlotStats = courseScheduleService.countSchedulesByTimeSlot();
 
-            Object statistics = new Object() {
-                public final long total = totalSchedules;
-                public final long active = activeSchedules;
-                public final Map<String, Long> byDay = dayStats;
-                public final Map<String, Long> byTimeSlot = timeSlotStats;
-            };
+            Map<String, Object> statistics = new java.util.HashMap<>();
+            statistics.put("total", totalSchedules);
+            statistics.put("active", activeSchedules);
+            statistics.put("byDay", dayStats);
+            statistics.put("byTimeSlot", timeSlotStats);
             
             return ResponseEntity.ok(ApiResponse.success(statistics));
         } catch (Exception e) {

@@ -8,7 +8,7 @@
     <el-row :gutter="20">
       <!-- 个人基本信息 -->
       <el-col :span="8">
-        <el-card class="profile-card">
+        <el-card class="profile-card" v-loading="loading">
           <template #header>
             <h3>基本信息</h3>
           </template>
@@ -18,8 +18,8 @@
               <el-avatar :size="80" :src="studentInfo.avatar">
                 <el-icon size="40"><User /></el-icon>
               </el-avatar>
-              <el-button type="text" @click="changeAvatar" class="change-avatar">
-                更换头像
+              <el-button type="text" @click="changeAvatar" class="change-avatar" :loading="avatarUploading">
+                {{ avatarUploading ? '上传中...' : '更换头像' }}
               </el-button>
             </div>
             
@@ -81,7 +81,7 @@
       
       <!-- 详细信息表单 -->
       <el-col :span="16">
-        <el-card class="form-card">
+        <el-card class="form-card" v-loading="loading">
           <template #header>
             <div class="card-header">
               <h3>详细信息</h3>
@@ -283,42 +283,109 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { User, Lock, Download } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/auth'
+import { studentApi } from '@/api/student'
+import { authApi } from '@/api/auth'
 
 const authStore = useAuthStore()
 const profileFormRef = ref()
 const passwordFormRef = ref()
 const isEditing = ref(false)
 const passwordDialogVisible = ref(false)
+const loading = ref(false)
+const avatarUploading = ref(false)
 
 const studentInfo = ref({
-  name: '张三',
-  studentId: '2021001001',
-  major: '计算机科学与技术',
-  className: '计科21-1班',
-  grade: 2021,
-  duration: 4,
+  name: '',
+  studentId: '',
+  major: '',
+  className: '',
+  grade: '',
+  duration: '',
   avatar: ''
 })
 
 const learningStats = ref({
-  totalCredits: 45,
-  gpa: 3.75,
-  rank: 15,
-  courses: 12
+  totalCredits: 0,
+  gpa: 0,
+  rank: 0,
+  courses: 0
 })
 
 const editForm = reactive({
-  realName: '张三',
-  gender: 'male',
-  birthDate: '2000-01-01',
-  idCard: '110101200001011234',
-  phone: '13800138000',
-  email: 'zhangsan@email.com',
-  address: '北京市海淀区某某街道某某小区',
-  emergencyContact: '张父',
-  emergencyPhone: '13900139000',
-  bio: '我是一名计算机专业的学生，热爱编程和技术。'
+  realName: '',
+  gender: '',
+  birthDate: '',
+  idCard: '',
+  phone: '',
+  email: '',
+  address: '',
+  emergencyContact: '',
+  emergencyPhone: '',
+  bio: ''
 })
+
+// 加载学生基本信息
+const loadStudentInfo = async () => {
+  loading.value = true
+
+  try {
+    const { data } = await studentApi.getProfile()
+
+    // 更新基本信息
+    studentInfo.value = {
+      name: data.realName || data.name || '',
+      studentId: data.studentNo || data.studentId || '',
+      major: data.majorName || data.major || '',
+      className: data.className || data.classInfo?.className || '',
+      grade: data.grade || data.enrollmentYear || '',
+      duration: data.duration || data.studyYears || 4,
+      avatar: data.avatarUrl || data.avatar || ''
+    }
+
+    // 更新详细信息表单
+    Object.assign(editForm, {
+      realName: data.realName || '',
+      gender: data.gender || '',
+      birthDate: data.birthDate || '',
+      idCard: data.idCard || data.identityCard || '',
+      phone: data.phone || data.mobile || '',
+      email: data.email || '',
+      address: data.address || data.homeAddress || '',
+      emergencyContact: data.emergencyContact || data.emergencyContactName || '',
+      emergencyPhone: data.emergencyPhone || data.emergencyContactPhone || '',
+      bio: data.bio || data.personalDescription || ''
+    })
+
+  } catch (error) {
+    console.error('加载学生信息失败:', error)
+    ElMessage.error('加载个人信息失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+// 加载学习统计
+const loadLearningStats = async () => {
+  try {
+    const { data } = await studentApi.getLearningStats()
+
+    learningStats.value = {
+      totalCredits: data.totalCredits || data.earnedCredits || 0,
+      gpa: data.gpa || data.averageGPA || 0,
+      rank: data.classRank || data.rank || 0,
+      courses: data.totalCourses || data.courseCount || 0
+    }
+  } catch (error) {
+    console.error('加载学习统计失败:', error)
+    // 使用默认值，不显示错误信息
+    learningStats.value = {
+      totalCredits: 0,
+      gpa: 0,
+      rank: 0,
+      courses: 0
+    }
+  }
+}
 
 const originalForm = reactive({})
 
@@ -387,60 +454,318 @@ const cancelEdit = () => {
 
 const saveChanges = async () => {
   if (!profileFormRef.value) return
-  
+
   await profileFormRef.value.validate(async (valid) => {
     if (!valid) return
-    
+
     try {
-      // 这里调用API保存数据
-      // await studentApi.updateStudentInfo(editForm)
-      
+      loading.value = true
+
+      // 调用API保存数据
+      await studentApi.updateProfile(editForm)
+
+      // 重新加载学生信息
+      await loadStudentInfo()
+
       ElMessage.success('个人信息更新成功')
       isEditing.value = false
     } catch (error) {
+      console.error('更新个人信息失败:', error)
       ElMessage.error('更新失败，请稍后重试')
+    } finally {
+      loading.value = false
     }
   })
 }
 
 const changeAvatar = () => {
-  ElMessage.info('更换头像功能开发中...')
+  // 创建文件输入元素
+  const input = document.createElement('input')
+  input.type = 'file'
+  input.accept = 'image/*'
+
+  input.onchange = async (event) => {
+    const file = event.target.files[0]
+    if (!file) return
+
+    // 验证文件大小（限制为2MB）
+    if (file.size > 2 * 1024 * 1024) {
+      ElMessage.error('头像文件大小不能超过2MB')
+      return
+    }
+
+    // 验证文件类型
+    if (!file.type.startsWith('image/')) {
+      ElMessage.error('请选择图片文件')
+      return
+    }
+
+    try {
+      avatarUploading.value = true
+
+      // 创建FormData
+      const formData = new FormData()
+      formData.append('avatar', file)
+
+      // 上传头像
+      const { data } = await studentApi.uploadAvatar(formData)
+
+      // 更新头像URL
+      studentInfo.value.avatar = data.avatarUrl || data.url
+
+      ElMessage.success('头像更新成功')
+    } catch (error) {
+      console.error('头像上传失败:', error)
+      ElMessage.error('头像上传失败，请稍后重试')
+    } finally {
+      avatarUploading.value = false
+    }
+  }
+
+  input.click()
 }
 
 const changePassword = async () => {
   if (!passwordFormRef.value) return
-  
+
   await passwordFormRef.value.validate(async (valid) => {
     if (!valid) return
-    
+
     try {
-      // 这里调用API修改密码
-      // await authApi.changePassword(passwordForm)
-      
-      ElMessage.success('密码修改成功')
+      loading.value = true
+
+      // 调用API修改密码
+      await authApi.changePassword({
+        oldPassword: passwordForm.oldPassword,
+        newPassword: passwordForm.newPassword
+      })
+
+      ElMessage.success('密码修改成功，请重新登录')
       passwordDialogVisible.value = false
-      
+
       // 清空表单
       Object.assign(passwordForm, {
         oldPassword: '',
         newPassword: '',
         confirmPassword: ''
       })
+
+      // 延迟后跳转到登录页
+      setTimeout(() => {
+        authStore.logout()
+      }, 1500)
+
     } catch (error) {
-      ElMessage.error('密码修改失败，请稍后重试')
+      console.error('密码修改失败:', error)
+      ElMessage.error('密码修改失败，请检查当前密码是否正确')
+    } finally {
+      loading.value = false
     }
   })
 }
 
-const exportProfile = () => {
-  ElMessage.info('导出功能开发中...')
+const exportProfile = async () => {
+  try {
+    loading.value = true
+
+    const { data } = await studentApi.exportProfile({
+      format: 'pdf',
+      includeStats: true
+    })
+
+    // 创建下载链接
+    const url = window.URL.createObjectURL(new Blob([data]))
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `个人信息_${studentInfo.value.studentId}_${new Date().toISOString().split('T')[0]}.pdf`
+    link.click()
+    window.URL.revokeObjectURL(url)
+
+    ElMessage.success('个人信息导出成功')
+  } catch (error) {
+    console.error('导出个人信息失败:', error)
+    ElMessage.error('导出失败，请稍后重试')
+  } finally {
+    loading.value = false
+  }
 }
 
-onMounted(() => {
-  // 加载学生信息
+// 生命周期
+onMounted(async () => {
+  await Promise.all([
+    loadStudentInfo(),
+    loadLearningStats()
+  ])
 })
 </script>
 
 <style scoped>
 @import '@/styles/student.css';
+
+.profile-page {
+  padding: 20px;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+}
+
+.page-header {
+  margin-bottom: 20px;
+  text-align: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.page-header h1 {
+  margin: 0 0 8px 0;
+  font-size: 28px;
+  font-weight: 600;
+}
+
+.page-header p {
+  margin: 0;
+  opacity: 0.9;
+  font-size: 16px;
+}
+
+.profile-card, .stats-card, .form-card {
+  margin-bottom: 20px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.profile-content {
+  text-align: center;
+}
+
+.avatar-section {
+  margin-bottom: 24px;
+}
+
+.change-avatar {
+  margin-top: 12px;
+  color: #409eff;
+}
+
+.basic-info {
+  text-align: left;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.info-item:last-child {
+  border-bottom: none;
+}
+
+.info-item label {
+  font-weight: 600;
+  color: #606266;
+  min-width: 60px;
+}
+
+.info-item span {
+  color: #303133;
+  flex: 1;
+  text-align: right;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.stat-item {
+  text-align: center;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.stat-item:hover {
+  background: #e9ecef;
+  transform: translateY(-2px);
+}
+
+.stat-number {
+  font-size: 24px;
+  font-weight: bold;
+  color: #409eff;
+  margin-bottom: 4px;
+}
+
+.stat-label {
+  font-size: 14px;
+  color: #606266;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-header h3 {
+  margin: 0;
+  color: #303133;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.profile-form {
+  padding: 20px 0;
+}
+
+.action-buttons {
+  margin-top: 20px;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+@media (max-width: 768px) {
+  .profile-page {
+    padding: 10px;
+  }
+
+  .page-header {
+    padding: 20px;
+  }
+
+  .page-header h1 {
+    font-size: 24px;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .action-buttons .el-button {
+    width: 200px;
+  }
+}
+
+@media (max-width: 992px) {
+  .el-col {
+    margin-bottom: 20px;
+  }
+}
 </style>

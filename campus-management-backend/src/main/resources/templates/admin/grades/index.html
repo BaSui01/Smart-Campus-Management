@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/admin :: html}"
+      lang="zh-CN">
+<head th:replace="~{layout/admin :: head}">
+    <th:block th:fragment="head-extra">
+        <title>成绩管理 - 智慧校园管理系统</title>
+        <!-- DataTables CSS -->
+        <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+        <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css">
+        <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
+        
+        <!-- 成绩管理专用样式 -->
+        <style>
+            .grade-badge {
+                font-size: 0.8rem;
+                padding: 0.3rem 0.6rem;
+                font-weight: bold;
+            }
+            .grade-excellent { background: linear-gradient(45deg, #28a745, #20c997); }
+            .grade-good { background: linear-gradient(45deg, #17a2b8, #6f42c1); }
+            .grade-average { background: linear-gradient(45deg, #ffc107, #fd7e14); }
+            .grade-poor { background: linear-gradient(45deg, #dc3545, #e83e8c); }
+            
+            .search-filters {
+                background: #f8f9fa;
+                border-radius: 0.5rem;
+                padding: 1rem;
+                margin-bottom: 1rem;
+            }
+            .batch-actions {
+                background: #e3f2fd;
+                border-radius: 0.5rem;
+                padding: 0.75rem;
+                margin-bottom: 1rem;
+                display: none;
+            }
+            .table-container {
+                background: white;
+                border-radius: 0.5rem;
+                box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            }
+            .stats-card {
+                transition: transform 0.2s ease-in-out;
+            }
+            .stats-card:hover {
+                transform: translateY(-2px);
+            }
+            .grade-input {
+                width: 80px;
+                text-align: center;
+            }
+        </style>
+    </th:block>
+</head>
+<body>
+    <div th:fragment="content">
+        <!-- 页面标题和操作按钮 -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-chart-line me-2 text-primary"></i>成绩管理
+                </h1>
+                <p class="text-muted mb-0">管理学生成绩、成绩统计和成绩分析</p>
+            </div>
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-outline-info" onclick="refreshGradeData()">
+                    <i class="fas fa-sync-alt me-2"></i>刷新数据
+                </button>
+                <button type="button" class="btn btn-outline-success" onclick="exportGrades()">
+                    <i class="fas fa-download me-2"></i>导出成绩
+                </button>
+                <button type="button" class="btn btn-outline-warning" onclick="showGradeAnalysis()">
+                    <i class="fas fa-chart-bar me-2"></i>成绩分析
+                </button>
+                <button type="button" class="btn btn-primary" onclick="showAddGradeModal()">
+                    <i class="fas fa-plus me-2"></i>录入成绩
+                </button>
+            </div>
+        </div>
+
+        <!-- 错误提示区域 -->
+        <div id="alertContainer"></div>
+
+        <!-- 搜索和筛选区域 -->
+        <div class="search-filters">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">学生姓名/学号</label>
+                    <input type="text" class="form-control" id="searchKeyword" placeholder="输入学生信息搜索">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">课程</label>
+                    <select class="form-select" id="courseFilter">
+                        <option value="">全部课程</option>
+                        <!-- 课程选项将通过AJAX加载 -->
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">学期</label>
+                    <select class="form-select" id="semesterFilter">
+                        <option value="">全部学期</option>
+                        <option value="2024-1">2024年春季</option>
+                        <option value="2024-2">2024年秋季</option>
+                        <option value="2025-1">2025年春季</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">考试类型</label>
+                    <select class="form-select" id="examTypeFilter">
+                        <option value="">全部类型</option>
+                        <option value="期中考试">期中考试</option>
+                        <option value="期末考试">期末考试</option>
+                        <option value="平时成绩">平时成绩</option>
+                        <option value="实验成绩">实验成绩</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-primary" onclick="applyFilters()">
+                            <i class="fas fa-search me-1"></i>搜索
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="resetFilters()">
+                            <i class="fas fa-undo me-1"></i>重置
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 批量操作区域 -->
+        <div class="batch-actions" id="batchActions">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="fw-bold">已选择 <span id="selectedCount">0</span> 条成绩记录</span>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-sm btn-primary" onclick="batchEdit()">
+                        <i class="fas fa-edit me-1"></i>批量编辑
+                    </button>
+                    <button type="button" class="btn btn-sm btn-success" onclick="batchExport()">
+                        <i class="fas fa-download me-1"></i>批量导出
+                    </button>
+                    <button type="button" class="btn btn-sm btn-danger" onclick="batchDelete()">
+                        <i class="fas fa-trash me-1"></i>批量删除
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearSelection()">
+                        <i class="fas fa-times me-1"></i>取消选择
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 成绩统计卡片 -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm stats-card">
+                    <div class="card-body text-center">
+                        <div class="text-primary mb-2">
+                            <i class="fas fa-clipboard-list fa-2x"></i>
+                        </div>
+                        <h5 class="card-title mb-1">总成绩记录</h5>
+                        <h3 class="text-primary mb-0" id="totalGrades">0</h3>
+                        <small class="text-muted">系统成绩总数</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm stats-card">
+                    <div class="card-body text-center">
+                        <div class="text-success mb-2">
+                            <i class="fas fa-trophy fa-2x"></i>
+                        </div>
+                        <h5 class="card-title mb-1">优秀率</h5>
+                        <h3 class="text-success mb-0" id="excellentRate">0%</h3>
+                        <small class="text-muted">90分以上比例</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm stats-card">
+                    <div class="card-body text-center">
+                        <div class="text-info mb-2">
+                            <i class="fas fa-chart-line fa-2x"></i>
+                        </div>
+                        <h5 class="card-title mb-1">平均分</h5>
+                        <h3 class="text-info mb-0" id="averageScore">0</h3>
+                        <small class="text-muted">全体平均成绩</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm stats-card">
+                    <div class="card-body text-center">
+                        <div class="text-warning mb-2">
+                            <i class="fas fa-exclamation-triangle fa-2x"></i>
+                        </div>
+                        <h5 class="card-title mb-1">不及格率</h5>
+                        <h3 class="text-warning mb-0" id="failRate">0%</h3>
+                        <small class="text-muted">60分以下比例</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 成绩数据表格 -->
+        <div class="table-container">
+            <div class="card border-0">
+                <div class="card-header bg-white border-0 py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-table me-2"></i>成绩列表
+                        </h5>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="toggleColumns()">
+                                <i class="fas fa-columns me-1"></i>列显示
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-info" onclick="refreshTable()">
+                                <i class="fas fa-sync-alt me-1"></i>刷新表格
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table id="gradesTable" class="table table-hover table-striped">
+                            <thead class="table-light">
+                                <tr>
+                                    <th width="40">
+                                        <input type="checkbox" class="form-check-input" id="selectAll">
+                                    </th>
+                                    <th>学生姓名</th>
+                                    <th>学号</th>
+                                    <th>课程名称</th>
+                                    <th>考试类型</th>
+                                    <th>成绩</th>
+                                    <th>等级</th>
+                                    <th>学期</th>
+                                    <th>录入时间</th>
+                                    <th>录入教师</th>
+                                    <th width="200">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- 数据将通过AJAX加载 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 录入成绩模态框 -->
+    <div class="modal fade" id="addGradeModal" tabindex="-1" aria-labelledby="addGradeModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addGradeModalLabel">
+                        <i class="fas fa-plus me-2"></i>录入成绩
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addGradeForm">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="studentId" class="form-label">学生 <span class="text-danger">*</span></label>
+                                <select class="form-select" id="studentId" name="studentId" required>
+                                    <option value="">请选择学生</option>
+                                    <!-- 学生选项将通过AJAX加载 -->
+                                </select>
+                                <div class="invalid-feedback">请选择学生</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="courseId" class="form-label">课程 <span class="text-danger">*</span></label>
+                                <select class="form-select" id="courseId" name="courseId" required>
+                                    <option value="">请选择课程</option>
+                                    <!-- 课程选项将通过AJAX加载 -->
+                                </select>
+                                <div class="invalid-feedback">请选择课程</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="examType" class="form-label">考试类型 <span class="text-danger">*</span></label>
+                                <select class="form-select" id="examType" name="examType" required>
+                                    <option value="">请选择考试类型</option>
+                                    <option value="期中考试">期中考试</option>
+                                    <option value="期末考试">期末考试</option>
+                                    <option value="平时成绩">平时成绩</option>
+                                    <option value="实验成绩">实验成绩</option>
+                                </select>
+                                <div class="invalid-feedback">请选择考试类型</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="score" class="form-label">成绩 <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="score" name="score" min="0" max="100" step="0.1" required>
+                                <div class="invalid-feedback">请输入成绩(0-100)</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="semester" class="form-label">学期 <span class="text-danger">*</span></label>
+                                <select class="form-select" id="semester" name="semester" required>
+                                    <option value="2024-1">2024年春季</option>
+                                    <option value="2024-2">2024年秋季</option>
+                                    <option value="2025-1" selected>2025年春季</option>
+                                </select>
+                                <div class="invalid-feedback">请选择学期</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="weight" class="form-label">权重(%)</label>
+                                <input type="number" class="form-control" id="weight" name="weight" min="1" max="100" value="100">
+                                <small class="form-text text-muted">该成绩在总成绩中的权重</small>
+                            </div>
+                            <div class="col-12">
+                                <label for="remarks" class="form-label">备注</label>
+                                <textarea class="form-control" id="remarks" name="remarks" rows="2" placeholder="请输入备注信息"></textarea>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="addGrade()">
+                        <i class="fas fa-save me-1"></i>保存
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 成绩分析模态框 -->
+    <div class="modal fade" id="gradeAnalysisModal" tabindex="-1" aria-labelledby="gradeAnalysisModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="gradeAnalysisModalLabel">
+                        <i class="fas fa-chart-bar me-2"></i>成绩分析
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <canvas id="gradeDistributionChart"></canvas>
+                        </div>
+                        <div class="col-md-6">
+                            <canvas id="courseTrendChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <th:block th:fragment="scripts">
+        <!-- DataTables JS -->
+        <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+        <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+        <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+        <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.bootstrap5.min.js"></script>
+        <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+        <script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
+        
+        <!-- Chart.js -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+        
+        <!-- 成绩管理脚本 -->
+        <script th:src="@{/js/modules/grade-management.js}"></script>
+        
+        <!-- 页面初始化脚本 -->
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // 设置当前页面标识
+                document.body.setAttribute('data-current-page', 'grades');
+                
+                // 初始化成绩管理模块
+                if (window.GradeManagement) {
+                    window.GradeManagement.init();
+                } else {
+                    console.error('成绩管理模块未加载');
+                }
+            });
+        </script>
+    </th:block>
+</body>
+</html>

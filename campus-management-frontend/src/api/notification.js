@@ -2,8 +2,249 @@ import request from './request'
 
 /**
  * 通知管理API
+ * 基于后端 NotificationController、NotificationTemplateController、MessageController 等接口实现
  */
 export const notificationApi = {
+  // ==================== 通知基础管理 ====================
+
+  /**
+   * 获取通知列表
+   * 对应后端: GET /api/v1/notifications
+   */
+  getNotificationList(params = {}) {
+    return request({
+      url: '/v1/notifications',
+      method: 'get',
+      params
+    })
+  },
+
+  /**
+   * 根据ID获取通知详情
+   * 对应后端: GET /api/v1/notifications/{id}
+   */
+  getNotificationById(id) {
+    return request({
+      url: `/v1/notifications/${id}`,
+      method: 'get'
+    })
+  },
+
+  /**
+   * 创建通知
+   * 对应后端: POST /api/v1/notifications
+   */
+  createNotification(data) {
+    return request({
+      url: '/v1/notifications',
+      method: 'post',
+      data
+    })
+  },
+
+  /**
+   * 更新通知信息
+   * 对应后端: PUT /api/v1/notifications/{id}
+   */
+  updateNotification(id, data) {
+    return request({
+      url: `/v1/notifications/${id}`,
+      method: 'put',
+      data
+    })
+  },
+
+  /**
+   * 删除通知
+   * 对应后端: DELETE /api/v1/notifications/{id}
+   */
+  deleteNotification(id) {
+    return request({
+      url: `/v1/notifications/${id}`,
+      method: 'delete'
+    })
+  },
+
+  /**
+   * 批量发布通知
+   * 对应后端: PUT /api/v1/notifications/batch/publish
+   */
+  batchPublishNotifications(notificationIds) {
+    return request({
+      url: '/v1/notifications/batch/publish',
+      method: 'put',
+      data: notificationIds
+    })
+  },
+
+  /**
+   * 发布通知
+   * 对应后端: PUT /api/v1/notifications/{id}/publish
+   */
+  publishNotification(id) {
+    return request({
+      url: `/v1/notifications/${id}/publish`,
+      method: 'put'
+    })
+  },
+
+  /**
+   * 撤回通知
+   * 对应后端: PUT /api/v1/notifications/{id}/withdraw
+   */
+  withdrawNotification(id) {
+    return request({
+      url: `/v1/notifications/${id}/withdraw`,
+      method: 'put'
+    })
+  },
+
+  /**
+   * 标记通知为已读
+   * 对应后端: PUT /api/v1/notifications/{id}/read
+   */
+  markNotificationAsRead(id) {
+    return request({
+      url: `/v1/notifications/${id}/read`,
+      method: 'put'
+    })
+  },
+
+  /**
+   * 批量标记通知为已读
+   * 对应后端: PUT /api/v1/notifications/batch/read
+   */
+  batchMarkNotificationsAsRead(notificationIds) {
+    return request({
+      url: '/v1/notifications/batch/read',
+      method: 'put',
+      data: notificationIds
+    })
+  },
+
+  // ==================== 通知模板管理 ====================
+
+  /**
+   * 获取通知模板列表
+   * 对应后端: GET /api/v1/notification-templates
+   */
+  getNotificationTemplateList(params = {}) {
+    return request({
+      url: '/v1/notification-templates',
+      method: 'get',
+      params
+    })
+  },
+
+  /**
+   * 根据ID获取通知模板详情
+   * 对应后端: GET /api/v1/notification-templates/{id}
+   */
+  getNotificationTemplateById(id) {
+    return request({
+      url: `/v1/notification-templates/${id}`,
+      method: 'get'
+    })
+  },
+
+  /**
+   * 创建通知模板
+   * 对应后端: POST /api/v1/notification-templates
+   */
+  createNotificationTemplate(data) {
+    return request({
+      url: '/v1/notification-templates',
+      method: 'post',
+      data
+    })
+  },
+
+  /**
+   * 更新通知模板
+   * 对应后端: PUT /api/v1/notification-templates/{id}
+   */
+  updateNotificationTemplate(id, data) {
+    return request({
+      url: `/v1/notification-templates/${id}`,
+      method: 'put',
+      data
+    })
+  },
+
+  /**
+   * 删除通知模板
+   * 对应后端: DELETE /api/v1/notification-templates/{id}
+   */
+  deleteNotificationTemplate(id) {
+    return request({
+      url: `/v1/notification-templates/${id}`,
+      method: 'delete'
+    })
+  },
+
+  /**
+   * 批量更新模板状态
+   * 对应后端: PUT /api/v1/notification-templates/batch-status
+   */
+  batchUpdateTemplateStatus(templateIds, newStatus) {
+    return request({
+      url: '/v1/notification-templates/batch-status',
+      method: 'put',
+      params: {
+        templateIds,
+        newStatus
+      }
+    })
+  },
+
+  // ==================== 消息管理 ====================
+
+  /**
+   * 获取消息列表
+   * 对应后端: GET /api/v1/messages
+   */
+  getMessageList(params = {}) {
+    return request({
+      url: '/v1/messages',
+      method: 'get',
+      params
+    })
+  },
+
+  /**
+   * 发送消息
+   * 对应后端: POST /api/v1/messages
+   */
+  sendMessage(data) {
+    return request({
+      url: '/v1/messages',
+      method: 'post',
+      data
+    })
+  },
+
+  /**
+   * 批量标记消息为已读
+   * 对应后端: PUT /api/v1/messages/batch/read
+   */
+  batchMarkMessagesAsRead(messageIds) {
+    return request({
+      url: '/v1/messages/batch/read',
+      method: 'put',
+      data: messageIds
+    })
+  },
+
+  /**
+   * 删除消息
+   * 对应后端: DELETE /api/v1/messages/{id}
+   */
+  deleteMessage(id) {
+    return request({
+      url: `/v1/messages/${id}`,
+      method: 'delete'
+    })
+  },
   // ==================== 基础CRUD操作 ====================
 
   /**

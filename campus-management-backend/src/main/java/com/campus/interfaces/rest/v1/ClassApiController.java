@@ -29,7 +29,7 @@ import jakarta.validation.Valid;
  * @since 2025-06-06
  */
 @RestController
-@RequestMapping("/api/classes")
+@RequestMapping("/api/v1/classes")
 @Tag(name = "班级管理API", description = "班级信息管理REST API接口")
 @SecurityRequirement(name = "Bearer")
 public class ClassApiController extends BaseController {

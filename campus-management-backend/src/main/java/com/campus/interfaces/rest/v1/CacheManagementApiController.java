@@ -22,7 +22,7 @@ import java.util.Map;
  * @since 2025-06-06
  */
 @RestController
-@RequestMapping("/api/cache")
+@RequestMapping("/api/v1/cache")
 @Tag(name = "缓存管理", description = "缓存管理相关的API接口")
 public class CacheManagementApiController {
 

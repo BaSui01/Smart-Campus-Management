@@ -23,7 +23,7 @@ import java.util.Map;
  * @since 2025-06-05
  */
 @RestController
-@RequestMapping("/api/health")
+@RequestMapping("/api/v1/health")
 public class HealthController {
 
     private final UserService userService;

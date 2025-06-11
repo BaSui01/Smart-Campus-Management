@@ -194,7 +194,7 @@ class DashboardManagement {
      */
     async fetchChartData() {
         try {
-            const response = await apiClient.get('/api/dashboard/chart-data');
+            const response = await apiClient.get('/api/v1/dashboard/chart-data');
             if (response.success) {
                 return response.data;
             } else {
@@ -205,7 +205,7 @@ class DashboardManagement {
 
             // 如果主接口失败，尝试获取统计数据
             try {
-                const statsResponse = await apiClient.get('/api/dashboard/stats');
+                const statsResponse = await apiClient.get('/api/v1/dashboard/stats');
                 if (statsResponse.success) {
                     const stats = statsResponse.data;
                     return {
@@ -611,7 +611,7 @@ class DashboardManagement {
      */
     async refreshStats() {
         try {
-            const response = await apiClient.get('/api/dashboard/stats');
+            const response = await apiClient.get('/api/v1/dashboard/stats');
             if (response.success) {
                 this.updateStatsCards(response.data);
             } else {
@@ -834,7 +834,7 @@ class DashboardManagement {
      */
     async refreshNotifications() {
         try {
-            const response = await apiClient.get('/api/dashboard/notifications');
+            const response = await apiClient.get('/api/v1/dashboard/notifications');
             if (response.success) {
                 this.updateNotificationsList(response.data);
             } else {
@@ -935,7 +935,7 @@ class DashboardManagement {
      */
     async markNotificationAsRead(element, notificationId) {
         try {
-            const response = await apiClient.put(`/api/dashboard/notifications/${notificationId}/read`);
+            const response = await apiClient.put(`/api/v1/dashboard/notifications/${notificationId}/read`);
             if (response.success) {
                 const item = element.closest('.notification-item');
                 item.classList.remove('unread');
@@ -958,7 +958,7 @@ class DashboardManagement {
         if (!confirm('确定要删除这条通知吗？')) return;
 
         try {
-            const response = await apiClient.delete(`/api/dashboard/notifications/${notificationId}`);
+            const response = await apiClient.delete(`/api/v1/dashboard/notifications/${notificationId}`);
             if (response.success) {
                 const item = element.closest('.notification-item');
                 item.remove();
@@ -975,7 +975,7 @@ class DashboardManagement {
      */
     async markAllNotificationsAsRead() {
         try {
-            const response = await apiClient.put('/api/dashboard/notifications/read-all');
+            const response = await apiClient.put('/api/v1/dashboard/notifications/read-all');
             if (response.success) {
                 const items = document.querySelectorAll('.notification-item.unread');
                 items.forEach(item => {
@@ -998,7 +998,7 @@ class DashboardManagement {
      */
     async refreshActivities() {
         try {
-            const response = await apiClient.get('/api/dashboard/activities');
+            const response = await apiClient.get('/api/v1/dashboard/activities');
             if (response.success) {
                 this.updateActivitiesList(response.data);
             } else {

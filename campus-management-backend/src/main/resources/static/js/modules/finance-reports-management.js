@@ -4,7 +4,7 @@
 
 class FinanceReportsManager {
     constructor() {
-        this.apiBase = '/admin/api/finance/reports';
+        this.apiBase = '/admin/api/v1/finance/reports';
         this.currentReportType = 'month';
         this.currentYear = new Date().getFullYear();
         this.currentMonth = new Date().getMonth() + 1;

@@ -282,6 +282,8 @@
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search } from '@element-plus/icons-vue'
+import { courseApi } from '@/api/course'
+import { studentApi } from '@/api/student'
 
 const searchQuery = ref('')
 const filterDepartment = ref('')
@@ -305,104 +307,98 @@ const selectionStats = ref({
   remaining: 245
 })
 
-const availableCourses = ref([
-  {
-    id: 1,
-    name: '数据库系统原理',
-    code: 'CS401',
-    teacher: '张教授',
-    department: '计算机学院',
-    credits: 3,
-    schedule: '周二 10:00-11:40',
-    location: '教学楼A201',
-    capacity: 40,
-    enrolled: 35,
-    status: '可选',
-    isSelected: false,
-    description: '数据库系统原理是计算机专业的核心课程，主要介绍数据库的基本概念、设计原理和实现技术。',
-    syllabus: [
-      '数据库系统概述',
-      '关系数据库理论',
-      'SQL语言及应用',
-      '数据库设计',
-      '查询优化',
-      '事务处理',
-      '并发控制',
-      '数据库恢复'
-    ]
-  },
-  {
-    id: 2,
-    name: '人工智能导论',
-    code: 'CS501',
-    teacher: '李教授',
-    department: '计算机学院',
-    credits: 4,
-    schedule: '周三 14:00-15:40',
-    location: '实验楼B301',
-    capacity: 30,
-    enrolled: 28,
-    status: '可选',
-    isSelected: false,
-    description: '人工智能导论课程介绍人工智能的基本概念、发展历史和主要技术。',
-    syllabus: [
-      '人工智能概述',
-      '搜索策略',
-      '知识表示',
-      '机器学习基础',
-      '神经网络',
-      '专家系统',
-      'AI应用实例'
-    ]
-  },
-  {
-    id: 3,
-    name: '软件工程',
-    code: 'CS301',
-    teacher: '王老师',
-    department: '计算机学院',
-    credits: 3,
-    schedule: '周四 8:00-9:40',
-    location: '教学楼C101',
-    capacity: 50,
-    enrolled: 50,
-    status: '已满',
-    isSelected: false,
-    description: '软件工程课程教授软件开发的方法论、过程和工具。',
-    syllabus: [
-      '软件工程概述',
-      '软件过程模型',
-      '需求工程',
-      '系统设计',
-      '编码实现',
-      '软件测试',
-      '项目管理'
-    ]
-  },
-  {
-    id: 4,
-    name: '线性代数',
-    code: 'MATH201',
-    teacher: '赵教授',
-    department: '数学学院',
-    credits: 4,
-    schedule: '周一 8:00-9:40',
-    location: '教学楼D201',
-    capacity: 60,
-    enrolled: 45,
-    status: '可选',
-    isSelected: true,
-    description: '线性代数是数学的重要分支，在计算机科学中有广泛应用。',
-    syllabus: [
-      '矩阵运算',
-      '线性方程组',
-      '向量空间',
-      '特征值与特征向量',
-      '二次型',
-      '线性变换'
-    ]
+const availableCourses = ref([])
+const loading = ref(false)
+
+// 加载可选课程
+const loadAvailableCourses = async () => {
+  loading.value = true
+  try {
+    const { data } = await courseApi.getAvailableCourses({
+      search: searchQuery.value,
+      department: filterDepartment.value,
+      credits: filterCredits.value,
+      time: filterTime.value
+    })
+
+    const courseList = Array.isArray(data) ? data : (data.courses || data.list || [])
+    availableCourses.value = courseList.map(course => ({
+      id: course.id,
+      name: course.courseName || course.name,
+      code: course.courseCode || course.code,
+      teacher: course.teacherName || course.teacher,
+      department: course.departmentName || course.department,
+      credits: course.credits || 0,
+      schedule: course.schedule || formatSchedule(course),
+      location: course.location || course.classroom || course.classroomName,
+      capacity: course.capacity || course.maxStudents || 0,
+      enrolled: course.enrolled || course.currentStudents || 0,
+      status: getSelectionStatus(course),
+      isSelected: course.isSelected || false,
+      description: course.description || course.courseDescription,
+      syllabus: course.syllabus || course.outline || [],
+      selectionPeriodId: course.selectionPeriodId,
+      prerequisites: course.prerequisites || []
+    }))
+
+    updateSelectionStats()
+  } catch (error) {
+    console.error('加载可选课程失败:', error)
+    ElMessage.error('加载课程数据失败')
+    availableCourses.value = []
+  } finally {
+    loading.value = false
   }
-])
+}
+
+// 加载选课状态
+const loadSelectionStatus = async () => {
+  try {
+    const { data } = await courseApi.getSelectionStatus()
+    selectionStatus.value = {
+      title: data.isOpen ? '选课进行中' : '选课已结束',
+      type: data.isOpen ? 'success' : 'warning',
+      description: data.description || `选课时间：${data.startTime} - ${data.endTime}`
+    }
+    maxCourses.value = data.maxCourses || 8
+  } catch (error) {
+    console.error('加载选课状态失败:', error)
+    selectionStatus.value = {
+      title: '选课状态未知',
+      type: 'info',
+      description: '无法获取选课状态信息'
+    }
+  }
+}
+
+// 格式化课程时间
+const formatSchedule = (course) => {
+  if (course.schedule) return course.schedule
+  if (course.dayOfWeek && course.startTime && course.endTime) {
+    const dayMap = ['日', '一', '二', '三', '四', '五', '六']
+    return `周${dayMap[course.dayOfWeek]} ${course.startTime}-${course.endTime}`
+  }
+  return '时间待定'
+}
+
+// 获取选课状态
+const getSelectionStatus = (course) => {
+  if (course.isSelected) return '已选'
+  if (course.enrolled >= course.capacity) return '已满'
+  if (course.selectionStatus === 'closed') return '已关闭'
+  return '可选'
+}
+
+// 更新选课统计
+const updateSelectionStats = () => {
+  const selectedList = availableCourses.value.filter(c => c.isSelected)
+  selectionStats.value = {
+    available: availableCourses.value.filter(c => c.status === '可选').length,
+    selected: selectedList.length,
+    credits: selectedList.reduce((sum, c) => sum + c.credits, 0),
+    remaining: availableCourses.value.reduce((sum, c) => sum + (c.capacity - c.enrolled), 0)
+  }
+}
 
 const filteredCourses = computed(() => {
   return availableCourses.value.filter(course => {
@@ -476,16 +472,29 @@ const selectCourse = async (course) => {
         type: 'warning'
       }
     )
-    
-    course.isSelected = true
-    course.status = '已选'
-    selectionStats.value.selected++
-    selectionStats.value.credits += course.credits
-    
-    ElMessage.success(`成功选择课程《${course.name}》`)
-    detailDialogVisible.value = false
-  } catch {
-    // 用户取消
+
+    // 调用后端API进行选课
+    const { data } = await courseApi.selectCourse({
+      courseId: course.id,
+      selectionPeriodId: course.selectionPeriodId
+    })
+
+    if (data.success) {
+      course.isSelected = true
+      course.status = '已选'
+      course.enrolled += 1
+      updateSelectionStats()
+
+      ElMessage.success(`成功选择课程《${course.name}》`)
+      detailDialogVisible.value = false
+    } else {
+      ElMessage.error(data.message || '选课失败')
+    }
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('选课失败:', error)
+      ElMessage.error('选课失败，请重试')
+    }
   }
 }
 
@@ -500,21 +509,34 @@ const dropCourse = async (course) => {
         type: 'warning'
       }
     )
-    
-    course.isSelected = false
-    course.status = '可选'
-    selectionStats.value.selected--
-    selectionStats.value.credits -= course.credits
-    
-    // 从已选课程列表中移除
-    const index = selectedCourses.value.findIndex(c => c.id === course.id)
-    if (index > -1) {
-      selectedCourses.value.splice(index, 1)
+
+    // 调用后端API进行退选
+    const { data } = await courseApi.dropCourse({
+      courseId: course.id,
+      selectionPeriodId: course.selectionPeriodId
+    })
+
+    if (data.success) {
+      course.isSelected = false
+      course.status = '可选'
+      course.enrolled -= 1
+
+      // 从已选课程列表中移除
+      const index = selectedCourses.value.findIndex(c => c.id === course.id)
+      if (index > -1) {
+        selectedCourses.value.splice(index, 1)
+      }
+
+      updateSelectionStats()
+      ElMessage.success(`成功退选课程《${course.name}》`)
+    } else {
+      ElMessage.error(data.message || '退选失败')
     }
-    
-    ElMessage.success(`成功退选课程《${course.name}》`)
-  } catch {
-    // 用户取消
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('退选失败:', error)
+      ElMessage.error('退选失败，请重试')
+    }
   }
 }
 
@@ -547,7 +569,13 @@ const viewCourseDetail = (course) => {
   detailDialogVisible.value = true
 }
 
-onMounted(() => {
+onMounted(async () => {
+  // 加载选课相关数据
+  await Promise.all([
+    loadSelectionStatus(),
+    loadAvailableCourses()
+  ])
+
   // 初始化已选课程
   selectedCourses.value = availableCourses.value.filter(course => course.isSelected)
 })

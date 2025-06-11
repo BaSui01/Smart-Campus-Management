@@ -12,6 +12,7 @@ import com.campus.application.service.GradeService;
 import com.campus.shared.common.ApiResponse;
 import com.campus.domain.entity.Grade;
 import com.campus.interfaces.rest.common.BaseController;
+import com.campus.shared.constants.RolePermissions;
 import org.springframework.http.ResponseEntity;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -28,7 +29,7 @@ import jakarta.validation.Valid;
  * @since 2025-06-06
  */
 @RestController
-@RequestMapping("/api/grades")
+@RequestMapping("/api/v1/grades")
 @Tag(name = "成绩管理API", description = "学生成绩管理REST API接口")
 @SecurityRequirement(name = "Bearer")
 public class GradeApiController extends BaseController {
@@ -44,7 +45,7 @@ public class GradeApiController extends BaseController {
      */
     @GetMapping
     @Operation(summary = "获取成绩列表", description = "分页查询成绩信息")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
+    @PreAuthorize(RolePermissions.TEACHING_STAFF + " || " + RolePermissions.STUDENT_ACCESS + " || " + RolePermissions.PARENT_ACCESS)
     public ApiResponse<Map<String, Object>> getGrades(
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") int page,
             @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") int size,
@@ -88,7 +89,7 @@ public class GradeApiController extends BaseController {
      */
     @GetMapping("/{id}")
     @Operation(summary = "获取成绩详情", description = "根据ID查询成绩详细信息")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
+    @PreAuthorize(RolePermissions.TEACHING_STAFF + " || " + RolePermissions.STUDENT_ACCESS + " || " + RolePermissions.PARENT_ACCESS)
     public ApiResponse<Grade> getGradeById(@Parameter(description = "成绩ID") @PathVariable Long id) {
         Optional<Grade> grade = gradeService.findById(id);
         if (grade.isPresent()) {
@@ -103,7 +104,7 @@ public class GradeApiController extends BaseController {
      */
     @GetMapping("/student/{studentId}")
     @Operation(summary = "根据学生ID查询成绩", description = "获取指定学生的所有成绩")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
+    @PreAuthorize(RolePermissions.TEACHING_STAFF + " || " + RolePermissions.STUDENT_ACCESS + " || " + RolePermissions.PARENT_ACCESS)
     public ApiResponse<List<Grade>> getGradesByStudentId(@Parameter(description = "学生ID") @PathVariable Long studentId) {
         List<Grade> grades = gradeService.findByStudentId(studentId);
         return ApiResponse.success(grades);
@@ -114,7 +115,7 @@ public class GradeApiController extends BaseController {
      */
     @GetMapping("/course/{courseId}")
     @Operation(summary = "根据课程ID查询成绩", description = "获取指定课程的所有成绩")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @PreAuthorize(RolePermissions.GRADE_MANAGEMENT)
     public ApiResponse<List<Grade>> getGradesByCourseId(@Parameter(description = "课程ID") @PathVariable Long courseId) {
         List<Grade> grades = gradeService.findByCourseId(courseId);
         return ApiResponse.success(grades);
@@ -125,7 +126,7 @@ public class GradeApiController extends BaseController {
      */
     @GetMapping("/semester/{semester}")
     @Operation(summary = "根据学期查询成绩", description = "获取指定学期的所有成绩")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
+    @PreAuthorize(RolePermissions.TEACHING_STAFF + " || " + RolePermissions.STUDENT_ACCESS + " || " + RolePermissions.PARENT_ACCESS)
     public ApiResponse<List<Grade>> getGradesBySemester(@Parameter(description = "学期") @PathVariable String semester) {
         List<Grade> grades = gradeService.findBySemester(semester);
         return ApiResponse.success(grades);
@@ -136,7 +137,7 @@ public class GradeApiController extends BaseController {
      */
     @GetMapping("/search")
     @Operation(summary = "搜索成绩", description = "根据关键词搜索成绩")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @PreAuthorize(RolePermissions.GRADE_MANAGEMENT)
     public ApiResponse<List<Grade>> searchGrades(@Parameter(description = "关键词") @RequestParam String keyword) {
         List<Grade> grades = gradeService.searchGrades(keyword);
         return ApiResponse.success(grades);
@@ -147,7 +148,7 @@ public class GradeApiController extends BaseController {
      */
     @GetMapping("/stats")
     @Operation(summary = "获取成绩统计信息", description = "获取成绩模块的统计数据")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN', 'TEACHER')")
+    @PreAuthorize(RolePermissions.STATISTICS_VIEW)
     public ResponseEntity<ApiResponse<Map<String, Object>>> getGradeStats() {
         try {
             log.info("获取成绩统计信息");
@@ -201,7 +202,7 @@ public class GradeApiController extends BaseController {
      */
     @GetMapping("/student/{studentId}/stats")
     @Operation(summary = "获取学生成绩统计", description = "获取指定学生的成绩统计信息")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
+    @PreAuthorize(RolePermissions.TEACHING_STAFF + " || " + RolePermissions.STUDENT_ACCESS + " || " + RolePermissions.PARENT_ACCESS)
     public ApiResponse<Map<String, Object>> getStudentGradeStats(@Parameter(description = "学生ID") @PathVariable Long studentId) {
         Map<String, Object> stats = gradeService.getStudentGradeStatistics(studentId);
         return ApiResponse.success(stats);
@@ -212,7 +213,7 @@ public class GradeApiController extends BaseController {
      */
     @GetMapping("/course/{courseId}/stats")
     @Operation(summary = "获取课程成绩统计", description = "获取指定课程的成绩统计信息")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @PreAuthorize(RolePermissions.GRADE_MANAGEMENT)
     public ApiResponse<Map<String, Object>> getCourseGradeStats(@Parameter(description = "课程ID") @PathVariable Long courseId) {
         Map<String, Object> stats = gradeService.getCourseGradeStatistics(courseId);
         return ApiResponse.success(stats);
@@ -223,7 +224,7 @@ public class GradeApiController extends BaseController {
      */
     @PostMapping
     @Operation(summary = "创建成绩记录", description = "添加新的成绩记录")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @PreAuthorize(RolePermissions.GRADE_MANAGEMENT)
     public ApiResponse<Grade> createGrade(@Parameter(description = "成绩信息") @Valid @RequestBody Grade grade) {
         try {
             Grade createdGrade = gradeService.createGrade(grade);
@@ -240,7 +241,7 @@ public class GradeApiController extends BaseController {
      */
     @PutMapping("/{id}")
     @Operation(summary = "更新成绩记录", description = "修改成绩记录信息")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @PreAuthorize(RolePermissions.GRADE_MANAGEMENT)
     public ApiResponse<Void> updateGrade(
             @Parameter(description = "成绩ID") @PathVariable Long id,
             @Parameter(description = "成绩信息") @Valid @RequestBody Grade grade) {
@@ -264,7 +265,7 @@ public class GradeApiController extends BaseController {
      */
     @DeleteMapping("/{id}")
     @Operation(summary = "删除成绩记录", description = "删除指定成绩记录")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(RolePermissions.BATCH_OPERATIONS)
     public ApiResponse<Void> deleteGrade(@Parameter(description = "成绩ID") @PathVariable Long id) {
         boolean result = gradeService.deleteGrade(id);
         if (result) {
@@ -279,7 +280,7 @@ public class GradeApiController extends BaseController {
      */
     @DeleteMapping("/batch")
     @Operation(summary = "批量删除成绩记录", description = "批量删除多个成绩记录")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN')")
+    @PreAuthorize(RolePermissions.BATCH_OPERATIONS)
     public ResponseEntity<ApiResponse<Map<String, Object>>> batchDeleteGrades(
             @Parameter(description = "成绩ID列表") @RequestBody List<Long> ids) {
 
@@ -325,7 +326,7 @@ public class GradeApiController extends BaseController {
      */
     @PostMapping("/batch/import")
     @Operation(summary = "批量导入成绩", description = "批量导入成绩数据")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN')")
+    @PreAuthorize(RolePermissions.BATCH_OPERATIONS)
     public ResponseEntity<ApiResponse<Map<String, Object>>> batchImportGrades(
             @Parameter(description = "成绩数据列表") @RequestBody List<Grade> grades) {
 
@@ -357,7 +358,7 @@ public class GradeApiController extends BaseController {
      */
     @PutMapping("/batch/update")
     @Operation(summary = "批量更新成绩", description = "批量更新成绩数据")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'TEACHER')")
+    @PreAuthorize(RolePermissions.GRADE_MANAGEMENT)
     public ResponseEntity<ApiResponse<Map<String, Object>>> batchUpdateGrades(
             @Parameter(description = "成绩数据列表") @RequestBody List<Grade> grades) {
 
@@ -406,7 +407,7 @@ public class GradeApiController extends BaseController {
      */
     @GetMapping("/export")
     @Operation(summary = "导出成绩数据", description = "导出成绩数据")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @PreAuthorize(RolePermissions.GRADE_MANAGEMENT)
     public ApiResponse<List<Grade>> exportGrades(
             @Parameter(description = "学生ID") @RequestParam(required = false) Long studentId,
             @Parameter(description = "课程ID") @RequestParam(required = false) Long courseId,

@@ -170,7 +170,7 @@ class SystemSettingsManager {
             LoadingManager.showPageLoading('.card-body');
 
             // 确保API客户端包含认证头
-            const response = await apiClient.get('/api/system/settings');
+            const response = await apiClient.get('/api/v1/system/settings');
 
             if (response.success) {
                 this.currentSettings = response.data;
@@ -336,7 +336,7 @@ class SystemSettingsManager {
             }
 
             // 确保API客户端包含认证头
-            const response = await apiClient.post('/api/system/settings', formData);
+            const response = await apiClient.post('/api/v1/system/settings', formData);
 
             if (response.success) {
                 this.currentSettings = { ...this.currentSettings, ...formData };
@@ -393,7 +393,7 @@ class SystemSettingsManager {
                     const formData = new FormData();
                     formData.append('file', file);
 
-                    const response = await apiClient.upload('/api/system/upload-logo', formData);
+                    const response = await apiClient.upload('/api/v1/system/upload-logo', formData);
 
                     if (response.success) {
                         // 更新Logo显示
@@ -440,7 +440,7 @@ class SystemSettingsManager {
             const backupBtn = document.querySelector('[onclick="backupData()"]');
             LoadingManager.showButtonLoading(backupBtn, '备份中...');
 
-            const response = await apiClient.post('/api/system/backup');
+            const response = await apiClient.post('/api/v1/system/backup');
 
             if (response.success) {
                 const backupInfo = response.data;
@@ -477,7 +477,7 @@ class SystemSettingsManager {
             const clearBtn = document.querySelector('[onclick="clearCache()"]');
             LoadingManager.showButtonLoading(clearBtn, '清理中...');
 
-            const response = await apiClient.post('/api/system/clear-cache');
+            const response = await apiClient.post('/api/v1/system/clear-cache');
 
             if (response.success) {
                 MessageUtils.success('系统缓存清理成功');
@@ -611,7 +611,7 @@ class SystemSettingsManager {
      */
     async loadSystemLogs(page = 1, size = 50) {
         try {
-            const response = await apiClient.get('/api/system/logs', { page, size });
+            const response = await apiClient.get('/api/v1/system/logs', { page, size });
 
             if (response.success) {
                 this.renderLogTable(response.data);
@@ -695,7 +695,7 @@ class SystemSettingsManager {
      */
     async loadSystemStatistics() {
         try {
-            const response = await apiClient.get('/api/system/statistics');
+            const response = await apiClient.get('/api/v1/system/statistics');
 
             if (response.success) {
                 this.updateStatistics(response.data);
@@ -774,7 +774,7 @@ class SystemSettingsManager {
             const restartBtn = document.querySelector('[onclick="restartSystem()"]');
             LoadingManager.showButtonLoading(restartBtn, '重启中...');
 
-            const response = await apiClient.post('/api/system/restart');
+            const response = await apiClient.post('/api/v1/system/restart');
 
             if (response.success) {
                 MessageUtils.success('系统重启指令已发送，请稍候...');

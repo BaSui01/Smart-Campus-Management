@@ -136,7 +136,7 @@
                     { method: 'GET', path: '/admin/login', description: '管理员登录页面' },
                     { method: 'POST', path: '/admin/login', description: '管理员登录处理' },
                     { method: 'GET', path: '/admin/logout', description: '管理员登出' },
-                    { method: 'GET', path: '/admin/api/database', description: '数据库连接测试API' }
+                    { method: 'GET', path: '/admin/api/v1/database', description: '数据库连接测试API' }
                 ]
             },
             {
@@ -151,7 +151,7 @@
             // API控制器
             {
                 name: 'StudentApiController',
-                baseMapping: '/api/v1',
+                baseMapping: '/api/v1/v1',
                 routes: [
                     { method: 'GET', path: '/students', description: '获取学生列表API' },
                     { method: 'GET', path: '/students/{id}', description: '获取学生详情API' },
@@ -162,7 +162,7 @@
             },
             {
                 name: 'UserApiController',
-                baseMapping: '/api/v1',
+                baseMapping: '/api/v1/v1',
                 routes: [
                     { method: 'GET', path: '/users', description: '获取用户列表API' },
                     { method: 'GET', path: '/users/{id}', description: '获取用户详情API' },
@@ -173,7 +173,7 @@
             },
             {
                 name: 'OptimizedStudentApiController',
-                baseMapping: '/api/v1',
+                baseMapping: '/api/v1/v1',
                 routes: [
                     { method: 'GET', path: '/students', description: '优化的获取学生列表API' },
                     { method: 'GET', path: '/students/{id}', description: '优化的获取学生详情API' },

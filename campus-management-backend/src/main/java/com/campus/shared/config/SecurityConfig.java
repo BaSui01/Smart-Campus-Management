@@ -112,7 +112,7 @@ public class SecurityConfig {
                 ).permitAll()
 
                 // API接口开放访问（使用自定义拦截器处理认证）
-                .requestMatchers(new AntPathRequestMatcher("/api/**")).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/api/v1/**")).permitAll()
 
                 // 管理后台使用自定义拦截器认证，这里允许访问
                 .requestMatchers(new AntPathRequestMatcher("/admin/**")).permitAll()

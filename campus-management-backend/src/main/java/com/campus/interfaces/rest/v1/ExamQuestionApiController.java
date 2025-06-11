@@ -4,6 +4,7 @@ import com.campus.application.service.ExamService;
 import com.campus.domain.entity.ExamQuestion;
 import com.campus.shared.common.ApiResponse;
 import com.campus.interfaces.rest.common.BaseController;
+import com.campus.shared.constants.RolePermissions;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -30,7 +31,7 @@ import java.util.Map;
  * @since 2025-06-07
  */
 @RestController
-@RequestMapping("/api/exam-questions")
+@RequestMapping("/api/v1/exam-questions")
 @Tag(name = "考试题目管理", description = "考试题目相关API接口")
 public class ExamQuestionApiController extends BaseController {
     
@@ -107,6 +108,7 @@ public class ExamQuestionApiController extends BaseController {
 
     @PostMapping
     @Operation(summary = "创建考试题目", description = "创建新的考试题目")
+    @PreAuthorize(RolePermissions.ACADEMIC_MANAGEMENT)
     public ResponseEntity<ApiResponse<ExamQuestion>> createQuestion(
             @Valid @RequestBody ExamQuestion question) {
         try {
@@ -125,6 +127,7 @@ public class ExamQuestionApiController extends BaseController {
     
     @GetMapping("/{questionId}")
     @Operation(summary = "获取题目详情", description = "根据ID获取考试题目详细信息")
+    @PreAuthorize(RolePermissions.ACADEMIC_MANAGEMENT)
     public ResponseEntity<ApiResponse<ExamQuestion>> getQuestionById(
             @Parameter(description = "题目ID") @PathVariable Long questionId) {
         try {
@@ -143,6 +146,7 @@ public class ExamQuestionApiController extends BaseController {
     
     @PutMapping("/{questionId}")
     @Operation(summary = "更新考试题目", description = "更新考试题目信息")
+    @PreAuthorize(RolePermissions.ACADEMIC_MANAGEMENT)
     public ResponseEntity<ApiResponse<ExamQuestion>> updateQuestion(
             @PathVariable Long questionId,
             @Valid @RequestBody ExamQuestion question) {
@@ -162,6 +166,7 @@ public class ExamQuestionApiController extends BaseController {
 
     @DeleteMapping("/{questionId}")
     @Operation(summary = "删除考试题目", description = "删除指定的考试题目")
+    @PreAuthorize(RolePermissions.ACADEMIC_MANAGEMENT)
     public ResponseEntity<ApiResponse<Void>> deleteQuestion(
             @Parameter(description = "题目ID") @PathVariable Long questionId) {
         try {
@@ -183,6 +188,7 @@ public class ExamQuestionApiController extends BaseController {
     
     @GetMapping
     @Operation(summary = "分页获取题目列表", description = "分页查询考试题目信息")
+    @PreAuthorize(RolePermissions.ACADEMIC_MANAGEMENT)
     public ResponseEntity<ApiResponse<Page<ExamQuestion>>> getQuestions(
             @Parameter(description = "页码") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") int size,
@@ -205,6 +211,7 @@ public class ExamQuestionApiController extends BaseController {
 
     @GetMapping("/exam/{examId}")
     @Operation(summary = "获取考试的所有题目", description = "获取指定考试的所有题目")
+    @PreAuthorize(RolePermissions.STUDENT_ACCESS + " || " + RolePermissions.TEACHING_STAFF)
     public ResponseEntity<ApiResponse<List<ExamQuestion>>> getQuestionsByExam(
             @Parameter(description = "考试ID") @PathVariable Long examId,
             @Parameter(description = "是否随机排序") @RequestParam(defaultValue = "false") boolean randomOrder) {
@@ -241,6 +248,7 @@ public class ExamQuestionApiController extends BaseController {
     
     @PostMapping("/import")
     @Operation(summary = "批量导入题目", description = "批量导入考试题目")
+    @PreAuthorize(RolePermissions.ACADEMIC_MANAGEMENT)
     public ResponseEntity<ApiResponse<Map<String, Object>>> importQuestions(
             @RequestBody List<ExamQuestion> questions) {
         try {
@@ -355,7 +363,7 @@ public class ExamQuestionApiController extends BaseController {
      */
     @DeleteMapping("/batch")
     @Operation(summary = "批量删除考试题目", description = "批量删除指定的考试题目")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN')")
+    @PreAuthorize(RolePermissions.BATCH_OPERATIONS)
     public ResponseEntity<ApiResponse<Map<String, Object>>> batchDeleteQuestions(
             @Parameter(description = "题目ID列表") @RequestBody List<Long> questionIds) {
 
@@ -417,7 +425,7 @@ public class ExamQuestionApiController extends BaseController {
      */
     @PostMapping("/batch/import")
     @Operation(summary = "批量导入考试题目", description = "批量导入考试题目")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'TEACHER')")
+    @PreAuthorize(RolePermissions.ACADEMIC_MANAGEMENT)
     public ResponseEntity<ApiResponse<Map<String, Object>>> batchImportQuestions(
             @Parameter(description = "题目列表") @RequestBody List<ExamQuestion> questions) {
 

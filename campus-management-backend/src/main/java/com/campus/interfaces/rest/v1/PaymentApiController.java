@@ -13,6 +13,7 @@ import com.campus.application.service.PaymentRecordService;
 import com.campus.shared.common.ApiResponse;
 import com.campus.domain.entity.PaymentRecord;
 import com.campus.interfaces.rest.common.BaseController;
+import com.campus.shared.constants.RolePermissions;
 import org.springframework.http.ResponseEntity;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -29,7 +30,7 @@ import jakarta.validation.Valid;
  * @since 2025-06-06
  */
 @RestController
-@RequestMapping("/api/payments")
+@RequestMapping("/api/v1/payments")
 @Tag(name = "缴费管理API", description = "缴费记录和缴费项目管理REST API接口")
 @SecurityRequirement(name = "Bearer")
 public class PaymentApiController extends BaseController {
@@ -44,7 +45,7 @@ public class PaymentApiController extends BaseController {
      */
     @GetMapping("/records")
     @Operation(summary = "获取缴费记录列表", description = "分页查询缴费记录")
-    @PreAuthorize("hasAnyRole('ADMIN', 'FINANCE', 'STUDENT')")
+    @PreAuthorize(RolePermissions.FINANCE_VIEW + " || " + RolePermissions.STUDENT_ACCESS + " || " + RolePermissions.PARENT_ACCESS)
     public ApiResponse<Map<String, Object>> getPaymentRecords(
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") int page,
             @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") int size,
@@ -88,7 +89,7 @@ public class PaymentApiController extends BaseController {
      */
     @GetMapping("/records/{id}")
     @Operation(summary = "获取缴费记录详情", description = "根据ID查询缴费记录详细信息")
-    @PreAuthorize("hasAnyRole('ADMIN', 'FINANCE', 'STUDENT')")
+    @PreAuthorize(RolePermissions.FINANCE_VIEW + " || " + RolePermissions.STUDENT_ACCESS + " || " + RolePermissions.PARENT_ACCESS)
     public ApiResponse<PaymentRecord> getPaymentRecordById(@Parameter(description = "缴费记录ID") @PathVariable Long id) {
         Optional<PaymentRecord> paymentRecord = paymentRecordService.findById(id);
         if (paymentRecord.isPresent()) {
@@ -103,7 +104,7 @@ public class PaymentApiController extends BaseController {
      */
     @GetMapping("/records/student/{studentId}")
     @Operation(summary = "根据学生ID查询缴费记录", description = "获取指定学生的所有缴费记录")
-    @PreAuthorize("hasAnyRole('ADMIN', 'FINANCE', 'STUDENT')")
+    @PreAuthorize(RolePermissions.STUDENT_ACCESS + " || " + RolePermissions.PARENT_ACCESS)
     public ApiResponse<List<PaymentRecord>> getPaymentRecordsByStudentId(@Parameter(description = "学生ID") @PathVariable Long studentId) {
         List<PaymentRecord> paymentRecords = paymentRecordService.findByStudentId(studentId);
         return ApiResponse.success(paymentRecords);
@@ -114,7 +115,7 @@ public class PaymentApiController extends BaseController {
      */
     @PostMapping("/records")
     @Operation(summary = "创建缴费记录", description = "添加新的缴费记录")
-    @PreAuthorize("hasAnyRole('ADMIN', 'FINANCE')")
+    @PreAuthorize(RolePermissions.FINANCE_MANAGEMENT)
     public ApiResponse<PaymentRecord> createPaymentRecord(@Parameter(description = "缴费记录信息") @Valid @RequestBody PaymentRecord paymentRecord) {
         try {
             PaymentRecord createdRecord = paymentRecordService.createPaymentRecord(paymentRecord);
@@ -131,7 +132,7 @@ public class PaymentApiController extends BaseController {
      */
     @PutMapping("/records/{id}")
     @Operation(summary = "更新缴费记录", description = "修改缴费记录信息")
-    @PreAuthorize("hasAnyRole('ADMIN', 'FINANCE')")
+    @PreAuthorize(RolePermissions.FINANCE_MANAGEMENT)
     public ApiResponse<Void> updatePaymentRecord(
             @Parameter(description = "缴费记录ID") @PathVariable Long id,
             @Parameter(description = "缴费记录信息") @Valid @RequestBody PaymentRecord paymentRecord) {
@@ -154,7 +155,7 @@ public class PaymentApiController extends BaseController {
      */
     @DeleteMapping("/records/{id}")
     @Operation(summary = "删除缴费记录", description = "删除指定缴费记录")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(RolePermissions.BATCH_OPERATIONS)
     public ApiResponse<Void> deletePaymentRecord(@Parameter(description = "缴费记录ID") @PathVariable Long id) {
         boolean result = paymentRecordService.deletePaymentRecord(id);
         if (result) {
@@ -173,7 +174,7 @@ public class PaymentApiController extends BaseController {
      */
     @GetMapping("/stats")
     @Operation(summary = "获取缴费统计信息", description = "获取缴费模块的统计数据")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN', 'TEACHER')")
+    @PreAuthorize(RolePermissions.STATISTICS_VIEW)
     public ResponseEntity<ApiResponse<Map<String, Object>>> getPaymentStats() {
         try {
             log.info("获取缴费统计信息");
@@ -234,7 +235,7 @@ public class PaymentApiController extends BaseController {
      */
     @DeleteMapping("/batch")
     @Operation(summary = "批量删除缴费记录", description = "根据ID列表批量删除缴费记录")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN')")
+    @PreAuthorize(RolePermissions.BATCH_OPERATIONS)
     public ResponseEntity<ApiResponse<Map<String, Object>>> batchDeletePayments(
             @Parameter(description = "缴费记录ID列表") @RequestBody List<Long> ids) {
 
@@ -280,7 +281,7 @@ public class PaymentApiController extends BaseController {
      */
     @PutMapping("/batch/refund")
     @Operation(summary = "批量退款", description = "批量处理缴费记录退款")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN')")
+    @PreAuthorize(RolePermissions.BATCH_OPERATIONS)
     public ResponseEntity<ApiResponse<Map<String, Object>>> batchRefundPayments(
             @Parameter(description = "批量退款请求") @RequestBody Map<String, Object> request) {
 

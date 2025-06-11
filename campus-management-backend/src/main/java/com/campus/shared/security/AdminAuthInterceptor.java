@@ -58,13 +58,13 @@ public class AdminAuthInterceptor implements HandlerInterceptor {
             return false;
         }
         
-        // 检查用户是否有管理员权限
-        boolean hasAdminRole = userService.hasRole(currentUser.getId(), "SUPER_ADMIN") ||
-                              userService.hasRole(currentUser.getId(), "ADMIN") ||
-                              userService.hasRole(currentUser.getId(), "SYSTEM_ADMIN") ||
-                              userService.hasRole(currentUser.getId(), "ACADEMIC_ADMIN") ||
-                              userService.hasRole(currentUser.getId(), "FINANCE_ADMIN") ||
-                              userService.hasRole(currentUser.getId(), "TEACHER");
+        // 检查用户是否有管理员权限 - 使用正确的角色键
+        boolean hasAdminRole = userService.hasRole(currentUser.getId(), "ROLE_SUPER_ADMIN") ||
+                              userService.hasRole(currentUser.getId(), "ROLE_ADMIN") ||
+                              userService.hasRole(currentUser.getId(), "ROLE_SYSTEM_ADMIN") ||
+                              userService.hasRole(currentUser.getId(), "ROLE_ACADEMIC_ADMIN") ||
+                              userService.hasRole(currentUser.getId(), "ROLE_FINANCE_ADMIN") ||
+                              userService.hasRole(currentUser.getId(), "ROLE_TEACHER");
 
         if (!hasAdminRole) {
             logger.warn("无管理权限用户尝试访问管理后台: {}", currentUser.getUsername());

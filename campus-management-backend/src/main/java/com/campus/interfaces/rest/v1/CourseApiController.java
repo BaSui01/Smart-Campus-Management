@@ -12,6 +12,7 @@ import com.campus.application.service.CourseService;
 import com.campus.shared.common.ApiResponse;
 import com.campus.domain.entity.Course;
 import com.campus.interfaces.rest.common.BaseController;
+import com.campus.shared.constants.RolePermissions;
 import org.springframework.http.ResponseEntity;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -28,7 +29,7 @@ import jakarta.validation.Valid;
  * @since 2025-06-06
  */
 @RestController
-@RequestMapping("/api/courses")
+@RequestMapping("/api/v1/courses")
 @Tag(name = "课程管理API", description = "课程信息管理REST API接口")
 @SecurityRequirement(name = "Bearer")
 public class CourseApiController extends BaseController {
@@ -44,7 +45,7 @@ public class CourseApiController extends BaseController {
      */
     @GetMapping
     @Operation(summary = "获取课程列表", description = "分页查询课程信息")
-    @PreAuthorize("hasAnyRole('ADMIN', 'ACADEMIC_ADMIN', 'TEACHER')")
+    @PreAuthorize(RolePermissions.ACADEMIC_AND_TEACHING)
     public ApiResponse<Map<String, Object>> getCourses(
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") int page,
             @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") int size,
@@ -146,7 +147,7 @@ public class CourseApiController extends BaseController {
      */
     @GetMapping("/stats")
     @Operation(summary = "获取课程统计信息", description = "获取课程模块的统计数据")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN', 'TEACHER')")
+    @PreAuthorize(RolePermissions.STATISTICS_VIEW)
     public ResponseEntity<ApiResponse<Map<String, Object>>> getCourseStats() {
         try {
             log.info("获取课程统计信息");
@@ -242,7 +243,7 @@ public class CourseApiController extends BaseController {
      */
     @PostMapping
     @Operation(summary = "创建课程", description = "添加新课程信息")
-    @PreAuthorize("hasAnyRole('ADMIN', 'ACADEMIC_ADMIN')")
+    @PreAuthorize(RolePermissions.COURSE_MANAGEMENT)
     public ApiResponse<Course> createCourse(@Parameter(description = "课程信息") @Valid @RequestBody Course course) {
         try {
             Course createdCourse = courseService.createCourse(course);
@@ -296,7 +297,7 @@ public class CourseApiController extends BaseController {
      */
     @DeleteMapping("/batch")
     @Operation(summary = "批量删除课程", description = "批量删除多个课程")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN')")
+    @PreAuthorize(RolePermissions.BATCH_OPERATIONS)
     public ResponseEntity<ApiResponse<Map<String, Object>>> batchDeleteCourses(
             @Parameter(description = "课程ID列表") @RequestBody List<Long> ids) {
 
@@ -342,7 +343,7 @@ public class CourseApiController extends BaseController {
      */
     @PostMapping("/batch/import")
     @Operation(summary = "批量导入课程", description = "批量导入课程数据")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN')")
+    @PreAuthorize(RolePermissions.BATCH_OPERATIONS)
     public ResponseEntity<ApiResponse<Map<String, Object>>> batchImportCourses(
             @Parameter(description = "课程数据列表") @RequestBody List<Course> courses) {
 
@@ -374,7 +375,7 @@ public class CourseApiController extends BaseController {
      */
     @PutMapping("/batch/status")
     @Operation(summary = "批量更新课程状态", description = "批量更新课程的启用/禁用状态")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN')")
+    @PreAuthorize(RolePermissions.BATCH_OPERATIONS)
     public ResponseEntity<ApiResponse<Map<String, Object>>> batchUpdateCourseStatus(
             @Parameter(description = "课程ID列表") @RequestBody Map<String, Object> request) {
 

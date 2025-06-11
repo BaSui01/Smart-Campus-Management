@@ -4,6 +4,7 @@ import com.campus.application.service.AttendanceService;
 import com.campus.interfaces.rest.common.BaseController;
 import com.campus.domain.entity.Attendance;
 import com.campus.shared.common.ApiResponse;
+import com.campus.shared.constants.RolePermissions;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -53,7 +54,7 @@ public class AttendanceApiController extends BaseController {
      */
     @GetMapping
     @Operation(summary = "分页查询考勤记录列表", description = "支持按条件搜索和分页查询考勤记录")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN', 'TEACHER')")
+    @PreAuthorize(RolePermissions.ATTENDANCE_MANAGEMENT)
     public ResponseEntity<ApiResponse<List<Attendance>>> getAttendanceRecords(
             @Parameter(description = "页码", example = "1") @RequestParam(defaultValue = "1") int page,
             @Parameter(description = "每页大小", example = "20") @RequestParam(defaultValue = "20") int size,
@@ -242,7 +243,7 @@ public class AttendanceApiController extends BaseController {
      */
     @PostMapping("/checkin")
     @Operation(summary = "学生签到", description = "学生进行签到操作")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN', 'TEACHER', 'STUDENT')")
+    @PreAuthorize(RolePermissions.STUDENT_CHECKIN + " || " + RolePermissions.ATTENDANCE_MANAGEMENT)
     public ResponseEntity<ApiResponse<Attendance>> checkIn(
             @Parameter(description = "学生ID", required = true) @RequestParam Long studentId,
             @Parameter(description = "课程ID", required = true) @RequestParam Long courseId,
@@ -266,7 +267,7 @@ public class AttendanceApiController extends BaseController {
      */
     @PostMapping("/checkout")
     @Operation(summary = "学生签退", description = "学生进行签退操作")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN', 'TEACHER', 'STUDENT')")
+    @PreAuthorize(RolePermissions.STUDENT_CHECKIN + " || " + RolePermissions.ATTENDANCE_MANAGEMENT)
     public ResponseEntity<ApiResponse<Attendance>> checkOut(
             @Parameter(description = "学生ID", required = true) @RequestParam Long studentId,
             @Parameter(description = "课程ID", required = true) @RequestParam Long courseId,
@@ -303,7 +304,7 @@ public class AttendanceApiController extends BaseController {
      */
     @PostMapping("/batch-import")
     @Operation(summary = "批量导入考勤记录", description = "批量导入考勤记录")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN')")
+    @PreAuthorize(RolePermissions.ACADEMIC_MANAGEMENT)
     public ResponseEntity<ApiResponse<Map<String, Object>>> batchImportAttendance(
             @RequestBody List<Attendance> attendanceList) {
 
@@ -326,7 +327,7 @@ public class AttendanceApiController extends BaseController {
      */
     @GetMapping("/statistics/student/{studentId}")
     @Operation(summary = "获取学生考勤统计", description = "获取指定学生的考勤统计信息")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN', 'TEACHER')")
+    @PreAuthorize(RolePermissions.ATTENDANCE_MANAGEMENT)
     public ResponseEntity<ApiResponse<Map<String, Object>>> getStudentAttendanceStatistics(
             @Parameter(description = "学生ID", required = true) @PathVariable Long studentId,
             @Parameter(description = "开始日期") @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
@@ -349,7 +350,7 @@ public class AttendanceApiController extends BaseController {
      */
     @GetMapping("/statistics/course/{courseId}")
     @Operation(summary = "获取课程考勤统计", description = "获取指定课程的考勤统计信息")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN', 'TEACHER')")
+    @PreAuthorize(RolePermissions.ATTENDANCE_MANAGEMENT)
     public ResponseEntity<ApiResponse<Map<String, Object>>> getCourseAttendanceStatistics(
             @Parameter(description = "课程ID", required = true) @PathVariable Long courseId,
             @Parameter(description = "开始日期") @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
@@ -372,7 +373,7 @@ public class AttendanceApiController extends BaseController {
      */
     @GetMapping("/statistics/class/{classId}")
     @Operation(summary = "获取班级考勤统计", description = "获取指定班级的考勤统计信息")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN', 'TEACHER')")
+    @PreAuthorize(RolePermissions.ATTENDANCE_MANAGEMENT)
     public ResponseEntity<ApiResponse<Map<String, Object>>> getClassAttendanceStatistics(
             @Parameter(description = "班级ID", required = true) @PathVariable Long classId,
             @Parameter(description = "开始日期") @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
@@ -397,7 +398,7 @@ public class AttendanceApiController extends BaseController {
      */
     @GetMapping("/stats")
     @Operation(summary = "获取考勤统计信息", description = "获取考勤模块的统计数据")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN', 'TEACHER')")
+    @PreAuthorize(RolePermissions.STATISTICS_VIEW)
     public ResponseEntity<ApiResponse<Map<String, Object>>> getAttendanceStats() {
         try {
             log.info("获取考勤统计信息");
@@ -475,7 +476,7 @@ public class AttendanceApiController extends BaseController {
      */
     @DeleteMapping("/batch")
     @Operation(summary = "批量删除考勤记录", description = "根据ID列表批量删除考勤记录")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN')")
+    @PreAuthorize(RolePermissions.BATCH_OPERATIONS)
     public ResponseEntity<ApiResponse<Map<String, Object>>> batchDeleteAttendance(
             @Parameter(description = "考勤记录ID列表") @RequestBody List<Long> ids) {
 
@@ -544,7 +545,7 @@ public class AttendanceApiController extends BaseController {
      */
     @PutMapping("/batch/status")
     @Operation(summary = "批量更新考勤状态", description = "批量更新考勤记录的状态")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN', 'TEACHER')")
+    @PreAuthorize(RolePermissions.ATTENDANCE_MANAGEMENT)
     public ResponseEntity<ApiResponse<Map<String, Object>>> batchUpdateAttendanceStatus(
             @Parameter(description = "批量更新请求") @RequestBody Map<String, Object> request) {
 

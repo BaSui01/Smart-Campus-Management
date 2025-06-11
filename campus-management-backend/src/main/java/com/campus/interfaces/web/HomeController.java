@@ -99,105 +99,105 @@ public class HomeController {
             List<Map<String, Object>> testApiList = new ArrayList<>();
 
             // 测试接口
-            testApiList.add(Map.of("id", 1, "method", "GET", "url", "/api/test/hello", "description", "Hello接口", "category", "测试接口", "status", "正常"));
-            testApiList.add(Map.of("id", 2, "method", "GET", "url", "/api/test/ping", "description", "Ping接口", "category", "测试接口", "status", "正常"));
-            testApiList.add(Map.of("id", 3, "method", "GET", "url", "/api/test/status", "description", "系统状态接口", "category", "测试接口", "status", "正常"));
-            testApiList.add(Map.of("id", 4, "method", "GET", "url", "/api/test/time", "description", "服务器时间接口", "category", "测试接口", "status", "正常"));
+            testApiList.add(Map.of("id", 1, "method", "GET", "url", "/api/v1/test/hello", "description", "Hello接口", "category", "测试接口", "status", "正常"));
+            testApiList.add(Map.of("id", 2, "method", "GET", "url", "/api/v1/test/ping", "description", "Ping接口", "category", "测试接口", "status", "正常"));
+            testApiList.add(Map.of("id", 3, "method", "GET", "url", "/api/v1/test/status", "description", "系统状态接口", "category", "测试接口", "status", "正常"));
+            testApiList.add(Map.of("id", 4, "method", "GET", "url", "/api/v1/test/time", "description", "服务器时间接口", "category", "测试接口", "status", "正常"));
 
             // 仪表盘API
-            testApiList.add(Map.of("id", 5, "method", "GET", "url", "/api/dashboard/stats", "description", "获取仪表盘统计数据", "category", "仪表盘API", "status", "正常"));
-            testApiList.add(Map.of("id", 6, "method", "GET", "url", "/api/dashboard/activities", "description", "获取最近活动", "category", "仪表盘API", "status", "正常"));
-            testApiList.add(Map.of("id", 7, "method", "GET", "url", "/api/dashboard/realtime", "description", "获取实时统计数据", "category", "仪表盘API", "status", "正常"));
-            testApiList.add(Map.of("id", 8, "method", "GET", "url", "/api/dashboard/quick-stats", "description", "获取快速统计", "category", "仪表盘API", "status", "正常"));
-            testApiList.add(Map.of("id", 9, "method", "GET", "url", "/api/dashboard/notifications", "description", "获取系统通知", "category", "仪表盘API", "status", "正常"));
-            testApiList.add(Map.of("id", 10, "method", "GET", "url", "/api/dashboard/charts/student", "description", "获取学生图表数据", "category", "仪表盘API", "status", "正常"));
+            testApiList.add(Map.of("id", 5, "method", "GET", "url", "/api/v1/dashboard/stats", "description", "获取仪表盘统计数据", "category", "仪表盘API", "status", "正常"));
+            testApiList.add(Map.of("id", 6, "method", "GET", "url", "/api/v1/dashboard/activities", "description", "获取最近活动", "category", "仪表盘API", "status", "正常"));
+            testApiList.add(Map.of("id", 7, "method", "GET", "url", "/api/v1/dashboard/realtime", "description", "获取实时统计数据", "category", "仪表盘API", "status", "正常"));
+            testApiList.add(Map.of("id", 8, "method", "GET", "url", "/api/v1/dashboard/quick-stats", "description", "获取快速统计", "category", "仪表盘API", "status", "正常"));
+            testApiList.add(Map.of("id", 9, "method", "GET", "url", "/api/v1/dashboard/notifications", "description", "获取系统通知", "category", "仪表盘API", "status", "正常"));
+            testApiList.add(Map.of("id", 10, "method", "GET", "url", "/api/v1/dashboard/charts/student", "description", "获取学生图表数据", "category", "仪表盘API", "status", "正常"));
 
             // 学生管理API
-            testApiList.add(Map.of("id", 11, "method", "GET", "url", "/api/students", "description", "获取学生列表", "category", "学生管理API", "status", "正常"));
-            testApiList.add(Map.of("id", 12, "method", "GET", "url", "/api/students/1", "description", "获取学生详情", "category", "学生管理API", "status", "正常"));
-            testApiList.add(Map.of("id", 13, "method", "GET", "url", "/api/students/form-data", "description", "获取学生表单数据", "category", "学生管理API", "status", "正常"));
-            testApiList.add(Map.of("id", 14, "method", "POST", "url", "/api/students", "description", "创建学生", "category", "学生管理API", "status", "正常"));
+            testApiList.add(Map.of("id", 11, "method", "GET", "url", "/api/v1/students", "description", "获取学生列表", "category", "学生管理API", "status", "正常"));
+            testApiList.add(Map.of("id", 12, "method", "GET", "url", "/api/v1/students/1", "description", "获取学生详情", "category", "学生管理API", "status", "正常"));
+            testApiList.add(Map.of("id", 13, "method", "GET", "url", "/api/v1/students/form-data", "description", "获取学生表单数据", "category", "学生管理API", "status", "正常"));
+            testApiList.add(Map.of("id", 14, "method", "POST", "url", "/api/v1/students", "description", "创建学生", "category", "学生管理API", "status", "正常"));
 
             // 班级管理API
-            testApiList.add(Map.of("id", 15, "method", "GET", "url", "/api/classes", "description", "获取班级列表", "category", "班级管理API", "status", "正常"));
-            testApiList.add(Map.of("id", 16, "method", "GET", "url", "/api/classes/1", "description", "获取班级详情", "category", "班级管理API", "status", "正常"));
-            testApiList.add(Map.of("id", 17, "method", "GET", "url", "/api/classes/form-data", "description", "获取班级表单数据", "category", "班级管理API", "status", "正常"));
-            testApiList.add(Map.of("id", 18, "method", "GET", "url", "/api/classes/stats/grade", "description", "统计班级数量按年级", "category", "班级管理API", "status", "正常"));
-            testApiList.add(Map.of("id", 19, "method", "GET", "url", "/api/classes/grade/2024", "description", "根据年级查询班级列表", "category", "班级管理API", "status", "正常"));
-            testApiList.add(Map.of("id", 20, "method", "POST", "url", "/api/classes", "description", "创建班级", "category", "班级管理API", "status", "正常"));
-            testApiList.add(Map.of("id", 21, "method", "PUT", "url", "/api/classes/1", "description", "更新班级信息", "category", "班级管理API", "status", "正常"));
-            testApiList.add(Map.of("id", 22, "method", "DELETE", "url", "/api/classes/1", "description", "删除班级", "category", "班级管理API", "status", "正常"));
+            testApiList.add(Map.of("id", 15, "method", "GET", "url", "/api/v1/classes", "description", "获取班级列表", "category", "班级管理API", "status", "正常"));
+            testApiList.add(Map.of("id", 16, "method", "GET", "url", "/api/v1/classes/1", "description", "获取班级详情", "category", "班级管理API", "status", "正常"));
+            testApiList.add(Map.of("id", 17, "method", "GET", "url", "/api/v1/classes/form-data", "description", "获取班级表单数据", "category", "班级管理API", "status", "正常"));
+            testApiList.add(Map.of("id", 18, "method", "GET", "url", "/api/v1/classes/stats/grade", "description", "统计班级数量按年级", "category", "班级管理API", "status", "正常"));
+            testApiList.add(Map.of("id", 19, "method", "GET", "url", "/api/v1/classes/grade/2024", "description", "根据年级查询班级列表", "category", "班级管理API", "status", "正常"));
+            testApiList.add(Map.of("id", 20, "method", "POST", "url", "/api/v1/classes", "description", "创建班级", "category", "班级管理API", "status", "正常"));
+            testApiList.add(Map.of("id", 21, "method", "PUT", "url", "/api/v1/classes/1", "description", "更新班级信息", "category", "班级管理API", "status", "正常"));
+            testApiList.add(Map.of("id", 22, "method", "DELETE", "url", "/api/v1/classes/1", "description", "删除班级", "category", "班级管理API", "status", "正常"));
 
             // 课程管理API
-            testApiList.add(Map.of("id", 23, "method", "GET", "url", "/api/courses", "description", "获取课程列表", "category", "课程管理API", "status", "正常"));
-            testApiList.add(Map.of("id", 24, "method", "GET", "url", "/api/courses/1", "description", "获取课程详情", "category", "课程管理API", "status", "正常"));
-            testApiList.add(Map.of("id", 25, "method", "GET", "url", "/api/courses/form-data", "description", "获取课程表单数据", "category", "课程管理API", "status", "正常"));
-            testApiList.add(Map.of("id", 26, "method", "GET", "url", "/api/courses/semester/2024-1", "description", "根据学期查询课程列表", "category", "课程管理API", "status", "正常"));
-            testApiList.add(Map.of("id", 27, "method", "GET", "url", "/api/courses/stats/type", "description", "统计课程数量按类型", "category", "课程管理API", "status", "正常"));
-            testApiList.add(Map.of("id", 28, "method", "POST", "url", "/api/courses", "description", "创建课程", "category", "课程管理API", "status", "正常"));
-            testApiList.add(Map.of("id", 29, "method", "PUT", "url", "/api/courses/1", "description", "更新课程信息", "category", "课程管理API", "status", "正常"));
-            testApiList.add(Map.of("id", 30, "method", "DELETE", "url", "/api/courses/1", "description", "删除课程", "category", "课程管理API", "status", "正常"));
+            testApiList.add(Map.of("id", 23, "method", "GET", "url", "/api/v1/courses", "description", "获取课程列表", "category", "课程管理API", "status", "正常"));
+            testApiList.add(Map.of("id", 24, "method", "GET", "url", "/api/v1/courses/1", "description", "获取课程详情", "category", "课程管理API", "status", "正常"));
+            testApiList.add(Map.of("id", 25, "method", "GET", "url", "/api/v1/courses/form-data", "description", "获取课程表单数据", "category", "课程管理API", "status", "正常"));
+            testApiList.add(Map.of("id", 26, "method", "GET", "url", "/api/v1/courses/semester/2024-1", "description", "根据学期查询课程列表", "category", "课程管理API", "status", "正常"));
+            testApiList.add(Map.of("id", 27, "method", "GET", "url", "/api/v1/courses/stats/type", "description", "统计课程数量按类型", "category", "课程管理API", "status", "正常"));
+            testApiList.add(Map.of("id", 28, "method", "POST", "url", "/api/v1/courses", "description", "创建课程", "category", "课程管理API", "status", "正常"));
+            testApiList.add(Map.of("id", 29, "method", "PUT", "url", "/api/v1/courses/1", "description", "更新课程信息", "category", "课程管理API", "status", "正常"));
+            testApiList.add(Map.of("id", 30, "method", "DELETE", "url", "/api/v1/courses/1", "description", "删除课程", "category", "课程管理API", "status", "正常"));
 
             // 成绩管理API
-            testApiList.add(Map.of("id", 31, "method", "GET", "url", "/api/grades", "description", "获取成绩列表", "category", "成绩管理API", "status", "正常"));
-            testApiList.add(Map.of("id", 32, "method", "GET", "url", "/api/grades/1", "description", "获取成绩详情", "category", "成绩管理API", "status", "正常"));
-            testApiList.add(Map.of("id", 33, "method", "GET", "url", "/api/grades/student/1", "description", "根据学生ID查询成绩", "category", "成绩管理API", "status", "正常"));
-            testApiList.add(Map.of("id", 34, "method", "GET", "url", "/api/grades/student/1/stats", "description", "获取学生成绩统计", "category", "成绩管理API", "status", "正常"));
-            testApiList.add(Map.of("id", 35, "method", "GET", "url", "/api/grades/semester/2024-1", "description", "根据学期查询成绩", "category", "成绩管理API", "status", "正常"));
-            testApiList.add(Map.of("id", 36, "method", "POST", "url", "/api/grades", "description", "创建成绩记录", "category", "成绩管理API", "status", "正常"));
-            testApiList.add(Map.of("id", 37, "method", "PUT", "url", "/api/grades/1", "description", "更新成绩记录", "category", "成绩管理API", "status", "正常"));
-            testApiList.add(Map.of("id", 38, "method", "DELETE", "url", "/api/grades/1", "description", "删除成绩记录", "category", "成绩管理API", "status", "正常"));
+            testApiList.add(Map.of("id", 31, "method", "GET", "url", "/api/v1/grades", "description", "获取成绩列表", "category", "成绩管理API", "status", "正常"));
+            testApiList.add(Map.of("id", 32, "method", "GET", "url", "/api/v1/grades/1", "description", "获取成绩详情", "category", "成绩管理API", "status", "正常"));
+            testApiList.add(Map.of("id", 33, "method", "GET", "url", "/api/v1/grades/student/1", "description", "根据学生ID查询成绩", "category", "成绩管理API", "status", "正常"));
+            testApiList.add(Map.of("id", 34, "method", "GET", "url", "/api/v1/grades/student/1/stats", "description", "获取学生成绩统计", "category", "成绩管理API", "status", "正常"));
+            testApiList.add(Map.of("id", 35, "method", "GET", "url", "/api/v1/grades/semester/2024-1", "description", "根据学期查询成绩", "category", "成绩管理API", "status", "正常"));
+            testApiList.add(Map.of("id", 36, "method", "POST", "url", "/api/v1/grades", "description", "创建成绩记录", "category", "成绩管理API", "status", "正常"));
+            testApiList.add(Map.of("id", 37, "method", "PUT", "url", "/api/v1/grades/1", "description", "更新成绩记录", "category", "成绩管理API", "status", "正常"));
+            testApiList.add(Map.of("id", 38, "method", "DELETE", "url", "/api/v1/grades/1", "description", "删除成绩记录", "category", "成绩管理API", "status", "正常"));
 
             // 缴费管理API
-            testApiList.add(Map.of("id", 39, "method", "GET", "url", "/api/payments/records", "description", "获取缴费记录列表", "category", "缴费管理API", "status", "正常"));
-            testApiList.add(Map.of("id", 40, "method", "GET", "url", "/api/payments/records/1", "description", "获取缴费记录详情", "category", "缴费管理API", "status", "正常"));
-            testApiList.add(Map.of("id", 41, "method", "GET", "url", "/api/payments/stats", "description", "获取缴费统计信息", "category", "缴费管理API", "status", "正常"));
-            testApiList.add(Map.of("id", 42, "method", "GET", "url", "/api/payments/records/student/1", "description", "根据学生ID查询缴费记录", "category", "缴费管理API", "status", "正常"));
-            testApiList.add(Map.of("id", 43, "method", "POST", "url", "/api/payments/records", "description", "创建缴费记录", "category", "缴费管理API", "status", "正常"));
-            testApiList.add(Map.of("id", 44, "method", "PUT", "url", "/api/payments/records/1", "description", "更新缴费记录", "category", "缴费管理API", "status", "正常"));
-            testApiList.add(Map.of("id", 45, "method", "DELETE", "url", "/api/payments/records/1", "description", "删除缴费记录", "category", "缴费管理API", "status", "正常"));
+            testApiList.add(Map.of("id", 39, "method", "GET", "url", "/api/v1/payments/records", "description", "获取缴费记录列表", "category", "缴费管理API", "status", "正常"));
+            testApiList.add(Map.of("id", 40, "method", "GET", "url", "/api/v1/payments/records/1", "description", "获取缴费记录详情", "category", "缴费管理API", "status", "正常"));
+            testApiList.add(Map.of("id", 41, "method", "GET", "url", "/api/v1/payments/stats", "description", "获取缴费统计信息", "category", "缴费管理API", "status", "正常"));
+            testApiList.add(Map.of("id", 42, "method", "GET", "url", "/api/v1/payments/records/student/1", "description", "根据学生ID查询缴费记录", "category", "缴费管理API", "status", "正常"));
+            testApiList.add(Map.of("id", 43, "method", "POST", "url", "/api/v1/payments/records", "description", "创建缴费记录", "category", "缴费管理API", "status", "正常"));
+            testApiList.add(Map.of("id", 44, "method", "PUT", "url", "/api/v1/payments/records/1", "description", "更新缴费记录", "category", "缴费管理API", "status", "正常"));
+            testApiList.add(Map.of("id", 45, "method", "DELETE", "url", "/api/v1/payments/records/1", "description", "删除缴费记录", "category", "缴费管理API", "status", "正常"));
 
             // 缴费项目管理API
-            testApiList.add(Map.of("id", 46, "method", "GET", "url", "/api/fee-items", "description", "分页查询缴费项目", "category", "缴费项目API", "status", "正常"));
-            testApiList.add(Map.of("id", 47, "method", "GET", "url", "/api/fee-items/1", "description", "查询缴费项目", "category", "缴费项目API", "status", "正常"));
-            testApiList.add(Map.of("id", 48, "method", "GET", "url", "/api/fee-items/statistics", "description", "获取统计信息", "category", "缴费项目API", "status", "正常"));
-            testApiList.add(Map.of("id", 49, "method", "GET", "url", "/api/fee-items/active", "description", "查询启用项目", "category", "缴费项目API", "status", "正常"));
-            testApiList.add(Map.of("id", 50, "method", "POST", "url", "/api/fee-items", "description", "创建缴费项目", "category", "缴费项目API", "status", "正常"));
-            testApiList.add(Map.of("id", 51, "method", "PUT", "url", "/api/fee-items/1", "description", "更新缴费项目", "category", "缴费项目API", "status", "正常"));
-            testApiList.add(Map.of("id", 52, "method", "DELETE", "url", "/api/fee-items/1", "description", "删除缴费项目", "category", "缴费项目API", "status", "正常"));
+            testApiList.add(Map.of("id", 46, "method", "GET", "url", "/api/v1/fee-items", "description", "分页查询缴费项目", "category", "缴费项目API", "status", "正常"));
+            testApiList.add(Map.of("id", 47, "method", "GET", "url", "/api/v1/fee-items/1", "description", "查询缴费项目", "category", "缴费项目API", "status", "正常"));
+            testApiList.add(Map.of("id", 48, "method", "GET", "url", "/api/v1/fee-items/statistics", "description", "获取统计信息", "category", "缴费项目API", "status", "正常"));
+            testApiList.add(Map.of("id", 49, "method", "GET", "url", "/api/v1/fee-items/active", "description", "查询启用项目", "category", "缴费项目API", "status", "正常"));
+            testApiList.add(Map.of("id", 50, "method", "POST", "url", "/api/v1/fee-items", "description", "创建缴费项目", "category", "缴费项目API", "status", "正常"));
+            testApiList.add(Map.of("id", 51, "method", "PUT", "url", "/api/v1/fee-items/1", "description", "更新缴费项目", "category", "缴费项目API", "status", "正常"));
+            testApiList.add(Map.of("id", 52, "method", "DELETE", "url", "/api/v1/fee-items/1", "description", "删除缴费项目", "category", "缴费项目API", "status", "正常"));
 
             // 用户管理API
-            testApiList.add(Map.of("id", 53, "method", "GET", "url", "/api/users", "description", "获取用户列表", "category", "用户管理API", "status", "正常"));
-            testApiList.add(Map.of("id", 54, "method", "GET", "url", "/api/users/1", "description", "获取用户详情", "category", "用户管理API", "status", "正常"));
-            testApiList.add(Map.of("id", 55, "method", "GET", "url", "/api/users/stats", "description", "获取用户统计信息", "category", "用户管理API", "status", "正常"));
-            testApiList.add(Map.of("id", 56, "method", "GET", "url", "/api/users/search", "description", "搜索用户", "category", "用户管理API", "status", "正常"));
-            testApiList.add(Map.of("id", 57, "method", "POST", "url", "/api/users", "description", "创建用户", "category", "用户管理API", "status", "正常"));
-            testApiList.add(Map.of("id", 58, "method", "PUT", "url", "/api/users/1", "description", "更新用户信息", "category", "用户管理API", "status", "正常"));
-            testApiList.add(Map.of("id", 59, "method", "DELETE", "url", "/api/users/1", "description", "删除用户", "category", "用户管理API", "status", "正常"));
-            testApiList.add(Map.of("id", 60, "method", "POST", "url", "/api/users/1/toggle-status", "description", "启用/禁用用户", "category", "用户管理API", "status", "正常"));
+            testApiList.add(Map.of("id", 53, "method", "GET", "url", "/api/v1/users", "description", "获取用户列表", "category", "用户管理API", "status", "正常"));
+            testApiList.add(Map.of("id", 54, "method", "GET", "url", "/api/v1/users/1", "description", "获取用户详情", "category", "用户管理API", "status", "正常"));
+            testApiList.add(Map.of("id", 55, "method", "GET", "url", "/api/v1/users/stats", "description", "获取用户统计信息", "category", "用户管理API", "status", "正常"));
+            testApiList.add(Map.of("id", 56, "method", "GET", "url", "/api/v1/users/search", "description", "搜索用户", "category", "用户管理API", "status", "正常"));
+            testApiList.add(Map.of("id", 57, "method", "POST", "url", "/api/v1/users", "description", "创建用户", "category", "用户管理API", "status", "正常"));
+            testApiList.add(Map.of("id", 58, "method", "PUT", "url", "/api/v1/users/1", "description", "更新用户信息", "category", "用户管理API", "status", "正常"));
+            testApiList.add(Map.of("id", 59, "method", "DELETE", "url", "/api/v1/users/1", "description", "删除用户", "category", "用户管理API", "status", "正常"));
+            testApiList.add(Map.of("id", 60, "method", "POST", "url", "/api/v1/users/1/toggle-status", "description", "启用/禁用用户", "category", "用户管理API", "status", "正常"));
 
             // 认证API
-            testApiList.add(Map.of("id", 61, "method", "POST", "url", "/api/auth/login", "description", "用户登录", "category", "认证API", "status", "正常"));
-            testApiList.add(Map.of("id", 62, "method", "POST", "url", "/api/auth/logout", "description", "用户登出", "category", "认证API", "status", "正常"));
-            testApiList.add(Map.of("id", 63, "method", "POST", "url", "/api/auth/register", "description", "用户注册", "category", "认证API", "status", "正常"));
-            testApiList.add(Map.of("id", 64, "method", "POST", "url", "/api/auth/refresh", "description", "刷新令牌", "category", "认证API", "status", "正常"));
-            testApiList.add(Map.of("id", 65, "method", "GET", "url", "/api/auth/me", "description", "获取当前用户信息", "category", "认证API", "status", "正常"));
-            testApiList.add(Map.of("id", 66, "method", "POST", "url", "/api/auth/change-password", "description", "修改密码", "category", "认证API", "status", "正常"));
+            testApiList.add(Map.of("id", 61, "method", "POST", "url", "/api/v1/auth/login", "description", "用户登录", "category", "认证API", "status", "正常"));
+            testApiList.add(Map.of("id", 62, "method", "POST", "url", "/api/v1/auth/logout", "description", "用户登出", "category", "认证API", "status", "正常"));
+            testApiList.add(Map.of("id", 63, "method", "POST", "url", "/api/v1/auth/register", "description", "用户注册", "category", "认证API", "status", "正常"));
+            testApiList.add(Map.of("id", 64, "method", "POST", "url", "/api/v1/auth/refresh", "description", "刷新令牌", "category", "认证API", "status", "正常"));
+            testApiList.add(Map.of("id", 65, "method", "GET", "url", "/api/v1/auth/me", "description", "获取当前用户信息", "category", "认证API", "status", "正常"));
+            testApiList.add(Map.of("id", 66, "method", "POST", "url", "/api/v1/auth/change-password", "description", "修改密码", "category", "认证API", "status", "正常"));
 
             // 系统管理API
-            testApiList.add(Map.of("id", 67, "method", "GET", "url", "/api/system/status", "description", "获取系统状态", "category", "系统管理API", "status", "正常"));
-            testApiList.add(Map.of("id", 68, "method", "POST", "url", "/api/system/profile/update", "description", "更新个人资料", "category", "系统管理API", "status", "正常"));
-            testApiList.add(Map.of("id", 69, "method", "POST", "url", "/api/system/profile/change-password", "description", "修改密码", "category", "系统管理API", "status", "正常"));
-            testApiList.add(Map.of("id", 70, "method", "POST", "url", "/api/system/clear-cache", "description", "清理系统缓存", "category", "系统管理API", "status", "正常"));
-            testApiList.add(Map.of("id", 71, "method", "POST", "url", "/api/system/backup", "description", "创建系统备份", "category", "系统管理API", "status", "正常"));
+            testApiList.add(Map.of("id", 67, "method", "GET", "url", "/api/v1/system/status", "description", "获取系统状态", "category", "系统管理API", "status", "正常"));
+            testApiList.add(Map.of("id", 68, "method", "POST", "url", "/api/v1/system/profile/update", "description", "更新个人资料", "category", "系统管理API", "status", "正常"));
+            testApiList.add(Map.of("id", 69, "method", "POST", "url", "/api/v1/system/profile/change-password", "description", "修改密码", "category", "系统管理API", "status", "正常"));
+            testApiList.add(Map.of("id", 70, "method", "POST", "url", "/api/v1/system/clear-cache", "description", "清理系统缓存", "category", "系统管理API", "status", "正常"));
+            testApiList.add(Map.of("id", 71, "method", "POST", "url", "/api/v1/system/backup", "description", "创建系统备份", "category", "系统管理API", "status", "正常"));
 
             // Auth Controller
             testApiList.add(Map.of("id", 72, "method", "GET", "url", "/admin/token-status", "description", "检查令牌状态", "category", "Auth Controller", "status", "正常"));
             testApiList.add(Map.of("id", 73, "method", "GET", "url", "/admin/current-user", "description", "获取当前用户", "category", "Auth Controller", "status", "正常"));
             testApiList.add(Map.of("id", 74, "method", "GET", "url", "/admin/check-login", "description", "检查登录状态", "category", "Auth Controller", "status", "正常"));
-            testApiList.add(Map.of("id", 75, "method", "GET", "url", "/admin/api/version", "description", "获取API版本", "category", "Auth Controller", "status", "正常"));
-            testApiList.add(Map.of("id", 76, "method", "GET", "url", "/admin/api/health", "description", "健康检查", "category", "Auth Controller", "status", "正常"));
-            testApiList.add(Map.of("id", 77, "method", "GET", "url", "/admin/api/database", "description", "数据库状态", "category", "Auth Controller", "status", "正常"));
+            testApiList.add(Map.of("id", 75, "method", "GET", "url", "/admin/api/v1/version", "description", "获取API版本", "category", "Auth Controller", "status", "正常"));
+            testApiList.add(Map.of("id", 76, "method", "GET", "url", "/admin/api/v1/health", "description", "健康检查", "category", "Auth Controller", "status", "正常"));
+            testApiList.add(Map.of("id", 77, "method", "GET", "url", "/admin/api/v1/database", "description", "数据库状态", "category", "Auth Controller", "status", "正常"));
             testApiList.add(Map.of("id", 78, "method", "POST", "url", "/admin/refresh-token", "description", "刷新令牌", "category", "Auth Controller", "status", "正常"));
 
             // Health Controller

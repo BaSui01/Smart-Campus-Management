@@ -391,6 +391,57 @@ const getCurrentGreeting = () => {
   return '夜深了，早点休息吧！'
 }
 
+// 根据时间判断课程状态
+const getTimeBasedStatus = (course) => {
+  const now = new Date()
+  const currentTime = now.getHours() * 60 + now.getMinutes()
+
+  if (course.startTime && course.endTime) {
+    const [startHour, startMin] = course.startTime.split(':').map(Number)
+    const [endHour, endMin] = course.endTime.split(':').map(Number)
+    const startTime = startHour * 60 + startMin
+    const endTime = endHour * 60 + endMin
+
+    if (currentTime < startTime) return '未开始'
+    if (currentTime >= startTime && currentTime <= endTime) return '进行中'
+    if (currentTime > endTime) return '已结束'
+  }
+
+  return '待定'
+}
+
+// 判断是否为当前课程
+const isCurrentCourse = (course) => {
+  const now = new Date()
+  const currentTime = now.getHours() * 60 + now.getMinutes()
+
+  if (course.startTime && course.endTime) {
+    const [startHour, startMin] = course.startTime.split(':').map(Number)
+    const [endHour, endMin] = course.endTime.split(':').map(Number)
+    const startTime = startHour * 60 + startMin
+    const endTime = endHour * 60 + endMin
+
+    return currentTime >= startTime && currentTime <= endTime
+  }
+
+  return false
+}
+
+// 判断课程是否已完成
+const isCompletedCourse = (course) => {
+  const now = new Date()
+  const currentTime = now.getHours() * 60 + now.getMinutes()
+
+  if (course.endTime) {
+    const [endHour, endMin] = course.endTime.split(':').map(Number)
+    const endTime = endHour * 60 + endMin
+
+    return currentTime > endTime
+  }
+
+  return false
+}
+
 const loadDashboardData = async () => {
   loading.value.dashboard = true
   
@@ -415,13 +466,20 @@ const loadUserInfo = async () => {
   try {
     const { data } = await studentApi.getProfile()
     userInfo.value = {
-      name: data.name,
-      studentId: data.studentId,
-      className: data.className,
-      avatar: data.avatar
+      name: data.realName || data.name || '学生',
+      studentId: data.studentNo || data.studentId || '',
+      className: data.className || data.classInfo?.className || '未分配班级',
+      avatar: data.avatarUrl || data.avatar || ''
     }
   } catch (error) {
     console.error('加载用户信息失败:', error)
+    // 设置默认值
+    userInfo.value = {
+      name: '学生',
+      studentId: '',
+      className: '未分配班级',
+      avatar: ''
+    }
   }
 }
 
@@ -433,29 +491,29 @@ const loadStatistics = async () => {
         type: 'courses',
         icon: 'Reading',
         label: '选修课程',
-        value: data.courseCount,
-        trend: data.courseCountTrend
+        value: data.courseCount || data.totalCourses || 0,
+        trend: data.courseCountTrend || null
       },
       {
         type: 'grades',
         icon: 'TrendCharts',
         label: '平均成绩',
-        value: data.avgGrade,
-        trend: data.avgGradeTrend
+        value: data.avgGrade || data.averageGrade || 0,
+        trend: data.avgGradeTrend || data.gradeTrend || null
       },
       {
         type: 'attendance',
         icon: 'Calendar',
         label: '出勤率',
-        value: `${data.attendanceRate}%`,
-        trend: data.attendanceTrend
+        value: `${data.attendanceRate || data.attendancePercentage || 0}%`,
+        trend: data.attendanceTrend || null
       },
       {
         type: 'credits',
         icon: 'Promotion',
         label: '已获学分',
-        value: data.totalCredits,
-        trend: null
+        value: data.totalCredits || data.earnedCredits || 0,
+        trend: data.creditsTrend || null
       }
     ]
   } catch (error) {
@@ -472,11 +530,18 @@ const loadStatistics = async () => {
 
 const loadTodayCourses = async () => {
   loading.value.todayCourses = true
-  
+
   try {
     const { data } = await courseApi.getTodayCourses()
-    todayCourses.value = data.map(course => ({
-      ...course,
+    const courses = Array.isArray(data) ? data : (data.courses || [])
+    todayCourses.value = courses.map(course => ({
+      id: course.id,
+      courseName: course.courseName || course.name,
+      startTime: course.startTime || course.beginTime,
+      endTime: course.endTime || course.finishTime,
+      location: course.location || course.classroom || course.classroomName,
+      teacherName: course.teacherName || course.teacher,
+      status: course.status || getTimeBasedStatus(course),
       isCurrent: isCurrentCourse(course),
       isCompleted: isCompletedCourse(course)
     }))
@@ -490,10 +555,19 @@ const loadTodayCourses = async () => {
 
 const loadRecentGrades = async () => {
   loading.value.recentGrades = true
-  
+
   try {
     const { data } = await gradeApi.getRecentGrades({ limit: 5 })
-    recentGrades.value = data
+    const grades = Array.isArray(data) ? data : (data.grades || [])
+    recentGrades.value = grades.map(grade => ({
+      id: grade.id,
+      courseName: grade.courseName || grade.course?.courseName,
+      examType: grade.examType || grade.type || '期末考试',
+      score: grade.score || grade.totalScore || 0,
+      rank: grade.rank || grade.classRank,
+      trend: grade.trend || null,
+      courseId: grade.courseId || grade.course?.id
+    }))
   } catch (error) {
     console.error('加载最新成绩失败:', error)
     recentGrades.value = []
@@ -504,11 +578,20 @@ const loadRecentGrades = async () => {
 
 const loadNotifications = async () => {
   loading.value.notifications = true
-  
+
   try {
     const { data } = await studentApi.getNotifications({ limit: 5 })
-    notifications.value = data.notifications
-    unreadNotifications.value = data.unreadCount
+    const notificationList = Array.isArray(data) ? data : (data.notifications || data.list || [])
+    notifications.value = notificationList.map(notification => ({
+      id: notification.id,
+      title: notification.title,
+      content: notification.content,
+      type: notification.type || notification.notificationType,
+      typeName: notification.typeName || getNotificationTypeName(notification.type),
+      isRead: notification.isRead || notification.readStatus === 1,
+      createTime: notification.createTime || notification.createdAt
+    }))
+    unreadNotifications.value = data.unreadCount || notificationList.filter(n => !n.isRead).length
   } catch (error) {
     console.error('加载通知公告失败:', error)
     notifications.value = []
@@ -518,24 +601,18 @@ const loadNotifications = async () => {
   }
 }
 
-const isCurrentCourse = (course) => {
-  const now = new Date()
-  const currentTime = now.getHours() * 60 + now.getMinutes()
-  const startTime = parseTimeToMinutes(course.startTime)
-  const endTime = parseTimeToMinutes(course.endTime)
-  
-  return currentTime >= startTime && currentTime <= endTime
-}
-
-const isCompletedCourse = (course) => {
-  const now = new Date()
-  const currentTime = now.getHours() * 60 + now.getMinutes()
-  const endTime = parseTimeToMinutes(course.endTime)
-  
-  return currentTime > endTime
+const getNotificationTypeName = (type) => {
+  const typeMap = {
+    'system': '系统通知',
+    'academic': '教务通知',
+    'course': '课程通知',
+    'grade': '成绩通知'
+  }
+  return typeMap[type] || '通知'
 }
 
 const parseTimeToMinutes = (timeStr) => {
+  if (!timeStr) return 0
   const [hours, minutes] = timeStr.split(':').map(Number)
   return hours * 60 + minutes
 }

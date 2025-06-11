@@ -108,7 +108,7 @@ public class DiagnosticController {
     /**
      * API方式获取权限诊断信息
      */
-    @GetMapping("/api/permissions")
+    @GetMapping("/api/v1/permissions")
     @ResponseBody
     public Map<String, Object> getPermissionDiagnosticApi(HttpSession session) {
         Map<String, Object> result = new HashMap<>();
@@ -155,14 +155,14 @@ public class DiagnosticController {
                 permissionChecks.put("isFinanceAdmin", permissionUtil.isFinanceAdmin());
                 result.put("permissionChecks", permissionChecks);
                 
-                // 角色检查
+                // 角色检查 - 使用正确的角色键
                 Map<String, Boolean> roleChecks = new HashMap<>();
-                roleChecks.put("SUPER_ADMIN", userService.hasRole(dbUser.getId(), "SUPER_ADMIN"));
-                roleChecks.put("ADMIN", userService.hasRole(dbUser.getId(), "ADMIN"));
-                roleChecks.put("SYSTEM_ADMIN", userService.hasRole(dbUser.getId(), "SYSTEM_ADMIN"));
-                roleChecks.put("ACADEMIC_ADMIN", userService.hasRole(dbUser.getId(), "ACADEMIC_ADMIN"));
-                roleChecks.put("FINANCE_ADMIN", userService.hasRole(dbUser.getId(), "FINANCE_ADMIN"));
-                roleChecks.put("TEACHER", userService.hasRole(dbUser.getId(), "TEACHER"));
+                roleChecks.put("ROLE_SUPER_ADMIN", userService.hasRole(dbUser.getId(), "ROLE_SUPER_ADMIN"));
+                roleChecks.put("ROLE_ADMIN", userService.hasRole(dbUser.getId(), "ROLE_ADMIN"));
+                roleChecks.put("ROLE_SYSTEM_ADMIN", userService.hasRole(dbUser.getId(), "ROLE_SYSTEM_ADMIN"));
+                roleChecks.put("ROLE_ACADEMIC_ADMIN", userService.hasRole(dbUser.getId(), "ROLE_ACADEMIC_ADMIN"));
+                roleChecks.put("ROLE_FINANCE_ADMIN", userService.hasRole(dbUser.getId(), "ROLE_FINANCE_ADMIN"));
+                roleChecks.put("ROLE_TEACHER", userService.hasRole(dbUser.getId(), "ROLE_TEACHER"));
                 result.put("roleChecks", roleChecks);
                 
                 result.put("success", true);
@@ -198,8 +198,8 @@ public class DiagnosticController {
                 return result;
             }
             
-            // 检查是否已有SUPER_ADMIN角色
-            boolean hasSuperAdmin = userService.hasRole(adminUser.getId(), "SUPER_ADMIN");
+            // 检查是否已有SUPER_ADMIN角色 - 使用正确的角色键
+            boolean hasSuperAdmin = userService.hasRole(adminUser.getId(), "ROLE_SUPER_ADMIN");
             
             result.put("success", true);
             result.put("adminUserId", adminUser.getId());

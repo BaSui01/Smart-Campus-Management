@@ -103,13 +103,13 @@ public class AdminJwtInterceptor implements HandlerInterceptor {
                 return false;
             }
             
-            // 检查用户权限
-            boolean hasAdminRole = userService.hasRole(userId, "SUPER_ADMIN") ||
-                                  userService.hasRole(userId, "ADMIN") ||
-                                  userService.hasRole(userId, "SYSTEM_ADMIN") ||
-                                  userService.hasRole(userId, "ACADEMIC_ADMIN") ||
-                                  userService.hasRole(userId, "FINANCE_ADMIN") ||
-                                  userService.hasRole(userId, "TEACHER");
+            // 检查用户权限 - 使用正确的角色键
+            boolean hasAdminRole = userService.hasRole(userId, "ROLE_SUPER_ADMIN") ||
+                                  userService.hasRole(userId, "ROLE_ADMIN") ||
+                                  userService.hasRole(userId, "ROLE_SYSTEM_ADMIN") ||
+                                  userService.hasRole(userId, "ROLE_ACADEMIC_ADMIN") ||
+                                  userService.hasRole(userId, "ROLE_FINANCE_ADMIN") ||
+                                  userService.hasRole(userId, "ROLE_TEACHER");
             if (!hasAdminRole) {
                 logger.warn("无管理权限用户尝试访问管理后台: {}", username);
                 response.sendRedirect("/admin/access-denied");

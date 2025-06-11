@@ -276,7 +276,7 @@ public class NotificationTemplateApiController extends BaseController {
      */
     @PostMapping("/{id}/preview")
     @Operation(summary = "预览通知模板", description = "使用测试数据预览模板效果")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'TEACHER')")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_SYSTEM_ADMIN', 'ROLE_TEACHER')")
     public ResponseEntity<ApiResponse<Map<String, Object>>> previewNotificationTemplate(
             @Parameter(description = "模板ID") @PathVariable Long id,
             @Parameter(description = "预览参数") @RequestBody Map<String, Object> previewParams) {

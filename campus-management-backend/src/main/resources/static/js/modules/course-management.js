@@ -5,7 +5,7 @@
 class CourseManagement extends CrudBase {
     constructor() {
         super({
-            apiEndpoint: '/api/courses',
+            apiEndpoint: '/api/v1/courses',
             tableName: '课程',
             modalId: 'courseModal',
             formId: 'courseForm',
@@ -127,7 +127,7 @@ me-2\></i>添加课程';
 
     async prepareFormData() {
         try {
-            const response = await apiClient.get('/api/courses/form-data');
+            const response = await apiClient.get('/api/v1/courses/form-data');
             if (this.isResponseSuccess(response)) {
                 this.formData = { ...this.formData, ...response.data };
                 this.populateFormSelects();

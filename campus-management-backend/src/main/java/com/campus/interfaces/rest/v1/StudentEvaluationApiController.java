@@ -32,7 +32,7 @@ import java.util.Map;
  * @since 2025-06-07
  */
 @RestController
-@RequestMapping("/api/student-evaluations")
+@RequestMapping("/api/v1/student-evaluations")
 @Tag(name = "学生评价管理", description = "学生评价相关API接口")
 public class StudentEvaluationApiController extends BaseController {
 

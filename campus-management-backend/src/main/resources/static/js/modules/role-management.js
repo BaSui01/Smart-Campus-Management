@@ -5,7 +5,7 @@
 class RoleManagement extends CrudBase {
     constructor() {
         super({
-            apiEndpoint: '/api/roles',
+            apiEndpoint: '/api/v1/roles',
             tableName: '角色',
             modalId: 'addRoleModal',
             formId: 'addRoleForm',
@@ -195,8 +195,8 @@ class RoleManagement extends CrudBase {
         try {
             // 获取权限列表和角色权限
             const [permissionsResponse, rolePermissionsResponse] = await Promise.all([
-                apiClient.get('/api/permissions'),
-                apiClient.get(`/api/roles/${roleId}/permissions`)
+                apiClient.get('/api/v1/permissions'),
+                apiClient.get(`/api/v1/roles/${roleId}/permissions`)
             ]);
 
             if (this.isResponseSuccess(permissionsResponse) && this.isResponseSuccess(rolePermissionsResponse)) {
@@ -306,7 +306,7 @@ class RoleManagement extends CrudBase {
         const permissionIds = Array.from(checkboxes).map(cb => parseInt(cb.value));
 
         try {
-            const response = await apiClient.put(`/api/roles/${roleId}/permissions`, permissionIds);
+            const response = await apiClient.put(`/api/v1/roles/${roleId}/permissions`, permissionIds);
             if (this.isResponseSuccess(response)) {
                 MessageUtils.success('权限保存成功');
                 const permissionModal = bootstrap.Modal.getInstance(document.getElementById('permissionModal'));

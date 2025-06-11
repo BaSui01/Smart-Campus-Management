@@ -1,0 +1,489 @@
+/* 作业管理页面专用样式 */
+
+/* 作业状态颜色主题 */
+.assignment-status-pending {
+  --status-color: #e6a23c;
+  --status-bg: #fdf6ec;
+  --status-border: #f5dab1;
+}
+
+.assignment-status-submitted {
+  --status-color: #909399;
+  --status-bg: #f4f4f5;
+  --status-border: #d3d4d6;
+}
+
+.assignment-status-graded {
+  --status-color: #67c23a;
+  --status-bg: #f0f9ff;
+  --status-border: #c2e7b0;
+}
+
+.assignment-status-overdue {
+  --status-color: #f56c6c;
+  --status-bg: #fef0f0;
+  --status-border: #fbc4c4;
+}
+
+/* 作业卡片通用样式 */
+.assignment-card {
+  background: white;
+  border: 1px solid #e4e7ed;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 16px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+.assignment-card:hover {
+  border-color: #409eff;
+  box-shadow: 0 8px 25px rgba(64, 158, 255, 0.15);
+  transform: translateY(-2px);
+}
+
+.assignment-card.priority-high {
+  border-left: 4px solid #f56c6c;
+}
+
+.assignment-card.priority-medium {
+  border-left: 4px solid #e6a23c;
+}
+
+.assignment-card.priority-low {
+  border-left: 4px solid #67c23a;
+}
+
+/* 作业标题样式 */
+.assignment-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #303133;
+  margin-bottom: 8px;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.assignment-title:hover {
+  color: #409eff;
+  cursor: pointer;
+}
+
+/* 作业描述样式 */
+.assignment-description {
+  color: #606266;
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 12px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 作业信息标签 */
+.assignment-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  color: #909399;
+}
+
+.assignment-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.assignment-meta-item .el-icon {
+  font-size: 16px;
+}
+
+/* 截止时间特殊样式 */
+.due-date-urgent {
+  color: #f56c6c !important;
+  font-weight: 600;
+  animation: pulse 2s infinite;
+}
+
+.due-date-warning {
+  color: #e6a23c !important;
+  font-weight: 500;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.7; }
+  100% { opacity: 1; }
+}
+
+/* 作业状态标签样式 */
+.assignment-status-tag {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.assignment-status-tag.pending {
+  background: #fdf6ec;
+  color: #e6a23c;
+  border: 1px solid #f5dab1;
+}
+
+.assignment-status-tag.submitted {
+  background: #f4f4f5;
+  color: #909399;
+  border: 1px solid #d3d4d6;
+}
+
+.assignment-status-tag.graded {
+  background: #f0f9ff;
+  color: #67c23a;
+  border: 1px solid #c2e7b0;
+}
+
+.assignment-status-tag.overdue {
+  background: #fef0f0;
+  color: #f56c6c;
+  border: 1px solid #fbc4c4;
+}
+
+/* 分数显示样式 */
+.assignment-score {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 8px;
+  color: white;
+  min-width: 80px;
+}
+
+.assignment-score-value {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.assignment-score-label {
+  font-size: 12px;
+  opacity: 0.9;
+  margin-top: 2px;
+}
+
+/* 优秀成绩样式 */
+.assignment-score.excellent {
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+}
+
+.assignment-score.good {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.assignment-score.average {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.assignment-score.poor {
+  background: linear-gradient(135deg, #4b6cb7 0%, #182848 100%);
+}
+
+/* 文件附件样式 */
+.assignment-attachments {
+  margin-top: 12px;
+}
+
+.attachment-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.attachment-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 20px;
+  font-size: 12px;
+  color: #606266;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.attachment-item:hover {
+  background: #e3f2fd;
+  border-color: #90caf9;
+  color: #1976d2;
+}
+
+.attachment-item .el-icon {
+  font-size: 14px;
+}
+
+/* 操作按钮组样式 */
+.assignment-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.assignment-actions .el-button {
+  padding: 8px 16px;
+  font-size: 13px;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.assignment-actions .el-button--primary {
+  background: linear-gradient(45deg, #409eff, #36a3f7);
+  border: none;
+}
+
+.assignment-actions .el-button--primary:hover {
+  background: linear-gradient(45deg, #36a3f7, #297fd6);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
+}
+
+/* 统计卡片样式 */
+.stats-card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.stats-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.stats-number {
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.stats-label {
+  color: #909399;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* 筛选器样式 */
+.assignment-filters {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.filter-group .el-select,
+.filter-group .el-input {
+  min-width: 150px;
+}
+
+/* 加载状态样式 */
+.assignment-skeleton {
+  padding: 20px;
+  background: white;
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+
+.skeleton-line {
+  height: 16px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+  border-radius: 4px;
+  margin-bottom: 12px;
+}
+
+.skeleton-line.title {
+  height: 20px;
+  width: 70%;
+}
+
+.skeleton-line.description {
+  width: 90%;
+}
+
+.skeleton-line.meta {
+  width: 50%;
+  height: 14px;
+}
+
+@keyframes skeleton-loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* 空状态样式 */
+.assignment-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: #909399;
+}
+
+.assignment-empty .el-icon {
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.assignment-empty h3 {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  color: #606266;
+}
+
+.assignment-empty p {
+  margin: 0;
+  font-size: 14px;
+}
+
+/* 进度指示器 */
+.assignment-progress {
+  margin-top: 12px;
+}
+
+.progress-bar {
+  height: 6px;
+  background: #f0f0f0;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #409eff, #36a3f7);
+  transition: width 0.3s ease;
+  border-radius: 3px;
+}
+
+.progress-text {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 4px;
+  text-align: center;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .assignment-card {
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  
+  .assignment-title {
+    font-size: 16px;
+  }
+  
+  .assignment-meta {
+    gap: 12px;
+  }
+  
+  .assignment-actions {
+    flex-direction: column;
+  }
+  
+  .assignment-actions .el-button {
+    width: 100%;
+  }
+  
+  .filter-group {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .filter-group .el-select,
+  .filter-group .el-input {
+    min-width: auto;
+    width: 100%;
+  }
+  
+  .stats-number {
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .assignment-card {
+    padding: 12px;
+  }
+  
+  .assignment-title {
+    font-size: 14px;
+  }
+  
+  .assignment-meta {
+    font-size: 12px;
+    gap: 8px;
+  }
+  
+  .assignment-actions .el-button {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+}
+
+/* 动画效果 */
+.assignment-enter-active,
+.assignment-leave-active {
+  transition: all 0.3s ease;
+}
+
+.assignment-enter-from {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.assignment-leave-to {
+  opacity: 0;
+  transform: translateX(-20px);
+}
+
+/* 打印样式 */
+@media print {
+  .assignment-actions,
+  .assignment-filters {
+    display: none !important;
+  }
+  
+  .assignment-card {
+    box-shadow: none;
+    border: 1px solid #ccc;
+    page-break-inside: avoid;
+  }
+}

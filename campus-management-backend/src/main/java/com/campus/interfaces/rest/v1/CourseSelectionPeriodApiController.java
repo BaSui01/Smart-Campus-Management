@@ -201,7 +201,7 @@ public class CourseSelectionPeriodApiController {
 
     @Operation(summary = "检查学生是否可以选课")
     @GetMapping("/{id}/can-select")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_TEACHER', 'ROLE_STUDENT')")
     public ResponseEntity<ApiResponse<Boolean>> canStudentSelectCourse(
             @Parameter(description = "选课时间段ID") @PathVariable Long id,
             @Parameter(description = "年级") @RequestParam String grade,

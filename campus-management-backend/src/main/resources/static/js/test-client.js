@@ -62,14 +62,14 @@ async function testSimpleRequest() {
     
     try {
         // 测试健康检查端点
-        const response = await apiClient.get('/api/health');
+        const response = await apiClient.get('/api/v1/health');
         console.log('✅ 健康检查请求成功:', response);
     } catch (error) {
         console.log('ℹ️ 健康检查请求失败（这是正常的，如果后端未运行）:', error.message);
         
         // 测试另一个端点
         try {
-            const response = await apiClient.get('/api/test/hello');
+            const response = await apiClient.get('/api/v1/test/hello');
             console.log('✅ 测试请求成功:', response);
         } catch (error2) {
             console.log('ℹ️ 测试请求也失败（这是正常的，如果后端未运行）:', error2.message);

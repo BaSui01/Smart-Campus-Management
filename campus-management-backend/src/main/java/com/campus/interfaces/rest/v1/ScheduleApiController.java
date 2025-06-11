@@ -33,7 +33,7 @@ import java.util.Optional;
  * @since 2025-06-06
  */
 @RestController
-@RequestMapping("/api/schedules")
+@RequestMapping("/api/v1/schedules")
 @Tag(name = "课程安排管理", description = "课程安排相关的API接口")
 public class ScheduleApiController extends BaseController {
 

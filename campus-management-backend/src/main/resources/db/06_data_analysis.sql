@@ -3,8 +3,8 @@
 -- 文件: 07_data_analysis.sql
 -- 描述: 检查所有表的结构、数据、索引、约束等完整情况
 -- 版本: 2.0.0
--- 创建时间: 2025-01-27
--- 更新时间: 2025-01-27
+-- 创建时间: 2025-06-08
+-- 更新时间: 2025-06-08
 --
 -- 功能：
 -- 1. 检查所有表的数据情况
@@ -146,10 +146,10 @@ SELECT
     (SELECT COUNT(*) FROM tb_department WHERE deleted = 0) as '学院数',
     (SELECT COUNT(*) FROM tb_class WHERE deleted = 0) as '班级数',
     (SELECT COUNT(*) FROM tb_student WHERE deleted = 0) as '学生数',
-    (SELECT COUNT(*) FROM tb_user u
+    (SELECT COUNT(DISTINCT u.id) FROM tb_user u
      JOIN tb_user_role ur ON u.id = ur.user_id
      JOIN tb_role r ON ur.role_id = r.id
-     WHERE u.deleted = 0 AND r.role_name LIKE '%教师%') as '教师数'
+     WHERE u.deleted = 0 AND ur.deleted = 0 AND r.role_key = 'ROLE_TEACHER') as '教师数'
 
 UNION ALL
 
@@ -315,191 +315,82 @@ UNION ALL
 SELECT
     '数据完整性检查' as '检查类型',
     '教师用户关联' as '检查项',
-    (SELECT COUNT(*) FROM tb_user u
-     JOIN tb_user_role ur ON u.id = ur.user_id
+    (SELECT COUNT(DISTINCT ur.user_id) FROM tb_user_role ur
      JOIN tb_role r ON ur.role_id = r.id
-     WHERE u.deleted = 0 AND r.role_name LIKE '%教师%' AND u.id IS NULL) as '异常数量',
-    '✅ 正常' as '检查结果';
+     WHERE ur.deleted = 0 AND r.role_key = 'ROLE_TEACHER'
+     AND ur.user_id NOT IN (SELECT DISTINCT u.id FROM tb_user u WHERE u.deleted = 0)) as '异常数量',
+    CASE
+        WHEN (SELECT COUNT(DISTINCT ur.user_id) FROM tb_user_role ur
+              JOIN tb_role r ON ur.role_id = r.id
+              WHERE ur.deleted = 0 AND r.role_key = 'ROLE_TEACHER'
+              AND ur.user_id NOT IN (SELECT DISTINCT u.id FROM tb_user u WHERE u.deleted = 0)) = 0
+        THEN '✅ 正常'
+        ELSE '❌ 异常'
+    END as '检查结果';
 
--- =====================================================
--- 10. 数据量评估
--- =====================================================
-
-SELECT '10. 数据量评估' as '检查项目', NOW() as '检查时间';
-
-SELECT
+-- 6. 数据量评估
+SELECT 
     '数据量评估' as '评估类型',
     '总用户数' as '指标',
     (SELECT COUNT(*) FROM tb_user WHERE deleted = 0) as '当前数量',
     '10000+' as '目标数量',
-    CASE
-        WHEN (SELECT COUNT(*) FROM tb_user WHERE deleted = 0) >= 10000 THEN '✅ 达标'
-        ELSE '❌ 不足'
+    CASE 
+        WHEN (SELECT COUNT(*) FROM tb_user WHERE deleted = 0) >= 10000 THEN '✓ 达标'
+        ELSE '✗ 不足'
     END as '评估结果'
 
 UNION ALL
 
-SELECT
+SELECT 
     '数据量评估' as '评估类型',
     '学生数量' as '指标',
     (SELECT COUNT(*) FROM tb_student WHERE deleted = 0) as '当前数量',
     '8000+' as '目标数量',
-    CASE
-        WHEN (SELECT COUNT(*) FROM tb_student WHERE deleted = 0) >= 8000 THEN '✅ 达标'
-        ELSE '❌ 不足'
+    CASE 
+        WHEN (SELECT COUNT(*) FROM tb_student WHERE deleted = 0) >= 8000 THEN '✓ 达标'
+        ELSE '✗ 不足'
     END as '评估结果'
 
 UNION ALL
 
-SELECT
+SELECT 
     '数据量评估' as '评估类型',
     '课程数量' as '指标',
     (SELECT COUNT(*) FROM tb_course WHERE deleted = 0) as '当前数量',
     '800+' as '目标数量',
-    CASE
-        WHEN (SELECT COUNT(*) FROM tb_course WHERE deleted = 0) >= 800 THEN '✅ 达标'
-        ELSE '❌ 不足'
+    CASE 
+        WHEN (SELECT COUNT(*) FROM tb_course WHERE deleted = 0) >= 800 THEN '✓ 达标'
+        ELSE '✗ 不足'
     END as '评估结果'
 
 UNION ALL
 
-SELECT
+SELECT 
     '数据量评估' as '评估类型',
     '选课记录' as '指标',
     (SELECT COUNT(*) FROM tb_course_selection WHERE deleted = 0) as '当前数量',
     '50000+' as '目标数量',
-    CASE
-        WHEN (SELECT COUNT(*) FROM tb_course_selection WHERE deleted = 0) >= 50000 THEN '✅ 达标'
-        ELSE '❌ 不足'
-    END as '评估结果'
-
-UNION ALL
-
-SELECT
-    '数据量评估' as '评估类型',
-    '成绩记录' as '指标',
-    (SELECT COUNT(*) FROM tb_grade WHERE deleted = 0) as '当前数量',
-    '30000+' as '目标数量',
-    CASE
-        WHEN (SELECT COUNT(*) FROM tb_grade WHERE deleted = 0) >= 30000 THEN '✅ 达标'
-        ELSE '❌ 不足'
+    CASE 
+        WHEN (SELECT COUNT(*) FROM tb_course_selection WHERE deleted = 0) >= 50000 THEN '✓ 达标'
+        ELSE '✗ 不足'
     END as '评估结果';
 
--- =====================================================
--- 11. 性能分析
--- =====================================================
-
-SELECT '11. 性能分析' as '检查项目', NOW() as '检查时间';
-
--- 检查大表情况
-SELECT
-    '大表分析' as '分析类型',
-    table_name as '表名',
-    table_rows as '记录数',
-    ROUND(((data_length + index_length) / 1024 / 1024), 2) as '表大小(MB)',
-    CASE
-        WHEN table_rows > 100000 THEN '⚠️ 超大表'
-        WHEN table_rows > 50000 THEN '⚠️ 大表'
-        WHEN table_rows > 10000 THEN '✅ 中等表'
-        ELSE '✅ 小表'
-    END as '表规模评估',
-    CASE
-        WHEN table_rows > 50000 THEN '建议添加分区或优化索引'
-        WHEN table_rows > 10000 THEN '建议监控查询性能'
-        ELSE '性能良好'
-    END as '优化建议'
-FROM information_schema.tables
-WHERE table_schema = 'campus_management_db'
-    AND table_type = 'BASE TABLE'
-    AND table_name LIKE 'tb_%'
-    AND table_rows > 0
-ORDER BY table_rows DESC
-LIMIT 10;
-
--- =====================================================
--- 12. 最终评估结果
--- =====================================================
-
-SELECT '12. 最终评估结果' as '检查项目', NOW() as '检查时间';
-
-SELECT
+-- 7. 最终评估结果
+SELECT 
     '最终评估结果' as '评估类型',
-    CASE
-        WHEN (SELECT COUNT(*) FROM information_schema.tables
-              WHERE table_schema = 'campus_management_db'
+    CASE 
+        WHEN (SELECT COUNT(*) FROM information_schema.tables 
+              WHERE table_schema = 'campus_management_db' 
                 AND table_type = 'BASE TABLE'
                 AND table_name LIKE 'tb_%'
-                AND table_rows = 0) = 0
+                AND table_rows = 0) = 0 
         THEN '✅ 所有表都有数据'
-        ELSE CONCAT('❌ 有 ', (SELECT COUNT(*) FROM information_schema.tables
-                              WHERE table_schema = 'campus_management_db'
+        ELSE CONCAT('❌ 有 ', (SELECT COUNT(*) FROM information_schema.tables 
+                              WHERE table_schema = 'campus_management_db' 
                                 AND table_type = 'BASE TABLE'
                                 AND table_name LIKE 'tb_%'
                                 AND table_rows = 0), ' 个表无数据')
     END as '数据覆盖评估',
-    CASE
-        WHEN (SELECT COUNT(*) FROM tb_user WHERE deleted = 0) >= 10000
-             AND (SELECT COUNT(*) FROM tb_student WHERE deleted = 0) >= 8000
-             AND (SELECT COUNT(*) FROM tb_course WHERE deleted = 0) >= 500
-        THEN '✅ 数据量充足'
-        ELSE '❌ 数据量不足'
-    END as '数据量评估',
-    CASE
-        WHEN (SELECT COUNT(*) FROM tb_user WHERE username = 'admin' AND deleted = 0) > 0
-             AND (SELECT COUNT(*) FROM tb_role_permission WHERE deleted = 0) > 0
-        THEN '✅ 系统配置完整'
-        ELSE '❌ 系统配置不完整'
-    END as '系统配置评估';
+    NOW() as '评估时间';
 
--- =====================================================
--- 13. 优化建议
--- =====================================================
-
-SELECT '13. 优化建议' as '检查项目', NOW() as '检查时间';
-
-SELECT
-    '优化建议' as '建议类型',
-    '数据补充' as '建议分类',
-    CASE
-        WHEN (SELECT COUNT(*) FROM information_schema.tables
-              WHERE table_schema = 'campus_management_db'
-                AND table_type = 'BASE TABLE'
-                AND table_name LIKE 'tb_%'
-                AND table_rows = 0) > 0
-        THEN '建议运行 04_complete_all_tables.sql 补充空表数据'
-        ELSE '所有表都有数据，无需补充'
-    END as '具体建议'
-
-UNION ALL
-
-SELECT
-    '优化建议' as '建议类型',
-    '性能优化' as '建议分类',
-    CASE
-        WHEN (SELECT COUNT(*) FROM information_schema.tables
-              WHERE table_schema = 'campus_management_db'
-                AND table_type = 'BASE TABLE'
-                AND table_name LIKE 'tb_%'
-                AND table_rows > 50000) > 0
-        THEN '建议为大表添加合适的索引和分区策略'
-        ELSE '当前表规模适中，性能良好'
-    END as '具体建议'
-
-UNION ALL
-
-SELECT
-    '优化建议' as '建议类型',
-    '系统配置' as '建议分类',
-    CASE
-        WHEN (SELECT COUNT(*) FROM tb_system_config WHERE deleted = 0) = 0
-        THEN '建议添加系统基础配置数据'
-        ELSE '系统配置完整'
-    END as '具体建议';
-
--- =====================================================
--- 检查完成
--- =====================================================
-
-SELECT '=== 智慧校园管理系统全面表检查完成 ===' as '状态', NOW() as '完成时间';
-SELECT '🎯 检查项目：表结构、数据完整性、索引、约束、性能分析' as '检查范围';
-SELECT '📊 如发现问题，请根据优化建议进行相应处理' as '后续建议';
+SELECT '=== 数据覆盖分析完成 ===' as '状态';

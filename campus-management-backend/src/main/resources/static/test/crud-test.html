@@ -399,7 +399,7 @@
             addTestResult(module, '开始测试', 'pending', '正在测试班级管理模块...');
             
             // 测试API连接
-            await testApiConnection('/api/classes', module);
+            await testApiConnection('/api/v1/classes', module);
             
             // 测试页面加载
             await testPageLoad('/admin/academic/classes', module);
@@ -422,7 +422,7 @@
             
             addTestResult(module, '开始测试', 'pending', '正在测试学生管理模块...');
             
-            await testApiConnection('/api/students', module);
+            await testApiConnection('/api/v1/students', module);
             await testPageLoad('/admin/students', module);
             
             setTimeout(() => {
@@ -439,7 +439,7 @@
             
             addTestResult(module, '开始测试', 'pending', '正在测试课程管理模块...');
             
-            await testApiConnection('/api/courses', module);
+            await testApiConnection('/api/v1/courses', module);
             await testPageLoad('/admin/academic/courses', module);
             
             setTimeout(() => {
@@ -456,7 +456,7 @@
             
             addTestResult(module, '开始测试', 'pending', '正在测试财务管理模块...');
             
-            await testApiConnection('/api/payments', module);
+            await testApiConnection('/api/v1/payments', module);
             await testPageLoad('/admin/finance/payments', module);
             
             setTimeout(() => {
@@ -473,7 +473,7 @@
             
             addTestResult(module, '开始测试', 'pending', '正在测试用户管理模块...');
             
-            await testApiConnection('/api/users', module);
+            await testApiConnection('/api/v1/users', module);
             await testPageLoad('/admin/users', module);
             
             setTimeout(() => {
@@ -490,7 +490,7 @@
             
             addTestResult(module, '开始测试', 'pending', '正在测试角色管理模块...');
             
-            await testApiConnection('/api/roles', module);
+            await testApiConnection('/api/v1/roles', module);
             await testPageLoad('/admin/system/roles', module);
             
             setTimeout(() => {

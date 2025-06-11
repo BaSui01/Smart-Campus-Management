@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
  * @since 2025-06-06
  */
 @RestController
-@RequestMapping("/api/dashboard")
+@RequestMapping("/api/v1/dashboard")
 @Tag(name = "仪表盘API", description = "仪表盘数据管理REST API接口")
 @SecurityRequirement(name = "Bearer")
 public class DashboardApiController {

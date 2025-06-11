@@ -5,7 +5,7 @@
 class PaymentManagement extends CrudBase {
     constructor() {
         super({
-            apiEndpoint: '/api/payments',
+            apiEndpoint: '/api/v1/payments',
             tableName: '缴费记录',
             modalId: 'paymentModal',
             formId: 'paymentForm',
@@ -153,7 +153,7 @@ me-2\></i>添加缴费记录';
 
     async prepareFormData() {
         try {
-            const response = await apiClient.get('/api/payments/form-data');
+            const response = await apiClient.get('/api/v1/payments/form-data');
             if (this.isResponseSuccess(response)) {
                 this.formData = { ...this.formData, ...response.data };
                 this.populateFormSelects();

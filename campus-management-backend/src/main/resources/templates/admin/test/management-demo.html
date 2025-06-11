@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/admin :: html}"
+      lang="zh-CN">
+<head th:replace="~{layout/admin :: head}">
+    <th:block th:fragment="head-extra">
+        <title>管理界面演示 - 智慧校园管理系统</title>
+        <style>
+            .demo-card {
+                transition: transform 0.2s ease-in-out;
+                cursor: pointer;
+            }
+            .demo-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+            }
+            .feature-icon {
+                font-size: 3rem;
+                margin-bottom: 1rem;
+            }
+            .status-indicator {
+                width: 12px;
+                height: 12px;
+                border-radius: 50%;
+                display: inline-block;
+                margin-right: 8px;
+            }
+            .status-completed { background-color: #28a745; }
+            .status-in-progress { background-color: #ffc107; }
+            .status-planned { background-color: #6c757d; }
+        </style>
+    </th:block>
+</head>
+<body>
+    <div th:fragment="content">
+        <!-- 页面标题 -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-desktop me-2 text-primary"></i>管理界面演示
+                </h1>
+                <p class="text-muted mb-0">Smart Campus Management 后台管理功能展示</p>
+            </div>
+            <div>
+                <span class="badge bg-success">v1.0.0</span>
+            </div>
+        </div>
+
+        <!-- 功能概览 -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info-circle me-2"></i>系统功能概览
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="fw-bold">✅ 已完成功能</h6>
+                                <ul class="list-unstyled">
+                                    <li><span class="status-indicator status-completed"></span>用户管理系统</li>
+                                    <li><span class="status-indicator status-completed"></span>课程管理系统</li>
+                                    <li><span class="status-indicator status-completed"></span>成绩管理系统</li>
+                                    <li><span class="status-indicator status-completed"></span>考勤管理系统</li>
+                                    <li><span class="status-indicator status-completed"></span>缴费管理系统</li>
+                                    <li><span class="status-indicator status-completed"></span>权限控制系统</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="fw-bold">🔧 技术特性</h6>
+                                <ul class="list-unstyled">
+                                    <li><span class="status-indicator status-completed"></span>响应式设计</li>
+                                    <li><span class="status-indicator status-completed"></span>数据表格功能</li>
+                                    <li><span class="status-indicator status-completed"></span>批量操作支持</li>
+                                    <li><span class="status-indicator status-completed"></span>实时数据刷新</li>
+                                    <li><span class="status-indicator status-completed"></span>数据导出功能</li>
+                                    <li><span class="status-indicator status-completed"></span>权限动态控制</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 管理模块卡片 -->
+        <div class="row g-4 mb-4">
+            <!-- 用户管理 -->
+            <div class="col-md-4">
+                <div class="card demo-card border-0 shadow-sm h-100" onclick="window.location.href='/admin/users'">
+                    <div class="card-body text-center">
+                        <div class="feature-icon text-primary">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <h5 class="card-title">用户管理</h5>
+                        <p class="card-text text-muted">管理系统用户账户、角色和权限，支持批量操作和数据导出</p>
+                        <div class="d-flex justify-content-between text-sm">
+                            <span class="text-success">✓ CRUD操作</span>
+                            <span class="text-success">✓ 权限控制</span>
+                            <span class="text-success">✓ 批量操作</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 课程管理 -->
+            <div class="col-md-4">
+                <div class="card demo-card border-0 shadow-sm h-100" onclick="window.location.href='/admin/courses'">
+                    <div class="card-body text-center">
+                        <div class="feature-icon text-info">
+                            <i class="fas fa-book"></i>
+                        </div>
+                        <h5 class="card-title">课程管理</h5>
+                        <p class="card-text text-muted">管理课程信息、课程安排和选课设置，支持多种课程类型</p>
+                        <div class="d-flex justify-content-between text-sm">
+                            <span class="text-success">✓ 课程分类</span>
+                            <span class="text-success">✓ 选课统计</span>
+                            <span class="text-success">✓ 状态管理</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 成绩管理 -->
+            <div class="col-md-4">
+                <div class="card demo-card border-0 shadow-sm h-100" onclick="window.location.href='/admin/grades'">
+                    <div class="card-body text-center">
+                        <div class="feature-icon text-warning">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h5 class="card-title">成绩管理</h5>
+                        <p class="card-text text-muted">管理学生成绩、成绩统计和成绩分析，支持图表展示</p>
+                        <div class="d-flex justify-content-between text-sm">
+                            <span class="text-success">✓ 成绩录入</span>
+                            <span class="text-success">✓ 统计分析</span>
+                            <span class="text-success">✓ 图表展示</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 考勤管理 -->
+            <div class="col-md-4">
+                <div class="card demo-card border-0 shadow-sm h-100" onclick="window.location.href='/admin/attendance'">
+                    <div class="card-body text-center">
+                        <div class="feature-icon text-success">
+                            <i class="fas fa-user-check"></i>
+                        </div>
+                        <h5 class="card-title">考勤管理</h5>
+                        <p class="card-text text-muted">管理学生考勤记录、考勤统计和考勤设置，支持日历视图</p>
+                        <div class="d-flex justify-content-between text-sm">
+                            <span class="text-success">✓ 考勤记录</span>
+                            <span class="text-success">✓ 日历视图</span>
+                            <span class="text-success">✓ 统计报表</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 缴费管理 -->
+            <div class="col-md-4">
+                <div class="card demo-card border-0 shadow-sm h-100" onclick="window.location.href='/admin/payments'">
+                    <div class="card-body text-center">
+                        <div class="feature-icon text-danger">
+                            <i class="fas fa-credit-card"></i>
+                        </div>
+                        <h5 class="card-title">缴费管理</h5>
+                        <p class="card-text text-muted">管理学生缴费记录、费用项目和财务统计，支持多种缴费方式</p>
+                        <div class="d-flex justify-content-between text-sm">
+                            <span class="text-success">✓ 缴费记录</span>
+                            <span class="text-success">✓ 财务统计</span>
+                            <span class="text-success">✓ 逾期提醒</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 系统设置 -->
+            <div class="col-md-4">
+                <div class="card demo-card border-0 shadow-sm h-100" onclick="window.location.href='/admin/system/settings'">
+                    <div class="card-body text-center">
+                        <div class="feature-icon text-secondary">
+                            <i class="fas fa-cogs"></i>
+                        </div>
+                        <h5 class="card-title">系统设置</h5>
+                        <p class="card-text text-muted">系统参数配置、角色权限管理和操作日志查看</p>
+                        <div class="d-flex justify-content-between text-sm">
+                            <span class="text-warning">⚠ 开发中</span>
+                            <span class="text-success">✓ 权限管理</span>
+                            <span class="text-warning">⚠ 日志查看</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 技术架构说明 -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">
+                            <i class="fas fa-code me-2"></i>技术架构
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <h6 class="fw-bold text-primary">后端技术</h6>
+                                <ul class="list-unstyled small">
+                                    <li>• Spring Boot 2.7.x</li>
+                                    <li>• Spring Security</li>
+                                    <li>• Spring Data JPA</li>
+                                    <li>• MySQL 8.0</li>
+                                    <li>• Redis</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-3">
+                                <h6 class="fw-bold text-info">前端技术</h6>
+                                <ul class="list-unstyled small">
+                                    <li>• Thymeleaf</li>
+                                    <li>• Bootstrap 5.x</li>
+                                    <li>• jQuery 3.7.0</li>
+                                    <li>• DataTables</li>
+                                    <li>• Font Awesome</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-3">
+                                <h6 class="fw-bold text-success">核心特性</h6>
+                                <ul class="list-unstyled small">
+                                    <li>• 响应式设计</li>
+                                    <li>• 权限控制</li>
+                                    <li>• 数据可视化</li>
+                                    <li>• 批量操作</li>
+                                    <li>• 实时刷新</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-3">
+                                <h6 class="fw-bold text-warning">安全机制</h6>
+                                <ul class="list-unstyled small">
+                                    <li>• JWT认证</li>
+                                    <li>• RBAC权限</li>
+                                    <li>• CSRF防护</li>
+                                    <li>• XSS防护</li>
+                                    <li>• 数据脱敏</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 快速操作 -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-rocket me-2"></i>快速操作
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <button type="button" class="btn btn-outline-primary w-100 mb-2" onclick="window.location.href='/admin/users'">
+                                    <i class="fas fa-user-plus me-2"></i>添加用户
+                                </button>
+                            </div>
+                            <div class="col-md-3">
+                                <button type="button" class="btn btn-outline-info w-100 mb-2" onclick="window.location.href='/admin/courses'">
+                                    <i class="fas fa-plus me-2"></i>创建课程
+                                </button>
+                            </div>
+                            <div class="col-md-3">
+                                <button type="button" class="btn btn-outline-warning w-100 mb-2" onclick="window.location.href='/admin/grades'">
+                                    <i class="fas fa-edit me-2"></i>录入成绩
+                                </button>
+                            </div>
+                            <div class="col-md-3">
+                                <button type="button" class="btn btn-outline-success w-100 mb-2" onclick="window.location.href='/admin/attendance'">
+                                    <i class="fas fa-check me-2"></i>考勤签到
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <th:block th:fragment="scripts">
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // 设置当前页面标识
+                document.body.setAttribute('data-current-page', 'demo');
+                
+                // 显示欢迎消息
+                if (window.AdminUtils) {
+                    AdminUtils.showAlert('欢迎使用Smart Campus Management管理系统！', 'success');
+                }
+                
+                console.log('管理界面演示页面加载完成');
+            });
+        </script>
+    </th:block>
+</body>
+</html>

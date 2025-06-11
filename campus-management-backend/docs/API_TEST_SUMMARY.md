@@ -215,7 +215,7 @@ mvn jacoco:report
 
 ---
 
-**报告生成时间**: 2025-01-27  
+**报告生成时间**: 2025-06-08  
 **系统版本**: 1.0.0  
 **测试框架**: JUnit 5 + Spring Boot Test  
 **维护团队**: Campus Management Team

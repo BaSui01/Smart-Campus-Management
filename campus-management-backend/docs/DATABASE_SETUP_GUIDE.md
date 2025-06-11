@@ -442,7 +442,7 @@ CREATE DATABASE campus_management_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unico
 
 | 版本 | 日期 | 更新内容 |
 |------|------|----------|
-| 1.0.0 | 2025-01-27 | 初始版本，包含完整的数据库初始化功能 |
+| 1.0.0 | 2025-06-08 | 初始版本，包含完整的数据库初始化功能 |
 
 ---
 

@@ -4,7 +4,7 @@
 
 class FeeItemsManager {
     constructor() {
-        this.apiBase = '/admin/api/fee-items';
+        this.apiBase = '/admin/api/v1/fee-items';
         this.currentPage = 0;
         this.pageSize = 10;
         this.searchQuery = '';

@@ -27,7 +27,7 @@
  * @since 2025-06-07
  */
 @RestController
-@RequestMapping("/api/activity-logs")
+@RequestMapping("/api/v1/activity-logs")
 @Tag(name = "活动日志管理", description = "活动日志相关API接口")
 public class ActivityLogApiController {
     

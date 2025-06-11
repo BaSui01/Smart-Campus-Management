@@ -2,8 +2,95 @@ import request from './request'
 
 /**
  * 家长相关API
+ * 基于后端 ParentStudentRelationController 等接口实现
  */
 export const parentApi = {
+  // ==================== 家长学生关系管理 ====================
+
+  /**
+   * 获取家长学生关系列表
+   * 对应后端: GET /api/v1/parent-student-relations
+   */
+  getParentStudentRelationList(params = {}) {
+    return request({
+      url: '/v1/parent-student-relations',
+      method: 'get',
+      params
+    })
+  },
+
+  /**
+   * 创建家长学生关系
+   * 对应后端: POST /api/v1/parent-student-relations
+   */
+  createParentStudentRelation(data) {
+    return request({
+      url: '/v1/parent-student-relations',
+      method: 'post',
+      data
+    })
+  },
+
+  /**
+   * 更新家长学生关系
+   * 对应后端: PUT /api/v1/parent-student-relations/{id}
+   */
+  updateParentStudentRelation(id, data) {
+    return request({
+      url: `/v1/parent-student-relations/${id}`,
+      method: 'put',
+      data
+    })
+  },
+
+  /**
+   * 删除家长学生关系
+   * 对应后端: DELETE /api/v1/parent-student-relations/{id}
+   */
+  deleteParentStudentRelation(id) {
+    return request({
+      url: `/v1/parent-student-relations/${id}`,
+      method: 'delete'
+    })
+  },
+
+  /**
+   * 验证家长学生关系
+   * 对应后端: POST /api/v1/parent-student-relations/verify
+   */
+  verifyParentStudentRelation(data) {
+    return request({
+      url: '/v1/parent-student-relations/verify',
+      method: 'post',
+      data
+    })
+  },
+
+  /**
+   * 获取家长的学生列表
+   * 对应后端: GET /api/v1/parent-student-relations/parent/{parentId}/students
+   */
+  getParentStudents(parentId, params = {}) {
+    return request({
+      url: `/v1/parent-student-relations/parent/${parentId}/students`,
+      method: 'get',
+      params
+    })
+  },
+
+  /**
+   * 获取学生的家长列表
+   * 对应后端: GET /api/v1/parent-student-relations/student/{studentId}/parents
+   */
+  getStudentParents(studentId, params = {}) {
+    return request({
+      url: `/v1/parent-student-relations/student/${studentId}/parents`,
+      method: 'get',
+      params
+    })
+  },
+
+  // ==================== 家长监控功能 ====================
   // 获取家长个人信息
   getProfile() {
     return request({

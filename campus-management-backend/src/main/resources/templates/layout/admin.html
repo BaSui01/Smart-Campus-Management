@@ -96,17 +96,17 @@
                     </ul>
                 </li>
 
-                <!-- 学术管理 - 只有SUPER_ADMIN、ADMIN和ACADEMIC_ADMIN可以看到 -->
-                <li th:if="${@permissionUtil.isAcademicAdmin()}">
+                <!-- 教务管理 - 基于权限控制显示 -->
+                <li th:if="${@permissionUtil.hasAnyRole('ROLE_SUPER_ADMIN,ROLE_ADMIN,ROLE_PRINCIPAL,ROLE_ACADEMIC_DIRECTOR,ROLE_DEAN,ROLE_DEPARTMENT_HEAD')}">
                     <a href="#academicSubmenu" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle">
                         <i class="fas fa-graduation-cap"></i>
-                        学术管理
+                        教务管理
                     </a>
                     <ul class="collapse list-unstyled" id="academicSubmenu">
                         <li>
-                            <a href="/admin/academic/classes" th:classappend="${currentPage == 'classes' ? 'active' : ''}">
-                                <i class="fas fa-chalkboard"></i>
-                                班级管理
+                            <a href="/admin/students" th:classappend="${currentPage == 'students' ? 'active' : ''}">
+                                <i class="fas fa-user-graduate"></i>
+                                学生管理
                             </a>
                         </li>
                         <li>
@@ -116,24 +116,40 @@
                             </a>
                         </li>
                         <li>
+                            <a href="/admin/grades" th:classappend="${currentPage == 'grades' ? 'active' : ''}">
+                                <i class="fas fa-chart-line"></i>
+                                成绩管理
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/admin/attendance" th:classappend="${currentPage == 'attendance' ? 'active' : ''}">
+                                <i class="fas fa-user-check"></i>
+                                考勤管理
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/admin/academic/classes" th:classappend="${currentPage == 'classes' ? 'active' : ''}">
+                                <i class="fas fa-chalkboard"></i>
+                                班级管理
+                            </a>
+                        </li>
+                        <li>
                             <a href="/admin/academic/schedules" th:classappend="${currentPage == 'schedules' ? 'active' : ''}">
                                 <i class="fas fa-calendar-alt"></i>
                                 课程安排
                             </a>
                         </li>
+                        <li>
+                            <a href="/admin/academic/course-selection" th:classappend="${currentPage == 'course-selection' ? 'active' : ''}">
+                                <i class="fas fa-hand-pointer"></i>
+                                选课管理
+                            </a>
+                        </li>
                     </ul>
                 </li>
 
-                <!-- 学生管理 - 只有SUPER_ADMIN、ADMIN和ACADEMIC_ADMIN可以看到 -->
-                <li th:if="${@permissionUtil.isAcademicAdmin()}">
-                    <a href="/admin/students" th:classappend="${currentPage == 'students' ? 'active' : ''}">
-                        <i class="fas fa-user-graduate"></i>
-                        学生管理
-                    </a>
-                </li>
-
-                <!-- 财务管理 - 只有SUPER_ADMIN、ADMIN和FINANCE_ADMIN可以看到 -->
-                <li th:if="${@permissionUtil.isFinanceAdmin()}">
+                <!-- 财务管理 - 基于权限控制显示 -->
+                <li th:if="${@permissionUtil.hasAnyRole('ROLE_SUPER_ADMIN,ROLE_ADMIN,ROLE_PRINCIPAL,ROLE_FINANCE_DIRECTOR,ROLE_FINANCE_STAFF')}">
                     <a href="#financeSubmenu" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle">
                         <i class="fas fa-money-bill-wave"></i>
                         财务管理
@@ -158,9 +174,43 @@
                             </a>
                         </li>
                         <li>
-                            <a href="/admin/reports" th:classappend="${currentPage == 'reports' ? 'active' : ''}">
+                            <a href="/admin/finance/statistics" th:classappend="${currentPage == 'finance-stats' ? 'active' : ''}">
                                 <i class="fas fa-chart-bar"></i>
+                                财务统计
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/admin/finance/reports" th:classappend="${currentPage == 'finance-reports' ? 'active' : ''}">
+                                <i class="fas fa-file-invoice-dollar"></i>
                                 财务报表
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
+                <!-- 人事管理 - 基于权限控制显示 -->
+                <li th:if="${@permissionUtil.hasAnyRole('ROLE_SUPER_ADMIN,ROLE_ADMIN,ROLE_PRINCIPAL,ROLE_HR_DIRECTOR,ROLE_HR_STAFF')}">
+                    <a href="#hrSubmenu" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle">
+                        <i class="fas fa-users-cog"></i>
+                        人事管理
+                    </a>
+                    <ul class="collapse list-unstyled" id="hrSubmenu">
+                        <li>
+                            <a href="/admin/teachers" th:classappend="${currentPage == 'teachers' ? 'active' : ''}">
+                                <i class="fas fa-chalkboard-teacher"></i>
+                                教师管理
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/admin/staff" th:classappend="${currentPage == 'staff' ? 'active' : ''}">
+                                <i class="fas fa-user-tie"></i>
+                                员工管理
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/admin/departments" th:classappend="${currentPage == 'departments' ? 'active' : ''}">
+                                <i class="fas fa-building"></i>
+                                部门管理
                             </a>
                         </li>
                     </ul>
@@ -265,6 +315,7 @@
     <!-- 通用工具类 -->
     <script th:src="@{/js/utils/common-utils.js}"></script>
     <script th:src="@{/js/utils/crud-base.js}"></script>
+    <script th:src="@{/js/common/admin-utils.js}"></script>
 
     <!-- 侧边栏切换脚本 -->
     <script>

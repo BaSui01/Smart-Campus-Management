@@ -2,8 +2,82 @@ import request from './request'
 
 /**
  * 教师相关API
+ * 基于后端 TeacherController 等接口实现
  */
 export const teacherApi = {
+  // ==================== 教师基础信息管理 ====================
+
+  /**
+   * 获取教师列表
+   * 对应后端: GET /api/v1/teachers
+   */
+  getTeacherList(params = {}) {
+    return request({
+      url: '/teachers',
+      method: 'get',
+      params
+    })
+  },
+
+  /**
+   * 根据ID获取教师详情
+   * 对应后端: GET /api/v1/teachers/{id}
+   */
+  getTeacherById(id) {
+    return request({
+      url: `/teachers/${id}`,
+      method: 'get'
+    })
+  },
+
+  /**
+   * 创建教师
+   * 对应后端: POST /api/v1/teachers
+   */
+  createTeacher(data) {
+    return request({
+      url: '/teachers',
+      method: 'post',
+      data
+    })
+  },
+
+  /**
+   * 更新教师信息
+   * 对应后端: PUT /api/v1/teachers/{id}
+   */
+  updateTeacher(id, data) {
+    return request({
+      url: `/teachers/${id}`,
+      method: 'put',
+      data
+    })
+  },
+
+  /**
+   * 删除教师
+   * 对应后端: DELETE /api/v1/teachers/{id}
+   */
+  deleteTeacher(id) {
+    return request({
+      url: `/teachers/${id}`,
+      method: 'delete'
+    })
+  },
+
+  /**
+   * 批量更新教师状态
+   * 对应后端: PUT /api/v1/teachers/batch/status
+   */
+  batchUpdateTeacherStatus(data) {
+    return request({
+      url: '/teachers/batch/status',
+      method: 'put',
+      data
+    })
+  },
+
+  // ==================== 教师个人信息管理 ====================
   // 获取教师个人信息
   getProfile() {
     return request({

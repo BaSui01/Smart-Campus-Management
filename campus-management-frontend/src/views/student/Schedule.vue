@@ -40,7 +40,7 @@
     </el-card>
     
     <!-- 周视图 -->
-    <el-card v-if="viewMode === 'week'" class="schedule-card">
+    <el-card v-if="viewMode === 'week'" class="schedule-card" v-loading="loading">
       <div class="schedule-container">
         <div class="schedule-table">
           <!-- 表头 -->
@@ -97,7 +97,7 @@
     </el-card>
     
     <!-- 列表视图 -->
-    <el-card v-else class="schedule-list-card">
+    <el-card v-else class="schedule-list-card" v-loading="loading">
       <template #header>
         <h3>课程列表</h3>
       </template>
@@ -184,16 +184,25 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Download } from '@element-plus/icons-vue'
 import dayjs from 'dayjs'
+import { courseApi } from '@/api/course'
+import { studentApi } from '@/api/student'
 
 const selectedWeek = ref(1)
 const selectedSemester = ref('2024-spring')
 const viewMode = ref('week')
 const detailDialogVisible = ref(false)
 const selectedCourse = ref(null)
+const loading = ref(false)
+
+// 当前学期信息
+const currentSemester = ref({
+  startDate: '2024-02-26',
+  endDate: '2024-06-30'
+})
 
 // 生成周次选项
 const weeks = computed(() => {
@@ -229,78 +238,79 @@ const timeSlots = ref([
 ])
 
 // 课程数据
-const courses = ref([
-  {
-    id: 1,
-    name: '高等数学',
-    code: 'MATH101',
-    teacher: '张教授',
-    location: '教学楼A101',
-    day: 'monday',
-    timeSlot: '08:00-09:40',
-    slotId: 1,
-    credits: 4,
-    type: '必修课',
-    assessment: '考试',
-    description: '高等数学是理工科学生的重要基础课程。'
-  },
-  {
-    id: 2,
-    name: 'Java程序设计',
-    code: 'CS201',
-    teacher: '李老师',
-    location: '实验楼B203',
-    day: 'tuesday',
-    timeSlot: '14:00-15:40',
-    slotId: 3,
-    credits: 3,
-    type: '专业课',
-    assessment: '考试+实验',
-    description: 'Java程序设计课程教授面向对象编程思想。'
-  },
-  {
-    id: 3,
-    name: '数据结构',
-    code: 'CS301',
-    teacher: '王教授',
-    location: '教学楼C302',
-    day: 'wednesday',
-    timeSlot: '10:00-11:40',
-    slotId: 2,
-    credits: 3,
-    type: '专业课',
-    assessment: '考试',
-    description: '数据结构课程介绍各种数据组织方式。'
-  },
-  {
-    id: 4,
-    name: '计算机网络',
-    code: 'CS401',
-    teacher: '赵老师',
-    location: '实验楼D401',
-    day: 'thursday',
-    timeSlot: '16:00-17:40',
-    slotId: 4,
-    credits: 3,
-    type: '专业课',
-    assessment: '考试+实验',
-    description: '计算机网络课程涵盖网络协议等知识。'
-  },
-  {
-    id: 5,
-    name: '英语',
-    code: 'ENG101',
-    teacher: '刘老师',
-    location: '外语楼E201',
-    day: 'friday',
-    timeSlot: '08:00-09:40',
-    slotId: 1,
-    credits: 2,
-    type: '必修课',
-    assessment: '考试',
-    description: '大学英语课程提高学生英语能力。'
+const courses = ref([])
+
+// 加载课程表数据
+const loadSchedule = async () => {
+  loading.value = true
+
+  try {
+    const { data } = await studentApi.getStudentSchedule({
+      semester: selectedSemester.value,
+      week: selectedWeek.value
+    })
+
+    const scheduleList = Array.isArray(data) ? data : (data.schedules || data.courses || [])
+    courses.value = scheduleList.map(schedule => ({
+      id: schedule.id,
+      name: schedule.courseName || schedule.name,
+      code: schedule.courseCode || schedule.code,
+      teacher: schedule.teacherName || schedule.teacher,
+      location: schedule.location || schedule.classroom || schedule.classroomName,
+      day: mapDayOfWeek(schedule.dayOfWeek),
+      timeSlot: formatTimeSlot(schedule.startTime, schedule.endTime),
+      slotId: mapTimeSlot(schedule.startTime),
+      credits: schedule.credits || 0,
+      type: schedule.courseType || schedule.type || '专业课',
+      assessment: schedule.assessment || schedule.examType || '考试',
+      description: schedule.description || schedule.courseDescription || '',
+      startTime: schedule.startTime,
+      endTime: schedule.endTime,
+      dayOfWeek: schedule.dayOfWeek,
+      weeks: schedule.weeks || [],
+      semester: schedule.semester || selectedSemester.value
+    }))
+  } catch (error) {
+    console.error('加载课程表失败:', error)
+    ElMessage.error('加载课程表数据失败')
+    courses.value = []
+  } finally {
+    loading.value = false
   }
-])
+}
+
+// 映射星期几
+const mapDayOfWeek = (dayOfWeek) => {
+  const dayMap = {
+    1: 'monday',
+    2: 'tuesday',
+    3: 'wednesday',
+    4: 'thursday',
+    5: 'friday',
+    6: 'saturday',
+    7: 'sunday'
+  }
+  return dayMap[dayOfWeek] || 'monday'
+}
+
+// 格式化时间段
+const formatTimeSlot = (startTime, endTime) => {
+  if (!startTime || !endTime) return '时间待定'
+  return `${startTime}-${endTime}`
+}
+
+// 映射时间段到节次
+const mapTimeSlot = (startTime) => {
+  if (!startTime) return 1
+
+  const hour = parseInt(startTime.split(':')[0])
+  if (hour >= 8 && hour < 10) return 1
+  if (hour >= 10 && hour < 12) return 2
+  if (hour >= 14 && hour < 16) return 3
+  if (hour >= 16 && hour < 18) return 4
+  if (hour >= 19 && hour < 21) return 5
+  return 1
+}
 
 // 获取指定时间段的课程
 const getCourseForSlot = (day, slotId) => {
@@ -337,15 +347,358 @@ const viewCourseDetail = (course) => {
 }
 
 // 导出课程表
-const exportSchedule = () => {
-  ElMessage.info('导出功能开发中...')
+const exportSchedule = async () => {
+  try {
+    loading.value = true
+    const { data } = await courseApi.exportSchedule({
+      semester: selectedSemester.value,
+      week: selectedWeek.value,
+      format: 'pdf'
+    })
+
+    // 创建下载链接
+    const url = window.URL.createObjectURL(new Blob([data]))
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `课程表_${selectedSemester.value}_第${selectedWeek.value}周.pdf`
+    link.click()
+    window.URL.revokeObjectURL(url)
+
+    ElMessage.success('课程表导出成功')
+  } catch (error) {
+    console.error('导出课程表失败:', error)
+    ElMessage.error('导出课程表失败')
+  } finally {
+    loading.value = false
+  }
 }
 
-onMounted(() => {
-  // 初始化数据
+// 监听器
+watch([selectedSemester, selectedWeek], () => {
+  loadSchedule()
 })
+
+// 生命周期
+onMounted(async () => {
+  // 获取当前周次
+  const currentWeek = getCurrentWeek()
+  selectedWeek.value = currentWeek
+
+  // 加载课程表数据
+  await loadSchedule()
+})
+
+// 获取当前周次
+const getCurrentWeek = () => {
+  const now = dayjs()
+  const semesterStart = dayjs(currentSemester.value.startDate)
+  const diffWeeks = now.diff(semesterStart, 'week') + 1
+  return Math.max(1, Math.min(20, diffWeeks))
+}
 </script>
 
 <style scoped>
 @import '@/styles/student.css';
+
+.schedule-page {
+  padding: 20px;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+}
+
+.page-header {
+  margin-bottom: 20px;
+  text-align: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.page-header h1 {
+  margin: 0 0 8px 0;
+  font-size: 28px;
+  font-weight: 600;
+}
+
+.page-header p {
+  margin: 0;
+  opacity: 0.9;
+  font-size: 16px;
+}
+
+.toolbar-card {
+  margin-bottom: 20px;
+}
+
+.schedule-card {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.schedule-container {
+  overflow-x: auto;
+}
+
+.schedule-table {
+  min-width: 800px;
+}
+
+.schedule-header {
+  display: flex;
+  background-color: #f8f9fa;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.time-slot-header {
+  width: 120px;
+  padding: 15px 10px;
+  text-align: center;
+  font-weight: bold;
+  color: #495057;
+  border-right: 1px solid #dee2e6;
+}
+
+.day-header {
+  flex: 1;
+  padding: 15px 10px;
+  text-align: center;
+  border-right: 1px solid #dee2e6;
+}
+
+.day-name {
+  font-weight: bold;
+  color: #495057;
+  margin-bottom: 4px;
+}
+
+.day-date {
+  font-size: 12px;
+  color: #6c757d;
+}
+
+.schedule-body {
+  background: white;
+}
+
+.time-row {
+  display: flex;
+  border-bottom: 1px solid #dee2e6;
+  min-height: 80px;
+}
+
+.time-slot {
+  width: 120px;
+  padding: 15px 10px;
+  text-align: center;
+  background-color: #f8f9fa;
+  border-right: 1px solid #dee2e6;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.slot-number {
+  font-weight: bold;
+  color: #495057;
+  margin-bottom: 4px;
+}
+
+.slot-time {
+  font-size: 12px;
+  color: #6c757d;
+}
+
+.course-cell {
+  flex: 1;
+  padding: 8px;
+  border-right: 1px solid #dee2e6;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.course-cell:hover {
+  background-color: #f8f9fa;
+}
+
+.course-item {
+  height: 100%;
+  padding: 8px;
+  border-radius: 6px;
+  color: white;
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.course-required {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.course-major {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.course-elective {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.course-default {
+  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+}
+
+.course-name {
+  font-weight: bold;
+  margin-bottom: 4px;
+  font-size: 13px;
+}
+
+.course-teacher {
+  margin-bottom: 2px;
+  opacity: 0.9;
+}
+
+.course-location {
+  opacity: 0.8;
+  font-size: 11px;
+}
+
+.schedule-list-card {
+  background: white;
+  border-radius: 12px;
+}
+
+.day-section {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.day-title {
+  margin: 0 0 16px 0;
+  color: #495057;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.day-courses {
+  space-y: 12px;
+}
+
+.course-list-item {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  transition: all 0.2s;
+}
+
+.course-list-item:hover {
+  background: #e9ecef;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.course-time {
+  width: 120px;
+  font-weight: bold;
+  color: #495057;
+  text-align: center;
+  background: white;
+  padding: 8px;
+  border-radius: 6px;
+  margin-right: 16px;
+}
+
+.course-content {
+  flex: 1;
+}
+
+.course-content h5 {
+  margin: 0 0 4px 0;
+  color: #495057;
+  font-size: 16px;
+}
+
+.course-content p {
+  margin: 0;
+  color: #6c757d;
+  font-size: 14px;
+}
+
+.course-actions {
+  margin-left: 16px;
+}
+
+.no-courses {
+  text-align: center;
+  padding: 40px;
+  color: #6c757d;
+}
+
+.course-detail {
+  padding: 16px 0;
+}
+
+.course-description {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #e9ecef;
+}
+
+.course-description h4 {
+  margin: 0 0 12px 0;
+  color: #495057;
+}
+
+.course-description p {
+  margin: 0;
+  color: #6c757d;
+  line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+  .schedule-page {
+    padding: 10px;
+  }
+
+  .page-header {
+    padding: 20px;
+  }
+
+  .page-header h1 {
+    font-size: 24px;
+  }
+
+  .course-item {
+    font-size: 10px;
+  }
+
+  .course-name {
+    font-size: 11px;
+  }
+
+  .course-list-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .course-time {
+    width: 100%;
+    margin-right: 0;
+    margin-bottom: 12px;
+  }
+
+  .course-actions {
+    margin-left: 0;
+    margin-top: 12px;
+  }
+}
 </style>

@@ -2,28 +2,16 @@ import request from './request'
 
 /**
  * 课程相关API
+ * 基于后端 CourseController、CourseScheduleController 等接口实现
  */
 export const courseApi = {
-  // 获取学生课程列表
-  getStudentCourses(params = {}) {
-    return request({
-      url: '/courses/student',
-      method: 'get',
-      params
-    })
-  },
+  // ==================== 课程基础管理 ====================
 
-  // 获取教师课程列表
-  getTeacherCourses(params = {}) {
-    return request({
-      url: '/courses/teacher',
-      method: 'get',
-      params
-    })
-  },
-
-  // 获取所有课程列表
-  getAllCourses(params = {}) {
+  /**
+   * 获取课程列表
+   * 对应后端: GET /api/v1/courses
+   */
+  getCourseList(params = {}) {
     return request({
       url: '/courses',
       method: 'get',
@@ -31,15 +19,21 @@ export const courseApi = {
     })
   },
 
-  // 获取课程详情
-  getCourseDetail(courseId) {
+  /**
+   * 根据ID获取课程详情
+   * 对应后端: GET /api/v1/courses/{id}
+   */
+  getCourseById(id) {
     return request({
-      url: `/courses/${courseId}`,
+      url: `/courses/${id}`,
       method: 'get'
     })
   },
 
-  // 创建课程
+  /**
+   * 创建课程
+   * 对应后端: POST /api/v1/courses
+   */
   createCourse(data) {
     return request({
       url: '/courses',
@@ -48,20 +42,329 @@ export const courseApi = {
     })
   },
 
-  // 更新课程信息
-  updateCourse(courseId, data) {
+  /**
+   * 更新课程信息
+   * 对应后端: PUT /api/v1/courses/{id}
+   */
+  updateCourse(id, data) {
     return request({
-      url: `/courses/${courseId}`,
+      url: `/courses/${id}`,
       method: 'put',
       data
     })
   },
 
-  // 删除课程
-  deleteCourse(courseId) {
+  /**
+   * 删除课程
+   * 对应后端: DELETE /api/v1/courses/{id}
+   */
+  deleteCourse(id) {
     return request({
-      url: `/courses/${courseId}`,
+      url: `/courses/${id}`,
       method: 'delete'
+    })
+  },
+
+  /**
+   * 批量删除课程
+   * 对应后端: DELETE /api/v1/courses/batch
+   */
+  batchDeleteCourses(courseIds) {
+    return request({
+      url: '/courses/batch',
+      method: 'delete',
+      data: { courseIds }
+    })
+  },
+
+  /**
+   * 获取课程统计信息
+   * 对应后端: GET /api/v1/courses/statistics
+   */
+  getCourseStatistics(params = {}) {
+    return request({
+      url: '/courses/statistics',
+      method: 'get',
+      params
+    })
+  },
+
+  // ==================== 课程安排管理 ====================
+
+  /**
+   * 获取课程安排列表
+   * 对应后端: GET /api/v1/course-schedules
+   */
+  getCourseScheduleList(params = {}) {
+    return request({
+      url: '/v1/course-schedules',
+      method: 'get',
+      params
+    })
+  },
+
+  /**
+   * 根据ID获取课程安排详情
+   * 对应后端: GET /api/v1/course-schedules/{id}
+   */
+  getCourseScheduleById(id) {
+    return request({
+      url: `/v1/course-schedules/${id}`,
+      method: 'get'
+    })
+  },
+
+  /**
+   * 创建课程安排
+   * 对应后端: POST /api/v1/course-schedules
+   */
+  createCourseSchedule(data) {
+    return request({
+      url: '/v1/course-schedules',
+      method: 'post',
+      data
+    })
+  },
+
+  /**
+   * 更新课程安排
+   * 对应后端: PUT /api/v1/course-schedules/{id}
+   */
+  updateCourseSchedule(id, data) {
+    return request({
+      url: `/v1/course-schedules/${id}`,
+      method: 'put',
+      data
+    })
+  },
+
+  /**
+   * 删除课程安排
+   * 对应后端: DELETE /api/v1/course-schedules/{id}
+   */
+  deleteCourseSchedule(id) {
+    return request({
+      url: `/v1/course-schedules/${id}`,
+      method: 'delete'
+    })
+  },
+
+  /**
+   * 获取课程安排统计
+   * 对应后端: GET /api/v1/course-schedules/statistics
+   */
+  getCourseScheduleStatistics(params = {}) {
+    return request({
+      url: '/v1/course-schedules/statistics',
+      method: 'get',
+      params
+    })
+  },
+
+  /**
+   * 检查课程安排冲突
+   * 对应后端: POST /api/v1/course-schedules/check-conflicts
+   */
+  checkScheduleConflicts(data) {
+    return request({
+      url: '/v1/course-schedules/check-conflicts',
+      method: 'post',
+      data
+    })
+  },
+  // ==================== 选课管理 ====================
+
+  /**
+   * 获取选课列表
+   * 对应后端: GET /api/v1/course-selections
+   */
+  getCourseSelectionList(params = {}) {
+    return request({
+      url: '/v1/course-selections',
+      method: 'get',
+      params
+    })
+  },
+
+  /**
+   * 创建选课记录
+   * 对应后端: POST /api/v1/course-selections
+   */
+  createCourseSelection(data) {
+    return request({
+      url: '/v1/course-selections',
+      method: 'post',
+      data
+    })
+  },
+
+  /**
+   * 批量选课
+   * 对应后端: POST /api/v1/course-selections/batch
+   */
+  batchCourseSelection(data) {
+    return request({
+      url: '/v1/course-selections/batch',
+      method: 'post',
+      data
+    })
+  },
+
+  /**
+   * 退课
+   * 对应后端: DELETE /api/v1/course-selections/{id}
+   */
+  withdrawCourseSelection(id) {
+    return request({
+      url: `/v1/course-selections/${id}`,
+      method: 'delete'
+    })
+  },
+
+  /**
+   * 获取可选课程列表
+   * 对应后端: GET /api/v1/course-selections/available
+   */
+  getAvailableCourses(params = {}) {
+    return request({
+      url: '/v1/course-selections/available',
+      method: 'get',
+      params
+    })
+  },
+
+  /**
+   * 检查选课冲突
+   * 对应后端: POST /api/v1/course-selections/check-conflicts
+   */
+  checkCourseConflicts(data) {
+    return request({
+      url: '/v1/course-selections/check-conflicts',
+      method: 'post',
+      data
+    })
+  },
+
+  // ==================== 选课时间段管理 ====================
+
+  /**
+   * 获取选课时间段列表
+   * 对应后端: GET /api/v1/course-selection-periods
+   */
+  getCourseSelectionPeriods(params = {}) {
+    return request({
+      url: '/v1/course-selection-periods',
+      method: 'get',
+      params
+    })
+  },
+
+  /**
+   * 创建选课时间段
+   * 对应后端: POST /api/v1/course-selection-periods
+   */
+  createCourseSelectionPeriod(data) {
+    return request({
+      url: '/v1/course-selection-periods',
+      method: 'post',
+      data
+    })
+  },
+
+  /**
+   * 更新选课时间段
+   * 对应后端: PUT /api/v1/course-selection-periods/{id}
+   */
+  updateCourseSelectionPeriod(id, data) {
+    return request({
+      url: `/v1/course-selection-periods/${id}`,
+      method: 'put',
+      data
+    })
+  },
+
+  /**
+   * 删除选课时间段
+   * 对应后端: DELETE /api/v1/course-selection-periods/{id}
+   */
+  deleteCourseSelectionPeriod(id) {
+    return request({
+      url: `/v1/course-selection-periods/${id}`,
+      method: 'delete'
+    })
+  },
+
+  /**
+   * 获取选课时间段统计
+   * 对应后端: GET /api/v1/course-selection-periods/statistics
+   */
+  getCourseSelectionPeriodStatistics(params = {}) {
+    return request({
+      url: '/v1/course-selection-periods/statistics',
+      method: 'get',
+      params
+    })
+  },
+
+  // ==================== 自动排课管理 ====================
+
+  /**
+   * 执行自动排课
+   * 对应后端: POST /api/v1/auto-schedule
+   */
+  executeAutoSchedule(data) {
+    return request({
+      url: '/v1/auto-schedule',
+      method: 'post',
+      data
+    })
+  },
+
+  /**
+   * 获取排课结果
+   * 对应后端: GET /api/v1/auto-schedule/result
+   */
+  getScheduleResult(params = {}) {
+    return request({
+      url: '/v1/auto-schedule/result',
+      method: 'get',
+      params
+    })
+  },
+
+  /**
+   * 获取排课冲突
+   * 对应后端: GET /api/v1/auto-schedule/conflicts
+   */
+  getScheduleConflicts(params = {}) {
+    return request({
+      url: '/v1/auto-schedule/conflicts',
+      method: 'get',
+      params
+    })
+  },
+
+  /**
+   * 获取可用教室
+   * 对应后端: GET /api/v1/auto-schedule/available-classrooms
+   */
+  getAvailableClassrooms(params = {}) {
+    return request({
+      url: '/v1/auto-schedule/available-classrooms',
+      method: 'get',
+      params
+    })
+  },
+
+  /**
+   * 获取可用时间段
+   * 对应后端: GET /api/v1/auto-schedule/available-time-slots
+   */
+  getAvailableTimeSlots(params = {}) {
+    return request({
+      url: '/v1/auto-schedule/available-time-slots',
+      method: 'get',
+      params
     })
   },
 
@@ -158,6 +461,79 @@ export const courseApi = {
       url: '/courses/available',
       method: 'get',
       params
+    })
+  },
+
+  // ==================== 学生选课相关 ====================
+
+  /**
+   * 学生选课
+   * 对应后端: POST /api/v1/student/course-selection
+   */
+  selectCourse(data) {
+    return request({
+      url: '/student/course-selection',
+      method: 'post',
+      data
+    })
+  },
+
+  /**
+   * 学生退选课程
+   * 对应后端: DELETE /api/v1/student/course-selection
+   */
+  dropCourse(data) {
+    return request({
+      url: '/student/course-selection',
+      method: 'delete',
+      data
+    })
+  },
+
+  /**
+   * 获取选课状态
+   * 对应后端: GET /api/v1/student/selection-status
+   */
+  getSelectionStatus() {
+    return request({
+      url: '/student/selection-status',
+      method: 'get'
+    })
+  },
+
+  /**
+   * 批量选课确认
+   * 对应后端: POST /api/v1/student/batch-confirm-selection
+   */
+  batchConfirmSelection(data) {
+    return request({
+      url: '/student/batch-confirm-selection',
+      method: 'post',
+      data
+    })
+  },
+
+  /**
+   * 获取课程资源
+   * 对应后端: GET /api/v1/courses/{id}/resources
+   */
+  getCourseResources(courseId) {
+    return request({
+      url: `/courses/${courseId}/resources`,
+      method: 'get'
+    })
+  },
+
+  /**
+   * 导出课程表
+   * 对应后端: GET /api/v1/student/schedule/export
+   */
+  exportSchedule(params = {}) {
+    return request({
+      url: '/student/schedule/export',
+      method: 'get',
+      params,
+      responseType: 'blob'
     })
   },
 

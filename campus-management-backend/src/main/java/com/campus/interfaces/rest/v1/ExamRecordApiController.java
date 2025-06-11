@@ -2,6 +2,7 @@ package com.campus.interfaces.rest.v1;
 import com.campus.domain.entity.ExamRecord;
 import com.campus.shared.common.ApiResponse;
 import com.campus.interfaces.rest.common.BaseController;
+import com.campus.shared.constants.RolePermissions;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -39,7 +40,7 @@ public class ExamRecordApiController extends BaseController {
      */
     @GetMapping
     @Operation(summary = "分页查询考试记录列表", description = "支持按考试ID、学生ID、考试状态等条件搜索")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'ACADEMIC_ADMIN')")
+    @PreAuthorize(RolePermissions.ACADEMIC_MANAGEMENT)
     public ResponseEntity<ApiResponse<Map<String, Object>>> getExamRecords(
             @Parameter(description = "页码，从1开始") @RequestParam(defaultValue = "1") int page,
             @Parameter(description = "每页大小") @RequestParam(defaultValue = "20") int size,
@@ -105,7 +106,7 @@ public class ExamRecordApiController extends BaseController {
      */
     @GetMapping("/{id}")
     @Operation(summary = "查询考试记录详情", description = "根据记录ID查询详细信息")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'ACADEMIC_ADMIN', 'STUDENT')")
+    @PreAuthorize(RolePermissions.STUDENT_ACCESS + " || " + RolePermissions.TEACHING_STAFF)
     public ResponseEntity<ApiResponse<ExamRecord>> getExamRecordById(
             @Parameter(description = "记录ID") @PathVariable Long id) {
 
@@ -128,7 +129,7 @@ public class ExamRecordApiController extends BaseController {
      */
     @GetMapping("/exam/{examId}")
     @Operation(summary = "根据考试ID查询记录列表", description = "查询指定考试的所有考试记录")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'ACADEMIC_ADMIN')")
+    @PreAuthorize(RolePermissions.ACADEMIC_MANAGEMENT)
     public ResponseEntity<ApiResponse<List<ExamRecord>>> getRecordsByExamId(
             @Parameter(description = "考试ID") @PathVariable Long examId) {
 
@@ -151,7 +152,7 @@ public class ExamRecordApiController extends BaseController {
      */
     @GetMapping("/student/{studentId}")
     @Operation(summary = "根据学生ID查询记录列表", description = "查询指定学生的所有考试记录")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'ACADEMIC_ADMIN', 'STUDENT')")
+    @PreAuthorize(RolePermissions.STUDENT_ACCESS + " || " + RolePermissions.TEACHING_STAFF)
     public ResponseEntity<ApiResponse<List<ExamRecord>>> getRecordsByStudentId(
             @Parameter(description = "学生ID") @PathVariable Long studentId) {
 
@@ -174,7 +175,7 @@ public class ExamRecordApiController extends BaseController {
      */
     @PostMapping
     @Operation(summary = "创建考试记录", description = "学生开始考试时创建考试记录")
-    @PreAuthorize("hasAnyRole('ADMIN', 'STUDENT', 'TEACHER')")
+    @PreAuthorize(RolePermissions.STUDENT_ACCESS + " || " + RolePermissions.TEACHING_STAFF)
     public ResponseEntity<ApiResponse<ExamRecord>> createExamRecord(
             @Parameter(description = "考试记录信息") @Valid @RequestBody ExamRecord record) {
 
@@ -206,7 +207,7 @@ public class ExamRecordApiController extends BaseController {
      */
     @PutMapping("/{id}")
     @Operation(summary = "更新考试记录", description = "更新考试记录信息")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
+    @PreAuthorize(RolePermissions.STUDENT_ACCESS + " || " + RolePermissions.TEACHING_STAFF)
     public ResponseEntity<ApiResponse<ExamRecord>> updateExamRecord(
             @Parameter(description = "记录ID") @PathVariable Long id,
             @Parameter(description = "考试记录信息") @Valid @RequestBody ExamRecord record) {
@@ -231,7 +232,7 @@ public class ExamRecordApiController extends BaseController {
      */
     @PutMapping("/{id}/submit")
     @Operation(summary = "提交考试", description = "学生提交考试，结束考试记录")
-    @PreAuthorize("hasAnyRole('ADMIN', 'STUDENT', 'TEACHER')")
+    @PreAuthorize(RolePermissions.STUDENT_ACCESS + " || " + RolePermissions.TEACHING_STAFF)
     public ResponseEntity<ApiResponse<ExamRecord>> submitExam(
             @Parameter(description = "记录ID") @PathVariable Long id,
             @Parameter(description = "考试答案") @RequestBody Map<String, Object> examData) {
@@ -259,7 +260,7 @@ public class ExamRecordApiController extends BaseController {
      */
     @DeleteMapping("/{id}")
     @Operation(summary = "删除考试记录", description = "删除指定的考试记录")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @PreAuthorize(RolePermissions.ACADEMIC_MANAGEMENT)
     public ResponseEntity<ApiResponse<Void>> deleteExamRecord(
             @Parameter(description = "记录ID") @PathVariable Long id) {
 
@@ -282,7 +283,7 @@ public class ExamRecordApiController extends BaseController {
      */
     @GetMapping("/stats")
     @Operation(summary = "获取考试统计信息", description = "获取考试记录的统计数据")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'ACADEMIC_ADMIN')")
+    @PreAuthorize(RolePermissions.STATISTICS_VIEW)
     public ResponseEntity<ApiResponse<Map<String, Object>>> getExamStatistics(
             @Parameter(description = "考试ID") @RequestParam(required = false) Long examId,
             @Parameter(description = "开始日期") @RequestParam(required = false) String startDate,
@@ -325,7 +326,7 @@ public class ExamRecordApiController extends BaseController {
      */
     @GetMapping("/export")
     @Operation(summary = "导出考试记录", description = "导出考试记录数据到Excel文件")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'ACADEMIC_ADMIN')")
+    @PreAuthorize(RolePermissions.ACADEMIC_MANAGEMENT)
     public ResponseEntity<ApiResponse<Map<String, Object>>> exportExamRecords(
             @Parameter(description = "考试ID") @RequestParam(required = false) Long examId,
             @Parameter(description = "学生ID") @RequestParam(required = false) Long studentId,

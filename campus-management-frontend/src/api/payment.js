@@ -1,6 +1,11 @@
 import request from './request'
 
+/**
+ * 缴费管理API
+ * 基于后端 PaymentController、FeeItemController 等接口实现
+ */
 export const paymentApi = {
+  // ==================== 缴费记录管理 ====================
   // 获取缴费项目列表
   getFeeItems: (params) => {
     return request({

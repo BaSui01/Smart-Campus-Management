@@ -92,7 +92,7 @@ mysql -u root -p campus_management_db < database/fix_admin_permissions.sql
 
 3. 使用权限诊断API获取详细信息：
    ```
-   GET /admin/diagnostic/api/permissions
+   GET /admin/diagnostic/api/v1/permissions
    ```
 
 4. 确认Session中的用户信息是否正确设置

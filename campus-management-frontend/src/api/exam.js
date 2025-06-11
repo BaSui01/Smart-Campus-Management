@@ -2,8 +2,208 @@ import request from './request'
 
 /**
  * 考试管理API
+ * 基于后端 ExamController、ExamRecordController、ExamQuestionController 等接口实现
  */
 export const examApi = {
+  // ==================== 考试基础管理 ====================
+
+  /**
+   * 获取考试列表
+   * 对应后端: GET /api/v1/exams
+   */
+  getExamList(params = {}) {
+    return request({
+      url: '/v1/exams',
+      method: 'get',
+      params
+    })
+  },
+
+  /**
+   * 根据ID获取考试详情
+   * 对应后端: GET /api/v1/exams/{id}
+   */
+  getExamById(id) {
+    return request({
+      url: `/v1/exams/${id}`,
+      method: 'get'
+    })
+  },
+
+  /**
+   * 创建考试
+   * 对应后端: POST /api/v1/exams
+   */
+  createExam(data) {
+    return request({
+      url: '/v1/exams',
+      method: 'post',
+      data
+    })
+  },
+
+  /**
+   * 更新考试信息
+   * 对应后端: PUT /api/v1/exams/{id}
+   */
+  updateExam(id, data) {
+    return request({
+      url: `/v1/exams/${id}`,
+      method: 'put',
+      data
+    })
+  },
+
+  /**
+   * 删除考试
+   * 对应后端: DELETE /api/v1/exams/{id}
+   */
+  deleteExam(id) {
+    return request({
+      url: `/v1/exams/${id}`,
+      method: 'delete'
+    })
+  },
+
+  /**
+   * 批量发布考试
+   * 对应后端: PUT /api/v1/exams/batch/publish
+   */
+  batchPublishExams(examIds) {
+    return request({
+      url: '/v1/exams/batch/publish',
+      method: 'put',
+      data: examIds
+    })
+  },
+
+  /**
+   * 发布考试
+   * 对应后端: PUT /api/v1/exams/{id}/publish
+   */
+  publishExam(id) {
+    return request({
+      url: `/v1/exams/${id}/publish`,
+      method: 'put'
+    })
+  },
+
+  /**
+   * 取消发布考试
+   * 对应后端: PUT /api/v1/exams/{id}/unpublish
+   */
+  unpublishExam(id) {
+    return request({
+      url: `/v1/exams/${id}/unpublish`,
+      method: 'put'
+    })
+  },
+
+  // ==================== 考试记录管理 ====================
+
+  /**
+   * 获取考试记录列表
+   * 对应后端: GET /api/v1/exam-records
+   */
+  getExamRecordList(params = {}) {
+    return request({
+      url: '/v1/exam-records',
+      method: 'get',
+      params
+    })
+  },
+
+  /**
+   * 根据ID获取考试记录详情
+   * 对应后端: GET /api/v1/exam-records/{id}
+   */
+  getExamRecordById(id) {
+    return request({
+      url: `/v1/exam-records/${id}`,
+      method: 'get'
+    })
+  },
+
+  /**
+   * 创建考试记录
+   * 对应后端: POST /api/v1/exam-records
+   */
+  createExamRecord(data) {
+    return request({
+      url: '/v1/exam-records',
+      method: 'post',
+      data
+    })
+  },
+
+  /**
+   * 更新考试记录
+   * 对应后端: PUT /api/v1/exam-records/{id}
+   */
+  updateExamRecord(id, data) {
+    return request({
+      url: `/v1/exam-records/${id}`,
+      method: 'put',
+      data
+    })
+  },
+
+  /**
+   * 删除考试记录
+   * 对应后端: DELETE /api/v1/exam-records/{id}
+   */
+  deleteExamRecord(id) {
+    return request({
+      url: `/v1/exam-records/${id}`,
+      method: 'delete'
+    })
+  },
+
+  /**
+   * 提交考试
+   * 对应后端: PUT /api/v1/exam-records/{id}/submit
+   */
+  submitExam(id, data) {
+    return request({
+      url: `/v1/exam-records/${id}/submit`,
+      method: 'put',
+      data
+    })
+  },
+
+  /**
+   * 开始考试
+   * 对应后端: POST /api/v1/exam-records/{examId}/start
+   */
+  startExam(examId, data = {}) {
+    return request({
+      url: `/v1/exam-records/${examId}/start`,
+      method: 'post',
+      data
+    })
+  },
+
+  /**
+   * 暂停考试
+   * 对应后端: PUT /api/v1/exam-records/{id}/pause
+   */
+  pauseExam(id) {
+    return request({
+      url: `/v1/exam-records/${id}/pause`,
+      method: 'put'
+    })
+  },
+
+  /**
+   * 恢复考试
+   * 对应后端: PUT /api/v1/exam-records/{id}/resume
+   */
+  resumeExam(id) {
+    return request({
+      url: `/v1/exam-records/${id}/resume`,
+      method: 'put'
+    })
+  },
   // ==================== 基础CRUD操作 ====================
 
   /**

@@ -4,6 +4,7 @@ import com.campus.application.service.AssignmentService;
 import com.campus.interfaces.rest.common.BaseController;
 import com.campus.domain.entity.Assignment;
 import com.campus.shared.common.ApiResponse;
+import com.campus.shared.constants.RolePermissions;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -51,7 +52,7 @@ public class AssignmentApiController extends BaseController {
      */
     @GetMapping
     @Operation(summary = "分页查询作业列表", description = "支持按条件搜索和分页查询作业")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN', 'TEACHER')")
+    @PreAuthorize(RolePermissions.TEACHING_STAFF)
     public ResponseEntity<ApiResponse<List<Assignment>>> getAssignments(
             @Parameter(description = "页码", example = "1") @RequestParam(defaultValue = "1") int page,
             @Parameter(description = "每页大小", example = "20") @RequestParam(defaultValue = "20") int size,
@@ -92,7 +93,7 @@ public class AssignmentApiController extends BaseController {
      */
     @GetMapping("/{id}")
     @Operation(summary = "查询作业详情", description = "根据ID查询作业的详细信息")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN', 'TEACHER')")
+    @PreAuthorize(RolePermissions.TEACHING_STAFF)
     public ResponseEntity<ApiResponse<Assignment>> getAssignment(
             @Parameter(description = "作业ID", required = true) @PathVariable Long id) {
 
@@ -119,7 +120,7 @@ public class AssignmentApiController extends BaseController {
      */
     @PostMapping
     @Operation(summary = "创建作业", description = "创建新的作业")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN', 'TEACHER')")
+    @PreAuthorize(RolePermissions.TEACHING_STAFF)
     public ResponseEntity<ApiResponse<Assignment>> createAssignment(
             @RequestBody Assignment assignment,
             HttpServletRequest request) {
@@ -217,7 +218,7 @@ public class AssignmentApiController extends BaseController {
      */
     @DeleteMapping("/{id}")
     @Operation(summary = "删除作业", description = "删除指定的作业")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN')")
+    @PreAuthorize(RolePermissions.ACADEMIC_MANAGEMENT)
     public ResponseEntity<ApiResponse<Void>> deleteAssignment(
             @Parameter(description = "作业ID", required = true) @PathVariable Long id) {
 

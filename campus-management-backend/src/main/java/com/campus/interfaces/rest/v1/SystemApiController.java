@@ -31,7 +31,7 @@ import java.util.ArrayList;
  * @since 2025-06-06
  */
 @RestController
-@RequestMapping("/api/system")
+@RequestMapping("/api/v1/system")
 @Tag(name = "系统管理API", description = "系统管理相关REST API接口")
 @SecurityRequirement(name = "Bearer")
 public class SystemApiController {

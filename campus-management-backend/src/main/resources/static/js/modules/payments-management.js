@@ -4,7 +4,7 @@
 
 class PaymentsManager {
     constructor() {
-        this.apiBase = '/admin/api/payments';
+        this.apiBase = '/admin/api/v1/payments';
         this.currentPage = 0;
         this.pageSize = 10;
         this.searchQuery = '';

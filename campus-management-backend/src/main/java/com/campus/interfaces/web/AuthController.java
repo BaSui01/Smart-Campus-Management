@@ -114,13 +114,13 @@ public class AuthController {
                 return "redirect:/admin/login?redirect=" + redirectUrl;
             }
 
-            // 检查用户角色（只允许管理员和教师登录后台）
-            boolean hasAdminRole = userService.hasRole(user.getId(), "SUPER_ADMIN") ||
-                                 userService.hasRole(user.getId(), "ADMIN") ||
-                                 userService.hasRole(user.getId(), "SYSTEM_ADMIN") ||
-                                 userService.hasRole(user.getId(), "ACADEMIC_ADMIN") ||
-                                 userService.hasRole(user.getId(), "FINANCE_ADMIN") ||
-                                 userService.hasRole(user.getId(), "TEACHER");
+            // 检查用户角色（只允许管理员和教师登录后台）- 使用正确的角色键
+            boolean hasAdminRole = userService.hasRole(user.getId(), "ROLE_SUPER_ADMIN") ||
+                                 userService.hasRole(user.getId(), "ROLE_ADMIN") ||
+                                 userService.hasRole(user.getId(), "ROLE_SYSTEM_ADMIN") ||
+                                 userService.hasRole(user.getId(), "ROLE_ACADEMIC_ADMIN") ||
+                                 userService.hasRole(user.getId(), "ROLE_FINANCE_ADMIN") ||
+                                 userService.hasRole(user.getId(), "ROLE_TEACHER");
             if (!hasAdminRole) {
                 redirectAttributes.addFlashAttribute("error", "无权限访问管理后台");
                 return "redirect:/admin/login?redirect=" + redirectUrl;
@@ -245,7 +245,7 @@ public class AuthController {
     /**
      * 系统健康检查API
      */
-    @GetMapping("/admin/api/health")
+    @GetMapping("/admin/api/v1/health")
     @ResponseBody
     public Map<String, Object> healthCheck() {
         Map<String, Object> result = new HashMap<>();
@@ -260,7 +260,7 @@ public class AuthController {
     /**
      * 系统版本信息API
      */
-    @GetMapping("/admin/api/version")
+    @GetMapping("/admin/api/v1/version")
     @ResponseBody
     public Map<String, Object> versionInfo() {
         Map<String, Object> result = new HashMap<>();
@@ -274,7 +274,7 @@ public class AuthController {
     /**
      * 数据库连接测试API
      */
-    @GetMapping("/admin/api/database")
+    @GetMapping("/admin/api/v1/database")
     @ResponseBody
     public Map<String, Object> databaseTest() {
         Map<String, Object> result = new HashMap<>();

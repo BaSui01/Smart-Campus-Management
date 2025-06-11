@@ -18,7 +18,7 @@ import java.util.List;
  *
  * @author Campus Management Team
  * @version 1.0.0
- * @since 2025-01-27
+ * @since 2025-06-08
  */
 @SpringBootTest
 public class ApiTestGenerator {
@@ -116,7 +116,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *
  * @author Campus Management Team
  * @version 1.0.0
- * @since 2025-01-27
+ * @since 2025-06-08
  */
 @DisplayName("%sAPI接口测试")
 class %s extends BaseApiTest {
@@ -212,15 +212,15 @@ class %s extends BaseApiTest {
         
         // 特殊情况处理
         switch (name) {
-            case "optimizeduser": return "/api/users/optimized";
-            case "optimizedstudent": return "/api/students/optimized";
-            case "courseselectionperiod": return "/api/course-selection-periods";
-            case "courseschedule": return "/api/course-schedules";
-            case "courseselection": return "/api/course-selections";
-            case "autoschedule": return "/api/auto-schedule";
-            case "cachemanagement": return "/api/cache";
-            case "feeitem": return "/api/fee-items";
-            default: return "/api/" + name + "s";
+            case "optimizeduser": return "/api/v1/users/optimized";
+            case "optimizedstudent": return "/api/v1/students/optimized";
+            case "courseselectionperiod": return "/api/v1/course-selection-periods";
+            case "courseschedule": return "/api/v1/course-schedules";
+            case "courseselection": return "/api/v1/course-selections";
+            case "autoschedule": return "/api/v1/auto-schedule";
+            case "cachemanagement": return "/api/v1/cache";
+            case "feeitem": return "/api/v1/fee-items";
+            default: return "/api/v1/" + name + "s";
         }
     }
 

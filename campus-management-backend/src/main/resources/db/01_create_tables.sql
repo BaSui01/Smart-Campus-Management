@@ -3,7 +3,7 @@
 -- 文件: 01_create_tables.sql
 -- 描述: 基于35个实体类创建完整的MySQL表结构
 -- 版本: 2.0.0
--- 创建时间: 2025-01-27
+-- 创建时间: 2025-06-08
 -- 编码: UTF-8
 -- =====================================================
 
@@ -41,13 +41,19 @@ CREATE TABLE IF NOT EXISTS tb_user (
     real_name VARCHAR(100) COMMENT '真实姓名',
     phone VARCHAR(20) COMMENT '手机号',
     gender VARCHAR(10) COMMENT '性别',
-    birth_date DATE COMMENT '出生日期',
+    birthday DATE COMMENT '出生日期',
     id_card VARCHAR(18) COMMENT '身份证号',
     address VARCHAR(200) COMMENT '地址',
     avatar_url VARCHAR(500) COMMENT '头像URL',
     last_login_time DATETIME COMMENT '最后登录时间',
+    last_login_ip VARCHAR(50) COMMENT '最后登录IP',
     login_count INT DEFAULT 0 COMMENT '登录次数',
-    is_locked TINYINT DEFAULT 0 COMMENT '是否锁定',
+    reset_token VARCHAR(100) COMMENT '密码重置令牌',
+    reset_token_expire DATETIME COMMENT '密码重置令牌过期时间',
+    account_non_expired TINYINT DEFAULT 1 COMMENT '账户是否未过期',
+    account_non_locked TINYINT DEFAULT 1 COMMENT '账户是否未锁定',
+    credentials_non_expired TINYINT DEFAULT 1 COMMENT '密码是否未过期',
+    remarks VARCHAR(500) COMMENT '备注',
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     deleted TINYINT NOT NULL DEFAULT 0 COMMENT '是否删除',
@@ -100,6 +106,11 @@ CREATE TABLE IF NOT EXISTS tb_user_role (
     id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '关联ID',
     user_id BIGINT NOT NULL COMMENT '用户ID',
     role_id BIGINT NOT NULL COMMENT '角色ID',
+    assign_type VARCHAR(10) NOT NULL DEFAULT 'assign' COMMENT '分配类型',
+    assigned_by BIGINT COMMENT '分配人ID',
+    assigned_at DATETIME COMMENT '分配时间',
+    expires_at DATETIME COMMENT '过期时间',
+    is_primary TINYINT NOT NULL DEFAULT 0 COMMENT '是否为主要角色',
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     deleted TINYINT NOT NULL DEFAULT 0 COMMENT '是否删除',
@@ -109,7 +120,8 @@ CREATE TABLE IF NOT EXISTS tb_user_role (
     INDEX idx_role_id (role_id),
     INDEX idx_status_deleted (status, deleted),
     FOREIGN KEY (user_id) REFERENCES tb_user(id) ON DELETE CASCADE,
-    FOREIGN KEY (role_id) REFERENCES tb_role(id) ON DELETE CASCADE
+    FOREIGN KEY (role_id) REFERENCES tb_role(id) ON DELETE CASCADE,
+    FOREIGN KEY (assigned_by) REFERENCES tb_user(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户角色关联表';
 
 -- 角色权限关联表 (RolePermission)

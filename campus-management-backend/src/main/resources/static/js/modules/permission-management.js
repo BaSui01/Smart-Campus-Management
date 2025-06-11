@@ -117,7 +117,7 @@ class PermissionManagement {
                 ...this.searchParams
             };
 
-            const response = await apiClient.get('/api/permissions', params);
+            const response = await apiClient.get('/api/v1/permissions', params);
             
             if (response.success) {
                 this.renderPermissionTable(response.data.content || response.data);
@@ -383,7 +383,7 @@ class PermissionManagement {
         try {
             showLoading('正在加载权限信息...');
 
-            const response = await apiClient.get(`/api/permissions/${permissionId}`);
+            const response = await apiClient.get(`/api/v1/permissions/${permissionId}`);
 
             if (response.success) {
                 this.fillPermissionForm(response.data);
@@ -443,10 +443,10 @@ class PermissionManagement {
 
             if (permissionId) {
                 // 编辑权限
-                response = await apiClient.put(`/api/permissions/${permissionId}`, formData);
+                response = await apiClient.put(`/api/v1/permissions/${permissionId}`, formData);
             } else {
                 // 添加权限
-                response = await apiClient.post('/api/permissions', formData);
+                response = await apiClient.post('/api/v1/permissions', formData);
             }
 
             if (response.success) {
@@ -518,7 +518,7 @@ class PermissionManagement {
         try {
             showLoading('正在删除权限...');
 
-            const response = await apiClient.delete(`/api/permissions/${permissionId}`);
+            const response = await apiClient.delete(`/api/v1/permissions/${permissionId}`);
 
             if (response.success) {
                 showAlert('权限删除成功', 'success');
@@ -608,7 +608,7 @@ class PermissionManagement {
             showLoading('正在批量删除权限...');
 
             const permissionIds = Array.from(this.selectedPermissions);
-            const response = await apiClient.post('/api/permissions/batch-delete', { permissionIds });
+            const response = await apiClient.post('/api/v1/permissions/batch-delete', { permissionIds });
 
             if (response.success) {
                 showAlert(`成功删除 ${permissionIds.length} 个权限`, 'success');
@@ -632,7 +632,7 @@ class PermissionManagement {
         try {
             showLoading('正在加载权限详情...');
 
-            const response = await apiClient.get(`/api/permissions/${permissionId}`);
+            const response = await apiClient.get(`/api/v1/permissions/${permissionId}`);
 
             if (response.success) {
                 this.renderPermissionDetail(response.data);
@@ -703,7 +703,7 @@ class PermissionManagement {
      */
     async loadPermissionRoles(permissionId) {
         try {
-            const response = await apiClient.get(`/api/permissions/${permissionId}/roles`);
+            const response = await apiClient.get(`/api/v1/permissions/${permissionId}/roles`);
 
             if (response.success) {
                 const container = document.getElementById('permissionRoleList');
@@ -759,7 +759,7 @@ class PermissionManagement {
                 });
             });
 
-            const response = await apiClient.post('/api/permissions/batch-create', { permissions });
+            const response = await apiClient.post('/api/v1/permissions/batch-create', { permissions });
 
             if (response.success) {
                 showAlert(`成功生成 ${permissions.length} 个权限`, 'success');
@@ -804,7 +804,7 @@ class PermissionManagement {
         try {
             showLoading('正在同步权限...');
 
-            const response = await apiClient.post('/api/permissions/sync');
+            const response = await apiClient.post('/api/v1/permissions/sync');
 
             if (response.success) {
                 showAlert('权限同步成功', 'success');

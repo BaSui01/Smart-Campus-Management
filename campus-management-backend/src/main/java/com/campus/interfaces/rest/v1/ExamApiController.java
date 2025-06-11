@@ -6,6 +6,7 @@ import com.campus.domain.entity.Exam;
 import com.campus.domain.entity.ExamQuestion;
 import com.campus.domain.entity.ExamRecord;
 import com.campus.shared.common.ApiResponse;
+import com.campus.shared.constants.RolePermissions;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -53,7 +54,7 @@ public class ExamApiController extends BaseController {
      */
     @GetMapping
     @Operation(summary = "分页查询考试列表", description = "支持按条件搜索和分页查询考试")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN', 'TEACHER')")
+    @PreAuthorize(RolePermissions.ACADEMIC_MANAGEMENT)
     public ResponseEntity<ApiResponse<List<Exam>>> getExams(
             @Parameter(description = "页码", example = "1") @RequestParam(defaultValue = "1") int page,
             @Parameter(description = "每页大小", example = "20") @RequestParam(defaultValue = "20") int size,
@@ -95,7 +96,7 @@ public class ExamApiController extends BaseController {
      */
     @GetMapping("/{id}")
     @Operation(summary = "查询考试详情", description = "根据ID查询考试的详细信息")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN', 'TEACHER')")
+    @PreAuthorize(RolePermissions.ACADEMIC_MANAGEMENT)
     public ResponseEntity<ApiResponse<Exam>> getExam(
             @Parameter(description = "考试ID", required = true) @PathVariable Long id) {
 
@@ -122,7 +123,7 @@ public class ExamApiController extends BaseController {
      */
     @PostMapping
     @Operation(summary = "创建考试", description = "创建新的考试")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN', 'TEACHER')")
+    @PreAuthorize(RolePermissions.ACADEMIC_MANAGEMENT)
     public ResponseEntity<ApiResponse<Exam>> createExam(
             @RequestBody Exam exam,
             HttpServletRequest request) {
@@ -163,7 +164,7 @@ public class ExamApiController extends BaseController {
      */
     @PutMapping("/{id}")
     @Operation(summary = "更新考试", description = "更新考试信息")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN', 'TEACHER')")
+    @PreAuthorize(RolePermissions.ACADEMIC_MANAGEMENT)
     public ResponseEntity<ApiResponse<Exam>> updateExam(
             @Parameter(description = "考试ID", required = true) @PathVariable Long id,
             @RequestBody Exam exam,
@@ -237,7 +238,7 @@ public class ExamApiController extends BaseController {
      */
     @DeleteMapping("/{id}")
     @Operation(summary = "删除考试", description = "删除指定的考试")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN')")
+    @PreAuthorize(RolePermissions.ACADEMIC_MANAGEMENT)
     public ResponseEntity<ApiResponse<Void>> deleteExam(
             @Parameter(description = "考试ID", required = true) @PathVariable Long id) {
 
@@ -273,7 +274,7 @@ public class ExamApiController extends BaseController {
      */
     @PostMapping("/{id}/publish")
     @Operation(summary = "发布考试", description = "发布指定的考试")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN', 'TEACHER')")
+    @PreAuthorize(RolePermissions.ACADEMIC_MANAGEMENT)
     public ResponseEntity<ApiResponse<Void>> publishExam(
             @Parameter(description = "考试ID", required = true) @PathVariable Long id) {
 
@@ -302,7 +303,7 @@ public class ExamApiController extends BaseController {
      */
     @PostMapping("/{id}/start")
     @Operation(summary = "开始考试", description = "开始指定的考试")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN', 'TEACHER')")
+    @PreAuthorize(RolePermissions.ACADEMIC_MANAGEMENT)
     public ResponseEntity<ApiResponse<Void>> startExam(
             @Parameter(description = "考试ID", required = true) @PathVariable Long id) {
 
@@ -325,7 +326,7 @@ public class ExamApiController extends BaseController {
      */
     @PostMapping("/{id}/end")
     @Operation(summary = "结束考试", description = "结束指定的考试")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN', 'TEACHER')")
+    @PreAuthorize(RolePermissions.ACADEMIC_MANAGEMENT)
     public ResponseEntity<ApiResponse<Void>> endExam(
             @Parameter(description = "考试ID", required = true) @PathVariable Long id) {
 
@@ -350,7 +351,7 @@ public class ExamApiController extends BaseController {
      */
     @GetMapping("/{id}/questions")
     @Operation(summary = "获取考试题目列表", description = "获取指定考试的所有题目")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN', 'TEACHER')")
+    @PreAuthorize(RolePermissions.ACADEMIC_MANAGEMENT)
     public ResponseEntity<ApiResponse<List<ExamQuestion>>> getExamQuestions(
             @Parameter(description = "考试ID", required = true) @PathVariable Long id,
             @Parameter(description = "页码", example = "1") @RequestParam(defaultValue = "1") int page,
@@ -378,7 +379,7 @@ public class ExamApiController extends BaseController {
      */
     @PostMapping("/{id}/questions")
     @Operation(summary = "添加考试题目", description = "为指定考试添加题目")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN', 'TEACHER')")
+    @PreAuthorize(RolePermissions.ACADEMIC_MANAGEMENT)
     public ResponseEntity<ApiResponse<ExamQuestion>> addExamQuestion(
             @Parameter(description = "考试ID", required = true) @PathVariable Long id,
             @RequestBody ExamQuestion question) {
@@ -404,7 +405,7 @@ public class ExamApiController extends BaseController {
      */
     @GetMapping("/{id}/records")
     @Operation(summary = "获取考试记录列表", description = "获取指定考试的所有考试记录")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN', 'TEACHER')")
+    @PreAuthorize(RolePermissions.ACADEMIC_MANAGEMENT)
     public ResponseEntity<ApiResponse<List<ExamRecord>>> getExamRecords(
             @Parameter(description = "考试ID", required = true) @PathVariable Long id,
             @Parameter(description = "页码", example = "1") @RequestParam(defaultValue = "1") int page,
@@ -434,7 +435,7 @@ public class ExamApiController extends BaseController {
      */
     @GetMapping("/stats")
     @Operation(summary = "获取考试统计信息", description = "获取考试模块的统计数据")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN', 'TEACHER')")
+    @PreAuthorize(RolePermissions.STATISTICS_VIEW)
     public ResponseEntity<ApiResponse<Map<String, Object>>> getExamStats() {
         try {
             log.info("获取考试统计信息");
@@ -492,7 +493,7 @@ public class ExamApiController extends BaseController {
      */
     @DeleteMapping("/batch")
     @Operation(summary = "批量删除考试", description = "根据ID列表批量删除考试")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN')")
+    @PreAuthorize(RolePermissions.BATCH_OPERATIONS)
     public ResponseEntity<ApiResponse<Map<String, Object>>> batchDeleteExams(
             @Parameter(description = "考试ID列表") @RequestBody List<Long> ids) {
 
@@ -561,7 +562,7 @@ public class ExamApiController extends BaseController {
      */
     @PutMapping("/batch/publish")
     @Operation(summary = "批量发布考试", description = "批量发布考试")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN', 'ACADEMIC_ADMIN', 'TEACHER')")
+    @PreAuthorize(RolePermissions.ACADEMIC_MANAGEMENT)
     public ResponseEntity<ApiResponse<Map<String, Object>>> batchPublishExams(
             @Parameter(description = "考试ID列表") @RequestBody List<Long> ids) {
 

@@ -31,7 +31,7 @@ import java.util.Map;
  * @since 2025-06-07
  */
 @RestController
-@RequestMapping("/api/parent-student-relations")
+@RequestMapping("/api/v1/parent-student-relations")
 @Tag(name = "家长学生关系管理", description = "家长学生关系相关API接口")
 public class ParentStudentRelationApiController extends BaseController {
 

@@ -230,7 +230,7 @@ let apiEndpoints = [];
         }
 
         try {
-            const apiDocsUrl = '/api/v3/api-docs';
+            const apiDocsUrl = '/api/v1/v3/api-docs';
             console.log(`📡 请求API文档: ${window.location.origin}${apiDocsUrl}`);
 
             const response = await fetch(apiDocsUrl, {
@@ -364,54 +364,54 @@ let apiEndpoints = [];
 
         apiEndpoints = [
             // 测试接口
-            { method: 'GET', path: '/api/test/hello', summary: '测试接口', tags: ['测试接口'] },
+            { method: 'GET', path: '/api/v1/test/hello', summary: '测试接口', tags: ['测试接口'] },
 
             // 认证API
-            { method: 'POST', path: '/api/auth/login', summary: '用户登录', tags: ['认证API'] },
-            { method: 'POST', path: '/api/auth/register', summary: '用户注册', tags: ['认证API'] },
-            { method: 'GET', path: '/api/auth/me', summary: '获取当前用户信息', tags: ['认证API'] },
-            { method: 'POST', path: '/api/auth/logout', summary: '用户登出', tags: ['认证API'] },
+            { method: 'POST', path: '/api/v1/auth/login', summary: '用户登录', tags: ['认证API'] },
+            { method: 'POST', path: '/api/v1/auth/register', summary: '用户注册', tags: ['认证API'] },
+            { method: 'GET', path: '/api/v1/auth/me', summary: '获取当前用户信息', tags: ['认证API'] },
+            { method: 'POST', path: '/api/v1/auth/logout', summary: '用户登出', tags: ['认证API'] },
 
             // 仪表盘API
-            { method: 'GET', path: '/api/dashboard/stats', summary: '获取仪表盘统计', tags: ['仪表盘API'] },
-            { method: 'POST', path: '/api/dashboard/refresh', summary: '刷新仪表盘数据', tags: ['仪表盘API'] },
+            { method: 'GET', path: '/api/v1/dashboard/stats', summary: '获取仪表盘统计', tags: ['仪表盘API'] },
+            { method: 'POST', path: '/api/v1/dashboard/refresh', summary: '刷新仪表盘数据', tags: ['仪表盘API'] },
 
             // 用户管理API
-            { method: 'GET', path: '/api/users', summary: '获取用户列表', tags: ['用户管理API'] },
-            { method: 'POST', path: '/api/users', summary: '创建用户', tags: ['用户管理API'] },
-            { method: 'GET', path: '/api/users/{id}', summary: '获取用户详情', tags: ['用户管理API'] },
+            { method: 'GET', path: '/api/v1/users', summary: '获取用户列表', tags: ['用户管理API'] },
+            { method: 'POST', path: '/api/v1/users', summary: '创建用户', tags: ['用户管理API'] },
+            { method: 'GET', path: '/api/v1/users/{id}', summary: '获取用户详情', tags: ['用户管理API'] },
 
             // 学生管理API
-            { method: 'GET', path: '/api/students', summary: '获取学生列表', tags: ['学生管理API'] },
-            { method: 'POST', path: '/api/students', summary: '创建学生', tags: ['学生管理API'] },
+            { method: 'GET', path: '/api/v1/students', summary: '获取学生列表', tags: ['学生管理API'] },
+            { method: 'POST', path: '/api/v1/students', summary: '创建学生', tags: ['学生管理API'] },
 
             // 班级管理API
-            { method: 'GET', path: '/api/classes', summary: '获取班级列表', tags: ['班级管理API'] },
-            { method: 'POST', path: '/api/classes', summary: '创建班级', tags: ['班级管理API'] },
-            { method: 'GET', path: '/api/classes/stats/grade', summary: '统计班级数量按年级', tags: ['班级管理API'] },
+            { method: 'GET', path: '/api/v1/classes', summary: '获取班级列表', tags: ['班级管理API'] },
+            { method: 'POST', path: '/api/v1/classes', summary: '创建班级', tags: ['班级管理API'] },
+            { method: 'GET', path: '/api/v1/classes/stats/grade', summary: '统计班级数量按年级', tags: ['班级管理API'] },
 
             // 课程管理API
-            { method: 'GET', path: '/api/courses', summary: '获取课程列表', tags: ['课程管理API'] },
-            { method: 'POST', path: '/api/courses', summary: '创建课程', tags: ['课程管理API'] },
+            { method: 'GET', path: '/api/v1/courses', summary: '获取课程列表', tags: ['课程管理API'] },
+            { method: 'POST', path: '/api/v1/courses', summary: '创建课程', tags: ['课程管理API'] },
 
             // 课程安排管理
-            { method: 'GET', path: '/api/schedules', summary: '获取课程安排列表', tags: ['课程安排管理'] },
-            { method: 'POST', path: '/api/schedules', summary: '创建课程安排', tags: ['课程安排管理'] },
+            { method: 'GET', path: '/api/v1/schedules', summary: '获取课程安排列表', tags: ['课程安排管理'] },
+            { method: 'POST', path: '/api/v1/schedules', summary: '创建课程安排', tags: ['课程安排管理'] },
 
             // 成绩管理API
-            { method: 'GET', path: '/api/grades', summary: '获取成绩列表', tags: ['成绩管理API'] },
-            { method: 'POST', path: '/api/grades', summary: '创建成绩记录', tags: ['成绩管理API'] },
+            { method: 'GET', path: '/api/v1/grades', summary: '获取成绩列表', tags: ['成绩管理API'] },
+            { method: 'POST', path: '/api/v1/grades', summary: '创建成绩记录', tags: ['成绩管理API'] },
 
             // 缴费管理API
-            { method: 'GET', path: '/api/payments/records', summary: '获取缴费记录列表', tags: ['缴费管理API'] },
-            { method: 'GET', path: '/api/fee-items', summary: '分页查询缴费项目', tags: ['缴费管理API'] },
+            { method: 'GET', path: '/api/v1/payments/records', summary: '获取缴费记录列表', tags: ['缴费管理API'] },
+            { method: 'GET', path: '/api/v1/fee-items', summary: '分页查询缴费项目', tags: ['缴费管理API'] },
 
             // 系统管理API
-            { method: 'GET', path: '/api/system/settings', summary: '获取系统设置', tags: ['系统管理API'] },
+            { method: 'GET', path: '/api/v1/system/settings', summary: '获取系统设置', tags: ['系统管理API'] },
 
             // 缓存管理
-            { method: 'GET', path: '/api/cache/info', summary: '获取缓存信息', tags: ['缓存管理'] },
-            { method: 'GET', path: '/api/cache/stats', summary: '获取缓存统计', tags: ['缓存管理'] }
+            { method: 'GET', path: '/api/v1/cache/info', summary: '获取缓存信息', tags: ['缓存管理'] },
+            { method: 'GET', path: '/api/v1/cache/stats', summary: '获取缓存统计', tags: ['缓存管理'] }
         ];
 
         console.log('加载预定义API列表，共', apiEndpoints.length, '个端点');
@@ -521,7 +521,7 @@ let apiEndpoints = [];
      * 测试API接口
      */
     async function testApi(method, url, data, testId) {
-        if (!currentToken && !url.includes('/api/test/')) {
+        if (!currentToken && !url.includes('/api/v1/test/')) {
             console.warn('请先获取Token');
             alert('请先获取Token');
             return;
@@ -734,11 +734,11 @@ let apiEndpoints = [];
         }
 
         const testData = {
-            '/api/auth/login': {
+            '/api/v1/auth/login': {
                 username: 'admin',
                 password: 'admin123'
             },
-            '/api/auth/register': {
+            '/api/v1/auth/register': {
                 username: 'testuser' + Date.now(),
                 password: 'test123',
                 email: 'test@example.com',
@@ -746,7 +746,7 @@ let apiEndpoints = [];
                 phone: '13800138000',
                 gender: '男'
             },
-            '/api/students': {
+            '/api/v1/students': {
                 userId: 1,
                 studentNo: 'STU' + Date.now(),
                 grade: '2024级',
@@ -766,7 +766,7 @@ let apiEndpoints = [];
                 dormitory: '1号楼101',
                 status: 1
             },
-            '/api/classes': {
+            '/api/v1/classes': {
                 className: '计算机科学与技术2024级1班',
                 classCode: 'CS2024' + Date.now(),
                 grade: '2024级',
@@ -786,7 +786,7 @@ let apiEndpoints = [];
                 classStatus: 1,
                 status: 1
             },
-            '/api/courses': {
+            '/api/v1/courses': {
                 courseName: '数据结构与算法',
                 courseCode: 'CS' + Date.now(),
                 courseNameEn: 'Data Structures and Algorithms',
@@ -818,7 +818,7 @@ let apiEndpoints = [];
                 references: '算法导论',
                 status: 1
             },
-            '/api/users': {
+            '/api/v1/users': {
                 username: 'testuser' + Date.now(),
                 realName: '测试用户',
                 email: 'test@example.com',
@@ -845,41 +845,41 @@ let apiEndpoints = [];
     function getQueryParamsForApi(path) {
         switch (path) {
             // 成绩搜索需要关键词
-            case '/api/grades/search':
+            case '/api/v1/grades/search':
                 return { keyword: '张三' };
 
             // 课程搜索需要关键词
-            case '/api/courses/search':
+            case '/api/v1/courses/search':
                 return { keyword: '数学' };
 
             // 用户搜索需要关键词
-            case '/api/users/search':
+            case '/api/v1/users/search':
                 return { keyword: 'admin' };
 
             // 缴费项目生成编码需要费用类型
-            case '/api/fee-items/generate-code':
+            case '/api/v1/fee-items/generate-code':
                 return { feeType: '学费' };
 
             // 缴费项目检查编码需要项目编码
-            case '/api/fee-items/check-code':
+            case '/api/v1/fee-items/check-code':
                 return { itemCode: 'FEE001' };
 
             // 按截止日期查询缴费项目需要日期范围
-            case '/api/fee-items/by-due-date':
+            case '/api/v1/fee-items/by-due-date':
                 return {
                     startDate: '2024-01-01',
                     endDate: '2025-06-07-31'
                 };
 
             // 按金额查询缴费项目需要金额范围
-            case '/api/fee-items/by-amount':
+            case '/api/v1/fee-items/by-amount':
                 return {
                     minAmount: 0,
                     maxAmount: 10000
                 };
 
             // 缴费项目搜索
-            case '/api/fee-items/search':
+            case '/api/v1/fee-items/search':
                 return {
                     keyword: '学费',
                     feeType: '学费',
@@ -887,26 +887,26 @@ let apiEndpoints = [];
                 };
 
             // 学生搜索
-            case '/api/students/search':
+            case '/api/v1/students/search':
                 return { keyword: '张三' };
 
             // 班级搜索
-            case '/api/classes/search':
+            case '/api/v1/classes/search':
                 return { keyword: '计算机' };
 
             // 课程安排搜索
-            case '/api/schedules/search':
+            case '/api/v1/schedules/search':
                 return { keyword: '数学' };
 
             // 其他需要分页参数的API
-            case '/api/users':
-            case '/api/students':
-            case '/api/courses':
-            case '/api/classes':
-            case '/api/grades':
-            case '/api/fee-items':
-            case '/api/schedules':
-            case '/api/payments/records':
+            case '/api/v1/users':
+            case '/api/v1/students':
+            case '/api/v1/courses':
+            case '/api/v1/classes':
+            case '/api/v1/grades':
+            case '/api/v1/fee-items':
+            case '/api/v1/schedules':
+            case '/api/v1/payments/records':
                 return {
                     page: 1,
                     size: 10
@@ -956,10 +956,10 @@ let apiEndpoints = [];
 
             // 一些安全的POST请求
             const safePostPaths = [
-                '/api/auth/logout',
-                '/api/dashboard/refresh',
-                '/api/cache/clear-all',
-                '/api/system/clear-cache'
+                '/api/v1/auth/logout',
+                '/api/v1/dashboard/refresh',
+                '/api/v1/cache/clear-all',
+                '/api/v1/system/clear-cache'
             ];
 
             if (api.method === 'POST' && safePostPaths.includes(api.path)) {
@@ -1065,11 +1065,11 @@ let apiEndpoints = [];
 
         // 需要跳过的危险API（避免造成系统问题）
         const skipApis = [
-            '/api/users/{id}', // DELETE 删除用户
-            '/api/system/shutdown', // 系统关闭
-            '/api/system/restart', // 系统重启
-            '/api/database/reset', // 数据库重置
-            '/api/cache/clear-all' // 清除所有缓存
+            '/api/v1/users/{id}', // DELETE 删除用户
+            '/api/v1/system/shutdown', // 系统关闭
+            '/api/v1/system/restart', // 系统重启
+            '/api/v1/database/reset', // 数据库重置
+            '/api/v1/cache/clear-all' // 清除所有缓存
         ];
 
         // 按分类分组测试

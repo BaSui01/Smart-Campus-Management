@@ -88,7 +88,7 @@ java -jar target/campus-management-backend-1.0.0.jar
 
 ### 5. 访问应用
 - **应用首页**: http://localhost:8080
-- **API文档**: http://localhost:8080/api/swagger-ui.html
+- **API文档**: http://localhost:8080/api/v1/swagger-ui.html
 - **管理后台**: http://localhost:8080/admin
 
 ### 6. 默认账户
@@ -165,83 +165,83 @@ campus-management-backend/
 
 ### 认证相关
 ```http
-POST /api/auth/login          # 用户登录
-POST /api/auth/logout         # 用户登出
-POST /api/auth/refresh        # 刷新令牌
-GET  /api/auth/profile        # 获取用户信息
+POST /api/v1/auth/login          # 用户登录
+POST /api/v1/auth/logout         # 用户登出
+POST /api/v1/auth/refresh        # 刷新令牌
+GET  /api/v1/auth/profile        # 获取用户信息
 ```
 
 ### 用户管理
 ```http
-GET    /api/users             # 获取用户列表
-POST   /api/users             # 创建用户
-GET    /api/users/{id}        # 获取用户详情
-PUT    /api/users/{id}        # 更新用户信息
-DELETE /api/users/{id}        # 删除用户
+GET    /api/v1/users             # 获取用户列表
+POST   /api/v1/users             # 创建用户
+GET    /api/v1/users/{id}        # 获取用户详情
+PUT    /api/v1/users/{id}        # 更新用户信息
+DELETE /api/v1/users/{id}        # 删除用户
 ```
 
 ### 院系管理
 ```http
-GET    /api/departments       # 获取院系列表
-POST   /api/departments       # 创建院系
-GET    /api/departments/{id}  # 获取院系详情
-PUT    /api/departments/{id}  # 更新院系信息
-DELETE /api/departments/{id}  # 删除院系
-GET    /api/departments/tree  # 获取院系树结构
+GET    /api/v1/departments       # 获取院系列表
+POST   /api/v1/departments       # 创建院系
+GET    /api/v1/departments/{id}  # 获取院系详情
+PUT    /api/v1/departments/{id}  # 更新院系信息
+DELETE /api/v1/departments/{id}  # 删除院系
+GET    /api/v1/departments/tree  # 获取院系树结构
 ```
 
 ### 班级管理
 ```http
-GET    /api/classes           # 获取班级列表
-POST   /api/classes           # 创建班级
-GET    /api/classes/{id}      # 获取班级详情
-PUT    /api/classes/{id}      # 更新班级信息
-DELETE /api/classes/{id}      # 删除班级
+GET    /api/v1/classes           # 获取班级列表
+POST   /api/v1/classes           # 创建班级
+GET    /api/v1/classes/{id}      # 获取班级详情
+PUT    /api/v1/classes/{id}      # 更新班级信息
+DELETE /api/v1/classes/{id}      # 删除班级
 ```
 
 ### 学生管理
 ```http
-GET    /api/students          # 获取学生列表
-POST   /api/students          # 创建学生
-GET    /api/students/{id}     # 获取学生详情
-PUT    /api/students/{id}     # 更新学生信息
-DELETE /api/students/{id}     # 删除学生
+GET    /api/v1/students          # 获取学生列表
+POST   /api/v1/students          # 创建学生
+GET    /api/v1/students/{id}     # 获取学生详情
+PUT    /api/v1/students/{id}     # 更新学生信息
+DELETE /api/v1/students/{id}     # 删除学生
 ```
 
 ### 课程管理
 ```http
-GET    /api/courses           # 获取课程列表
-POST   /api/courses           # 创建课程
-GET    /api/courses/{id}      # 获取课程详情
-PUT    /api/courses/{id}      # 更新课程信息
-DELETE /api/courses/{id}      # 删除课程
+GET    /api/v1/courses           # 获取课程列表
+POST   /api/v1/courses           # 创建课程
+GET    /api/v1/courses/{id}      # 获取课程详情
+PUT    /api/v1/courses/{id}      # 更新课程信息
+DELETE /api/v1/courses/{id}      # 删除课程
 ```
 
 ### 选课管理
 ```http
-GET    /api/course-selections        # 获取选课列表
-POST   /api/course-selections        # 学生选课
-DELETE /api/course-selections/{id}   # 学生退课
-GET    /api/course-selections/my     # 获取我的选课
+GET    /api/v1/course-selections        # 获取选课列表
+POST   /api/v1/course-selections        # 学生选课
+DELETE /api/v1/course-selections/{id}   # 学生退课
+GET    /api/v1/course-selections/my     # 获取我的选课
 ```
 
 ### 成绩管理
 ```http
-GET    /api/grades            # 获取成绩列表
-POST   /api/grades            # 录入成绩
-GET    /api/grades/{id}       # 获取成绩详情
-PUT    /api/grades/{id}       # 更新成绩
-DELETE /api/grades/{id}       # 删除成绩
-GET    /api/grades/transcript # 获取成绩单
+GET    /api/v1/grades            # 获取成绩列表
+POST   /api/v1/grades            # 录入成绩
+GET    /api/v1/grades/{id}       # 获取成绩详情
+PUT    /api/v1/grades/{id}       # 更新成绩
+DELETE /api/v1/grades/{id}       # 删除成绩
+GET    /api/v1/grades/transcript # 获取成绩单
 ```
 
 ### 缴费管理
 ```http
-GET    /api/payments          # 获取缴费列表
-POST   /api/payments          # 记录缴费
-GET    /api/payments/{id}     # 获取缴费详情
-PUT    /api/payments/{id}     # 更新缴费记录
-GET    /api/fee-items         # 获取缴费项目
+GET    /api/v1/payments          # 获取缴费列表
+POST   /api/v1/payments          # 记录缴费
+GET    /api/v1/payments/{id}     # 获取缴费详情
+PUT    /api/v1/payments/{id}     # 更新缴费记录
+GET    /api/v1/fee-items         # 获取缴费项目
 ```
 
 ## 🔒 安全机制

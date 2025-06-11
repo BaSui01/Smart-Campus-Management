@@ -63,7 +63,7 @@ public abstract class BaseIntegrationTest {
      * 获取API基础URL
      */
     protected String getApiUrl(String endpoint) {
-        return baseUrl + "/api/v1" + endpoint;
+        return baseUrl + "/api/v1/v1" + endpoint;
     }
 
     /**

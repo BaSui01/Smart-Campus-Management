@@ -237,7 +237,7 @@ public class ApiDataFormatTest extends BaseApiTest {
             """;
 
         try {
-            MvcResult result = mockMvc.perform(post("/api/auth/login")
+            MvcResult result = mockMvc.perform(post("/api/v1/auth/login")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(loginJson))
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))

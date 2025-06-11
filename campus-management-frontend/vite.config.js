@@ -10,12 +10,16 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     }
   },
+  define: {
+    // 为了兼容一些可能使用 process.env 的第三方库
+    'process.env': {}
+  },
   server: {
     port: 3000,
     host: '0.0.0.0',
     proxy: {
       '/api': {
-        target: 'http://localhost:8080',
+        target: process.env.VITE_API_BASE_URL?.replace('/api', '') || 'http://localhost:8082',
         changeOrigin: true,
         secure: false
       }

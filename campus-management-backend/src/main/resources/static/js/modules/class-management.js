@@ -5,7 +5,7 @@
 class ClassManagement extends CrudBase {
     constructor() {
         super({
-            apiEndpoint: '/api/classes',
+            apiEndpoint: '/api/v1/classes',
             tableName: '班级',
             modalId: 'classModal',
             formId: 'classForm',
@@ -87,7 +87,7 @@ class ClassManagement extends CrudBase {
                 ...this.searchParams
             };
 
-            const response = await apiClient.get('/api/classes', params);
+            const response = await apiClient.get('/api/v1/classes', params);
             
             if (response.success) {
                 this.renderClassTable(response.data.classes);
@@ -263,7 +263,7 @@ class ClassManagement extends CrudBase {
     async showAddClassModal() {
         try {
             // 获取表单数据
-            const response = await apiClient.get('/api/classes/form-data');
+            const response = await apiClient.get('/api/v1/classes/form-data');
             if (response.success) {
                 this.populateFormData(response.data);
                 this.resetClassForm();
@@ -285,8 +285,8 @@ class ClassManagement extends CrudBase {
         try {
             // 获取班级详情和表单数据
             const [classResponse, formDataResponse] = await Promise.all([
-                apiClient.get(`/api/classes/${classId}`),
-                apiClient.get('/api/classes/form-data')
+                apiClient.get(`/api/v1/classes/${classId}`),
+                apiClient.get('/api/v1/classes/form-data')
             ]);
 
             if (classResponse.success && formDataResponse.success) {
@@ -331,10 +331,10 @@ class ClassManagement extends CrudBase {
 
             if (classId) {
                 // 更新班级
-                response = await apiClient.put(`/api/classes/${classId}`, classData);
+                response = await apiClient.put(`/api/v1/classes/${classId}`, classData);
             } else {
                 // 创建班级
-                response = await apiClient.post('/api/classes', classData);
+                response = await apiClient.post('/api/v1/classes', classData);
             }
 
             if (response.success) {
@@ -359,7 +359,7 @@ class ClassManagement extends CrudBase {
         if (!confirmed) return;
 
         try {
-            const response = await apiClient.delete(`/api/classes/${classId}`);
+            const response = await apiClient.delete(`/api/v1/classes/${classId}`);
             if (response.success) {
                 MessageUtils.success('删除成功');
                 this.loadClasses(this.currentPage);
@@ -464,6 +464,14 @@ class ClassManagement extends CrudBase {
         data.status = parseInt(data.status) || 1;
         data.headTeacherId = data.headTeacherId ? parseInt(data.headTeacherId) : null;
 
+        // 确保必填字段
+        if (!data.className) {
+            throw new Error('班级名称不能为空');
+        }
+        if (!data.classCode) {
+            throw new Error('班级代码不能为空');
+        }
+
         return data;
     }
 
@@ -511,7 +519,7 @@ class ClassManagement extends CrudBase {
      */
     async prepareFormData() {
         try {
-            const response = await apiClient.get('/api/classes/form-data');
+            const response = await apiClient.get('/api/v1/classes/form-data');
             if (this.isResponseSuccess(response)) {
                 this.formData = response.data;
                 this.populateFormSelects();

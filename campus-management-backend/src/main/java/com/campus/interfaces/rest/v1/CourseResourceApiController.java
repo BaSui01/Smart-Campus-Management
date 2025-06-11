@@ -28,7 +28,7 @@ import java.util.Map;
  * @since 2025-06-07
  */
 @RestController
-@RequestMapping("/api/course-resources")
+@RequestMapping("/api/v1/course-resources")
 @Tag(name = "课程资源管理", description = "课程资源相关API接口")
 public class CourseResourceApiController {
     

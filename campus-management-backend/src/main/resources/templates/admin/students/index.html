@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-CN">
+<head th:replace="~{layout/admin :: head}">
+    <th:block th:fragment="head-extra">
+        <link th:href="@{/css/components/data-table.css}" rel="stylesheet">
+        <link th:href="@{/css/components/form-components.css}" rel="stylesheet">
+    </th:block>
+</head>
+
+<body th:replace="~{layout/admin :: html}">
+    <th:block th:fragment="content">
+        <!-- 页面标题 -->
+        <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="fas fa-user-graduate me-2"></i>学生管理
+            </h1>
+            <div class="btn-group">
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createStudentModal">
+                    <i class="fas fa-plus me-1"></i>新增学生
+                </button>
+                <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#importStudentModal">
+                    <i class="fas fa-upload me-1"></i>批量导入
+                </button>
+                <button type="button" class="btn btn-outline-secondary" id="refreshBtn">
+                    <i class="fas fa-sync-alt me-1"></i>刷新
+                </button>
+            </div>
+        </div>
+
+        <!-- 统计卡片 -->
+        <div class="row mb-4">
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-primary shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                    总学生数
+                                </div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${totalStudents ?: 0}">0</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-user-graduate fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-success shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                    在校学生
+                                </div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${activeStudents ?: 0}">0</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-school fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-info shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                    毕业学生
+                                </div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${graduatedStudents ?: 0}">0</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-graduation-cap fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-warning shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                    今日新增
+                                </div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${todayNewStudents ?: 0}">0</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-user-plus fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 搜索和筛选 -->
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">搜索筛选</h6>
+            </div>
+            <div class="card-body">
+                <form id="searchForm" class="row g-3">
+                    <div class="col-md-3">
+                        <label for="searchKeyword" class="form-label">关键词</label>
+                        <input type="text" class="form-control" id="searchKeyword" name="keyword" 
+                               placeholder="学号、姓名、邮箱" th:value="${keyword}">
+                    </div>
+                    <div class="col-md-2">
+                        <label for="departmentFilter" class="form-label">院系</label>
+                        <select class="form-select" id="departmentFilter" name="departmentId">
+                            <option value="">全部院系</option>
+                            <option th:each="dept : ${departments}" th:value="${dept.id}" th:text="${dept.name}">院系</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="majorFilter" class="form-label">专业</label>
+                        <select class="form-select" id="majorFilter" name="majorId">
+                            <option value="">全部专业</option>
+                            <option th:each="major : ${majors}" th:value="${major.id}" th:text="${major.name}">专业</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="gradeFilter" class="form-label">年级</label>
+                        <select class="form-select" id="gradeFilter" name="grade">
+                            <option value="">全部年级</option>
+                            <option value="2024">2024级</option>
+                            <option value="2023">2023级</option>
+                            <option value="2022">2022级</option>
+                            <option value="2021">2021级</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="statusFilter" class="form-label">状态</label>
+                        <select class="form-select" id="statusFilter" name="status">
+                            <option value="">全部</option>
+                            <option value="ACTIVE">在校</option>
+                            <option value="GRADUATED">毕业</option>
+                            <option value="SUSPENDED">休学</option>
+                            <option value="DROPPED">退学</option>
+                        </select>
+                    </div>
+                    <div class="col-md-1">
+                        <label class="form-label">&nbsp;</label>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search me-1"></i>搜索
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 学生列表 -->
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">学生列表</h6>
+                <div class="dropdown no-arrow">
+                    <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink"
+                       data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in">
+                        <div class="dropdown-header">批量操作:</div>
+                        <a class="dropdown-item" href="#" id="batchActiveBtn">
+                            <i class="fas fa-check fa-sm fa-fw mr-2 text-gray-400"></i>
+                            批量激活
+                        </a>
+                        <a class="dropdown-item" href="#" id="batchSuspendBtn">
+                            <i class="fas fa-pause fa-sm fa-fw mr-2 text-gray-400"></i>
+                            批量休学
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="#" id="exportBtn">
+                            <i class="fas fa-download fa-sm fa-fw mr-2 text-gray-400"></i>
+                            导出数据
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <th width="40">
+                                    <input type="checkbox" id="selectAll" class="form-check-input">
+                                </th>
+                                <th>学号</th>
+                                <th>姓名</th>
+                                <th>性别</th>
+                                <th>院系</th>
+                                <th>专业</th>
+                                <th>年级</th>
+                                <th>班级</th>
+                                <th>状态</th>
+                                <th width="150">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="student : ${students?.content}" th:if="${students?.content}">
+                                <td>
+                                    <input type="checkbox" class="form-check-input row-checkbox" th:value="${student.id}">
+                                </td>
+                                <td>
+                                    <code th:text="${student.studentNumber}">2024001</code>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-sm me-2">
+                                            <img th:src="${student.avatar ?: '/img/default-avatar.png'}" 
+                                                 class="rounded-circle" width="32" height="32" alt="头像">
+                                        </div>
+                                        <span th:text="${student.name}">张三</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span th:class="${student.gender == 'MALE' ? 'badge bg-info' : 'badge bg-pink'}" 
+                                          th:text="${student.gender == 'MALE' ? '男' : '女'}">男</span>
+                                </td>
+                                <td th:text="${student.departmentName ?: '-'}">计算机学院</td>
+                                <td th:text="${student.majorName ?: '-'}">计算机科学与技术</td>
+                                <td th:text="${student.grade ?: '-'}">2024</td>
+                                <td th:text="${student.className ?: '-'}">计科1班</td>
+                                <td>
+                                    <span th:class="${student.status == 'ACTIVE' ? 'badge bg-success' : 
+                                                   student.status == 'GRADUATED' ? 'badge bg-primary' : 
+                                                   student.status == 'SUSPENDED' ? 'badge bg-warning' : 'badge bg-danger'}" 
+                                          th:text="${student.status == 'ACTIVE' ? '在校' : 
+                                                   student.status == 'GRADUATED' ? '毕业' : 
+                                                   student.status == 'SUSPENDED' ? '休学' : '退学'}">在校</span>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button type="button" class="btn btn-outline-info btn-sm detail-btn" 
+                                                th:data-id="${student.id}" title="详情">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-primary btn-sm edit-btn" 
+                                                th:data-id="${student.id}" title="编辑">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-success btn-sm course-btn" 
+                                                th:data-id="${student.id}" title="选课">
+                                            <i class="fas fa-book"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-danger btn-sm delete-btn" 
+                                                th:data-id="${student.id}" title="删除">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr th:if="${students?.content == null or students?.content.isEmpty()}">
+                                <td colspan="10" class="text-center text-muted py-4">
+                                    <i class="fas fa-inbox fa-2x mb-2"></i><br>
+                                    暂无学生数据
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 分页 -->
+                <nav th:if="${students?.totalPages > 1}">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item" th:classappend="${students.first} ? 'disabled'">
+                            <a class="page-link" th:href="@{/admin/students(page=${students.number - 1}, size=${students.size})}">
+                                <i class="fas fa-angle-left"></i>
+                            </a>
+                        </li>
+                        <li class="page-item" th:each="i : ${#numbers.sequence(0, students.totalPages - 1)}"
+                            th:classappend="${i == students.number} ? 'active'">
+                            <a class="page-link" th:href="@{/admin/students(page=${i}, size=${students.size})}" th:text="${i + 1}">1</a>
+                        </li>
+                        <li class="page-item" th:classappend="${students.last} ? 'disabled'">
+                            <a class="page-link" th:href="@{/admin/students(page=${students.number + 1}, size=${students.size})}">
+                                <i class="fas fa-angle-right"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+
+        <!-- 创建学生模态框 -->
+        <div class="modal fade" id="createStudentModal" tabindex="-1">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-user-graduate me-2"></i>新增学生
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form id="createStudentForm">
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="studentNumber" class="form-label">学号 <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="studentNumber" name="studentNumber" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="name" class="form-label">姓名 <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="name" name="name" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="gender" class="form-label">性别</label>
+                                        <select class="form-select" id="gender" name="gender">
+                                            <option value="MALE">男</option>
+                                            <option value="FEMALE">女</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="birthDate" class="form-label">出生日期</label>
+                                        <input type="date" class="form-control" id="birthDate" name="birthDate">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="idCard" class="form-label">身份证号</label>
+                                        <input type="text" class="form-control" id="idCard" name="idCard">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="email" class="form-label">邮箱</label>
+                                        <input type="email" class="form-control" id="email" name="email">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="phone" class="form-label">手机号</label>
+                                        <input type="tel" class="form-control" id="phone" name="phone">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="departmentId" class="form-label">院系</label>
+                                        <select class="form-select" id="departmentId" name="departmentId">
+                                            <option value="">选择院系</option>
+                                            <option th:each="dept : ${departments}" th:value="${dept.id}" th:text="${dept.name}">院系</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="majorId" class="form-label">专业</label>
+                                        <select class="form-select" id="majorId" name="majorId">
+                                            <option value="">选择专业</option>
+                                            <option th:each="major : ${majors}" th:value="${major.id}" th:text="${major.name}">专业</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="grade" class="form-label">年级</label>
+                                        <select class="form-select" id="grade" name="grade">
+                                            <option value="2024">2024级</option>
+                                            <option value="2023">2023级</option>
+                                            <option value="2022">2022级</option>
+                                            <option value="2021">2021级</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="classId" class="form-label">班级</label>
+                                        <select class="form-select" id="classId" name="classId">
+                                            <option value="">选择班级</option>
+                                            <option th:each="clazz : ${classes}" th:value="${clazz.id}" th:text="${clazz.name}">班级</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="enrollmentDate" class="form-label">入学日期</label>
+                                        <input type="date" class="form-control" id="enrollmentDate" name="enrollmentDate">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="address" class="form-label">家庭住址</label>
+                                <textarea class="form-control" id="address" name="address" rows="2"></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>保存
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- 批量导入模态框 -->
+        <div class="modal fade" id="importStudentModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-upload me-2"></i>批量导入学生
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="importFile" class="form-label">选择Excel文件</label>
+                            <input type="file" class="form-control" id="importFile" accept=".xlsx,.xls">
+                            <div class="form-text">支持.xlsx和.xls格式文件</div>
+                        </div>
+                        <div class="mb-3">
+                            <a href="/templates/student-import-template.xlsx" class="btn btn-outline-info btn-sm">
+                                <i class="fas fa-download me-1"></i>下载导入模板
+                            </a>
+                        </div>
+                        <div class="alert alert-info">
+                            <h6>导入说明：</h6>
+                            <ul class="mb-0">
+                                <li>请使用提供的模板文件</li>
+                                <li>学号不能重复</li>
+                                <li>必填字段：学号、姓名</li>
+                                <li>单次最多导入1000条记录</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        <button type="button" class="btn btn-primary" id="importBtn">
+                            <i class="fas fa-upload me-1"></i>开始导入
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </th:block>
+
+    <th:block th:fragment="scripts">
+        <script th:src="@{/js/pages/students.js}"></script>
+    </th:block>
+</body>
+</html>

@@ -19,7 +19,7 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
  *
  * @author Campus Management Team
  * @version 1.0.0
- * @since 2025-01-27
+ * @since 2025-06-08
  */
 @TestConfiguration
 @EnableWebSecurity
@@ -47,7 +47,7 @@ public class TestSecurityConfig {
             
             // 配置授权规则 - 测试环境允许所有请求
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers(new AntPathRequestMatcher("/api/auth/**")).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/api/v1/auth/**")).permitAll()
                 .requestMatchers(new AntPathRequestMatcher("/actuator/**")).permitAll()
                 .requestMatchers(new AntPathRequestMatcher("/h2-console/**")).permitAll()
                 .requestMatchers(new AntPathRequestMatcher("/swagger-ui/**")).permitAll()

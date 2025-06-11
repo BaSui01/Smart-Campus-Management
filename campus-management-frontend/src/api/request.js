@@ -2,14 +2,13 @@ import axios from 'axios'
 import { ElMessage } from 'element-plus'
 import { useAuthStore } from '@/stores/auth'
 import CryptoUtil from '@/utils/crypto'
+import { API_CONFIG, HTTP_STATUS, ERROR_MESSAGES } from './config'
 
 // 创建 axios 实例
 const request = axios.create({
-  baseURL: '/api',
-  timeout: 10000,
-  headers: {
-    'Content-Type': 'application/json'
-  }
+  baseURL: API_CONFIG.BASE_URL,
+  timeout: API_CONFIG.TIMEOUT,
+  headers: API_CONFIG.HEADERS
 })
 
 // 是否启用加密通信

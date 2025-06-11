@@ -28,7 +28,7 @@ import java.util.Map;
  * @since 2025-06-07
  */
 @RestController
-@RequestMapping("/api/time-slots")
+@RequestMapping("/api/v1/time-slots")
 @Tag(name = "时间段管理", description = "时间段管理相关API接口")
 public class TimeSlotApiController {
     

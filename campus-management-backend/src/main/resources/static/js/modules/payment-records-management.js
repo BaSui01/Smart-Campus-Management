@@ -4,7 +4,7 @@
 
 class PaymentRecordsManager {
     constructor() {
-        this.apiBase = '/admin/api/payment-records';
+        this.apiBase = '/admin/api/v1/payment-records';
         this.currentPage = 0;
         this.pageSize = 10;
         this.searchQuery = '';
@@ -241,7 +241,7 @@ class PaymentRecordsManager {
         if (!feeItemId) return;
 
         try {
-            const response = await fetch(`/admin/api/fee-items/${feeItemId}`);
+            const response = await fetch(`/admin/api/v1/fee-items/${feeItemId}`);
             if (response.ok) {
                 const feeItem = await response.json();
                 const amountInput = document.querySelector('input[name="amount"]');

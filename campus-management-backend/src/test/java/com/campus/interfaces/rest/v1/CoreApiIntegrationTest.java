@@ -34,8 +34,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
  */
 @DisplayName("核心API控制器集成测试")
 @WebMvcTest(controllers = {
-    UserApiController.class,
-    StudentApiController.class,
+    OptimizedUserApiController.class,
+    OptimizedStudentApiController.class,
     DepartmentApiController.class,
     CourseApiController.class,
     ClassApiController.class

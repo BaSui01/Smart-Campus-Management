@@ -453,7 +453,7 @@ const filteredGrades = computed(() => {
 // 方法
 const loadGrades = async () => {
   loading.value.grades = true
-  
+
   try {
     const { data } = await gradeApi.getStudentGrades({
       page: currentPage.value,
@@ -463,10 +463,30 @@ const loadGrades = async () => {
       status: filterStatus.value,
       search: searchQuery.value
     })
-    
-    grades.value = data.grades
-    total.value = data.total
-    
+
+    const gradeList = Array.isArray(data) ? data : (data.grades || data.list || [])
+    grades.value = gradeList.map(grade => ({
+      id: grade.id,
+      courseName: grade.courseName || grade.course?.courseName,
+      courseCode: grade.courseCode || grade.course?.courseCode,
+      examType: grade.examType || grade.type || 'final',
+      score: grade.score || grade.totalScore || 0,
+      grade: grade.grade || grade.letterGrade || calculateLetterGrade(grade.score),
+      gpa: grade.gpa || grade.gradePoint || calculateGPA(grade.score),
+      credits: grade.credits || grade.course?.credits || 0,
+      rank: grade.rank || grade.classRank,
+      totalStudents: grade.totalStudents || grade.classSize,
+      semester: grade.semester || grade.semesterName,
+      status: grade.status || (grade.publishTime ? 'published' : 'pending'),
+      publishTime: grade.publishTime || grade.publishedAt,
+      examTime: grade.examTime || grade.examDate,
+      teacherName: grade.teacherName || grade.teacher?.realName,
+      analysis: grade.analysis,
+      comment: grade.comment || grade.teacherComment
+    }))
+
+    total.value = data.total || gradeList.length
+
     await loadGradeStats()
   } catch (error) {
     console.error('加载成绩失败:', error)
@@ -792,6 +812,34 @@ const renderSemesterChart = () => {
 }
 
 // 辅助方法
+const calculateLetterGrade = (score) => {
+  if (score >= 95) return 'A+'
+  if (score >= 90) return 'A'
+  if (score >= 85) return 'A-'
+  if (score >= 82) return 'B+'
+  if (score >= 78) return 'B'
+  if (score >= 75) return 'B-'
+  if (score >= 72) return 'C+'
+  if (score >= 68) return 'C'
+  if (score >= 65) return 'C-'
+  if (score >= 60) return 'D'
+  return 'F'
+}
+
+const calculateGPA = (score) => {
+  if (score >= 95) return 4.0
+  if (score >= 90) return 3.7
+  if (score >= 85) return 3.3
+  if (score >= 82) return 3.0
+  if (score >= 78) return 2.7
+  if (score >= 75) return 2.3
+  if (score >= 72) return 2.0
+  if (score >= 68) return 1.7
+  if (score >= 65) return 1.3
+  if (score >= 60) return 1.0
+  return 0.0
+}
+
 const getExamTypeTag = (type) => {
   const typeMap = {
     'midterm': 'warning',

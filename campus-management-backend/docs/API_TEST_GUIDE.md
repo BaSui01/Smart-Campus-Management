@@ -214,7 +214,7 @@ void tearDown() {
 ### 3. 断言最佳实践
 ```java
 // 使用具体的断言
-mockMvc.perform(get("/api/users"))
+mockMvc.perform(get("/api/v1/users"))
     .andExpect(status().isOk())
     .andExpect(jsonPath("$.success").value(true))
     .andExpect(jsonPath("$.data.total").exists())
@@ -310,6 +310,6 @@ adminToken = "Bearer mock-admin-token";
 
 ---
 
-**最后更新**: 2025-01-27  
+**最后更新**: 2025-06-08  
 **文档版本**: 1.0.0  
 **维护团队**: Campus Management Team

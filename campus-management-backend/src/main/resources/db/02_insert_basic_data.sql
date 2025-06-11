@@ -3,8 +3,8 @@
 -- 文件: 02_insert_basic_data.sql
 -- 描述: 插入系统基础数据，包括角色权限、学院、教室、费用项目、系统配置、200个用户账号等
 -- 版本: 4.0.0 (完善版)
--- 创建时间: 2025-01-27
--- 更新时间: 2025-01-27
+-- 创建时间: 2025-06-08
+-- 更新时间: 2025-06-08
 -- 编码: UTF-8
 --
 -- 重要信息:
@@ -793,7 +793,7 @@ INSERT INTO temp_numbers (num) VALUES
 -- 7.1 插入系统管理员 (1个)
 INSERT IGNORE INTO tb_user (
     username, password, email, real_name, phone, gender,
-    birth_date, address, avatar_url, is_locked,
+    birthday, address, avatar_url, account_non_locked,
     created_at, updated_at, deleted, status
 ) VALUES (
     'admin',
@@ -805,7 +805,7 @@ INSERT IGNORE INTO tb_user (
     '1980-01-01',
     '系统管理员办公室',
     '/static/images/avatar/admin.png',
-    0,
+    1,
     NOW(),
     NOW(),
     0,
@@ -815,20 +815,20 @@ INSERT IGNORE INTO tb_user (
 -- 7.2 插入管理员用户 (10个: admin001-admin010)
 INSERT IGNORE INTO tb_user (
     username, password, email, real_name, phone, gender,
-    birth_date, address, avatar_url, is_locked,
+    birthday, address, avatar_url, account_non_locked,
     created_at, updated_at, deleted, status
 )
 SELECT
     CONCAT('admin', LPAD(num, 3, '0')) as username,
-    '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iKXIgBTrEDQ/pR7L5N6.k6xKe6S2' as password, -- 123456
+    '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iKXIgBTrEDQ/pR7L5N6.k6xKe6S2' as password, -- admin123
     CONCAT('admin', LPAD(num, 3, '0'), '@smartuniversity.edu.cn') as email,
     CONCAT('管理员', LPAD(num, 3, '0')) as real_name,
     CONCAT('138', LPAD(num, 8, '0')) as phone,
     CASE WHEN num % 2 = 1 THEN '男' ELSE '女' END as gender,
-    DATE_SUB('1990-01-01', INTERVAL (num % 10) YEAR) as birth_date,
+    DATE_SUB('1990-01-01', INTERVAL (num % 10) YEAR) as birthday,
     CONCAT('管理员办公室', num, '号') as address,
     '/static/images/avatar/admin.png' as avatar_url,
-    0 as is_locked,
+    1 as account_non_locked,
     NOW() as created_at,
     NOW() as updated_at,
     0 as deleted,
@@ -839,12 +839,12 @@ WHERE num BETWEEN 1 AND 10;
 -- 7.3 插入教师用户 (50个: teacher001-teacher050)
 INSERT IGNORE INTO tb_user (
     username, password, email, real_name, phone, gender,
-    birth_date, address, avatar_url, is_locked,
+    birthday, address, avatar_url, account_non_locked,
     created_at, updated_at, deleted, status
 )
 SELECT
     CONCAT('teacher', LPAD(num, 3, '0')) as username,
-    '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iKXIgBTrEDQ/pR7L5N6.k6xKe6S2' as password, -- 123456
+    '$2a$10$8.UnVuG9HHgffUDAlhs8lOXuZr3VkM7B4SO8rmp/O/ZUAAESQ2XuO' as password, -- teacher123
     CONCAT('teacher', LPAD(num, 3, '0'), '@smartuniversity.edu.cn') as email,
     CASE
         WHEN num % 20 = 1 THEN CONCAT('张', '教授', LPAD(num, 2, '0'))
@@ -870,10 +870,10 @@ SELECT
     END as real_name,
     CONCAT('139', LPAD(num + 100, 8, '0')) as phone,
     CASE WHEN num % 3 = 1 THEN '男' ELSE '女' END as gender,
-    DATE_SUB('1985-01-01', INTERVAL (num % 15) YEAR) as birth_date,
+    DATE_SUB('1985-01-01', INTERVAL (num % 15) YEAR) as birthday,
     CONCAT('教师公寓', ((num - 1) % 10 + 1), '栋', LPAD(num, 3, '0'), '号') as address,
     '/static/images/avatar/teacher.png' as avatar_url,
-    0 as is_locked,
+    1 as account_non_locked,
     NOW() as created_at,
     NOW() as updated_at,
     0 as deleted,
@@ -884,12 +884,12 @@ WHERE num BETWEEN 1 AND 50;
 -- 7.4 插入学生用户 (100个: student001-student100)
 INSERT IGNORE INTO tb_user (
     username, password, email, real_name, phone, gender,
-    birth_date, address, avatar_url, is_locked,
+    birthday, address, avatar_url, account_non_locked,
     created_at, updated_at, deleted, status
 )
 SELECT
     CONCAT('student', LPAD(num, 3, '0')) as username,
-    '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iKXIgBTrEDQ/pR7L5N6.k6xKe6S2' as password, -- 123456
+    '$2a$10$YQiQxpyI07u9dqVVFuXOQOTrq4hQyf36RnArLD9FEgieiMZiYzC2.' as password, -- student123
     CONCAT('student', LPAD(num, 3, '0'), '@student.smartuniversity.edu.cn') as email,
     CASE
         WHEN num % 30 = 1 THEN CONCAT('张', '同学', LPAD(num, 2, '0'))
@@ -925,10 +925,10 @@ SELECT
     END as real_name,
     CONCAT('150', LPAD(num + 200, 8, '0')) as phone,
     CASE WHEN num % 2 = 1 THEN '男' ELSE '女' END as gender,
-    DATE_SUB('2005-01-01', INTERVAL (num % 5) YEAR) as birth_date,
+    DATE_SUB('2005-01-01', INTERVAL (num % 5) YEAR) as birthday,
     CONCAT('学生宿舍', ((num - 1) % 20 + 1), '栋', LPAD(num, 3, '0'), '号') as address,
     '/static/images/avatar/student.png' as avatar_url,
-    0 as is_locked,
+    1 as account_non_locked,
     NOW() as created_at,
     NOW() as updated_at,
     0 as deleted,
@@ -939,12 +939,12 @@ WHERE num BETWEEN 1 AND 100;
 -- 7.5 插入家长用户 (39个: parent001-parent039)
 INSERT IGNORE INTO tb_user (
     username, password, email, real_name, phone, gender,
-    birth_date, address, avatar_url, is_locked,
+    birthday, address, avatar_url, account_non_locked,
     created_at, updated_at, deleted, status
 )
 SELECT
     CONCAT('parent', LPAD(num, 3, '0')) as username,
-    '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iKXIgBTrEDQ/pR7L5N6.k6xKe6S2' as password, -- 123456
+    '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iKXIgBTrEDQ/pR7L5N6.k6xKe6S2' as password, -- admin123
     CONCAT('parent', LPAD(num, 3, '0'), '@parent.smartuniversity.edu.cn') as email,
     CASE
         WHEN num % 20 = 1 THEN CONCAT('张', '先生', LPAD(num, 2, '0'))
@@ -970,10 +970,10 @@ SELECT
     END as real_name,
     CONCAT('180', LPAD(num + 300, 8, '0')) as phone,
     CASE WHEN num % 2 = 1 THEN '男' ELSE '女' END as gender,
-    DATE_SUB('1975-01-01', INTERVAL (num % 20) YEAR) as birth_date,
+    DATE_SUB('1975-01-01', INTERVAL (num % 20) YEAR) as birthday,
     CONCAT('家长居住地', num, '号') as address,
     '/static/images/avatar/parent.png' as avatar_url,
-    0 as is_locked,
+    1 as account_non_locked,
     NOW() as created_at,
     NOW() as updated_at,
     0 as deleted,

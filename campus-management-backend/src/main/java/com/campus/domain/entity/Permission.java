@@ -49,7 +49,7 @@ public class Permission extends BaseEntity {
     private String description;
 
     /**
-     * 权限类型 (menu/button/api/data)
+     * 权限类型 (menu/button/api/v1/data)
      */
     @Size(max = 20, message = "权限类型长度不能超过20个字符")
     @Column(name = "permission_type", length = 20)

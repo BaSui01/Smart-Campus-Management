@@ -82,7 +82,7 @@
               "raw": "{\n  \"username\": \"{{admin_username}}\",\n  \"password\": \"{{admin_password}}\"\n}"
             },
             "url": {
-              "raw": "{{base_url}}/api/auth/login",
+              "raw": "{{base_url}}/api/v1/auth/login",
               "host": ["{{base_url}}"],
               "path": ["api", "auth", "login"]
             }
@@ -112,7 +112,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/api/auth/me",
+              "raw": "{{base_url}}/api/v1/auth/me",
               "host": ["{{base_url}}"],
               "path": ["api", "auth", "me"]
             }
@@ -149,7 +149,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/api/users?page=1&size=10",
+              "raw": "{{base_url}}/api/v1/users?page=1&size=10",
               "host": ["{{base_url}}"],
               "path": ["api", "users"],
               "query": [
@@ -189,7 +189,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/api/users/stats",
+              "raw": "{{base_url}}/api/v1/users/stats",
               "host": ["{{base_url}}"],
               "path": ["api", "users", "stats"]
             }
@@ -223,7 +223,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/api/students?page=1&size=10",
+              "raw": "{{base_url}}/api/v1/students?page=1&size=10",
               "host": ["{{base_url}}"],
               "path": ["api", "students"],
               "query": [
@@ -245,7 +245,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/api/students/statistics",
+              "raw": "{{base_url}}/api/v1/students/statistics",
               "host": ["{{base_url}}"],
               "path": ["api", "students", "statistics"]
             }
@@ -262,7 +262,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/api/courses?page=1&size=10",
+              "raw": "{{base_url}}/api/v1/courses?page=1&size=10",
               "host": ["{{base_url}}"],
               "path": ["api", "courses"],
               "query": [
@@ -313,7 +313,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/api/dashboard",
+              "raw": "{{base_url}}/api/v1/dashboard",
               "host": ["{{base_url}}"],
               "path": ["api", "dashboard"]
             }

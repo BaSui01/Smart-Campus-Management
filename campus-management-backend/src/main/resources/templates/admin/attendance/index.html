@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/admin :: html}"
+      lang="zh-CN">
+<head th:replace="~{layout/admin :: head}">
+    <th:block th:fragment="head-extra">
+        <title>考勤管理 - 智慧校园管理系统</title>
+        <!-- DataTables CSS -->
+        <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+        <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css">
+        <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
+        
+        <!-- 考勤管理专用样式 -->
+        <style>
+            .attendance-badge {
+                font-size: 0.75rem;
+                padding: 0.3rem 0.6rem;
+                font-weight: bold;
+            }
+            .status-present { background: linear-gradient(45deg, #28a745, #20c997); }
+            .status-late { background: linear-gradient(45deg, #ffc107, #fd7e14); }
+            .status-early { background: linear-gradient(45deg, #17a2b8, #6f42c1); }
+            .status-absent { background: linear-gradient(45deg, #dc3545, #e83e8c); }
+            .status-leave { background: linear-gradient(45deg, #6c757d, #495057); }
+            
+            .search-filters {
+                background: #f8f9fa;
+                border-radius: 0.5rem;
+                padding: 1rem;
+                margin-bottom: 1rem;
+            }
+            .batch-actions {
+                background: #e3f2fd;
+                border-radius: 0.5rem;
+                padding: 0.75rem;
+                margin-bottom: 1rem;
+                display: none;
+            }
+            .table-container {
+                background: white;
+                border-radius: 0.5rem;
+                box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            }
+            .stats-card {
+                transition: transform 0.2s ease-in-out;
+            }
+            .stats-card:hover {
+                transform: translateY(-2px);
+            }
+            .calendar-view {
+                background: white;
+                border-radius: 0.5rem;
+                padding: 1rem;
+                margin-bottom: 1rem;
+            }
+            .calendar-day {
+                width: 40px;
+                height: 40px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 50%;
+                margin: 2px;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+            .calendar-day:hover {
+                background: #e9ecef;
+            }
+            .calendar-day.present { background: #28a745; color: white; }
+            .calendar-day.late { background: #ffc107; color: white; }
+            .calendar-day.absent { background: #dc3545; color: white; }
+            .calendar-day.leave { background: #6c757d; color: white; }
+        </style>
+    </th:block>
+</head>
+<body>
+    <div th:fragment="content">
+        <!-- 页面标题和操作按钮 -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-user-check me-2 text-primary"></i>考勤管理
+                </h1>
+                <p class="text-muted mb-0">管理学生考勤记录、考勤统计和考勤设置</p>
+            </div>
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-outline-info" onclick="refreshAttendanceData()">
+                    <i class="fas fa-sync-alt me-2"></i>刷新数据
+                </button>
+                <button type="button" class="btn btn-outline-success" onclick="exportAttendance()">
+                    <i class="fas fa-download me-2"></i>导出考勤
+                </button>
+                <button type="button" class="btn btn-outline-warning" onclick="showAttendanceReport()">
+                    <i class="fas fa-chart-bar me-2"></i>考勤报表
+                </button>
+                <button type="button" class="btn btn-primary" onclick="showManualCheckInModal()">
+                    <i class="fas fa-plus me-2"></i>手动签到
+                </button>
+            </div>
+        </div>
+
+        <!-- 错误提示区域 -->
+        <div id="alertContainer"></div>
+
+        <!-- 搜索和筛选区域 -->
+        <div class="search-filters">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">学生姓名/学号</label>
+                    <input type="text" class="form-control" id="searchKeyword" placeholder="输入学生信息搜索">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">课程</label>
+                    <select class="form-select" id="courseFilter">
+                        <option value="">全部课程</option>
+                        <!-- 课程选项将通过AJAX加载 -->
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">考勤状态</label>
+                    <select class="form-select" id="statusFilter">
+                        <option value="">全部状态</option>
+                        <option value="出勤">出勤</option>
+                        <option value="迟到">迟到</option>
+                        <option value="早退">早退</option>
+                        <option value="缺勤">缺勤</option>
+                        <option value="请假">请假</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">日期范围</label>
+                    <input type="date" class="form-control" id="dateFilter">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-primary" onclick="applyFilters()">
+                            <i class="fas fa-search me-1"></i>搜索
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="resetFilters()">
+                            <i class="fas fa-undo me-1"></i>重置
+                        </button>
+                        <button type="button" class="btn btn-outline-info" onclick="toggleCalendarView()">
+                            <i class="fas fa-calendar me-1"></i>日历视图
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 批量操作区域 -->
+        <div class="batch-actions" id="batchActions">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="fw-bold">已选择 <span id="selectedCount">0</span> 条考勤记录</span>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-sm btn-primary" onclick="batchEdit()">
+                        <i class="fas fa-edit me-1"></i>批量修改
+                    </button>
+                    <button type="button" class="btn btn-sm btn-success" onclick="batchExport()">
+                        <i class="fas fa-download me-1"></i>批量导出
+                    </button>
+                    <button type="button" class="btn btn-sm btn-danger" onclick="batchDelete()">
+                        <i class="fas fa-trash me-1"></i>批量删除
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearSelection()">
+                        <i class="fas fa-times me-1"></i>取消选择
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 考勤统计卡片 -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm stats-card">
+                    <div class="card-body text-center">
+                        <div class="text-success mb-2">
+                            <i class="fas fa-user-check fa-2x"></i>
+                        </div>
+                        <h5 class="card-title mb-1">出勤率</h5>
+                        <h3 class="text-success mb-0" id="attendanceRate">0%</h3>
+                        <small class="text-muted">今日出勤率</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm stats-card">
+                    <div class="card-body text-center">
+                        <div class="text-warning mb-2">
+                            <i class="fas fa-clock fa-2x"></i>
+                        </div>
+                        <h5 class="card-title mb-1">迟到率</h5>
+                        <h3 class="text-warning mb-0" id="lateRate">0%</h3>
+                        <small class="text-muted">今日迟到率</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm stats-card">
+                    <div class="card-body text-center">
+                        <div class="text-danger mb-2">
+                            <i class="fas fa-user-times fa-2x"></i>
+                        </div>
+                        <h5 class="card-title mb-1">缺勤人数</h5>
+                        <h3 class="text-danger mb-0" id="absentCount">0</h3>
+                        <small class="text-muted">今日缺勤人数</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm stats-card">
+                    <div class="card-body text-center">
+                        <div class="text-info mb-2">
+                            <i class="fas fa-clipboard-list fa-2x"></i>
+                        </div>
+                        <h5 class="card-title mb-1">总记录数</h5>
+                        <h3 class="text-info mb-0" id="totalRecords">0</h3>
+                        <small class="text-muted">考勤记录总数</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 日历视图（默认隐藏） -->
+        <div class="calendar-view" id="calendarView" style="display: none;">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0">
+                    <i class="fas fa-calendar me-2"></i>考勤日历
+                </h5>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="prevMonth()">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <span id="currentMonth" class="fw-bold">2025年1月</span>
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="nextMonth()">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+            <div id="calendarGrid" class="d-flex flex-wrap">
+                <!-- 日历网格将通过JavaScript生成 -->
+            </div>
+            <div class="mt-3">
+                <span class="badge status-present me-2">出勤</span>
+                <span class="badge status-late me-2">迟到</span>
+                <span class="badge status-absent me-2">缺勤</span>
+                <span class="badge status-leave me-2">请假</span>
+            </div>
+        </div>
+
+        <!-- 考勤数据表格 -->
+        <div class="table-container">
+            <div class="card border-0">
+                <div class="card-header bg-white border-0 py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-table me-2"></i>考勤记录
+                        </h5>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="toggleColumns()">
+                                <i class="fas fa-columns me-1"></i>列显示
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-info" onclick="refreshTable()">
+                                <i class="fas fa-sync-alt me-1"></i>刷新表格
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table id="attendanceTable" class="table table-hover table-striped">
+                            <thead class="table-light">
+                                <tr>
+                                    <th width="40">
+                                        <input type="checkbox" class="form-check-input" id="selectAll">
+                                    </th>
+                                    <th>学生姓名</th>
+                                    <th>学号</th>
+                                    <th>课程名称</th>
+                                    <th>考勤日期</th>
+                                    <th>签到时间</th>
+                                    <th>签退时间</th>
+                                    <th>考勤状态</th>
+                                    <th>签到方式</th>
+                                    <th>备注</th>
+                                    <th width="200">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- 数据将通过AJAX加载 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 手动签到模态框 -->
+    <div class="modal fade" id="manualCheckInModal" tabindex="-1" aria-labelledby="manualCheckInModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="manualCheckInModalLabel">
+                        <i class="fas fa-plus me-2"></i>手动签到
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="manualCheckInForm">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="studentId" class="form-label">学生 <span class="text-danger">*</span></label>
+                                <select class="form-select" id="studentId" name="studentId" required>
+                                    <option value="">请选择学生</option>
+                                    <!-- 学生选项将通过AJAX加载 -->
+                                </select>
+                                <div class="invalid-feedback">请选择学生</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="courseId" class="form-label">课程 <span class="text-danger">*</span></label>
+                                <select class="form-select" id="courseId" name="courseId" required>
+                                    <option value="">请选择课程</option>
+                                    <!-- 课程选项将通过AJAX加载 -->
+                                </select>
+                                <div class="invalid-feedback">请选择课程</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="attendanceDate" class="form-label">考勤日期 <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="attendanceDate" name="attendanceDate" required>
+                                <div class="invalid-feedback">请选择考勤日期</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="attendanceStatus" class="form-label">考勤状态 <span class="text-danger">*</span></label>
+                                <select class="form-select" id="attendanceStatus" name="status" required>
+                                    <option value="">请选择状态</option>
+                                    <option value="出勤">出勤</option>
+                                    <option value="迟到">迟到</option>
+                                    <option value="早退">早退</option>
+                                    <option value="缺勤">缺勤</option>
+                                    <option value="请假">请假</option>
+                                </select>
+                                <div class="invalid-feedback">请选择考勤状态</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="checkInTime" class="form-label">签到时间</label>
+                                <input type="time" class="form-control" id="checkInTime" name="checkInTime">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="checkOutTime" class="form-label">签退时间</label>
+                                <input type="time" class="form-control" id="checkOutTime" name="checkOutTime">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="checkInMethod" class="form-label">签到方式</label>
+                                <select class="form-select" id="checkInMethod" name="checkInMethod">
+                                    <option value="manual">手动签到</option>
+                                    <option value="qr_code">二维码签到</option>
+                                    <option value="face_recognition">人脸识别</option>
+                                    <option value="location">位置签到</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="location" class="form-label">签到位置</label>
+                                <input type="text" class="form-control" id="location" name="location" placeholder="请输入签到位置">
+                            </div>
+                            <div class="col-12">
+                                <label for="remarks" class="form-label">备注</label>
+                                <textarea class="form-control" id="remarks" name="remarks" rows="2" placeholder="请输入备注信息"></textarea>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="manualCheckIn()">
+                        <i class="fas fa-save me-1"></i>保存
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <th:block th:fragment="scripts">
+        <!-- DataTables JS -->
+        <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+        <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+        <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+        <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.bootstrap5.min.js"></script>
+        <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+        <script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
+        
+        <!-- 考勤管理脚本 -->
+        <script th:src="@{/js/modules/attendance-management.js}"></script>
+        
+        <!-- 页面初始化脚本 -->
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // 设置当前页面标识
+                document.body.setAttribute('data-current-page', 'attendance');
+                
+                // 初始化考勤管理模块
+                if (window.AttendanceManagement) {
+                    window.AttendanceManagement.init();
+                } else {
+                    console.error('考勤管理模块未加载');
+                }
+                
+                // 设置默认日期为今天
+                document.getElementById('attendanceDate').value = new Date().toISOString().split('T')[0];
+            });
+        </script>
+    </th:block>
+</body>
+</html>

@@ -80,7 +80,7 @@ class ScheduleManagement {
      */
     async loadFormData() {
         try {
-            const response = await apiClient.get('/api/schedules/form-data');
+            const response = await apiClient.get('/api/v1/schedules/form-data');
             if (response.success) {
                 this.formData = response.data;
                 this.populateFormOptions();
@@ -171,7 +171,7 @@ class ScheduleManagement {
                 }
             }
 
-            const response = await apiClient.get('/api/schedules', params);
+            const response = await apiClient.get('/api/v1/schedules', params);
             
             if (response.success) {
                 this.renderScheduleTable(response.data.content);
@@ -298,7 +298,7 @@ class ScheduleManagement {
      */
     async loadStatistics() {
         try {
-            const response = await apiClient.get('/api/schedules/stats');
+            const response = await apiClient.get('/api/v1/schedules/stats');
             if (response.success) {
                 const stats = response.data;
                 document.getElementById('totalSchedules').textContent = stats.totalSchedules || 0;
@@ -329,7 +329,7 @@ class ScheduleManagement {
         try {
             showLoading('正在加载课程安排信息...');
             
-            const response = await apiClient.get(`/api/schedules/${scheduleId}`);
+            const response = await apiClient.get(`/api/v1/schedules/${scheduleId}`);
             if (response.success) {
                 this.isEditing = true;
                 this.currentScheduleId = scheduleId;
@@ -385,9 +385,9 @@ class ScheduleManagement {
 
             let response;
             if (this.isEditing) {
-                response = await apiClient.put(`/api/schedules/${this.currentScheduleId}`, scheduleData);
+                response = await apiClient.put(`/api/v1/schedules/${this.currentScheduleId}`, scheduleData);
             } else {
-                response = await apiClient.post('/api/schedules', scheduleData);
+                response = await apiClient.post('/api/v1/schedules', scheduleData);
             }
 
             if (response.success) {
@@ -417,7 +417,7 @@ class ScheduleManagement {
         try {
             showLoading('正在删除课程安排...');
             
-            const response = await apiClient.delete(`/api/schedules/${scheduleId}`);
+            const response = await apiClient.delete(`/api/v1/schedules/${scheduleId}`);
             if (response.success) {
                 showAlert('课程安排删除成功', 'success');
                 this.loadSchedules();

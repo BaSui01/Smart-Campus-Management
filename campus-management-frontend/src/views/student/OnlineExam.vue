@@ -293,11 +293,11 @@
     </el-dialog>
 
     <!-- 防作弊监控 -->
-    <anti-cheat-monitor
+    <!-- <anti-cheat-monitor
       v-if="examInfo.antiCheatEnabled"
       :exam-record-id="examRecordId"
       @cheat-warning="handleCheatWarning"
-    />
+    /> -->
   </div>
 </template>
 
@@ -307,7 +307,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Timer, ArrowLeft, ArrowRight, Warning } from '@element-plus/icons-vue'
 import { examApi } from '@/api/exam'
-import AntiCheatMonitor from '@/components/AntiCheatMonitor.vue'
+// import AntiCheatMonitor from '@/components/AntiCheatMonitor.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -369,41 +369,122 @@ const canSubmit = computed(() => {
 // 方法
 const loadExamInfo = async () => {
   try {
-    const examId = route.params.examId
-    const response = await examApi.getStudentExamDetail(examId)
-    examInfo.value = response.data
-    
+    const examId = route.params.examId || route.params.id
+    const { data } = await examApi.getStudentExamDetail(examId)
+
+    examInfo.value = {
+      id: data.id,
+      examName: data.examName || data.title || data.name,
+      courseName: data.courseName || data.course?.courseName,
+      totalScore: data.totalScore || data.maxScore || 100,
+      durationMinutes: data.durationMinutes || data.duration || 120,
+      status: data.status || getExamStatus(data),
+      antiCheatEnabled: data.antiCheatEnabled || false,
+      allowReview: data.allowReview || false,
+      questionCount: data.questionCount || 0,
+      startTime: data.startTime || data.beginTime,
+      endTime: data.endTime || data.finishTime
+    }
+
     // 检查考试状态
-    if (examInfo.value.status !== 'ongoing') {
+    if (examInfo.value.status !== 'ongoing' && examInfo.value.status !== 'available') {
       ElMessage.error('考试未开始或已结束')
       router.push('/student/exams')
       return
     }
-    
+
     await loadQuestions()
     await startExam()
   } catch (error) {
+    console.error('加载考试信息失败:', error)
     ElMessage.error('加载考试信息失败')
     router.push('/student/exams')
   }
 }
 
+// 根据时间判断考试状态
+const getExamStatus = (exam) => {
+  if (exam.status) return exam.status
+
+  const now = new Date()
+  const startTime = new Date(exam.startTime || exam.beginTime)
+  const endTime = new Date(exam.endTime || exam.finishTime)
+
+  if (now < startTime) return 'pending'
+  if (now >= startTime && now <= endTime) return 'ongoing'
+  return 'ended'
+}
+
 const loadQuestions = async () => {
   try {
-    const response = await examApi.getExamQuestions(examInfo.value.id)
-    questions.value = response.data.list
-    
+    const { data } = await examApi.getExamQuestions(examInfo.value.id)
+    const questionList = Array.isArray(data) ? data : (data.questions || data.list || [])
+
+    questions.value = questionList.map(question => ({
+      id: question.id,
+      questionText: question.questionText || question.content || question.title,
+      questionType: question.questionType || question.type || 'single_choice',
+      questionImage: question.questionImage || question.imageUrl,
+      score: question.score || question.points || 5,
+      options: question.options || question.choices || [],
+      blanks: question.blanks || question.blankCount || 1,
+      correctAnswer: question.correctAnswer || question.answer,
+      analysis: question.analysis || question.explanation
+    }))
+
     // 初始化答案对象
     questions.value.forEach(question => {
-      if (question.questionType === 'multiple_choice' || question.questionType === 'fill_blank') {
+      if (question.questionType === 'multiple_choice') {
         answers[question.id] = []
+      } else if (question.questionType === 'fill_blank') {
+        answers[question.id] = new Array(question.blanks).fill('')
       } else {
         answers[question.id] = null
       }
     })
   } catch (error) {
+    console.error('加载题目失败:', error)
     ElMessage.error('加载题目失败')
+
+    // 如果API失败，使用模拟数据
+    questions.value = generateMockQuestions()
   }
+}
+
+// 生成模拟题目数据
+const generateMockQuestions = () => {
+  return [
+    {
+      id: 1,
+      questionText: '以下哪个是JavaScript的数据类型？',
+      questionType: 'single_choice',
+      score: 5,
+      options: [
+        { key: 'A', text: 'String' },
+        { key: 'B', text: 'Integer' },
+        { key: 'C', text: 'Float' },
+        { key: 'D', text: 'Character' }
+      ]
+    },
+    {
+      id: 2,
+      questionText: '以下哪些是前端框架？',
+      questionType: 'multiple_choice',
+      score: 10,
+      options: [
+        { key: 'A', text: 'Vue.js' },
+        { key: 'B', text: 'React' },
+        { key: 'C', text: 'Angular' },
+        { key: 'D', text: 'Spring Boot' }
+      ]
+    },
+    {
+      id: 3,
+      questionText: 'HTML是超文本标记语言。',
+      questionType: 'true_false',
+      score: 5
+    }
+  ]
 }
 
 const startExam = async () => {

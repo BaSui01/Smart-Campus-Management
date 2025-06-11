@@ -12,31 +12,31 @@ class DashboardDiagnostics {
         this.apiEndpoints = [
             { 
                 name: '统计数据API', 
-                endpoint: '/api/dashboard/stats',
+                endpoint: '/api/v1/dashboard/stats',
                 description: '获取学生、课程、班级等基础统计数据',
                 required: true
             },
             { 
                 name: '图表数据API', 
-                endpoint: '/api/dashboard/chart-data',
+                endpoint: '/api/v1/dashboard/chart-data',
                 description: '获取各种图表所需的数据',
                 required: true
             },
             { 
                 name: '通知数据API', 
-                endpoint: '/api/dashboard/notifications',
+                endpoint: '/api/v1/dashboard/notifications',
                 description: '获取系统通知列表',
                 required: false
             },
             { 
                 name: '活动数据API', 
-                endpoint: '/api/dashboard/activities',
+                endpoint: '/api/v1/dashboard/activities',
                 description: '获取最近活动记录',
                 required: false
             },
             { 
                 name: '健康检查API', 
-                endpoint: '/api/health',
+                endpoint: '/api/v1/health',
                 description: '检查后端服务状态',
                 required: true
             }
@@ -142,9 +142,9 @@ class DashboardDiagnostics {
                 }
 
                 // 检查数据完整性
-                if (api.endpoint === '/api/dashboard/stats') {
+                if (api.endpoint === '/api/v1/dashboard/stats') {
                     details.dataCheck = this.validateStatsData(response.data || response);
-                } else if (api.endpoint === '/api/dashboard/chart-data') {
+                } else if (api.endpoint === '/api/v1/dashboard/chart-data') {
                     details.dataCheck = this.validateChartData(response.data || response);
                 }
             }

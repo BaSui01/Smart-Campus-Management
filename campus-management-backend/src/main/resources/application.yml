@@ -1,6 +1,6 @@
 # 智慧校园管理系统 - 统一配置文件
 server:
-  port: 8082  # 开发环境端口
+  port: 8888  # 开发环境端口（避免端口冲突）
 
 spring:
   application:
@@ -35,7 +35,7 @@ spring:
   # JPA配置
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: none  # 使用SQL脚本创建表结构，不让Hibernate自动创建
       naming:
         physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
         implicit-strategy: org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy
@@ -92,20 +92,6 @@ spring:
           auth: true
           starttls:
             enable: true
-
-  # Quartz配置
-  quartz:
-    job-store-type: memory
-    properties:
-      org:
-        quartz:
-          threadPool:
-            threadCount: 5
-            threadPriority: 5
-          scheduler:
-            instanceName: CampusScheduler-Dev
-            instanceId: AUTO
-
   # Thymeleaf配置
   thymeleaf:
     prefix: classpath:/templates/
@@ -222,50 +208,21 @@ management:
     health:
       show-details: always
   metrics:
-    export:
-      prometheus:
-        enabled: true
     tags:
       application: smart-campus-management
       environment: dev
+  prometheus:
+    metrics:
+      export:
+        enabled: true
 
 # 日志配置 - 开发环境（减少输出）
-logging:
-  level:
-    com.campus: INFO
-    org.springframework: WARN
-    org.springframework.security: ERROR
-    org.springframework.data: ERROR
-    org.springframework.cache: ERROR
-    org.springframework.boot: ERROR
-    org.springframework.web: ERROR
-    org.springframework.orm: ERROR
-    org.hibernate: ERROR
-    org.hibernate.SQL: ERROR
-    org.hibernate.type: ERROR
-    org.hibernate.stat: ERROR
-    org.hibernate.engine: ERROR
-    org.apache.tomcat: ERROR
-    org.apache.catalina: ERROR
-    com.zaxxer.hikari: ERROR
-    com.zaxxer.hikari.HikariConfig: ERROR
-    com.zaxxer.hikari.pool: ERROR
-    org.quartz: ERROR
-    io.lettuce: ERROR
-    io.netty: ERROR
-    org.apache.http: ERROR
-    org.apache.commons: ERROR
-    org.springframework.transaction: ERROR
-    root: WARN
-  pattern:
-    console: "%d{HH:mm:ss} %-5level %logger{15} - %msg%n"
-
 # SpringDoc OpenAPI配置
 springdoc:
   api-docs:
-    path: /api/v3/api-docs
+    path: /api/v1/api-docs
   swagger-ui:
-    path: /api/swagger-ui.html
+    path: /api/v1/swagger-ui.html
     operationsSorter: method
     tagsSorter: alpha
     disable-swagger-default-url: true

@@ -327,7 +327,7 @@ class UserManagement {
             };
 
             console.log('📡 发送API请求参数:', params);
-            const response = await apiClient.get('/api/users', params);
+            const response = await apiClient.get('/api/v1/users', params);
             console.log('📥 API响应:', response);
 
             // 检查响应格式：支持 {success: true} 和 {code: 200} 两种格式
@@ -655,7 +655,7 @@ class UserManagement {
             this.showLoading('正在加载用户信息...');
 
             console.log('📡 获取用户信息...');
-            const response = await apiClient.get(`/api/users/${userId}`);
+            const response = await apiClient.get(`/api/v1/users/${userId}`);
             console.log('📥 用户信息响应:', response);
 
             if (this.isResponseSuccess(response)) {
@@ -779,10 +779,10 @@ class UserManagement {
 
             if (userId) {
                 // 编辑用户
-                response = await apiClient.put(`/api/users/${userId}`, formData);
+                response = await apiClient.put(`/api/v1/users/${userId}`, formData);
             } else {
                 // 添加用户
-                response = await apiClient.post('/api/users', formData);
+                response = await apiClient.post('/api/v1/users', formData);
             }
 
             if (this.isResponseSuccess(response)) {
@@ -949,7 +949,7 @@ class UserManagement {
         }
 
         try {
-            const response = await apiClient.delete(`/api/users/${userId}`);
+            const response = await apiClient.delete(`/api/v1/users/${userId}`);
 
             if (this.isResponseSuccess(response)) {
                 this.showAlert('用户删除成功', 'success');
@@ -976,7 +976,7 @@ class UserManagement {
             this.showLoading('正在重置密码...');
 
             console.log('📡 发送重置密码请求...');
-            const response = await apiClient.post(`/api/users/${userId}/reset-password`, null);
+            const response = await apiClient.post(`/api/v1/users/${userId}/reset-password`, null);
             console.log('📥 重置密码响应:', response);
 
             if (this.isResponseSuccess(response)) {
@@ -1077,7 +1077,7 @@ class UserManagement {
 
         try {
             const userIds = Array.from(this.selectedUsers);
-            const response = await apiClient.delete('/api/users/batch', userIds);
+            const response = await apiClient.delete('/api/v1/users/batch', userIds);
 
             if (this.isResponseSuccess(response)) {
                 this.showAlert(`成功删除 ${userIds.length} 个用户`, 'success');
@@ -1100,7 +1100,7 @@ class UserManagement {
             this.showLoading('正在导出用户数据...');
 
             const params = { ...this.searchParams, export: true };
-            const response = await apiClient.get('/api/users/export', params);
+            const response = await apiClient.get('/api/v1/users/export', params);
 
             if (this.isResponseSuccess(response)) {
                 // 创建下载链接
@@ -1135,7 +1135,7 @@ class UserManagement {
             this.showLoading('正在加载用户详情...');
 
             console.log('📡 获取用户详情...');
-            const response = await apiClient.get(`/api/users/${userId}`);
+            const response = await apiClient.get(`/api/v1/users/${userId}`);
             console.log('📥 用户详情响应:', response);
 
             if (this.isResponseSuccess(response)) {
@@ -1458,7 +1458,7 @@ class UserManagement {
      */
     async toggleUserStatus(userId) {
         try {
-            const response = await apiClient.post(`/api/users/${userId}/toggle-status`);
+            const response = await apiClient.post(`/api/v1/users/${userId}/toggle-status`);
 
             if (this.isResponseSuccess(response)) {
                 this.showAlert('用户状态切换成功', 'success');
@@ -1482,7 +1482,7 @@ class UserManagement {
         }
 
         try {
-            const response = await apiClient.post(`/api/users/${userId}/toggle-status`);
+            const response = await apiClient.post(`/api/v1/users/${userId}/toggle-status`);
 
             if (this.isResponseSuccess(response)) {
                 this.showAlert('用户启用成功', 'success');
@@ -1532,7 +1532,7 @@ class UserManagement {
         try {
             console.log('🔄 开始加载禁用用户列表');
 
-            const response = await apiClient.get('/api/users/disabled');
+            const response = await apiClient.get('/api/v1/users/disabled');
             console.log('📥 禁用用户列表响应:', response);
 
             if (this.isResponseSuccess(response)) {

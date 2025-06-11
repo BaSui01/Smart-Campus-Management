@@ -8,6 +8,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -36,10 +41,15 @@ import com.campus.domain.repository.UserRoleRepository;
 @Transactional
 public class UserServiceImpl implements UserService {
 
+    private static final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final RoleRepository roleRepository;
     private final UserRoleRepository userRoleRepository;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     
     public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder,
@@ -129,8 +139,9 @@ public class UserServiceImpl implements UserService {
     public boolean hasMenuPermission(Long userId, String menuPath) {
         List<String> userRoles = getUserRoles(userId);
 
-        // SUPER_ADMIN和ADMIN角色拥有所有权限
-        if (userRoles.contains("SUPER_ADMIN") || userRoles.contains("ADMIN")) {
+        // 系统管理员拥有所有权限
+        if (userRoles.contains("ROLE_SUPER_ADMIN") || userRoles.contains("ROLE_ADMIN") ||
+            userRoles.contains("ROLE_PRINCIPAL") || userRoles.contains("ROLE_VICE_PRINCIPAL")) {
             return true;
         }
 
@@ -157,21 +168,78 @@ public class UserServiceImpl implements UserService {
             return userRoles.contains("SUPER_ADMIN") || userRoles.contains("ADMIN") || userRoles.contains("SYSTEM_ADMIN");
         }
 
-        // 教务管理页面 - SUPER_ADMIN、ADMIN、ACADEMIC_ADMIN、TEACHER可以访问
+        // 教务管理页面 - 系统管理员、教务相关角色、教学人员可以访问
         if (menuPath.startsWith("/admin/academic/") ||
-            menuPath.startsWith("/admin/students")) {
-            return userRoles.contains("SUPER_ADMIN") ||
-                   userRoles.contains("ADMIN") ||
-                   userRoles.contains("ACADEMIC_ADMIN") ||
-                   userRoles.contains("TEACHER");
+            menuPath.startsWith("/admin/students") ||
+            menuPath.startsWith("/admin/courses") ||
+            menuPath.startsWith("/admin/grades")) {
+            return userRoles.contains("ROLE_SUPER_ADMIN") ||
+                   userRoles.contains("ROLE_ADMIN") ||
+                   userRoles.contains("ROLE_PRINCIPAL") ||
+                   userRoles.contains("ROLE_VICE_PRINCIPAL") ||
+                   userRoles.contains("ROLE_ACADEMIC_DIRECTOR") ||
+                   userRoles.contains("ROLE_DEAN") ||
+                   userRoles.contains("ROLE_VICE_DEAN") ||
+                   userRoles.contains("ROLE_DEPARTMENT_HEAD") ||
+                   userRoles.contains("ROLE_TEACHING_GROUP_HEAD") ||
+                   userRoles.contains("ROLE_TEACHER") ||
+                   userRoles.contains("ROLE_PROFESSOR") ||
+                   userRoles.contains("ROLE_ASSOCIATE_PROFESSOR") ||
+                   userRoles.contains("ROLE_LECTURER") ||
+                   userRoles.contains("ROLE_CLASS_TEACHER") ||
+                   userRoles.contains("ROLE_COUNSELOR") ||
+                   userRoles.contains("ROLE_ACADEMIC_STAFF");
         }
 
-        // 财务管理页面 - SUPER_ADMIN、ADMIN、FINANCE_ADMIN可以访问
+        // 财务管理页面 - 系统管理员、财务相关角色可以访问
         if (menuPath.startsWith("/admin/fee-items") ||
             menuPath.startsWith("/admin/payments") ||
             menuPath.startsWith("/admin/payment-records") ||
+            menuPath.startsWith("/admin/finance") ||
             menuPath.startsWith("/admin/reports")) {
-            return userRoles.contains("SUPER_ADMIN") || userRoles.contains("ADMIN") || userRoles.contains("FINANCE_ADMIN");
+            return userRoles.contains("ROLE_SUPER_ADMIN") ||
+                   userRoles.contains("ROLE_ADMIN") ||
+                   userRoles.contains("ROLE_PRINCIPAL") ||
+                   userRoles.contains("ROLE_VICE_PRINCIPAL") ||
+                   userRoles.contains("ROLE_FINANCE_DIRECTOR") ||
+                   userRoles.contains("ROLE_FINANCE_STAFF");
+        }
+
+        // 学生事务管理页面 - 学生工作相关角色可以访问
+        if (menuPath.startsWith("/admin/student-affairs") ||
+            menuPath.startsWith("/admin/classes") ||
+            menuPath.startsWith("/admin/attendance")) {
+            return userRoles.contains("ROLE_SUPER_ADMIN") ||
+                   userRoles.contains("ROLE_ADMIN") ||
+                   userRoles.contains("ROLE_PRINCIPAL") ||
+                   userRoles.contains("ROLE_VICE_PRINCIPAL") ||
+                   userRoles.contains("ROLE_STUDENT_AFFAIRS_DIRECTOR") ||
+                   userRoles.contains("ROLE_DEAN") ||
+                   userRoles.contains("ROLE_DEPARTMENT_HEAD") ||
+                   userRoles.contains("ROLE_CLASS_TEACHER") ||
+                   userRoles.contains("ROLE_COUNSELOR") ||
+                   userRoles.contains("ROLE_STUDENT_AFFAIRS_STAFF");
+        }
+
+        // 人事管理页面 - 人事相关角色可以访问
+        if (menuPath.startsWith("/admin/hr") ||
+            menuPath.startsWith("/admin/teachers") ||
+            menuPath.startsWith("/admin/staff")) {
+            return userRoles.contains("ROLE_SUPER_ADMIN") ||
+                   userRoles.contains("ROLE_ADMIN") ||
+                   userRoles.contains("ROLE_PRINCIPAL") ||
+                   userRoles.contains("ROLE_VICE_PRINCIPAL") ||
+                   userRoles.contains("ROLE_HR_DIRECTOR") ||
+                   userRoles.contains("ROLE_HR_STAFF");
+        }
+
+        // 系统管理页面 - 仅系统管理员和IT相关角色可以访问
+        if (menuPath.startsWith("/admin/system") ||
+            menuPath.startsWith("/admin/config") ||
+            menuPath.startsWith("/admin/logs")) {
+            return userRoles.contains("ROLE_SUPER_ADMIN") ||
+                   userRoles.contains("ROLE_ADMIN") ||
+                   userRoles.contains("ROLE_IT_DIRECTOR");
         }
 
         // 默认拒绝访问
@@ -1451,29 +1519,48 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     public List<Map<String, Object>> getOrphanedStudents() {
         try {
+            // 查询所有学生，但在家长-学生关系表中没有记录的学生
+            String sql = """
+                SELECT DISTINCT s.id, s.student_no, u.real_name, s.grade, s.major,
+                       sc.class_name, s.enrollment_date, s.status, u.phone, u.email
+                FROM tb_student s
+                INNER JOIN tb_user u ON s.user_id = u.id
+                LEFT JOIN tb_school_class sc ON s.class_id = sc.id
+                WHERE s.status = 1
+                  AND s.deleted = 0
+                  AND u.status = 1
+                  AND u.deleted = 0
+                  AND s.id NOT IN (
+                      SELECT DISTINCT psr.student_id
+                      FROM tb_parent_student_relation psr
+                      WHERE psr.deleted = 0 AND psr.status = 1
+                  )
+                ORDER BY s.enrollment_date DESC
+                """;
+
+            @SuppressWarnings("unchecked")
+            List<Object[]> results = entityManager.createNativeQuery(sql).getResultList();
+
             List<Map<String, Object>> orphanedStudents = new ArrayList<>();
-
-            // 模拟孤儿学生数据
-            String[] studentNames = {"王小明", "李小红", "张小华", "刘小强", "陈小美"};
-            String[] studentNos = {"2024001", "2024002", "2024003", "2024004", "2024005"};
-            String[] grades = {"2024级", "2023级", "2024级", "2022级", "2023级"};
-            String[] classes = {"计算机1班", "数学1班", "物理1班", "化学1班", "生物1班"};
-
-            for (int i = 0; i < studentNames.length; i++) {
+            for (Object[] row : results) {
                 Map<String, Object> student = new HashMap<>();
-                student.put("id", (long) (i + 1));
-                student.put("studentNo", studentNos[i]);
-                student.put("name", studentNames[i]);
-                student.put("grade", grades[i]);
-                student.put("className", classes[i]);
-                student.put("enrollmentDate", LocalDateTime.now().minusMonths(i + 1));
-                student.put("status", 1);
+                student.put("id", row[0]);
+                student.put("studentNo", row[1]);
+                student.put("name", row[2]);
+                student.put("grade", row[3]);
+                student.put("major", row[4]);
+                student.put("className", row[5]);
+                student.put("enrollmentDate", row[6]);
+                student.put("status", row[7]);
+                student.put("phone", row[8]);
+                student.put("email", row[9]);
                 orphanedStudents.add(student);
             }
 
+            log.info("✅ 查询到 {} 个孤儿学生", orphanedStudents.size());
             return orphanedStudents;
         } catch (Exception e) {
-            System.err.println("❌ 获取孤儿学生失败: " + e.getMessage());
+            log.error("❌ 获取孤儿学生失败: {}", e.getMessage(), e);
             return new ArrayList<>();
         }
     }
@@ -1482,27 +1569,44 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     public List<Map<String, Object>> getChildlessParents() {
         try {
+            // 查询所有家长角色的用户，但在家长-学生关系表中没有记录的用户
+            String sql = """
+                SELECT DISTINCT u.id, u.username, u.real_name, u.phone, u.email,
+                       u.created_at, u.status
+                FROM tb_user u
+                INNER JOIN tb_user_role ur ON u.id = ur.user_id
+                INNER JOIN tb_role r ON ur.role_id = r.id
+                WHERE r.role_key = 'PARENT'
+                  AND u.status = 1
+                  AND u.deleted = 0
+                  AND u.id NOT IN (
+                      SELECT DISTINCT psr.parent_id
+                      FROM tb_parent_student_relation psr
+                      WHERE psr.deleted = 0 AND psr.status = 1
+                  )
+                ORDER BY u.created_at DESC
+                """;
+
+            @SuppressWarnings("unchecked")
+            List<Object[]> results = entityManager.createNativeQuery(sql).getResultList();
+
             List<Map<String, Object>> childlessParents = new ArrayList<>();
-
-            // 模拟无子女家长数据
-            String[] parentNames = {"赵大明", "钱二娘", "孙三郎", "李四姐", "周五叔"};
-            String[] phones = {"13800138001", "13800138002", "13800138003", "13800138004", "13800138005"};
-            String[] emails = {"zhao@example.com", "qian@example.com", "sun@example.com", "li@example.com", "zhou@example.com"};
-
-            for (int i = 0; i < parentNames.length; i++) {
+            for (Object[] row : results) {
                 Map<String, Object> parent = new HashMap<>();
-                parent.put("id", (long) (i + 1));
-                parent.put("name", parentNames[i]);
-                parent.put("phone", phones[i]);
-                parent.put("email", emails[i]);
-                parent.put("registrationDate", LocalDateTime.now().minusMonths(i + 2));
-                parent.put("status", 1);
+                parent.put("id", row[0]);
+                parent.put("username", row[1]);
+                parent.put("name", row[2]);
+                parent.put("phone", row[3]);
+                parent.put("email", row[4]);
+                parent.put("registrationDate", row[5]);
+                parent.put("status", row[6]);
                 childlessParents.add(parent);
             }
 
+            log.info("✅ 查询到 {} 个无子女家长", childlessParents.size());
             return childlessParents;
         } catch (Exception e) {
-            System.err.println("❌ 获取无子女家长失败: " + e.getMessage());
+            log.error("❌ 获取无子女家长失败: {}", e.getMessage(), e);
             return new ArrayList<>();
         }
     }

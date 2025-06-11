@@ -30,7 +30,7 @@ import jakarta.validation.Valid;
  * @since 2025-06-06
  */
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/api/v1/auth")
 @Tag(name = "认证API", description = "用户认证相关REST API接口")
 public class AuthApiController extends BaseController {
 

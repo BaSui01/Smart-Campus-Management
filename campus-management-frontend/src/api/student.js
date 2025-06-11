@@ -2,9 +2,86 @@ import request from './request'
 
 /**
  * 学生相关API
+ * 基于后端 StudentController 和相关接口实现
  */
 export const studentApi = {
-  // 获取学生个人信息
+  // ==================== 学生基础信息管理 ====================
+
+  /**
+   * 获取学生列表
+   * 对应后端: GET /api/v1/students
+   */
+  getStudentList(params = {}) {
+    return request({
+      url: '/v1/students',
+      method: 'get',
+      params
+    })
+  },
+
+  /**
+   * 根据ID获取学生详情
+   * 对应后端: GET /api/v1/students/{id}
+   */
+  getStudentById(id) {
+    return request({
+      url: `/v1/students/${id}`,
+      method: 'get'
+    })
+  },
+
+  /**
+   * 创建学生
+   * 对应后端: POST /api/v1/students
+   */
+  createStudent(data) {
+    return request({
+      url: '/v1/students',
+      method: 'post',
+      data
+    })
+  },
+
+  /**
+   * 更新学生信息
+   * 对应后端: PUT /api/v1/students/{id}
+   */
+  updateStudent(id, data) {
+    return request({
+      url: `/v1/students/${id}`,
+      method: 'put',
+      data
+    })
+  },
+
+  /**
+   * 删除学生
+   * 对应后端: DELETE /api/v1/students/{id}
+   */
+  deleteStudent(id) {
+    return request({
+      url: `/v1/students/${id}`,
+      method: 'delete'
+    })
+  },
+
+  /**
+   * 批量更新学生状态
+   * 对应后端: PUT /api/v1/students/batch/status
+   */
+  batchUpdateStudentStatus(data) {
+    return request({
+      url: '/v1/students/batch/status',
+      method: 'put',
+      data
+    })
+  },
+  // ==================== 学生个人信息管理 ====================
+
+  /**
+   * 获取学生个人信息
+   * 对应后端: GET /api/v1/student/profile
+   */
   getProfile() {
     return request({
       url: '/student/profile',
@@ -12,7 +89,10 @@ export const studentApi = {
     })
   },
 
-  // 更新学生个人信息
+  /**
+   * 更新学生个人信息
+   * 对应后端: PUT /api/v1/student/profile
+   */
   updateProfile(data) {
     return request({
       url: '/student/profile',
@@ -21,7 +101,10 @@ export const studentApi = {
     })
   },
 
-  // 上传头像
+  /**
+   * 上传头像
+   * 对应后端: POST /api/v1/student/profile/avatar
+   */
   uploadAvatar(formData) {
     return request({
       url: '/student/profile/avatar',
@@ -33,11 +116,63 @@ export const studentApi = {
     })
   },
 
-  // 获取仪表盘统计数据
+  // ==================== 学生仪表盘数据 ====================
+
+  /**
+   * 获取仪表盘统计数据
+   * 对应后端: GET /api/v1/dashboard/stats
+   */
   getDashboardStats() {
     return request({
-      url: '/student/dashboard/stats',
+      url: '/dashboard/stats',
       method: 'get'
+    })
+  },
+
+  /**
+   * 获取快速统计数据
+   * 对应后端: GET /api/v1/dashboard/quick-stats
+   */
+  getQuickStats() {
+    return request({
+      url: '/dashboard/quick-stats',
+      method: 'get'
+    })
+  },
+
+  /**
+   * 获取系统通知
+   * 对应后端: GET /api/v1/dashboard/system-notifications
+   */
+  getSystemNotifications(params = {}) {
+    return request({
+      url: '/dashboard/system-notifications',
+      method: 'get',
+      params
+    })
+  },
+
+  /**
+   * 获取最近活动
+   * 对应后端: GET /api/v1/dashboard/recent-activities
+   */
+  getRecentActivities(params = {}) {
+    return request({
+      url: '/dashboard/recent-activities',
+      method: 'get',
+      params
+    })
+  },
+
+  /**
+   * 获取图表数据
+   * 对应后端: GET /api/v1/dashboard/chart-data
+   */
+  getChartData(type, params = {}) {
+    return request({
+      url: `/dashboard/chart-data/${type}`,
+      method: 'get',
+      params
     })
   },
 
@@ -396,6 +531,153 @@ export const studentApi = {
       url: '/student/feedback',
       method: 'post',
       data
+    })
+  },
+
+  // ==================== 学生课程相关 ====================
+
+  /**
+   * 获取学生已选课程列表
+   * 对应后端: GET /api/v1/student/courses
+   */
+  getStudentCourses(params = {}) {
+    return request({
+      url: '/student/courses',
+      method: 'get',
+      params
+    })
+  },
+
+  /**
+   * 获取学生课程详情
+   * 对应后端: GET /api/v1/student/courses/{id}
+   */
+  getStudentCourseDetail(courseId) {
+    return request({
+      url: `/student/courses/${courseId}`,
+      method: 'get'
+    })
+  },
+
+  /**
+   * 获取学生成绩列表
+   * 对应后端: GET /api/v1/student/grades
+   */
+  getStudentGrades(params = {}) {
+    return request({
+      url: '/student/grades',
+      method: 'get',
+      params
+    })
+  },
+
+  /**
+   * 获取学生考试安排
+   * 对应后端: GET /api/v1/student/exam-schedule
+   */
+  getStudentExamSchedule(params = {}) {
+    return request({
+      url: '/student/exam-schedule',
+      method: 'get',
+      params
+    })
+  },
+
+  /**
+   * 获取学生课程表
+   * 对应后端: GET /api/v1/student/schedule
+   */
+  getStudentSchedule(params = {}) {
+    return request({
+      url: '/student/schedule',
+      method: 'get',
+      params
+    })
+  },
+
+  // ==================== 学生个人资料相关 ====================
+
+  /**
+   * 更新学生个人资料
+   * 对应后端: PUT /api/v1/student/profile
+   */
+  updateProfile(data) {
+    return request({
+      url: '/student/profile',
+      method: 'put',
+      data
+    })
+  },
+
+  /**
+   * 上传学生头像
+   * 对应后端: POST /api/v1/student/avatar
+   */
+  uploadAvatar(formData) {
+    return request({
+      url: '/student/avatar',
+      method: 'post',
+      data: formData,
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+  },
+
+  /**
+   * 获取学习统计数据
+   * 对应后端: GET /api/v1/student/learning-stats
+   */
+  getLearningStats() {
+    return request({
+      url: '/student/learning-stats',
+      method: 'get'
+    })
+  },
+
+  /**
+   * 导出个人信息
+   * 对应后端: GET /api/v1/student/export-profile
+   */
+  exportProfile(params = {}) {
+    return request({
+      url: '/student/export-profile',
+      method: 'get',
+      params,
+      responseType: 'blob'
+    })
+  },
+
+  /**
+   * 获取学期列表
+   * 对应后端: GET /api/v1/student/semesters
+   */
+  getSemesters() {
+    return request({
+      url: '/student/semesters',
+      method: 'get'
+    })
+  },
+
+  /**
+   * 获取学生课程详情
+   * 对应后端: GET /api/v1/student/courses/{id}
+   */
+  getStudentCourseDetail(courseId) {
+    return request({
+      url: `/student/courses/${courseId}`,
+      method: 'get'
+    })
+  },
+
+  /**
+   * 获取课程学习进度
+   * 对应后端: GET /api/v1/student/courses/{id}/progress
+   */
+  getCourseProgress(courseId) {
+    return request({
+      url: `/student/courses/${courseId}/progress`,
+      method: 'get'
     })
   }
 }

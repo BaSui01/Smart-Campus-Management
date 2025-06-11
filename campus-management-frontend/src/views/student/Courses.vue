@@ -467,9 +467,10 @@ const filteredCourses = computed(() => {
 // 方法
 const loadCourses = async () => {
   loading.value = true
-  
+
   try {
-    const { data } = await courseApi.getStudentCourses({
+    // 使用学生API获取已选课程
+    const { data } = await studentApi.getStudentCourses({
       page: currentPage.value,
       size: pageSize.value,
       semester: filterSemester.value,
@@ -477,14 +478,32 @@ const loadCourses = async () => {
       type: filterType.value,
       search: searchQuery.value
     })
-    
-    courses.value = data.courses.map(course => ({
-      ...course,
+
+    const courseList = Array.isArray(data) ? data : (data.courses || data.list || [])
+    courses.value = courseList.map(course => ({
+      id: course.id,
+      name: course.courseName || course.name,
+      code: course.courseCode || course.code,
+      teacherName: course.teacherName || course.teacher,
+      credits: course.credits || 0,
+      schedule: course.schedule || formatSchedule(course),
+      location: course.location || course.classroom || course.classroomName,
+      type: course.type || course.courseType || 'elective',
+      status: course.status || getTimeBasedStatus(course),
+      progress: course.progress || calculateProgress(course),
+      semester: course.semester || course.semesterName,
+      category: course.category || 'general',
+      description: course.description,
+      totalChapters: course.totalChapters || 0,
+      completedChapters: course.completedChapters || 0,
+      attendanceCount: course.attendanceCount || 0,
+      totalHours: course.totalHours || 0,
+      createTime: course.createTime || course.createdAt,
       isCurrent: isCurrentCourse(course),
-      coverColor: generateCoverColor(course.category)
+      coverColor: generateCoverColor(course.category || 'general')
     }))
-    
-    total.value = data.total
+
+    total.value = data.total || courseList.length
     updateStats()
   } catch (error) {
     console.error('加载课程失败:', error)
@@ -542,6 +561,47 @@ const isCurrentCourse = (course) => {
   return false
 }
 
+// 格式化课程时间
+const formatSchedule = (course) => {
+  if (course.schedule) return course.schedule
+  if (course.dayOfWeek && course.startTime && course.endTime) {
+    const dayMap = ['日', '一', '二', '三', '四', '五', '六']
+    return `周${dayMap[course.dayOfWeek]} ${course.startTime}-${course.endTime}`
+  }
+  return '时间待定'
+}
+
+// 根据时间判断课程状态
+const getTimeBasedStatus = (course) => {
+  if (course.status) return course.status
+
+  const now = new Date()
+  const currentDate = now.toISOString().split('T')[0]
+
+  if (course.startDate && course.endDate) {
+    if (currentDate < course.startDate) return 'pending'
+    if (currentDate > course.endDate) return 'completed'
+    return 'ongoing'
+  }
+
+  return 'ongoing'
+}
+
+// 计算学习进度
+const calculateProgress = (course) => {
+  if (course.progress !== undefined) return course.progress
+
+  if (course.completedChapters && course.totalChapters) {
+    return Math.round((course.completedChapters / course.totalChapters) * 100)
+  }
+
+  if (course.attendanceCount && course.totalHours) {
+    return Math.round((course.attendanceCount / course.totalHours) * 100)
+  }
+
+  return 0
+}
+
 const generateCoverColor = (category) => {
   const colors = {
     'computer': '#409eff',
@@ -552,7 +612,8 @@ const generateCoverColor = (category) => {
     'literature': '#9c27b0',
     'art': '#ff5722',
     'music': '#795548',
-    'sports': '#607d8b'
+    'sports': '#607d8b',
+    'general': '#409eff'
   }
   return colors[category] || '#409eff'
 }

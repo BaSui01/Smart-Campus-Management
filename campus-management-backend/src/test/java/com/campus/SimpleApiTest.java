@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * @author Campus Management Team
  * @version 1.0.0
- * @since 2025-01-27
+ * @since 2025-06-08
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @ActiveProfiles("test")

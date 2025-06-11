@@ -2,8 +2,198 @@ import request from './request'
 
 /**
  * 作业管理API
+ * 基于后端 AssignmentController、AssignmentSubmissionController 等接口实现
  */
 export const assignmentApi = {
+  // ==================== 作业基础管理 ====================
+
+  /**
+   * 获取作业列表
+   * 对应后端: GET /api/v1/assignments
+   */
+  getAssignmentList(params = {}) {
+    return request({
+      url: '/v1/assignments',
+      method: 'get',
+      params
+    })
+  },
+
+  /**
+   * 根据ID获取作业详情
+   * 对应后端: GET /api/v1/assignments/{id}
+   */
+  getAssignmentById(id) {
+    return request({
+      url: `/v1/assignments/${id}`,
+      method: 'get'
+    })
+  },
+
+  /**
+   * 创建作业
+   * 对应后端: POST /api/v1/assignments
+   */
+  createAssignment(data) {
+    return request({
+      url: '/v1/assignments',
+      method: 'post',
+      data
+    })
+  },
+
+  /**
+   * 更新作业信息
+   * 对应后端: PUT /api/v1/assignments/{id}
+   */
+  updateAssignment(id, data) {
+    return request({
+      url: `/v1/assignments/${id}`,
+      method: 'put',
+      data
+    })
+  },
+
+  /**
+   * 删除作业
+   * 对应后端: DELETE /api/v1/assignments/{id}
+   */
+  deleteAssignment(id) {
+    return request({
+      url: `/v1/assignments/${id}`,
+      method: 'delete'
+    })
+  },
+
+  /**
+   * 批量发布作业
+   * 对应后端: PUT /api/v1/assignments/batch/publish
+   */
+  batchPublishAssignments(assignmentIds) {
+    return request({
+      url: '/v1/assignments/batch/publish',
+      method: 'put',
+      data: assignmentIds
+    })
+  },
+
+  /**
+   * 发布作业
+   * 对应后端: PUT /api/v1/assignments/{id}/publish
+   */
+  publishAssignment(id) {
+    return request({
+      url: `/v1/assignments/${id}/publish`,
+      method: 'put'
+    })
+  },
+
+  /**
+   * 取消发布作业
+   * 对应后端: PUT /api/v1/assignments/{id}/unpublish
+   */
+  unpublishAssignment(id) {
+    return request({
+      url: `/v1/assignments/${id}/unpublish`,
+      method: 'put'
+    })
+  },
+
+  // ==================== 作业提交管理 ====================
+
+  /**
+   * 获取作业提交列表
+   * 对应后端: GET /api/v1/assignment-submissions
+   */
+  getAssignmentSubmissionList(params = {}) {
+    return request({
+      url: '/v1/assignment-submissions',
+      method: 'get',
+      params
+    })
+  },
+
+  /**
+   * 根据ID获取作业提交详情
+   * 对应后端: GET /api/v1/assignment-submissions/{id}
+   */
+  getAssignmentSubmissionById(id) {
+    return request({
+      url: `/v1/assignment-submissions/${id}`,
+      method: 'get'
+    })
+  },
+
+  /**
+   * 创建作业提交
+   * 对应后端: POST /api/v1/assignment-submissions
+   */
+  createAssignmentSubmission(data) {
+    return request({
+      url: '/v1/assignment-submissions',
+      method: 'post',
+      data
+    })
+  },
+
+  /**
+   * 更新作业提交
+   * 对应后端: PUT /api/v1/assignment-submissions/{id}
+   */
+  updateAssignmentSubmission(id, data) {
+    return request({
+      url: `/v1/assignment-submissions/${id}`,
+      method: 'put',
+      data
+    })
+  },
+
+  /**
+   * 删除作业提交
+   * 对应后端: DELETE /api/v1/assignment-submissions/{id}
+   */
+  deleteAssignmentSubmission(id) {
+    return request({
+      url: `/v1/assignment-submissions/${id}`,
+      method: 'delete'
+    })
+  },
+
+  /**
+   * 评分作业提交
+   * 对应后端: PUT /api/v1/assignment-submissions/{id}/grade
+   */
+  gradeAssignmentSubmission(id, data) {
+    return request({
+      url: `/v1/assignment-submissions/${id}/grade`,
+      method: 'put',
+      data
+    })
+  },
+
+  /**
+   * 批量评分作业提交
+   * 对应后端: PUT /api/v1/assignment-submissions/batch/grade
+   */
+  batchGradeSubmissions(data) {
+    return request({
+      url: '/v1/assignment-submissions/batch/grade',
+      method: 'put',
+      data
+    })
+  },
+
+  /**
+   * 提交作业
+   * 对应后端: POST /api/v1/assignment-submissions/{assignmentId}/submit
+   */
+  submitAssignment(assignmentId, data) {
+    return request({
+      url: `/v1/assignment-submissions/${assignmentId}/submit`,
+      method: 'post',
+      data
+    })
+  },
   // ==================== 基础CRUD操作 ====================
 
   /**
@@ -144,6 +334,16 @@ export const assignmentApi = {
   getStudentAssignmentDetail(assignmentId) {
     return request({
       url: `/api/v1/assignments/${assignmentId}/student`,
+      method: 'get'
+    })
+  },
+
+  /**
+   * 获取作业详情（通用）
+   */
+  getAssignmentDetail(assignmentId) {
+    return request({
+      url: `/api/v1/assignments/${assignmentId}`,
       method: 'get'
     })
   },

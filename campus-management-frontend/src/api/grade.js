@@ -1,9 +1,107 @@
 import request from './request'
 
 /**
- * 成绩相关API
+ * 成绩管理API
+ * 基于后端 GradeController 等接口实现
  */
 export const gradeApi = {
+  // ==================== 成绩基础管理 ====================
+
+  /**
+   * 获取成绩列表
+   * 对应后端: GET /api/v1/grades
+   */
+  getGradeList(params = {}) {
+    return request({
+      url: '/grades',
+      method: 'get',
+      params
+    })
+  },
+
+  /**
+   * 根据ID获取成绩详情
+   * 对应后端: GET /api/v1/grades/{id}
+   */
+  getGradeById(id) {
+    return request({
+      url: `/grades/${id}`,
+      method: 'get'
+    })
+  },
+
+  /**
+   * 创建成绩记录
+   * 对应后端: POST /api/v1/grades
+   */
+  createGrade(data) {
+    return request({
+      url: '/grades',
+      method: 'post',
+      data
+    })
+  },
+
+  /**
+   * 更新成绩信息
+   * 对应后端: PUT /api/v1/grades/{id}
+   */
+  updateGrade(id, data) {
+    return request({
+      url: `/grades/${id}`,
+      method: 'put',
+      data
+    })
+  },
+
+  /**
+   * 删除成绩记录
+   * 对应后端: DELETE /api/v1/grades/{id}
+   */
+  deleteGrade(id) {
+    return request({
+      url: `/grades/${id}`,
+      method: 'delete'
+    })
+  },
+
+  /**
+   * 批量录入成绩
+   * 对应后端: POST /api/v1/grades/batch
+   */
+  batchCreateGrades(data) {
+    return request({
+      url: '/grades/batch',
+      method: 'post',
+      data
+    })
+  },
+
+  /**
+   * 批量更新成绩
+   * 对应后端: PUT /api/v1/grades/batch
+   */
+  batchUpdateGrades(data) {
+    return request({
+      url: '/grades/batch',
+      method: 'put',
+      data
+    })
+  },
+
+  /**
+   * 批量删除成绩
+   * 对应后端: DELETE /api/v1/grades/batch
+   */
+  batchDeleteGrades(gradeIds) {
+    return request({
+      url: '/grades/batch',
+      method: 'delete',
+      data: { gradeIds }
+    })
+  },
+
+  // ==================== 学生成绩查询 ====================
   // 获取学生成绩列表
   getStudentGrades(params = {}) {
     return request({

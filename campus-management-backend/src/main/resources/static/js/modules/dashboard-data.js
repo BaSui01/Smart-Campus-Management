@@ -99,7 +99,7 @@ class DashboardDataManager {
             // 确保有有效的token
             await this.ensureAuthentication();
             
-            const response = await apiClient.get('/api/dashboard/stats');
+            const response = await apiClient.get('/api/v1/dashboard/stats');
             console.log('API响应:', response);
 
             if (response && response.success !== false) {
@@ -275,7 +275,7 @@ class DashboardDataManager {
             // 确保有有效的token
             await this.ensureAuthentication();
             
-            const response = await apiClient.get('/api/dashboard/chart-data');
+            const response = await apiClient.get('/api/v1/dashboard/chart-data');
             console.log('图表数据API响应:', response);
 
             if (response && response.success !== false) {
@@ -329,7 +329,7 @@ class DashboardDataManager {
             }
 
             // 严格模式：图表数据获取失败时显示错误，不使用模拟数据
-            this.showChartError('无法从服务器获取图表数据。请确保：1) 后端API /api/dashboard/chart-data 正常 2) 数据库连接正常 3) 用户有访问权限');
+            this.showChartError('无法从服务器获取图表数据。请确保：1) 后端API /api/v1/dashboard/chart-data 正常 2) 数据库连接正常 3) 用户有访问权限');
         } finally {
             hideLoading();
         }
@@ -340,10 +340,10 @@ class DashboardDataManager {
      */
     async validateBackendAPIs() {
         const apis = [
-            { name: '统计数据', endpoint: '/api/dashboard/stats' },
-            { name: '图表数据', endpoint: '/api/dashboard/chart-data' },
-            { name: '通知数据', endpoint: '/api/dashboard/notifications' },
-            { name: '活动数据', endpoint: '/api/dashboard/activities' }
+            { name: '统计数据', endpoint: '/api/v1/dashboard/stats' },
+            { name: '图表数据', endpoint: '/api/v1/dashboard/chart-data' },
+            { name: '通知数据', endpoint: '/api/v1/dashboard/notifications' },
+            { name: '活动数据', endpoint: '/api/v1/dashboard/activities' }
         ];
         
         const results = [];
@@ -501,7 +501,7 @@ class DashboardDataManager {
             // 确保有有效的token
             await this.ensureAuthentication();
             
-            const response = await apiClient.get('/api/health');
+            const response = await apiClient.get('/api/v1/health');
             if (response && response.status === 'UP') {
                 showAlert('网络连接正常，尝试重新加载数据...', 'success');
                 setTimeout(() => {
@@ -945,7 +945,7 @@ class DashboardDataManager {
             await this.ensureAuthentication();
 
             // 清除缓存并刷新数据
-            const response = await apiClient.post('/api/dashboard/refresh');
+            const response = await apiClient.post('/api/v1/dashboard/refresh');
 
             // 检查响应是否成功（包容性检查）
             if (response && (response.success !== false)) {
@@ -1394,7 +1394,7 @@ class DashboardDataManager {
             // 确保有有效的token
             await this.ensureAuthentication();
 
-            const response = await apiClient.get('/api/dashboard/notifications');
+            const response = await apiClient.get('/api/v1/dashboard/notifications');
             if (response && response.success !== false) {
                 console.log('通知数据刷新成功');
                 showAlert('通知已刷新', 'success');
@@ -1422,7 +1422,7 @@ class DashboardDataManager {
             // 确保有有效的token
             await this.ensureAuthentication();
 
-            const response = await apiClient.get('/api/dashboard/activities');
+            const response = await apiClient.get('/api/v1/dashboard/activities');
             if (response && response.success !== false) {
                 console.log('活动数据刷新成功');
                 showAlert('活动已刷新', 'success');

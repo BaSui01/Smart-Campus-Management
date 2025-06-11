@@ -2,7 +2,6 @@ package com.campus.interfaces.rest.v1;
 
 import java.util.*;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -34,8 +33,11 @@ import jakarta.validation.Valid;
 @SecurityRequirement(name = "Bearer")
 public class CourseApiController extends BaseController {
 
-    @Autowired
-    private CourseService courseService;
+    private final CourseService courseService;
+
+    public CourseApiController(CourseService courseService) {
+        this.courseService = courseService;
+    }
 
     /**
      * 获取课程列表（分页）

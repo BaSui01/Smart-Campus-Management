@@ -93,7 +93,8 @@ public class TimeSlotServiceImpl implements TimeSlotService {
         existing.setStartTime(timeSlot.getStartTime());
         existing.setEndTime(timeSlot.getEndTime());
         existing.setSlotType(timeSlot.getSlotType());
-        // TODO: TimeSlot实体类缺少getSemester/setSemester方法
+        // 注意：TimeSlot实体类当前缺少semester相关方法，暂时跳过学期字段的设置
+        // 后续可在TimeSlot实体类中添加semester字段和相应的getter/setter方法
         // existing.setSemester(timeSlot.getSemester());
         existing.setDescription(timeSlot.getDescription());
         
@@ -344,7 +345,8 @@ public class TimeSlotServiceImpl implements TimeSlotService {
             targetSlot.setStartTime(sourceSlot.getStartTime());
             targetSlot.setEndTime(sourceSlot.getEndTime());
             targetSlot.setSlotType(sourceSlot.getSlotType());
-            // TODO: TimeSlot实体类缺少setSemester方法
+            // 注意：TimeSlot实体类当前缺少semester相关方法，暂时跳过学期字段的设置
+            // 后续可在TimeSlot实体类中添加semester字段和相应的getter/setter方法
             // targetSlot.setSemester(targetSemester);
             targetSlot.setDescription(sourceSlot.getDescription());
             targetSlot.setStatus(1);

@@ -197,6 +197,144 @@ public interface StudentService {
     StudentStatistics getStudentStatistics();
 
     /**
+     * 搜索学生（分页）
+     *
+     * @param keyword 搜索关键词
+     * @param pageable 分页参数
+     * @return 学生分页结果
+     */
+    Page<Student> searchStudents(String keyword, Pageable pageable);
+
+    /**
+     * 根据多个条件查找学生
+     *
+     * @param grade 年级
+     * @param major 专业
+     * @param classId 班级ID
+     * @param enrollmentYear 入学年份
+     * @param pageable 分页参数
+     * @return 学生分页结果
+     */
+    Page<Student> findByMultipleConditions(String grade, String major, Long classId, Integer enrollmentYear, Pageable pageable);
+
+    /**
+     * 根据班级ID查找学生（分页）
+     *
+     * @param classId 班级ID
+     * @param pageable 分页参数
+     * @return 学生分页结果
+     */
+    Page<Student> findByClassId(Long classId, Pageable pageable);
+
+    /**
+     * 根据年级查找学生（分页）
+     *
+     * @param grade 年级
+     * @param pageable 分页参数
+     * @return 学生分页结果
+     */
+    Page<Student> findByGrade(String grade, Pageable pageable);
+
+    /**
+     * 根据专业查找学生列表
+     *
+     * @param major 专业
+     * @return 学生列表
+     */
+    List<Student> findByMajor(String major);
+
+    /**
+     * 根据入学年份查找学生列表
+     *
+     * @param year 入学年份
+     * @return 学生列表
+     */
+    List<Student> findByEnrollmentYear(Integer year);
+
+    /**
+     * 统计学生数量按专业
+     *
+     * @return 统计结果
+     */
+    List<Object[]> countStudentsByMajor();
+
+    /**
+     * 统计学生数量按班级
+     *
+     * @return 统计结果
+     */
+    List<Object[]> countStudentsByClass();
+
+    /**
+     * 统计学生数量按入学年份
+     *
+     * @return 统计结果
+     */
+    List<Object[]> countStudentsByEnrollmentYear();
+
+    /**
+     * 更新学生班级
+     *
+     * @param studentId 学生ID
+     * @param classId 班级ID
+     * @return 更新结果
+     */
+    boolean updateStudentClass(Long studentId, Long classId);
+
+    /**
+     * 批量更新学生班级
+     *
+     * @param studentIds 学生ID列表
+     * @param classId 班级ID
+     * @return 更新结果
+     */
+    boolean batchUpdateStudentClass(List<Long> studentIds, Long classId);
+
+    /**
+     * 更新学生年级
+     *
+     * @param studentId 学生ID
+     * @param grade 年级
+     * @return 更新结果
+     */
+    boolean updateStudentGrade(Long studentId, String grade);
+
+    /**
+     * 批量更新学生年级
+     *
+     * @param studentIds 学生ID列表
+     * @param grade 年级
+     * @return 更新结果
+     */
+    boolean batchUpdateStudentGrade(List<Long> studentIds, String grade);
+
+    /**
+     * 检查学号是否存在（排除指定ID）
+     *
+     * @param studentNo 学号
+     * @param excludeId 排除的学生ID
+     * @return 是否存在
+     */
+    boolean existsByStudentNoAndIdNot(String studentNo, Long excludeId);
+
+    /**
+     * 检查用户ID是否已关联学生
+     *
+     * @param userId 用户ID
+     * @return 是否存在
+     */
+    boolean existsByUserId(Long userId);
+
+    /**
+     * 检查用户ID是否已关联学生（排除指定ID）
+     *
+     * @param userId 用户ID
+     * @param excludeId 排除的学生ID
+     * @return 是否存在
+     */
+    boolean existsByUserIdAndIdNot(Long userId, Long excludeId);
+
+    /**
      * 学生统计信息内部类
      */
     class StudentStatistics {

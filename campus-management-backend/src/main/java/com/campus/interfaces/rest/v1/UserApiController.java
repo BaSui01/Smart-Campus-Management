@@ -2,7 +2,6 @@ package com.campus.interfaces.rest.v1;
 
 import java.util.*;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -11,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import com.campus.application.service.UserService;
 import com.campus.shared.common.ApiResponse;
 import com.campus.domain.entity.User;
+import com.campus.interfaces.rest.common.BaseController;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -29,10 +29,13 @@ import jakarta.validation.Valid;
 @RequestMapping("/api/users")
 @Tag(name = "用户管理API", description = "用户信息管理REST API接口")
 @SecurityRequirement(name = "Bearer")
-public class UserApiController {
+public class UserApiController extends BaseController {
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
+
+    public UserApiController(UserService userService) {
+        this.userService = userService;
+    }
 
     /**
      * 获取用户列表（分页）

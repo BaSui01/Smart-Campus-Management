@@ -2,7 +2,6 @@ package com.campus.interfaces.rest.v1;
 
 import java.util.*;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -34,8 +33,11 @@ import jakarta.validation.Valid;
 @SecurityRequirement(name = "Bearer")
 public class GradeApiController extends BaseController {
 
-    @Autowired
-    private GradeService gradeService;
+    private final GradeService gradeService;
+
+    public GradeApiController(GradeService gradeService) {
+        this.gradeService = gradeService;
+    }
 
     /**
      * 获取成绩列表（分页）

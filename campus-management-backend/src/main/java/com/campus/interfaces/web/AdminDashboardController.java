@@ -2,7 +2,6 @@ package com.campus.interfaces.web;
 
 import com.campus.application.dto.DashboardStatsDTO;
 import com.campus.application.service.DashboardService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -20,7 +19,6 @@ public class AdminDashboardController {
 
     private final DashboardService dashboardService;
 
-    @Autowired
     public AdminDashboardController(DashboardService dashboardService) {
         this.dashboardService = dashboardService;
     }

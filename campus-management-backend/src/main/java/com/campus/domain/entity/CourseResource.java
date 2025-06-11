@@ -18,7 +18,7 @@ import java.util.List;
  * @since 2025-06-07
  */
 @Entity
-@Table(name = "course_resources", indexes = {
+@Table(name = "tb_course_resource", indexes = {
     @Index(name = "idx_course_id", columnList = "course_id"),
     @Index(name = "idx_teacher_id", columnList = "teacher_id"),
     @Index(name = "idx_resource_type", columnList = "resource_type"),

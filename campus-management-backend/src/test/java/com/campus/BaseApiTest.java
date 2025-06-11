@@ -1,5 +1,6 @@
 package com.campus;
 
+import com.campus.config.TestCacheConfig;
 import com.campus.config.TestJpaConfig;
 import com.campus.config.TestJwtUtil;
 import com.campus.config.TestSecurityConfig;
@@ -33,7 +34,7 @@ import static org.springframework.security.test.web.servlet.setup.SecurityMockMv
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureWebMvc
 @ActiveProfiles("test")
-@Import({TestSecurityConfig.class, TestJpaConfig.class})
+@Import({TestSecurityConfig.class, TestJpaConfig.class, TestCacheConfig.class})
 @Transactional
 public abstract class BaseApiTest {
 

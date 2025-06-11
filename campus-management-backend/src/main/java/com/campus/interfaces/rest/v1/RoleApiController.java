@@ -3,7 +3,6 @@ package com.campus.interfaces.rest.v1;
 import com.campus.application.service.RoleService;
 import com.campus.domain.entity.Role;
 import com.campus.shared.common.ApiResponse;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -30,7 +29,6 @@ public class RoleApiController {
 
     private final RoleService roleService;
 
-    @Autowired
     public RoleApiController(RoleService roleService) {
         this.roleService = roleService;
     }

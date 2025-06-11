@@ -319,8 +319,68 @@ public class MessageServiceImpl implements MessageService {
     @Override
     @Transactional(readOnly = true)
     public Object getMessageStatistics(Long userId) {
-        // TODO: 实现消息统计信息
-        return new Object();
+        try {
+            // 注意：当前实现基础的消息统计信息功能，提供用户的消息概览和统计数据
+            // 后续可扩展更详细的统计分析，如消息趋势、类型分布等
+            logger.debug("获取消息统计信息: userId={}", userId);
+
+            java.util.Map<String, Object> statistics = new java.util.HashMap<>();
+
+            if (userId == null) {
+                return statistics;
+            }
+
+            // 获取用户相关的消息
+            // 注意：使用分页查询方法获取所有消息，然后转换为List
+            org.springframework.data.domain.Pageable allPageable = org.springframework.data.domain.PageRequest.of(0, Integer.MAX_VALUE);
+            java.util.List<Message> receivedMessages = messageRepository.findByReceiverIdAndDeletedOrderByCreatedAtDesc(userId, 0, allPageable).getContent();
+            java.util.List<Message> sentMessages = messageRepository.findBySenderIdAndDeletedOrderByCreatedAtDesc(userId, 0, allPageable).getContent();
+
+            // 基础统计
+            statistics.put("totalReceived", receivedMessages.size());
+            statistics.put("totalSent", sentMessages.size());
+
+            // 未读消息统计
+            long unreadCount = receivedMessages.stream()
+                .filter(msg -> msg.getIsRead() != null && !msg.getIsRead())
+                .count();
+            statistics.put("unreadCount", unreadCount);
+
+            // 消息类型分布
+            java.util.Map<String, Long> typeDistribution = receivedMessages.stream()
+                .filter(msg -> msg.getMessageType() != null)
+                .collect(java.util.stream.Collectors.groupingBy(
+                    Message::getMessageType,
+                    java.util.stream.Collectors.counting()));
+            statistics.put("typeDistribution", typeDistribution);
+
+            // 最近7天的消息统计
+            java.time.LocalDateTime sevenDaysAgo = java.time.LocalDateTime.now().minusDays(7);
+            long recentReceived = receivedMessages.stream()
+                .filter(msg -> msg.getSendTime() != null && msg.getSendTime().isAfter(sevenDaysAgo))
+                .count();
+            long recentSent = sentMessages.stream()
+                .filter(msg -> msg.getSendTime() != null && msg.getSendTime().isAfter(sevenDaysAgo))
+                .count();
+
+            statistics.put("recentReceived", recentReceived);
+            statistics.put("recentSent", recentSent);
+
+            // 优先级分布
+            java.util.Map<String, Long> priorityDistribution = receivedMessages.stream()
+                .filter(msg -> msg.getPriority() != null)
+                .collect(java.util.stream.Collectors.groupingBy(
+                    Message::getPriority,
+                    java.util.stream.Collectors.counting()));
+            statistics.put("priorityDistribution", priorityDistribution);
+
+            logger.debug("消息统计信息获取完成: {}", statistics);
+            return statistics;
+
+        } catch (Exception e) {
+            logger.error("获取消息统计信息失败: userId={}", userId, e);
+            return new java.util.HashMap<>();
+        }
     }
     
     @Override

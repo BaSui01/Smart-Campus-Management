@@ -15,7 +15,6 @@ import com.campus.domain.entity.FeeItem;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -47,7 +46,6 @@ public class AdminSystemController {
 
     private final FeeItemService feeItemService;
 
-    @Autowired
     public AdminSystemController(UserService userService,
                                 StudentService studentService,
                                 CourseService courseService,

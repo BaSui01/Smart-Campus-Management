@@ -129,8 +129,8 @@ public interface StudentEvaluationRepository extends JpaRepository<StudentEvalua
     /**
      * 获取学生最新评价（限制数量）
      */
-    @Query(value = "SELECT * FROM student_evaluation se WHERE se.student_id = :studentId AND se.deleted = :deleted ORDER BY se.created_at DESC LIMIT :limit", nativeQuery = true)
-    List<StudentEvaluation> findTopByStudentIdAndDeletedOrderByCreatedAtDesc(@Param("studentId") Long studentId, @Param("deleted") Integer deleted, @Param("limit") int limit);
+    @Query("SELECT se FROM StudentEvaluation se WHERE se.studentId = :studentId AND se.deleted = :deleted ORDER BY se.createdAt DESC")
+    List<StudentEvaluation> findTopByStudentIdAndDeletedOrderByCreatedAtDesc(@Param("studentId") Long studentId, @Param("deleted") Integer deleted, org.springframework.data.domain.Pageable pageable);
 
     /**
      * 根据学生统计评价类型数量

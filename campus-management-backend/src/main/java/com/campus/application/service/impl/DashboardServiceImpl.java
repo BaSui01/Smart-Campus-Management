@@ -7,8 +7,6 @@ import com.campus.application.dto.DashboardStatsDTO.RecentActivityDTO;
 import com.campus.application.dto.DashboardStatsDTO.SystemNotificationDTO;
 import com.campus.application.service.*;
 
-import org.springframework.beans.factory.annotation.Autowired;
-
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -42,7 +40,6 @@ public class DashboardServiceImpl implements DashboardService {
     private final PaymentRecordService paymentRecordService;
     private final CourseScheduleService courseScheduleService;
 
-    @Autowired
     public DashboardServiceImpl(StudentService studentService,
                                CourseService courseService,
                                SchoolClassService schoolClassService,

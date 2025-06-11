@@ -192,7 +192,43 @@ public class ParentStudentRelationController {
     }
     
     private Object getRelationTypes() {
-        // TODO: 实现获取关系类型逻辑
-        return new Object();
+        try {
+            // 注意：当前实现基础的关系类型列表，提供常见的家长与学生关系类型
+            // 后续可从数据库或配置文件中动态获取关系类型配置
+            logger.debug("获取关系类型列表");
+
+            java.util.List<java.util.Map<String, Object>> relationTypes = new java.util.ArrayList<>();
+
+            // 定义关系类型
+            String[] typeNames = {"父亲", "母亲", "监护人", "祖父", "祖母", "外祖父", "外祖母", "其他亲属"};
+            String[] typeKeys = {"father", "mother", "guardian", "grandfather", "grandmother", "maternal_grandfather", "maternal_grandmother", "other"};
+            String[] typeDescriptions = {
+                "学生的父亲",
+                "学生的母亲",
+                "学生的法定监护人",
+                "学生的祖父",
+                "学生的祖母",
+                "学生的外祖父",
+                "学生的外祖母",
+                "学生的其他亲属"
+            };
+
+            for (int i = 0; i < typeNames.length; i++) {
+                java.util.Map<String, Object> type = new java.util.HashMap<>();
+                type.put("name", typeNames[i]);
+                type.put("key", typeKeys[i]);
+                type.put("description", typeDescriptions[i]);
+                type.put("enabled", true);
+                type.put("priority", i < 3 ? "high" : "normal"); // 父母监护人为高优先级
+                relationTypes.add(type);
+            }
+
+            logger.debug("关系类型列表获取完成，共{}种类型", relationTypes.size());
+            return relationTypes;
+
+        } catch (Exception e) {
+            logger.error("获取关系类型列表失败", e);
+            return new java.util.ArrayList<>();
+        }
     }
 }

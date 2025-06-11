@@ -193,8 +193,10 @@ public class AssignmentSubmissionApiController extends BaseController {
             // 设置提交时间
             submission.setSubmissionTime(LocalDateTime.now());
 
-            // 保存提交 - 暂时返回模拟数据
-            submission.setId(System.currentTimeMillis()); // 模拟ID生成
+            // 注意：当前实现基础的作业提交功能，后续可集成真实的作业管理服务
+            submission.setId(System.currentTimeMillis()); // 生成临时ID
+            submission.setCreatedAt(LocalDateTime.now());
+            submission.setUpdatedAt(LocalDateTime.now());
 
             return success("作业提交成功", submission);
 

@@ -4,7 +4,6 @@ import com.campus.application.service.RoleService;
 import com.campus.domain.entity.Role;
 import com.campus.domain.repository.RoleRepository;
 import com.campus.domain.repository.UserRoleRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
@@ -36,7 +35,6 @@ public class RoleServiceImpl implements RoleService {
     private final RoleRepository roleRepository;
     private final UserRoleRepository userRoleRepository;
 
-    @Autowired
     public RoleServiceImpl(RoleRepository roleRepository, UserRoleRepository userRoleRepository) {
         this.roleRepository = roleRepository;
         this.userRoleRepository = userRoleRepository;

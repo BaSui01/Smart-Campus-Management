@@ -489,10 +489,10 @@ public class OptimizedStudentApiController extends BaseController {
             // 执行搜索
             Page<Student> studentPage;
             if (StringUtils.hasText(keyword)) {
-                // 处理搜索关键词并执行搜索
-                processSearchKeyword(keyword); // 处理关键词但暂时不使用结果
-                // TODO: 实现基于关键词的搜索，目前返回所有数据
-                studentPage = studentService.findAll(pageable);
+                // 注意：当前实现基础的关键词搜索功能，支持按姓名、学号等条件搜索
+                // 后续可集成更复杂的搜索算法，如全文搜索、模糊匹配等
+                processSearchKeyword(keyword); // 处理关键词
+                studentPage = searchStudentsByKeyword(keyword, pageable);
             } else {
                 studentPage = studentService.findAll(pageable);
             }
@@ -531,5 +531,74 @@ public class OptimizedStudentApiController extends BaseController {
         // if (studentService.existsByStudentNumber(student.getStudentNumber(), student.getId())) {
         //     throw new IllegalArgumentException("学号已存在");
         // }
+    }
+
+    // ================================
+    // 辅助方法
+    // ================================
+
+    /**
+     * 基于关键词搜索学生
+     */
+    private Page<Student> searchStudentsByKeyword(String keyword, Pageable pageable) {
+        try {
+            // 注意：当前实现基础的关键词搜索功能，支持按姓名、学号等条件搜索
+            // 后续可集成更复杂的搜索算法，如全文搜索、模糊匹配、拼音搜索等
+            log.debug("基于关键词搜索学生: keyword={}", keyword);
+
+            if (keyword == null || keyword.trim().isEmpty()) {
+                return studentService.findAll(pageable);
+            }
+
+            // 获取所有学生数据
+            Page<Student> allStudents = studentService.findAll(org.springframework.data.domain.PageRequest.of(0, Integer.MAX_VALUE));
+
+            // 关键词搜索逻辑
+            String searchKeyword = keyword.toLowerCase().trim();
+            java.util.List<Student> filteredStudents = allStudents.getContent().stream()
+                .filter(student -> {
+                    // 按姓名搜索
+                    if (student.getName() != null && student.getName().toLowerCase().contains(searchKeyword)) {
+                        return true;
+                    }
+                    // 按学号搜索
+                    if (student.getStudentNumber() != null && student.getStudentNumber().toLowerCase().contains(searchKeyword)) {
+                        return true;
+                    }
+                    // 按邮箱搜索
+                    if (student.getEmail() != null && student.getEmail().toLowerCase().contains(searchKeyword)) {
+                        return true;
+                    }
+                    // 按电话搜索
+                    if (student.getPhone() != null && student.getPhone().contains(searchKeyword)) {
+                        return true;
+                    }
+                    return false;
+                })
+                .collect(java.util.stream.Collectors.toList());
+
+            // 手动分页
+            int start = (int) pageable.getOffset();
+            int end = Math.min(start + pageable.getPageSize(), filteredStudents.size());
+
+            java.util.List<Student> pageContent = start < filteredStudents.size() ?
+                filteredStudents.subList(start, end) : new java.util.ArrayList<>();
+
+            log.debug("关键词搜索完成，找到{}个匹配的学生", filteredStudents.size());
+
+            return new org.springframework.data.domain.PageImpl<>(
+                pageContent,
+                pageable,
+                filteredStudents.size()
+            );
+
+        } catch (Exception e) {
+            log.error("基于关键词搜索学生失败: keyword={}", keyword, e);
+            return new org.springframework.data.domain.PageImpl<>(
+                new java.util.ArrayList<>(),
+                pageable,
+                0
+            );
+        }
     }
 }

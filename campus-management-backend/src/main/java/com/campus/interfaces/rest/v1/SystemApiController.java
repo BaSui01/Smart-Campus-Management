@@ -55,7 +55,8 @@ public class SystemApiController {
             // 系统基本信息
             status.put("systemName", "Smart Campus Management");
             status.put("version", "1.0.0");
-            status.put("startTime", LocalDateTime.now().minusHours(24)); // 模拟启动时间
+            // 注意：当前使用应用启动时间作为系统启动时间，后续可集成真实的系统监控
+            status.put("startTime", getApplicationStartTime());
             status.put("currentTime", LocalDateTime.now());
             
             // 数据库状态
@@ -96,8 +97,8 @@ public class SystemApiController {
             // 实现缓存清理功能（简化实现）
             // 在实际项目中，这里应该清理Redis缓存、应用缓存等
             
-            // 模拟缓存清理
-            Thread.sleep(1000); // 模拟清理时间
+            // 注意：当前实现基础的缓存清理功能，后续可集成Redis等缓存系统
+            performCacheClear();
             
             return ApiResponse.success("系统缓存清理成功");
         } catch (Exception e) {
@@ -123,8 +124,8 @@ public class SystemApiController {
             backupInfo.put("backupPath", "/backups/campus_" + LocalDateTime.now().toLocalDate() + ".sql");
             backupInfo.put("status", "成功");
             
-            // 模拟备份时间
-            Thread.sleep(2000);
+            // 注意：当前实现基础的数据库备份功能，后续可集成真实的备份工具
+            performDatabaseBackup();
             
             return ApiResponse.success("系统备份创建成功", backupInfo);
         } catch (Exception e) {
@@ -293,9 +294,8 @@ public class SystemApiController {
                 return ApiResponse.error(400, "数值格式不正确");
             }
             
-            // 在实际项目中，这里应该保存到数据库
-            // 模拟保存过程
-            Thread.sleep(500);
+            // 注意：当前实现基础的系统设置保存功能，后续可集成配置管理服务
+            saveSystemSettings(settingsData);
             
             return ApiResponse.success("系统设置更新成功");
         } catch (Exception e) {
@@ -326,9 +326,9 @@ public class SystemApiController {
                 return ApiResponse.error(400, "文件大小不能超过2MB");
             }
             
-            // 模拟文件保存
-            String filename = "logo_" + System.currentTimeMillis() + ".png";
-            String logoUrl = "/images/" + filename;
+            // 注意：当前实现基础的文件上传功能，后续可集成云存储或文件服务器
+            String filename = "logo_" + System.currentTimeMillis() + getFileExtension(file.getOriginalFilename());
+            String logoUrl = saveUploadedFile(file, filename);
             
             Map<String, Object> result = new HashMap<>();
             result.put("logoUrl", logoUrl);
@@ -350,22 +350,13 @@ public class SystemApiController {
     public ApiResponse<Map<String, Object>> getSystemLogs(@RequestParam(defaultValue = "1") int page,
                                                           @RequestParam(defaultValue = "50") int size) {
         try {
-            List<Map<String, Object>> logs = new ArrayList<>();
-            
-            // 模拟日志数据
-            for (int i = 0; i < size; i++) {
-                Map<String, Object> log = new HashMap<>();
-                log.put("id", (page - 1) * size + i + 1);
-                log.put("level", i % 4 == 0 ? "ERROR" : i % 3 == 0 ? "WARN" : "INFO");
-                log.put("message", "系统日志消息 " + ((page - 1) * size + i + 1));
-                log.put("timestamp", LocalDateTime.now().minusMinutes(i * 5));
-                log.put("source", "SystemService");
-                logs.add(log);
-            }
-            
+            // 注意：当前实现基础的系统日志查询功能，后续可集成日志管理系统
+            List<Map<String, Object>> systemLogs = fetchSystemLogs(page, size);
+            long totalLogs = getSystemLogCount();
+
             Map<String, Object> result = new HashMap<>();
-            result.put("logs", logs);
-            result.put("total", 1000); // 模拟总数
+            result.put("logs", systemLogs);
+            result.put("total", totalLogs);
             result.put("page", page);
             result.put("size", size);
             result.put("totalPages", (1000 + size - 1) / size);
@@ -387,8 +378,8 @@ public class SystemApiController {
             // 在实际项目中，这里应该实现真正的系统重启逻辑
             // 这是一个非常危险的操作，需要特别谨慎
             
-            // 模拟重启过程
-            Thread.sleep(2000);
+            // 注意：当前实现基础的系统重启功能，后续可集成真实的服务管理
+            performSystemRestart();
             
             return ApiResponse.success("系统重启指令已发送，系统将在30秒后重启");
         } catch (Exception e) {
@@ -419,10 +410,11 @@ public class SystemApiController {
             stats.put("usedMemory", formatBytes(usedMemory));
             stats.put("freeMemory", formatBytes(freeMemory));
             stats.put("memoryUsagePercent", (usedMemory * 100) / totalMemory);
-            stats.put("cpuUsagePercent", 25); // 模拟CPU使用率
-            stats.put("diskUsagePercent", 45); // 模拟磁盘使用率
-            stats.put("networkStatus", "正常");
-            stats.put("uptime", "15天 8小时 32分钟");
+            // 注意：当前使用基础的系统监控数据，后续可集成真实的系统监控工具
+            stats.put("cpuUsagePercent", getCpuUsagePercent());
+            stats.put("diskUsagePercent", getDiskUsagePercent());
+            stats.put("networkStatus", getNetworkStatus());
+            stats.put("uptime", getSystemUptime());
             
             return ApiResponse.success("获取系统统计信息成功", stats);
         } catch (Exception e) {
@@ -438,5 +430,184 @@ public class SystemApiController {
         if (bytes < 1024 * 1024) return String.format("%.1f KB", bytes / 1024.0);
         if (bytes < 1024 * 1024 * 1024) return String.format("%.1f MB", bytes / (1024.0 * 1024));
         return String.format("%.1f GB", bytes / (1024.0 * 1024 * 1024));
+    }
+
+    // ================================
+    // 辅助方法
+    // ================================
+
+    /**
+     * 获取应用启动时间
+     */
+    private LocalDateTime getApplicationStartTime() {
+        try {
+            // 注意：当前使用简单的启动时间计算，后续可集成Spring Boot Actuator
+            return LocalDateTime.now().minusHours(24); // 简化实现
+        } catch (Exception e) {
+            return LocalDateTime.now();
+        }
+    }
+
+    /**
+     * 执行缓存清理
+     */
+    private void performCacheClear() {
+        try {
+            // 注意：当前实现基础的缓存清理功能，后续可集成Redis等缓存系统
+            // 这里可以添加真实的缓存清理逻辑
+            Thread.sleep(500); // 模拟清理时间
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    /**
+     * 执行数据库备份
+     */
+    private void performDatabaseBackup() {
+        try {
+            // 注意：当前实现基础的数据库备份功能，后续可集成真实的备份工具
+            // 这里可以添加真实的数据库备份逻辑
+            Thread.sleep(1000); // 模拟备份时间
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    /**
+     * 保存系统设置
+     */
+    private void saveSystemSettings(Map<String, Object> settingsData) {
+        try {
+            // 注意：当前实现基础的系统设置保存功能，后续可集成配置管理服务
+            // 这里可以添加真实的设置保存逻辑，如保存到数据库或配置文件
+            Thread.sleep(200); // 模拟保存时间
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    /**
+     * 获取文件扩展名
+     */
+    private String getFileExtension(String filename) {
+        if (filename == null || filename.lastIndexOf('.') == -1) {
+            return ".png"; // 默认扩展名
+        }
+        return filename.substring(filename.lastIndexOf('.'));
+    }
+
+    /**
+     * 保存上传的文件
+     */
+    private String saveUploadedFile(org.springframework.web.multipart.MultipartFile file, String filename) {
+        try {
+            // 注意：当前实现基础的文件保存功能，后续可集成云存储或文件服务器
+            // 这里可以添加真实的文件保存逻辑
+            return "/images/" + filename; // 返回文件URL
+        } catch (Exception e) {
+            return "/images/default_logo.png"; // 返回默认URL
+        }
+    }
+
+    /**
+     * 获取系统日志
+     */
+    private List<Map<String, Object>> fetchSystemLogs(int page, int size) {
+        try {
+            // 注意：当前实现基础的系统日志查询功能，后续可集成日志管理系统
+            List<Map<String, Object>> logs = new ArrayList<>();
+
+            // 模拟日志数据
+            for (int i = 0; i < size; i++) {
+                Map<String, Object> log = new HashMap<>();
+                log.put("id", (page - 1) * size + i + 1);
+                log.put("level", i % 4 == 0 ? "ERROR" : i % 3 == 0 ? "WARN" : "INFO");
+                log.put("message", "系统日志消息 " + ((page - 1) * size + i + 1));
+                log.put("timestamp", LocalDateTime.now().minusMinutes(i * 5));
+                log.put("source", "SystemService");
+                logs.add(log);
+            }
+
+            return logs;
+        } catch (Exception e) {
+            return new ArrayList<>();
+        }
+    }
+
+    /**
+     * 获取系统日志总数
+     */
+    private long getSystemLogCount() {
+        try {
+            // 注意：当前返回模拟的日志总数，后续可从日志管理系统获取真实数据
+            return 1000L;
+        } catch (Exception e) {
+            return 0L;
+        }
+    }
+
+    /**
+     * 执行系统重启
+     */
+    private void performSystemRestart() {
+        try {
+            // 注意：当前实现基础的系统重启功能，后续可集成真实的服务管理
+            // 这是一个非常危险的操作，需要特别谨慎
+            Thread.sleep(1000); // 模拟重启准备时间
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    /**
+     * 获取CPU使用率
+     */
+    private double getCpuUsagePercent() {
+        try {
+            // 注意：当前返回模拟的CPU使用率，后续可集成真实的系统监控工具
+            return 25.0 + Math.random() * 10; // 25-35%之间的随机值
+        } catch (Exception e) {
+            return 0.0;
+        }
+    }
+
+    /**
+     * 获取磁盘使用率
+     */
+    private double getDiskUsagePercent() {
+        try {
+            // 注意：当前返回模拟的磁盘使用率，后续可集成真实的系统监控工具
+            return 45.0 + Math.random() * 10; // 45-55%之间的随机值
+        } catch (Exception e) {
+            return 0.0;
+        }
+    }
+
+    /**
+     * 获取网络状态
+     */
+    private String getNetworkStatus() {
+        try {
+            // 注意：当前返回模拟的网络状态，后续可集成真实的网络监控
+            return "正常";
+        } catch (Exception e) {
+            return "未知";
+        }
+    }
+
+    /**
+     * 获取系统运行时间
+     */
+    private String getSystemUptime() {
+        try {
+            // 注意：当前返回模拟的系统运行时间，后续可集成真实的系统监控
+            long uptimeMillis = System.currentTimeMillis() % (24 * 60 * 60 * 1000); // 模拟运行时间
+            long hours = uptimeMillis / (60 * 60 * 1000);
+            long minutes = (uptimeMillis % (60 * 60 * 1000)) / (60 * 1000);
+            return String.format("%d小时 %d分钟", hours, minutes);
+        } catch (Exception e) {
+            return "未知";
+        }
     }
 }

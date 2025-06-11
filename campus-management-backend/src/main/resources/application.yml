@@ -4,7 +4,7 @@ server:
 
 spring:
   application:
-    name: smart-campus-management
+    name: campus_management_db
 
   profiles:
     active: dev  # 默认激活开发环境

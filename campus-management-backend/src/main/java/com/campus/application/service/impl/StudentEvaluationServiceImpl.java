@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -181,7 +182,7 @@ public class StudentEvaluationServiceImpl implements StudentEvaluationService {
     @Override
     @Transactional(readOnly = true)
     public List<StudentEvaluation> getLatestEvaluations(Long studentId, int limit) {
-        return studentEvaluationRepository.findTopByStudentIdAndDeletedOrderByCreatedAtDesc(studentId, 0, limit);
+        return studentEvaluationRepository.findTopByStudentIdAndDeletedOrderByCreatedAtDesc(studentId, 0, PageRequest.of(0, limit));
     }
     
     @Override

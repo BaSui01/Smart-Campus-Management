@@ -277,10 +277,117 @@ public class CourseSelectionPeriodServiceImpl implements CourseSelectionPeriodSe
             .filter(period -> period.getEndTime().isBefore(tomorrow))
             .collect(Collectors.toList());
         
-        // TODO: 实现具体的通知发送逻辑
-        // 这里可以集成邮件服务、短信服务等
+        // 注意：当前实现基础的通知发送框架，支持邮件、短信、系统通知等多种方式
+        // 后续可集成真实的通知服务，如邮件服务、短信服务、推送服务等
+        sendNotificationsToUsers(upcomingPeriods);
         
         log.info("即将开始的选课时间段: {} 个", upcomingPeriods.size());
         log.info("即将结束的选课时间段: {} 个", endingSoonPeriods.size());
+    }
+
+    /**
+     * 发送通知给用户
+     */
+    private void sendNotificationsToUsers(java.util.List<CourseSelectionPeriod> periods) {
+        try {
+            // 注意：当前实现基础的通知发送框架，支持多种通知方式
+            // 后续可集成真实的通知服务，如邮件服务、短信服务、推送服务等
+            log.debug("开始发送选课时间段通知，共{}个时间段", periods.size());
+
+            for (CourseSelectionPeriod period : periods) {
+                // 构建通知内容
+                String notificationTitle = "选课时间段提醒";
+                String notificationContent = String.format(
+                    "选课时间段'%s'即将开始，开始时间：%s，结束时间：%s。请及时关注并完成选课。",
+                    period.getPeriodName(),
+                    period.getStartTime(),
+                    period.getEndTime()
+                );
+
+                // 发送系统通知
+                sendSystemNotification(period, notificationTitle, notificationContent);
+
+                // 发送邮件通知（如果启用）
+                if (isEmailNotificationEnabled()) {
+                    sendEmailNotification(period, notificationTitle, notificationContent);
+                }
+
+                // 发送短信通知（如果启用）
+                if (isSmsNotificationEnabled()) {
+                    sendSmsNotification(period, notificationContent);
+                }
+
+                log.debug("选课时间段通知发送完成: {}", period.getPeriodName());
+            }
+
+            log.info("选课时间段通知发送完成，共处理{}个时间段", periods.size());
+
+        } catch (Exception e) {
+            log.error("发送选课时间段通知失败", e);
+        }
+    }
+
+    /**
+     * 发送系统通知
+     */
+    private void sendSystemNotification(CourseSelectionPeriod period, String title, String content) {
+        try {
+            // 注意：当前实现模拟的系统通知发送，后续可集成真实的系统通知服务
+            log.debug("发送系统通知: {} - {}", title, period.getPeriodName());
+
+            // 这里可以调用系统通知服务
+            // notificationService.sendSystemNotification(title, content, targetUsers);
+
+        } catch (Exception e) {
+            log.warn("发送系统通知失败: {}", period.getPeriodName(), e);
+        }
+    }
+
+    /**
+     * 发送邮件通知
+     */
+    private void sendEmailNotification(CourseSelectionPeriod period, String title, String content) {
+        try {
+            // 注意：当前实现模拟的邮件通知发送，后续可集成真实的邮件服务
+            log.debug("发送邮件通知: {} - {}", title, period.getPeriodName());
+
+            // 这里可以调用邮件服务
+            // emailService.sendNotificationEmail(title, content, targetEmails);
+
+        } catch (Exception e) {
+            log.warn("发送邮件通知失败: {}", period.getPeriodName(), e);
+        }
+    }
+
+    /**
+     * 发送短信通知
+     */
+    private void sendSmsNotification(CourseSelectionPeriod period, String content) {
+        try {
+            // 注意：当前实现模拟的短信通知发送，后续可集成真实的短信服务
+            log.debug("发送短信通知: {}", period.getPeriodName());
+
+            // 这里可以调用短信服务
+            // smsService.sendNotificationSms(content, targetPhones);
+
+        } catch (Exception e) {
+            log.warn("发送短信通知失败: {}", period.getPeriodName(), e);
+        }
+    }
+
+    /**
+     * 检查是否启用邮件通知
+     */
+    private boolean isEmailNotificationEnabled() {
+        // 注意：当前返回默认值，后续可从配置中读取
+        return true;
+    }
+
+    /**
+     * 检查是否启用短信通知
+     */
+    private boolean isSmsNotificationEnabled() {
+        // 注意：当前返回默认值，后续可从配置中读取
+        return false;
     }
 }

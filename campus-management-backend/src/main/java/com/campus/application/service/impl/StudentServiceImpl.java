@@ -302,4 +302,110 @@ public class StudentServiceImpl implements StudentService {
         );
     }
 
+    // ==================== 新增方法实现 ====================
+
+    @Override
+    public Page<Student> searchStudents(String keyword, Pageable pageable) {
+        return studentRepository.searchStudentsPage(keyword, pageable);
+    }
+
+    @Override
+    public Page<Student> findByMultipleConditions(String grade, String major, Long classId, Integer enrollmentYear, Pageable pageable) {
+        return studentRepository.findByMultipleConditions(grade, major, classId, enrollmentYear, pageable);
+    }
+
+    @Override
+    public Page<Student> findByClassId(Long classId, Pageable pageable) {
+        return studentRepository.findByClassId(classId, pageable);
+    }
+
+    @Override
+    public Page<Student> findByGrade(String grade, Pageable pageable) {
+        return studentRepository.findByGrade(grade, pageable);
+    }
+
+    @Override
+    public List<Student> findByMajor(String major) {
+        return studentRepository.findByMajor(major);
+    }
+
+    @Override
+    public List<Student> findByEnrollmentYear(Integer year) {
+        return studentRepository.findByEnrollmentYear(year);
+    }
+
+    @Override
+    public List<Object[]> countStudentsByMajor() {
+        return studentRepository.countByMajor();
+    }
+
+    @Override
+    public List<Object[]> countStudentsByClass() {
+        return studentRepository.countByClass();
+    }
+
+    @Override
+    public List<Object[]> countStudentsByEnrollmentYear() {
+        return studentRepository.countByEnrollmentYear();
+    }
+
+    @Override
+    @Transactional
+    public boolean updateStudentClass(Long studentId, Long classId) {
+        try {
+            int updated = studentRepository.updateClass(studentId, classId);
+            return updated > 0;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    @Override
+    @Transactional
+    public boolean batchUpdateStudentClass(List<Long> studentIds, Long classId) {
+        try {
+            int updated = studentRepository.batchUpdateClass(studentIds, classId);
+            return updated > 0;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    @Override
+    @Transactional
+    public boolean updateStudentGrade(Long studentId, String grade) {
+        try {
+            int updated = studentRepository.updateGrade(studentId, grade);
+            return updated > 0;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    @Override
+    @Transactional
+    public boolean batchUpdateStudentGrade(List<Long> studentIds, String grade) {
+        try {
+            int updated = studentRepository.batchUpdateGrade(studentIds, grade);
+            return updated > 0;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    @Override
+    public boolean existsByStudentNoAndIdNot(String studentNo, Long excludeId) {
+        return studentRepository.existsByStudentNoAndIdNot(studentNo, excludeId);
+    }
+
+    @Override
+    public boolean existsByUserId(Long userId) {
+        return studentRepository.existsByUserId(userId);
+    }
+
+    @Override
+    public boolean existsByUserIdAndIdNot(Long userId, Long excludeId) {
+        return studentRepository.existsByUserIdAndIdNot(userId, excludeId);
+    }
+
 }

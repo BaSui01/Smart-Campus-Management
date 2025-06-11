@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
  * @since 2025-06-07
  */
 @Entity
-@Table(name = "attendances", indexes = {
+@Table(name = "tb_attendance", indexes = {
     @Index(name = "idx_student_id", columnList = "student_id"),
     @Index(name = "idx_course_id", columnList = "course_id"),
     @Index(name = "idx_attendance_date", columnList = "attendance_date"),

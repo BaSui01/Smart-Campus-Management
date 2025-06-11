@@ -5,7 +5,6 @@ import com.campus.application.service.RoleService;
 import com.campus.domain.entity.User;
 import com.campus.domain.entity.Role;
 import com.campus.interfaces.web.common.BaseWebController;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -28,11 +27,13 @@ import java.util.List;
 @PreAuthorize("hasRole('ADMIN')")
 public class UserController extends BaseWebController {
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
+    private final RoleService roleService;
 
-    @Autowired
-    private RoleService roleService;
+    public UserController(UserService userService, RoleService roleService) {
+        this.userService = userService;
+        this.roleService = roleService;
+    }
 
     /**
      * 用户管理主页

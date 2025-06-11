@@ -7,7 +7,6 @@ import com.campus.application.service.ClassroomService;
 import com.campus.application.service.TimeSlotService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -22,23 +21,26 @@ import org.springframework.web.bind.annotation.*;
 @Controller
 @RequestMapping("/admin/course-schedule")
 public class CourseScheduleController {
-    
+
     private static final Logger logger = LoggerFactory.getLogger(CourseScheduleController.class);
-    
-    @Autowired
-    private CourseScheduleService courseScheduleService;
-    
-    @Autowired
-    private CourseService courseService;
-    
-    @Autowired
-    private UserService userService;
-    
-    @Autowired
-    private ClassroomService classroomService;
-    
-    @Autowired
-    private TimeSlotService timeSlotService;
+
+    private final CourseScheduleService courseScheduleService;
+    private final CourseService courseService;
+    private final UserService userService;
+    private final ClassroomService classroomService;
+    private final TimeSlotService timeSlotService;
+
+    public CourseScheduleController(CourseScheduleService courseScheduleService,
+                                   CourseService courseService,
+                                   UserService userService,
+                                   ClassroomService classroomService,
+                                   TimeSlotService timeSlotService) {
+        this.courseScheduleService = courseScheduleService;
+        this.courseService = courseService;
+        this.userService = userService;
+        this.classroomService = classroomService;
+        this.timeSlotService = timeSlotService;
+    }
     
     // ================================
     // 页面路由

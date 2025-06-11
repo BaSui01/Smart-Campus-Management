@@ -228,10 +228,17 @@ public class PermissionApiController {
     @Operation(summary = "批量创建权限", description = "批量创建多个权限")
     public ResponseEntity<ApiResponse<List<Permission>>> batchCreatePermissions(@RequestBody List<Permission> permissions) {
         try {
-            // TODO: PermissionService中缺少batchCreatePermissions方法
+            // 注意：当前使用循环调用单个创建方法实现批量创建功能
+            // 后续可在PermissionService中添加batchCreatePermissions方法来优化性能
             List<Permission> created = new java.util.ArrayList<>();
             for (Permission permission : permissions) {
-                created.add(permissionService.createPermission(permission));
+                try {
+                    Permission createdPermission = permissionService.createPermission(permission);
+                    created.add(createdPermission);
+                } catch (Exception e) {
+                    // 记录单个权限创建失败，但继续处理其他权限
+                    logger.warn("创建权限失败: {}", permission.getPermissionName(), e);
+                }
             }
             return ResponseEntity.ok(ApiResponse.success("批量创建权限成功", created));
         } catch (Exception e) {

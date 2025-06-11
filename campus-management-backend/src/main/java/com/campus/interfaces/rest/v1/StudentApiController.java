@@ -2,7 +2,6 @@ package com.campus.interfaces.rest.v1;
 
 import java.util.*;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -36,11 +35,13 @@ import org.springframework.security.access.prepost.PreAuthorize;
 @SecurityRequirement(name = "Bearer")
 public class StudentApiController extends BaseController {
 
-    @Autowired
-    private StudentService studentService;
+    private final StudentService studentService;
+    private final SchoolClassService schoolClassService;
 
-    @Autowired
-    private SchoolClassService schoolClassService;
+    public StudentApiController(StudentService studentService, SchoolClassService schoolClassService) {
+        this.studentService = studentService;
+        this.schoolClassService = schoolClassService;
+    }
 
     /**
      * 获取学生列表（分页）

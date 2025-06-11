@@ -6,7 +6,6 @@ import com.campus.domain.entity.Course;
 import com.campus.domain.entity.CourseSchedule;
 import com.campus.domain.repository.ClassroomRepository;
 import com.campus.domain.repository.TimeSlotRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -30,17 +29,20 @@ import java.util.Map;
 @RequestMapping("/admin/auto-schedule")
 public class AutoScheduleController {
 
-    @Autowired
-    private AutoScheduleService autoScheduleService;
+    private final AutoScheduleService autoScheduleService;
+    private final CourseService courseService;
+    private final ClassroomRepository classroomRepository;
+    private final TimeSlotRepository timeSlotRepository;
 
-    @Autowired
-    private CourseService courseService;
-
-    @Autowired
-    private ClassroomRepository classroomRepository;
-
-    @Autowired
-    private TimeSlotRepository timeSlotRepository;
+    public AutoScheduleController(AutoScheduleService autoScheduleService,
+                                 CourseService courseService,
+                                 ClassroomRepository classroomRepository,
+                                 TimeSlotRepository timeSlotRepository) {
+        this.autoScheduleService = autoScheduleService;
+        this.courseService = courseService;
+        this.classroomRepository = classroomRepository;
+        this.timeSlotRepository = timeSlotRepository;
+    }
 
     /**
      * 自动排课主页面

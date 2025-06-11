@@ -8,7 +8,6 @@ import java.util.Optional;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -38,20 +37,23 @@ import com.campus.domain.entity.User;
 @Controller
 public class StudentController {
 
-    @Autowired
-    private StudentService studentService;
+    private final StudentService studentService;
+    private final SchoolClassService schoolClassService;
+    private final GradeService gradeService;
+    private final CourseScheduleService courseScheduleService;
+    private final UserService userService;
 
-    @Autowired
-    private SchoolClassService schoolClassService;
-
-    @Autowired
-    private GradeService gradeService;
-
-    @Autowired
-    private CourseScheduleService courseScheduleService;
-
-    @Autowired
-    private UserService userService;
+    public StudentController(StudentService studentService,
+                           SchoolClassService schoolClassService,
+                           GradeService gradeService,
+                           CourseScheduleService courseScheduleService,
+                           UserService userService) {
+        this.studentService = studentService;
+        this.schoolClassService = schoolClassService;
+        this.gradeService = gradeService;
+        this.courseScheduleService = courseScheduleService;
+        this.userService = userService;
+    }
 
     // ========== 管理页面路由 ==========
 

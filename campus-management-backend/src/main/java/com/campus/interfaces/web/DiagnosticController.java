@@ -7,7 +7,6 @@ import com.campus.domain.entity.UserRole;
 import com.campus.shared.util.PermissionUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,11 +30,13 @@ public class DiagnosticController {
 
     private static final Logger logger = LoggerFactory.getLogger(DiagnosticController.class);
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
+    private final PermissionUtil permissionUtil;
 
-    @Autowired
-    private PermissionUtil permissionUtil;
+    public DiagnosticController(UserService userService, PermissionUtil permissionUtil) {
+        this.userService = userService;
+        this.permissionUtil = permissionUtil;
+    }
 
     /**
      * 权限诊断页面

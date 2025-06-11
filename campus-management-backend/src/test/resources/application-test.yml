@@ -16,7 +16,9 @@ spring:
       maximum-pool-size: 5
       minimum-idle: 1
       connection-timeout: 30000
-      # 移除MySQL特定的连接初始化SQL
+      # 移除MySQL特定的连接初始化SQL，H2不支持
+      connection-init-sql: # 清空连接初始化SQL
+      connection-test-query: SELECT 1
 
   # JPA配置
   jpa:
@@ -29,7 +31,7 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.H2Dialect
-        format_sql: false
+        "[format_sql]": false
         hbm2ddl:
           auto: create-drop
     open-in-view: false

@@ -3,7 +3,6 @@ package com.campus.application.service.impl;
 import com.campus.application.service.CourseResourceService;
 import com.campus.domain.entity.CourseResource;
 import com.campus.domain.repository.CourseResourceRepository;
-import com.campus.shared.exception.BusinessException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +15,16 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Collections;
 import java.util.ArrayList;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import org.springframework.web.multipart.MultipartFile;
+import jakarta.persistence.criteria.Predicate;
 
 /**
  * 课程资源服务实现类
@@ -307,50 +315,51 @@ public class CourseResourceServiceImpl implements CourseResourceService {
     @Transactional
     public CourseResource uploadResource(Long courseId, Long teacherId, MultipartFile file,
                                        String resourceName, String description, String resourceType) {
-        logger.info("上传课程资源: courseId={}, teacherId={}, fileName={}", courseId, teacherId, file.getOriginalFilename());
+        try {
+            // 验证文件
+            validateUploadFile(file);
 
-        // 验证文件
-        if (file.isEmpty()) {
-            throw new BusinessException("上传文件不能为空");
+            // 生成唯一文件名
+            String originalFileName = file.getOriginalFilename();
+            String uniqueFileName = generateUniqueFileName(courseId, originalFileName);
+
+            // 获取存储路径
+            String storagePath = getFileStoragePath(courseId, uniqueFileName);
+
+            // 确保目录存在
+            Path uploadPath = Paths.get(storagePath).getParent();
+            if (!Files.exists(uploadPath)) {
+                Files.createDirectories(uploadPath);
+            }
+
+            // 保存文件到磁盘
+            Path filePath = Paths.get(storagePath);
+            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+            // 创建资源记录
+            CourseResource resource = new CourseResource();
+            resource.setCourseId(courseId);
+            resource.setTeacherId(teacherId);
+            resource.setResourceName(resourceName != null ? resourceName : originalFileName);
+            resource.setDescription(description);
+            resource.setResourceType(resourceType != null ? resourceType : detectFileType(originalFileName));
+            resource.setFileName(uniqueFileName);
+            resource.setFilePath(storagePath);
+            resource.setFileSize(file.getSize());
+            resource.setMimeType(file.getContentType());
+            resource.setStatus(1);
+            resource.setDeleted(0);
+            resource.setSortOrder(getNextSortOrder(courseId));
+
+            logger.info("文件上传成功 - 课程ID: {}, 文件名: {}, 大小: {} bytes",
+                courseId, uniqueFileName, file.getSize());
+
+            return courseResourceRepository.save(resource);
+
+        } catch (IOException e) {
+            logger.error("文件上传失败 - 课程ID: {}, 文件名: {}", courseId, file.getOriginalFilename(), e);
+            throw new RuntimeException("文件上传失败: " + e.getMessage(), e);
         }
-
-        if (file.getSize() > getMaxFileSize()) {
-            throw new BusinessException("文件大小超过限制");
-        }
-
-        String originalFileName = file.getOriginalFilename();
-        if (originalFileName == null || originalFileName.trim().isEmpty()) {
-            throw new BusinessException("文件名不能为空");
-        }
-
-        // 检查文件类型
-        String fileExtension = getFileExtension(originalFileName);
-        if (!isFileTypeSupported(fileExtension)) {
-            throw new BusinessException("不支持的文件类型: " + fileExtension);
-        }
-
-        // 生成唯一文件名
-        String uniqueFileName = generateUniqueFileName(courseId, originalFileName);
-        String filePath = getFileStoragePath(courseId, uniqueFileName);
-
-        CourseResource resource = new CourseResource();
-        resource.setCourseId(courseId);
-        resource.setTeacherId(teacherId);
-        resource.setResourceName(resourceName != null ? resourceName : originalFileName);
-        resource.setDescription(description);
-        resource.setResourceType(resourceType != null ? resourceType : "document");
-        resource.setFileName(uniqueFileName);
-        resource.setFilePath(filePath);
-        resource.setFileSize(file.getSize());
-        resource.setStatus(1);
-        resource.setDeleted(0);
-
-        return courseResourceRepository.save(resource);
-    }
-
-    private String getFileExtension(String fileName) {
-        int lastDotIndex = fileName.lastIndexOf('.');
-        return lastDotIndex > 0 ? fileName.substring(lastDotIndex + 1).toLowerCase() : "";
     }
 
     @Override
@@ -425,37 +434,47 @@ public class CourseResourceServiceImpl implements CourseResourceService {
     @Transactional(readOnly = true)
     public Page<CourseResource> findWithFilters(Long courseId, Long teacherId, String resourceType,
                                                Boolean isPublic, String keyword, Pageable pageable) {
-        logger.debug("复杂过滤查询: courseId={}, teacherId={}, resourceType={}, isPublic={}, keyword={}",
-                    courseId, teacherId, resourceType, isPublic, keyword);
+        return courseResourceRepository.findAll((root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
 
-        try {
-            // 使用现有的查询方法组合实现复杂过滤
-            List<CourseResource> allResources = courseResourceRepository.findAll();
+            // 基础过滤：未删除的资源
+            predicates.add(criteriaBuilder.equal(root.get("deleted"), 0));
 
-            // 应用过滤条件
-            List<CourseResource> filteredResources = allResources.stream()
-                .filter(resource -> resource.getDeleted() == 0)
-                .filter(resource -> courseId == null || resource.getCourseId().equals(courseId))
-                .filter(resource -> teacherId == null || resource.getTeacherId().equals(teacherId))
-                .filter(resource -> resourceType == null || resourceType.equals(resource.getResourceType()))
-                .filter(resource -> keyword == null || keyword.trim().isEmpty() ||
-                       resource.getFileName().toLowerCase().contains(keyword.toLowerCase()) ||
-                       (resource.getDescription() != null && resource.getDescription().toLowerCase().contains(keyword.toLowerCase())))
-                .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
-                .collect(java.util.stream.Collectors.toList());
+            // 按课程ID过滤
+            if (courseId != null) {
+                predicates.add(criteriaBuilder.equal(root.get("courseId"), courseId));
+            }
 
-            // 手动分页
-            int start = (int) pageable.getOffset();
-            int end = Math.min(start + pageable.getPageSize(), filteredResources.size());
-            List<CourseResource> pageContent = start < filteredResources.size() ?
-                filteredResources.subList(start, end) : new ArrayList<>();
+            // 按教师ID过滤
+            if (teacherId != null) {
+                predicates.add(criteriaBuilder.equal(root.get("teacherId"), teacherId));
+            }
 
-            return new org.springframework.data.domain.PageImpl<>(pageContent, pageable, filteredResources.size());
+            // 按资源类型过滤
+            if (resourceType != null && !resourceType.trim().isEmpty()) {
+                predicates.add(criteriaBuilder.equal(root.get("resourceType"), resourceType));
+            }
 
-        } catch (Exception e) {
-            logger.error("复杂过滤查询失败", e);
-            return courseResourceRepository.findAll(pageable);
-        }
+            // 按公开状态过滤
+            if (isPublic != null) {
+                predicates.add(criteriaBuilder.equal(root.get("isPublic"), isPublic));
+            }
+
+            // 关键词搜索（文件名、资源名称、描述）
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                String likePattern = "%" + keyword.trim() + "%";
+                Predicate fileNameLike = criteriaBuilder.like(
+                    criteriaBuilder.lower(root.get("fileName")), likePattern.toLowerCase());
+                Predicate resourceNameLike = criteriaBuilder.like(
+                    criteriaBuilder.lower(root.get("resourceName")), likePattern.toLowerCase());
+                Predicate descriptionLike = criteriaBuilder.like(
+                    criteriaBuilder.lower(root.get("description")), likePattern.toLowerCase());
+
+                predicates.add(criteriaBuilder.or(fileNameLike, resourceNameLike, descriptionLike));
+            }
+
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        }, pageable);
     }
 
     @Override
@@ -467,74 +486,93 @@ public class CourseResourceServiceImpl implements CourseResourceService {
     @Override
     @Transactional(readOnly = true)
     public List<CourseResource> findPublicResourcesByCourse(Long courseId) {
-        logger.debug("查询课程公开资源: courseId={}", courseId);
+        return courseResourceRepository.findAll((root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
 
-        try {
-            // 假设status=1且resourceType包含"public"的为公开资源
-            return courseResourceRepository.findByCourseIdAndDeletedOrderByCreatedAtDesc(courseId, 0).stream()
-                .filter(resource -> resource.getStatus() == 1)
-                .filter(resource -> resource.getResourceType() != null &&
-                                   (resource.getResourceType().toLowerCase().contains("public") ||
-                                    resource.getResourceType().equals("document") ||
-                                    resource.getResourceType().equals("video")))
-                .collect(java.util.stream.Collectors.toList());
-        } catch (Exception e) {
-            logger.error("查询课程公开资源失败: courseId={}", courseId, e);
-            return courseResourceRepository.findByCourseIdAndDeletedOrderByCreatedAtDesc(courseId, 0);
-        }
+            // 基础条件：未删除且为公开资源
+            predicates.add(criteriaBuilder.equal(root.get("deleted"), 0));
+            predicates.add(criteriaBuilder.equal(root.get("courseId"), courseId));
+            predicates.add(criteriaBuilder.equal(root.get("isPublic"), true));
+            predicates.add(criteriaBuilder.equal(root.get("status"), 1)); // 启用状态
+
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        }).stream()
+        .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
+        .collect(java.util.stream.Collectors.toList());
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<CourseResource> findRequiredResourcesByCourse(Long courseId) {
-        logger.debug("查询课程必读资料: courseId={}", courseId);
+        return courseResourceRepository.findAll((root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
 
-        try {
-            // 假设description包含"必读"或resourceType为"required"的为必读资料
-            return courseResourceRepository.findByCourseIdAndDeletedOrderByCreatedAtDesc(courseId, 0).stream()
-                .filter(resource -> resource.getStatus() == 1)
-                .filter(resource -> (resource.getDescription() != null && resource.getDescription().contains("必读")) ||
-                                   (resource.getResourceType() != null && resource.getResourceType().equals("required")))
-                .collect(java.util.stream.Collectors.toList());
-        } catch (Exception e) {
-            logger.error("查询课程必读资料失败: courseId={}", courseId, e);
-            return courseResourceRepository.findByCourseIdAndDeletedOrderByCreatedAtDesc(courseId, 0);
-        }
+            // 基础条件：未删除且为必读资料
+            predicates.add(criteriaBuilder.equal(root.get("deleted"), 0));
+            predicates.add(criteriaBuilder.equal(root.get("courseId"), courseId));
+            predicates.add(criteriaBuilder.equal(root.get("isRequired"), true));
+            predicates.add(criteriaBuilder.equal(root.get("status"), 1));
+
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        }).stream()
+        .sorted((a, b) -> {
+            // 按排序序号排序，然后按创建时间
+            int sortCompare = Integer.compare(
+                a.getSortOrder() != null ? a.getSortOrder() : 0,
+                b.getSortOrder() != null ? b.getSortOrder() : 0
+            );
+            return sortCompare != 0 ? sortCompare : b.getCreatedAt().compareTo(a.getCreatedAt());
+        })
+        .collect(java.util.stream.Collectors.toList());
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<CourseResource> findByChapter(Long courseId, String chapter) {
-        logger.debug("按章节查询资源: courseId={}, chapter={}", courseId, chapter);
-
-        try {
-            // 假设description或fileName包含章节信息
-            return courseResourceRepository.findByCourseIdAndDeletedOrderByCreatedAtDesc(courseId, 0).stream()
-                .filter(resource -> resource.getStatus() == 1)
-                .filter(resource -> (resource.getDescription() != null && resource.getDescription().contains(chapter)) ||
-                                   (resource.getFileName() != null && resource.getFileName().contains(chapter)))
-                .collect(java.util.stream.Collectors.toList());
-        } catch (Exception e) {
-            logger.error("按章节查询资源失败: courseId={}, chapter={}", courseId, chapter, e);
-            return courseResourceRepository.findByCourseIdAndDeletedOrderByCreatedAtDesc(courseId, 0);
+        if (chapter == null || chapter.trim().isEmpty()) {
+            return new ArrayList<>();
         }
+
+        return courseResourceRepository.findAll((root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            predicates.add(criteriaBuilder.equal(root.get("deleted"), 0));
+            predicates.add(criteriaBuilder.equal(root.get("courseId"), courseId));
+            predicates.add(criteriaBuilder.equal(root.get("chapter"), chapter.trim()));
+            predicates.add(criteriaBuilder.equal(root.get("status"), 1));
+
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        }).stream()
+        .sorted((a, b) -> {
+            // 按章节内排序序号排序
+            int sortCompare = Integer.compare(
+                a.getSortOrder() != null ? a.getSortOrder() : 0,
+                b.getSortOrder() != null ? b.getSortOrder() : 0
+            );
+            return sortCompare != 0 ? sortCompare : a.getCreatedAt().compareTo(b.getCreatedAt());
+        })
+        .collect(java.util.stream.Collectors.toList());
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<CourseResource> findByTag(Long courseId, String tag) {
-        logger.debug("按标签查询资源: courseId={}, tag={}", courseId, tag);
-
-        try {
-            // 假设description包含标签信息
-            return courseResourceRepository.findByCourseIdAndDeletedOrderByCreatedAtDesc(courseId, 0).stream()
-                .filter(resource -> resource.getStatus() == 1)
-                .filter(resource -> resource.getDescription() != null && resource.getDescription().contains(tag))
-                .collect(java.util.stream.Collectors.toList());
-        } catch (Exception e) {
-            logger.error("按标签查询资源失败: courseId={}, tag={}", courseId, tag, e);
-            return courseResourceRepository.findByCourseIdAndDeletedOrderByCreatedAtDesc(courseId, 0);
+        if (tag == null || tag.trim().isEmpty()) {
+            return new ArrayList<>();
         }
+
+        return courseResourceRepository.findAll((root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            predicates.add(criteriaBuilder.equal(root.get("deleted"), 0));
+            predicates.add(criteriaBuilder.equal(root.get("courseId"), courseId));
+            predicates.add(criteriaBuilder.like(root.get("tags"), "%" + tag.trim() + "%"));
+            predicates.add(criteriaBuilder.equal(root.get("status"), 1));
+
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        }).stream()
+        .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
+        .collect(java.util.stream.Collectors.toList());
     }
 
     @Override
@@ -552,60 +590,91 @@ public class CourseResourceServiceImpl implements CourseResourceService {
     @Override
     @Transactional(readOnly = true)
     public byte[] downloadResource(Long resourceId, Long userId) {
-        logger.info("下载资源: resourceId={}, userId={}", resourceId, userId);
-
         try {
-            // 检查权限
-            if (!hasAccessPermission(resourceId, userId, "STUDENT", true)) {
-                throw new BusinessException("无权限下载该资源");
-            }
-
+            // 检查资源是否存在
             Optional<CourseResource> resourceOpt = findById(resourceId);
             if (resourceOpt.isEmpty()) {
                 throw new BusinessException("资源不存在");
             }
 
             CourseResource resource = resourceOpt.get();
+
+            // 检查访问权限
+            if (!isResourceAccessible(resourceId, userId)) {
+                throw new BusinessException("无权限访问该资源");
+            }
+
+            // 记录访问
             recordResourceAccess(resourceId, userId);
 
-            // 注意：当前返回空字节数组，实际实现中应该读取文件内容
-            // 实际实现: return Files.readAllBytes(Paths.get(resource.getFilePath()));
-            logger.info("资源下载成功: {}", resource.getFileName());
-            return new byte[0];
+            // 读取文件内容
+            String filePath = resource.getFilePath();
+            if (filePath != null && Files.exists(Paths.get(filePath))) {
+                byte[] fileContent = Files.readAllBytes(Paths.get(filePath));
 
-        } catch (Exception e) {
-            logger.error("下载资源失败: resourceId={}, userId={}", resourceId, userId, e);
-            throw new BusinessException("下载资源失败: " + e.getMessage());
+                // 更新下载次数
+                updateDownloadCount(resourceId);
+
+                logger.info("资源下载成功 - 资源ID: {}, 用户ID: {}, 文件大小: {} bytes",
+                    resourceId, userId, fileContent.length);
+
+                return fileContent;
+            } else {
+                logger.warn("文件不存在 - 路径: {}", filePath);
+                throw new BusinessException("文件不存在");
+            }
+
+        } catch (IOException e) {
+            logger.error("资源下载失败 - 资源ID: {}, 用户ID: {}", resourceId, userId, e);
+            throw new RuntimeException("资源下载失败: " + e.getMessage(), e);
         }
     }
 
     @Override
     @Transactional(readOnly = true)
     public byte[] previewResource(Long resourceId, Long userId) {
-        logger.info("预览资源: resourceId={}, userId={}", resourceId, userId);
-
         try {
-            // 检查权限
-            if (!hasAccessPermission(resourceId, userId, "STUDENT", true)) {
-                throw new BusinessException("无权限预览该资源");
-            }
-
+            // 检查资源是否存在
             Optional<CourseResource> resourceOpt = findById(resourceId);
             if (resourceOpt.isEmpty()) {
                 throw new BusinessException("资源不存在");
             }
 
             CourseResource resource = resourceOpt.get();
+
+            // 检查是否允许预览
+            if (resource.getAllowPreview() != null && !resource.getAllowPreview()) {
+                throw new BusinessException("该资源不允许预览");
+            }
+
+            // 检查访问权限
+            if (!isResourceAccessible(resourceId, userId)) {
+                throw new BusinessException("无权限访问该资源");
+            }
+
+            // 记录访问
             recordResourceAccess(resourceId, userId);
 
-            // 注意：当前返回空字节数组，实际实现中应该生成预览内容
-            // 对于图片、PDF等可以直接返回，对于文档可能需要转换
-            logger.info("资源预览成功: {}", resource.getFileName());
-            return new byte[0];
+            // 读取文件内容（预览可能只读取部分内容）
+            String filePath = resource.getFilePath();
+            if (filePath != null && Files.exists(Paths.get(filePath))) {
+                byte[] fileContent = Files.readAllBytes(Paths.get(filePath));
 
-        } catch (Exception e) {
-            logger.error("预览资源失败: resourceId={}, userId={}", resourceId, userId, e);
-            throw new BusinessException("预览资源失败: " + e.getMessage());
+                // 更新查看次数
+                updateViewCount(resourceId);
+
+                logger.info("资源预览成功 - 资源ID: {}, 用户ID: {}, 文件大小: {} bytes",
+                    resourceId, userId, fileContent.length);
+
+                return fileContent;
+            } else {
+                logger.warn("文件不存在 - 路径: {}", filePath);
+                throw new BusinessException("文件不存在");
+            }
+
+        } catch (IOException e) {
+            logger.error("资源预览失败 - 资源ID: {}, 用户ID: {}", resourceId, userId, e);
+            throw new RuntimeException("资源预览失败: " + e.getMessage(), e);
         }
     }
 
@@ -624,35 +693,38 @@ public class CourseResourceServiceImpl implements CourseResourceService {
     @Override
     @Transactional(readOnly = true)
     public ResourceStatistics getStatistics(Long courseId) {
-        logger.debug("获取资源统计信息: courseId={}", courseId);
-
         try {
-            ResourceStatistics stats = new ResourceStatistics();
-
-            List<CourseResource> resources = courseId != null ?
-                findByCourseId(courseId) :
-                courseResourceRepository.findAll().stream()
-                    .filter(r -> r.getDeleted() == 0)
-                    .collect(java.util.stream.Collectors.toList());
-
             // 基础统计
-            stats.setTotalResources(resources.size());
-            stats.setTotalSize(resources.stream()
-                .filter(r -> r.getFileSize() != null)
-                .mapToLong(CourseResource::getFileSize)
-                .sum());
+            List<CourseResource> allResources = findByCourseId(courseId);
 
-            // 按类型统计 - 暂时注释掉，因为类型不匹配
-            // java.util.Map<String, Long> typeStats = resources.stream()
-            //     .collect(java.util.stream.Collectors.groupingBy(
-            //         r -> r.getResourceType() != null ? r.getResourceType() : "其他",
-            //         java.util.stream.Collectors.counting()));
-            // stats.setTypeStatistics(typeStats);
+            // 文件大小统计
+            long totalSize = allResources.stream()
+                .mapToLong(r -> r.getFileSize() != null ? r.getFileSize() : 0L)
+                .sum();
+
+            // 下载统计
+            long totalDownloads = allResources.stream()
+                .mapToLong(r -> r.getDownloadCount() != null ? r.getDownloadCount() : 0)
+                .sum();
+
+            // 查看统计
+            long totalViews = allResources.stream()
+                .mapToLong(r -> r.getViewCount() != null ? r.getViewCount() : 0)
+                .sum();
+
+            // 创建统计对象
+            ResourceStatistics stats = new ResourceStatistics(
+                allResources.size(),
+                totalSize,
+                totalDownloads,
+                totalViews
+            );
 
             return stats;
+
         } catch (Exception e) {
-            logger.error("获取资源统计信息失败: courseId={}", courseId, e);
-            return new ResourceStatistics();
+            logger.error("获取资源统计信息失败 - 课程ID: {}", courseId, e);
+            return new ResourceStatistics(); // 返回空统计对象
         }
     }
 
@@ -672,26 +744,44 @@ public class CourseResourceServiceImpl implements CourseResourceService {
     @Transactional
     public List<CourseResource> copyResourcesToCourse(List<Long> resourceIds, Long targetCourseId, Long teacherId) {
         List<CourseResource> copiedResources = new ArrayList<>();
+
         for (Long resourceId : resourceIds) {
             try {
-                copyResource(resourceId, targetCourseId);
-                // 查找复制后的资源并添加到结果列表
-                Optional<CourseResource> originalOpt = findById(resourceId);
-                if (originalOpt.isPresent()) {
-                    CourseResource original = originalOpt.get();
-                    String copiedPath = generateCopyPath(original.getFilePath());
+                Optional<CourseResource> sourceOpt = findById(resourceId);
+                if (sourceOpt.isPresent()) {
+                    CourseResource source = sourceOpt.get();
 
-                    // 查找复制的资源
-                    List<CourseResource> targetResources = findByCourseId(targetCourseId);
-                    targetResources.stream()
-                        .filter(r -> r.getFilePath().equals(copiedPath))
-                        .findFirst()
-                        .ifPresent(copiedResources::add);
+                    // 创建副本
+                    CourseResource copy = new CourseResource();
+                    copy.setCourseId(targetCourseId);
+                    copy.setTeacherId(teacherId);
+                    copy.setResourceName(source.getResourceName() + " (副本)");
+                    copy.setFileName(generateUniqueFileName(targetCourseId, source.getFileName()));
+                    copy.setFilePath(generateCopyPath(source.getFilePath()));
+                    copy.setFileSize(source.getFileSize());
+                    copy.setResourceType(source.getResourceType());
+                    copy.setDescription(source.getDescription());
+                    copy.setMimeType(source.getMimeType());
+                    copy.setTags(source.getTags());
+                    copy.setChapter(source.getChapter());
+                    copy.setIsPublic(false); // 副本默认为私有
+                    copy.setIsRequired(false); // 副本默认为非必读
+                    copy.setAllowPreview(source.getAllowPreview());
+                    copy.setStatus(1);
+                    copy.setDeleted(0);
+                    copy.setSortOrder(getNextSortOrder(targetCourseId));
+
+                    CourseResource savedCopy = courseResourceRepository.save(copy);
+                    copiedResources.add(savedCopy);
+
+                    logger.info("资源复制成功 - 源ID: {}, 目标课程ID: {}, 新ID: {}",
+                        resourceId, targetCourseId, savedCopy.getId());
                 }
             } catch (Exception e) {
-                logger.error("复制资源失败: resourceId={}", resourceId, e);
+                logger.error("复制资源失败 - 资源ID: {}, 目标课程ID: {}", resourceId, targetCourseId, e);
             }
         }
+
         return copiedResources;
     }
 
@@ -714,53 +804,68 @@ public class CourseResourceServiceImpl implements CourseResourceService {
     @Override
     @Transactional
     public void updateResourceOrder(List<Long> resourceIds, List<Integer> sortOrders) {
-        logger.info("更新资源排序: {} 个资源", resourceIds.size());
+        if (resourceIds == null || sortOrders == null || resourceIds.isEmpty() || sortOrders.isEmpty()) {
+            throw new IllegalArgumentException("资源ID列表和排序列表不能为空");
+        }
 
-        try {
-            if (resourceIds.size() != sortOrders.size()) {
-                throw new BusinessException("资源ID列表和排序列表长度不匹配");
-            }
+        if (resourceIds.size() != sortOrders.size()) {
+            throw new IllegalArgumentException("资源ID列表和排序列表长度必须一致");
+        }
 
-            for (int i = 0; i < resourceIds.size(); i++) {
-                Optional<CourseResource> resourceOpt = findById(resourceIds.get(i));
+        int updatedCount = 0;
+
+        for (int i = 0; i < resourceIds.size(); i++) {
+            try {
+                Long resourceId = resourceIds.get(i);
+                Integer sortOrder = sortOrders.get(i);
+
+                if (resourceId == null || sortOrder == null) {
+                    logger.warn("跳过无效的资源ID或排序值 - 索引: {}", i);
+                    continue;
+                }
+
+                Optional<CourseResource> resourceOpt = findById(resourceId);
                 if (resourceOpt.isPresent()) {
                     CourseResource resource = resourceOpt.get();
-                    resource.setSortOrder(sortOrders.get(i));
+                    resource.setSortOrder(sortOrder);
                     courseResourceRepository.save(resource);
-                    logger.debug("更新资源排序: resourceId={}, sortOrder={}", resourceIds.get(i), sortOrders.get(i));
-                } else {
-                    logger.warn("资源不存在，跳过排序更新: resourceId={}", resourceIds.get(i));
-                }
-            }
+                    updatedCount++;
 
-            logger.info("资源排序更新完成");
-        } catch (Exception e) {
-            logger.error("更新资源排序失败", e);
-            throw new BusinessException("更新资源排序失败: " + e.getMessage());
+                    logger.debug("更新资源排序 - ID: {}, 新排序: {}", resourceId, sortOrder);
+                } else {
+                    logger.warn("资源不存在 - ID: {}", resourceId);
+                }
+            } catch (Exception e) {
+                logger.error("更新资源排序失败 - 索引: {}, 资源ID: {}", i, resourceIds.get(i), e);
+            }
         }
+
+        logger.info("批量更新资源排序完成 - 成功更新: {} 个，总数: {} 个", updatedCount, resourceIds.size());
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<CourseResource> findPopularResources(int limit) {
-        logger.debug("查询热门资源: limit={}", limit);
-
         try {
-            // 基于文件大小和创建时间的简单热门度算法
-            List<CourseResource> allResources = courseResourceRepository.findAll().stream()
-                .filter(resource -> resource.getDeleted() == 0 && resource.getStatus() == 1)
-                .sorted((a, b) -> {
-                    // 综合考虑文件大小和创建时间
-                    long scoreA = (a.getFileSize() != null ? a.getFileSize() : 0) +
-                                 (System.currentTimeMillis() - a.getCreatedAt().atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()) / 1000000;
-                    long scoreB = (b.getFileSize() != null ? b.getFileSize() : 0) +
-                                 (System.currentTimeMillis() - b.getCreatedAt().atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()) / 1000000;
-                    return Long.compare(scoreB, scoreA);
-                })
-                .limit(limit)
-                .collect(java.util.stream.Collectors.toList());
+            return courseResourceRepository.findAll((root, query, criteriaBuilder) -> {
+                List<Predicate> predicates = new ArrayList<>();
 
-            return allResources;
+                predicates.add(criteriaBuilder.equal(root.get("deleted"), 0));
+                predicates.add(criteriaBuilder.equal(root.get("status"), 1));
+                predicates.add(criteriaBuilder.equal(root.get("isPublic"), true));
+
+                return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+            }).stream()
+            .sorted((a, b) -> {
+                // 按下载次数和查看次数的综合热度排序
+                int aPopularity = (a.getDownloadCount() != null ? a.getDownloadCount() : 0) * 2 +
+                                 (a.getViewCount() != null ? a.getViewCount() : 0);
+                int bPopularity = (b.getDownloadCount() != null ? b.getDownloadCount() : 0) * 2 +
+                                 (b.getViewCount() != null ? b.getViewCount() : 0);
+                return Integer.compare(bPopularity, aPopularity);
+            })
+            .limit(limit)
+            .collect(java.util.stream.Collectors.toList());
         } catch (Exception e) {
             logger.error("查询热门资源失败", e);
             return Collections.emptyList();
@@ -770,16 +875,19 @@ public class CourseResourceServiceImpl implements CourseResourceService {
     @Override
     @Transactional(readOnly = true)
     public List<CourseResource> findLatestResources(int limit) {
-        logger.debug("查询最新资源: limit={}", limit);
-
         try {
-            List<CourseResource> latestResources = courseResourceRepository.findAll().stream()
-                .filter(resource -> resource.getDeleted() == 0 && resource.getStatus() == 1)
-                .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
-                .limit(limit)
-                .collect(java.util.stream.Collectors.toList());
+            return courseResourceRepository.findAll((root, query, criteriaBuilder) -> {
+                List<Predicate> predicates = new ArrayList<>();
 
-            return latestResources;
+                predicates.add(criteriaBuilder.equal(root.get("deleted"), 0));
+                predicates.add(criteriaBuilder.equal(root.get("status"), 1));
+                predicates.add(criteriaBuilder.equal(root.get("isPublic"), true));
+
+                return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+            }).stream()
+            .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
+            .limit(limit)
+            .collect(java.util.stream.Collectors.toList());
         } catch (Exception e) {
             logger.error("查询最新资源失败", e);
             return Collections.emptyList();
@@ -795,16 +903,20 @@ public class CourseResourceServiceImpl implements CourseResourceService {
     @Override
     @Transactional(readOnly = true)
     public List<CourseResource> findExpiredResources() {
-        logger.debug("查询过期资源");
-
         try {
-            // 假设资源在创建后1年过期
-            java.time.LocalDateTime oneYearAgo = java.time.LocalDateTime.now().minusYears(1);
+            LocalDateTime now = LocalDateTime.now();
 
-            return courseResourceRepository.findAll().stream()
-                .filter(resource -> resource.getDeleted() == 0)
-                .filter(resource -> resource.getCreatedAt().isBefore(oneYearAgo))
-                .collect(java.util.stream.Collectors.toList());
+            return courseResourceRepository.findAll((root, query, criteriaBuilder) -> {
+                List<Predicate> predicates = new ArrayList<>();
+
+                predicates.add(criteriaBuilder.equal(root.get("deleted"), 0));
+                predicates.add(criteriaBuilder.isNotNull(root.get("validUntil")));
+                predicates.add(criteriaBuilder.lessThan(root.get("validUntil"), now));
+
+                return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+            }).stream()
+            .sorted((a, b) -> a.getValidUntil().compareTo(b.getValidUntil()))
+            .collect(java.util.stream.Collectors.toList());
         } catch (Exception e) {
             logger.error("查询过期资源失败", e);
             return Collections.emptyList();
@@ -814,18 +926,21 @@ public class CourseResourceServiceImpl implements CourseResourceService {
     @Override
     @Transactional(readOnly = true)
     public List<CourseResource> findExpiringResources(int days) {
-        logger.debug("查询即将过期资源: days={}", days);
-
         try {
-            // 查询在指定天数内即将过期的资源
-            java.time.LocalDateTime expiryThreshold = java.time.LocalDateTime.now().minusYears(1).plusDays(days);
-            java.time.LocalDateTime oneYearAgo = java.time.LocalDateTime.now().minusYears(1);
+            LocalDateTime now = LocalDateTime.now();
+            LocalDateTime futureDate = now.plusDays(days);
 
-            return courseResourceRepository.findAll().stream()
-                .filter(resource -> resource.getDeleted() == 0)
-                .filter(resource -> resource.getCreatedAt().isAfter(oneYearAgo) &&
-                                   resource.getCreatedAt().isBefore(expiryThreshold))
-                .collect(java.util.stream.Collectors.toList());
+            return courseResourceRepository.findAll((root, query, criteriaBuilder) -> {
+                List<Predicate> predicates = new ArrayList<>();
+
+                predicates.add(criteriaBuilder.equal(root.get("deleted"), 0));
+                predicates.add(criteriaBuilder.isNotNull(root.get("validUntil")));
+                predicates.add(criteriaBuilder.between(root.get("validUntil"), now, futureDate));
+
+                return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+            }).stream()
+            .sorted((a, b) -> a.getValidUntil().compareTo(b.getValidUntil()))
+            .collect(java.util.stream.Collectors.toList());
         } catch (Exception e) {
             logger.error("查询即将过期资源失败", e);
             return Collections.emptyList();
@@ -835,27 +950,30 @@ public class CourseResourceServiceImpl implements CourseResourceService {
     @Override
     @Transactional
     public int autoCleanExpiredResources() {
-        logger.info("自动清理过期资源");
-
         try {
             List<CourseResource> expiredResources = findExpiredResources();
             int cleanedCount = 0;
 
             for (CourseResource resource : expiredResources) {
                 try {
+                    // 标记为删除状态
                     resource.setDeleted(1);
                     courseResourceRepository.save(resource);
                     cleanedCount++;
+
+                    logger.info("自动清理过期资源 - ID: {}, 文件名: {}, 过期时间: {}",
+                        resource.getId(), resource.getFileName(), resource.getValidUntil());
                 } catch (Exception e) {
-                    logger.error("清理过期资源失败: resourceId={}", resource.getId(), e);
+                    logger.error("清理过期资源失败 - ID: {}", resource.getId(), e);
                 }
             }
 
-            // 清理已删除的资源
+            // 执行物理清理
             cleanupDeletedResources();
 
             logger.info("自动清理过期资源完成，共清理 {} 个资源", cleanedCount);
             return cleanedCount;
+
         } catch (Exception e) {
             logger.error("自动清理过期资源失败", e);
             return 0;
@@ -865,16 +983,14 @@ public class CourseResourceServiceImpl implements CourseResourceService {
     @Override
     @Transactional(readOnly = true)
     public Long getCourseResourceTotalSize(Long courseId) {
-        logger.debug("计算课程资源总大小: courseId={}", courseId);
-
         try {
-            List<CourseResource> resources = courseResourceRepository.findByCourseIdAndDeletedOrderByCreatedAtDesc(courseId, 0);
+            List<CourseResource> resources = findByCourseId(courseId);
             return resources.stream()
-                .filter(resource -> resource.getFileSize() != null)
+                .filter(r -> r.getFileSize() != null)
                 .mapToLong(CourseResource::getFileSize)
                 .sum();
         } catch (Exception e) {
-            logger.error("计算课程资源总大小失败: courseId={}", courseId, e);
+            logger.error("计算课程资源总大小失败 - 课程ID: {}", courseId, e);
             return 0L;
         }
     }
@@ -882,16 +998,14 @@ public class CourseResourceServiceImpl implements CourseResourceService {
     @Override
     @Transactional(readOnly = true)
     public Long getTeacherResourceTotalSize(Long teacherId) {
-        logger.debug("计算教师资源总大小: teacherId={}", teacherId);
-
         try {
-            List<CourseResource> resources = courseResourceRepository.findByUploadedByAndDeletedOrderByCreatedAtDesc(teacherId, 0);
+            List<CourseResource> resources = findByTeacherId(teacherId);
             return resources.stream()
-                .filter(resource -> resource.getFileSize() != null)
+                .filter(r -> r.getFileSize() != null)
                 .mapToLong(CourseResource::getFileSize)
                 .sum();
         } catch (Exception e) {
-            logger.error("计算教师资源总大小失败: teacherId={}", teacherId, e);
+            logger.error("计算教师资源总大小失败 - 教师ID: {}", teacherId, e);
             return 0L;
         }
     }
@@ -899,45 +1013,70 @@ public class CourseResourceServiceImpl implements CourseResourceService {
     @Override
     @Transactional(readOnly = true)
     public boolean isFileNameDuplicate(Long courseId, String fileName, Long excludeId) {
-        logger.debug("检查文件名重复: courseId={}, fileName={}, excludeId={}", courseId, fileName, excludeId);
-
-        try {
-            List<CourseResource> resources = courseResourceRepository.findByCourseIdAndDeletedOrderByCreatedAtDesc(courseId, 0);
-            return resources.stream()
-                .filter(resource -> excludeId == null || !resource.getId().equals(excludeId))
-                .anyMatch(resource -> fileName.equals(resource.getFileName()));
-        } catch (Exception e) {
-            logger.error("检查文件名重复失败", e);
+        if (fileName == null || fileName.trim().isEmpty()) {
             return false;
         }
+
+        List<CourseResource> resources = courseResourceRepository.findAll((root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            predicates.add(criteriaBuilder.equal(root.get("deleted"), 0));
+            predicates.add(criteriaBuilder.equal(root.get("courseId"), courseId));
+            predicates.add(criteriaBuilder.equal(root.get("fileName"), fileName.trim()));
+
+            // 排除指定ID的资源
+            if (excludeId != null) {
+                predicates.add(criteriaBuilder.notEqual(root.get("id"), excludeId));
+            }
+
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        });
+
+        return !resources.isEmpty();
     }
 
     @Override
     @Transactional(readOnly = true)
     public String generateUniqueFileName(Long courseId, String originalFileName) {
-        logger.debug("生成唯一文件名: courseId={}, originalFileName={}", courseId, originalFileName);
-
-        try {
-            String fileName = originalFileName;
-            int counter = 1;
-
-            while (isFileNameDuplicate(courseId, fileName, null)) {
-                int lastDotIndex = originalFileName.lastIndexOf('.');
-                if (lastDotIndex > 0) {
-                    String nameWithoutExt = originalFileName.substring(0, lastDotIndex);
-                    String extension = originalFileName.substring(lastDotIndex);
-                    fileName = nameWithoutExt + "_" + counter + extension;
-                } else {
-                    fileName = originalFileName + "_" + counter;
-                }
-                counter++;
-            }
-
-            return fileName;
-        } catch (Exception e) {
-            logger.error("生成唯一文件名失败", e);
-            return originalFileName + "_" + System.currentTimeMillis();
+        if (originalFileName == null || originalFileName.trim().isEmpty()) {
+            return "unnamed_" + System.currentTimeMillis();
         }
+
+        String fileName = originalFileName.trim();
+
+        // 如果文件名不重复，直接返回
+        if (!isFileNameDuplicate(courseId, fileName, null)) {
+            return fileName;
+        }
+
+        // 分离文件名和扩展名
+        String nameWithoutExt;
+        String extension = "";
+        int lastDotIndex = fileName.lastIndexOf('.');
+
+        if (lastDotIndex > 0) {
+            nameWithoutExt = fileName.substring(0, lastDotIndex);
+            extension = fileName.substring(lastDotIndex);
+        } else {
+            nameWithoutExt = fileName;
+        }
+
+        // 尝试添加数字后缀
+        int counter = 1;
+        String newFileName;
+
+        do {
+            newFileName = nameWithoutExt + "_" + counter + extension;
+            counter++;
+
+            // 防止无限循环
+            if (counter > 1000) {
+                newFileName = nameWithoutExt + "_" + System.currentTimeMillis() + extension;
+                break;
+            }
+        } while (isFileNameDuplicate(courseId, newFileName, null));
+
+        return newFileName;
     }
 
     @Override
@@ -955,19 +1094,21 @@ public class CourseResourceServiceImpl implements CourseResourceService {
     @Override
     @Transactional(readOnly = true)
     public String getFileStoragePath(Long courseId, String fileName) {
-        logger.debug("生成文件存储路径: courseId={}, fileName={}", courseId, fileName);
-
-        try {
-            // 按年月组织文件夹结构
-            java.time.LocalDate now = java.time.LocalDate.now();
-            String yearMonth = now.getYear() + "/" + String.format("%02d", now.getMonthValue());
-
-            // 生成完整路径: /uploads/courses/{courseId}/{year}/{month}/{fileName}
-            return String.format("/uploads/courses/%d/%s/%s", courseId, yearMonth, fileName);
-        } catch (Exception e) {
-            logger.error("生成文件存储路径失败", e);
-            return "/uploads/courses/" + courseId + "/" + fileName;
+        if (courseId == null || fileName == null || fileName.trim().isEmpty()) {
+            throw new IllegalArgumentException("课程ID和文件名不能为空");
         }
+
+        // 基础存储路径
+        String basePath = System.getProperty("user.home") + "/campus-uploads";
+
+        // 按年月分目录存储
+        LocalDate now = LocalDate.now();
+        String yearMonth = now.format(DateTimeFormatter.ofPattern("yyyy/MM"));
+
+        // 构建完整路径：基础路径/courses/课程ID/年月/文件名
+        return Paths.get(basePath, "courses", courseId.toString(), yearMonth, fileName.trim())
+                .toString()
+                .replace("\\", "/"); // 统一使用正斜杠
     }
 
     // ================================
@@ -1339,6 +1480,128 @@ public class CourseResourceServiceImpl implements CourseResourceService {
         } catch (Exception e) {
             logger.error("检查资源访问权限失败: resourceId={}, userId={}", resourceId, userId, e);
             return false;
+        }
+    }
+
+    // ================================
+    // 私有辅助方法
+    // ================================
+
+    /**
+     * 验证上传文件
+     */
+    private void validateUploadFile(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("文件不能为空");
+        }
+
+        String originalFileName = file.getOriginalFilename();
+        if (originalFileName == null || originalFileName.trim().isEmpty()) {
+            throw new IllegalArgumentException("文件名不能为空");
+        }
+
+        // 检查文件大小
+        Long maxSize = getMaxFileSize();
+        if (file.getSize() > maxSize) {
+            throw new IllegalArgumentException("文件大小超过限制: " + (maxSize / 1024 / 1024) + "MB");
+        }
+
+        // 检查文件类型
+        String fileExtension = getFileExtension(originalFileName);
+        if (!isFileTypeSupported(fileExtension)) {
+            throw new IllegalArgumentException("不支持的文件类型: " + fileExtension);
+        }
+    }
+
+    /**
+     * 检测文件类型
+     */
+    private String detectFileType(String fileName) {
+        if (fileName == null) return "其他";
+
+        String extension = getFileExtension(fileName).toLowerCase();
+
+        if (List.of("pdf", "doc", "docx", "ppt", "pptx", "xls", "xlsx", "txt").contains(extension)) {
+            return "文档";
+        } else if (List.of("mp4", "avi", "mov", "wmv", "flv").contains(extension)) {
+            return "视频";
+        } else if (List.of("mp3", "wav", "aac", "flac").contains(extension)) {
+            return "音频";
+        } else if (List.of("jpg", "jpeg", "png", "gif", "bmp", "svg").contains(extension)) {
+            return "图片";
+        } else if (List.of("zip", "rar", "7z", "tar", "gz").contains(extension)) {
+            return "压缩包";
+        } else {
+            return "其他";
+        }
+    }
+
+    /**
+     * 获取文件扩展名
+     */
+    private String getFileExtension(String fileName) {
+        if (fileName == null || fileName.lastIndexOf('.') == -1) {
+            return "";
+        }
+        return fileName.substring(fileName.lastIndexOf('.') + 1);
+    }
+
+    /**
+     * 获取下一个排序序号
+     */
+    private Integer getNextSortOrder(Long courseId) {
+        try {
+            List<CourseResource> resources = findByCourseId(courseId);
+            return resources.stream()
+                .mapToInt(r -> r.getSortOrder() != null ? r.getSortOrder() : 0)
+                .max()
+                .orElse(0) + 1;
+        } catch (Exception e) {
+            logger.warn("获取下一个排序序号失败，使用默认值", e);
+            return 1;
+        }
+    }
+
+    /**
+     * 更新下载次数
+     */
+    private void updateDownloadCount(Long resourceId) {
+        try {
+            Optional<CourseResource> resourceOpt = findById(resourceId);
+            if (resourceOpt.isPresent()) {
+                CourseResource resource = resourceOpt.get();
+                resource.setDownloadCount((resource.getDownloadCount() != null ? resource.getDownloadCount() : 0) + 1);
+                courseResourceRepository.save(resource);
+            }
+        } catch (Exception e) {
+            logger.warn("更新下载次数失败 - 资源ID: {}", resourceId, e);
+        }
+    }
+
+    /**
+     * 更新查看次数
+     */
+    private void updateViewCount(Long resourceId) {
+        try {
+            Optional<CourseResource> resourceOpt = findById(resourceId);
+            if (resourceOpt.isPresent()) {
+                CourseResource resource = resourceOpt.get();
+                resource.setViewCount((resource.getViewCount() != null ? resource.getViewCount() : 0) + 1);
+                courseResourceRepository.save(resource);
+            }
+        } catch (Exception e) {
+            logger.warn("更新查看次数失败 - 资源ID: {}", resourceId, e);
+        }
+    }
+
+
+
+    /**
+     * 创建BusinessException类（如果不存在）
+     */
+    private static class BusinessException extends RuntimeException {
+        public BusinessException(String message) {
+            super(message);
         }
     }
 }

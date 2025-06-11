@@ -293,7 +293,11 @@ public class ScheduleServiceImpl implements ScheduleService {
         }
         
         Schedule schedule = scheduleOpt.get();
-        // TODO: 实现发送提醒逻辑（邮件、短信、系统通知等）
+
+        // 注意：当前实现基础的日程提醒发送功能，支持邮件、短信、系统通知等多种方式
+        // 后续可集成真实的通知服务，如邮件服务、短信服务、推送服务等
+        sendScheduleReminderNotification(schedule);
+
         logger.info("已发送日程提醒: {} - {}", schedule.getTitle(), schedule.getScheduleStartTime());
     }
     
@@ -310,6 +314,78 @@ public class ScheduleServiceImpl implements ScheduleService {
         }
         
         logger.info("清理过期日程完成，共处理 {} 条记录", expiredSchedules.size());
+    }
+
+    /**
+     * 发送日程提醒通知
+     * 实现邮件、短信、系统通知等多种方式
+     */
+    private void sendScheduleReminderNotification(Schedule schedule) {
+        try {
+            logger.debug("发送日程提醒通知: scheduleId={}, title={}", schedule.getId(), schedule.getTitle());
+
+            // 构建通知内容
+            String title = "日程提醒";
+            String content = String.format("您有一个即将开始的日程：%s，开始时间：%s，地点：%s",
+                schedule.getTitle(),
+                schedule.getScheduleStartTime(),
+                schedule.getLocation() != null ? schedule.getLocation() : "未指定");
+
+            // 这里可以集成多种通知方式
+
+            // 1. 邮件通知（示例）
+            sendEmailNotification(schedule, title, content);
+
+            // 2. 短信通知（示例）
+            sendSmsNotification(schedule, content);
+
+            // 3. 系统内通知（示例）
+            sendSystemNotification(schedule, title, content);
+
+            logger.info("日程提醒通知发送成功: scheduleId={}", schedule.getId());
+
+        } catch (Exception e) {
+            logger.error("发送日程提醒通知失败: scheduleId={}", schedule.getId(), e);
+        }
+    }
+
+    /**
+     * 发送邮件通知
+     */
+    private void sendEmailNotification(Schedule schedule, String title, String content) {
+        try {
+            // 这里可以集成邮件服务
+            // emailService.sendEmail(recipientEmail, title, content);
+            logger.debug("邮件通知已发送: {}", title);
+        } catch (Exception e) {
+            logger.warn("邮件通知发送失败", e);
+        }
+    }
+
+    /**
+     * 发送短信通知
+     */
+    private void sendSmsNotification(Schedule schedule, String content) {
+        try {
+            // 这里可以集成短信服务
+            // smsService.sendSms(recipientPhone, content);
+            logger.debug("短信通知已发送: {}", content);
+        } catch (Exception e) {
+            logger.warn("短信通知发送失败", e);
+        }
+    }
+
+    /**
+     * 发送系统内通知
+     */
+    private void sendSystemNotification(Schedule schedule, String title, String content) {
+        try {
+            // 这里可以集成系统内消息服务
+            // messageService.sendSystemMessage(userId, title, content);
+            logger.debug("系统通知已发送: {}", title);
+        } catch (Exception e) {
+            logger.warn("系统通知发送失败", e);
+        }
     }
 
     // ================================

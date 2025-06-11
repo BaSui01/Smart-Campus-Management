@@ -16,6 +16,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -78,43 +79,43 @@ public class SecurityConfig {
             .authorizeHttpRequests(authz -> authz
                 // 公开访问的端点 - 首页和静态资源
                 .requestMatchers(
-                    "/",                    // 首页
-                    "/index",               // 首页别名
-                    "/home",                // 首页别名
-                    "/about",               // 关于我们
-                    "/contact",             // 联系我们
-                    "/help",                // 帮助页面
-                    "/privacy",             // 隐私政策
-                    "/terms",               // 服务条款
-                    "/admin/login",         // 登录页面
-                    "/admin/captcha",       // 验证码接口
-                    "/admin/check-login",   // 登录状态检查
-                    "/static/**",           // 静态资源
-                    "/css/**",              // CSS文件
-                    "/js/**",               // JavaScript文件
-                    "/images/**",           // 图片文件
-                    "/fonts/**",            // 字体文件
-                    "/favicon.ico",         // 网站图标
-                    "/error"                // 错误页面
+                    new AntPathRequestMatcher("/"),                    // 首页
+                    new AntPathRequestMatcher("/index"),               // 首页别名
+                    new AntPathRequestMatcher("/home"),                // 首页别名
+                    new AntPathRequestMatcher("/about"),               // 关于我们
+                    new AntPathRequestMatcher("/contact"),             // 联系我们
+                    new AntPathRequestMatcher("/help"),                // 帮助页面
+                    new AntPathRequestMatcher("/privacy"),             // 隐私政策
+                    new AntPathRequestMatcher("/terms"),               // 服务条款
+                    new AntPathRequestMatcher("/admin/login"),         // 登录页面
+                    new AntPathRequestMatcher("/admin/captcha"),       // 验证码接口
+                    new AntPathRequestMatcher("/admin/check-login"),   // 登录状态检查
+                    new AntPathRequestMatcher("/static/**"),           // 静态资源
+                    new AntPathRequestMatcher("/css/**"),              // CSS文件
+                    new AntPathRequestMatcher("/js/**"),               // JavaScript文件
+                    new AntPathRequestMatcher("/images/**"),           // 图片文件
+                    new AntPathRequestMatcher("/fonts/**"),            // 字体文件
+                    new AntPathRequestMatcher("/favicon.ico"),         // 网站图标
+                    new AntPathRequestMatcher("/error")                // 错误页面
                 ).permitAll()
 
                 // API文档完全开放，不需要认证
                 .requestMatchers(
-                    "/swagger-ui/**",       // Swagger UI
-                    "/swagger-ui.html",     // Swagger UI首页
-                    "/v3/api-docs/**",      // OpenAPI 3.0文档
-                    "/v2/api-docs/**",      // OpenAPI 2.0文档
-                    "/swagger-resources/**", // Swagger资源
-                    "/webjars/**",          // Web JAR资源
-                    "/doc.html",            // Knife4j文档
-                    "/favicon.ico"          // 图标
+                    new AntPathRequestMatcher("/swagger-ui/**"),       // Swagger UI
+                    new AntPathRequestMatcher("/swagger-ui.html"),     // Swagger UI首页
+                    new AntPathRequestMatcher("/v3/api-docs/**"),      // OpenAPI 3.0文档
+                    new AntPathRequestMatcher("/v2/api-docs/**"),      // OpenAPI 2.0文档
+                    new AntPathRequestMatcher("/swagger-resources/**"), // Swagger资源
+                    new AntPathRequestMatcher("/webjars/**"),          // Web JAR资源
+                    new AntPathRequestMatcher("/doc.html"),            // Knife4j文档
+                    new AntPathRequestMatcher("/favicon.ico")          // 图标
                 ).permitAll()
 
                 // API接口开放访问（使用自定义拦截器处理认证）
-                .requestMatchers("/api/**").permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/api/**")).permitAll()
 
                 // 管理后台使用自定义拦截器认证，这里允许访问
-                .requestMatchers("/admin/**").permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/admin/**")).permitAll()
 
                 // 其他所有请求都允许访问
                 .anyRequest().permitAll()

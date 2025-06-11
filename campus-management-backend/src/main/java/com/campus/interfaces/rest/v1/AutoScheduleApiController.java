@@ -10,7 +10,6 @@ import com.campus.interfaces.rest.common.BaseController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -36,7 +35,6 @@ public class AutoScheduleApiController extends BaseController {
 
     private final AutoScheduleService autoScheduleService;
 
-    @Autowired
     public AutoScheduleApiController(AutoScheduleService autoScheduleService) {
         this.autoScheduleService = autoScheduleService;
     }

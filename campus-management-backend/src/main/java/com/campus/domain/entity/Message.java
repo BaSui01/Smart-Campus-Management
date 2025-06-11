@@ -18,7 +18,7 @@ import java.util.List;
  * @since 2025-06-07
  */
 @Entity
-@Table(name = "messages", indexes = {
+@Table(name = "tb_message", indexes = {
     @Index(name = "idx_sender_id", columnList = "sender_id"),
     @Index(name = "idx_receiver_id", columnList = "receiver_id"),
     @Index(name = "idx_message_type", columnList = "message_type"),

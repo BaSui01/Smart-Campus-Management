@@ -17,7 +17,7 @@ import java.math.BigDecimal;
  * @since 2025-06-07
  */
 @Entity
-@Table(name = "exam_questions")
+@Table(name = "tb_exam_question")
 public class ExamQuestion extends BaseEntity {
 
     /**

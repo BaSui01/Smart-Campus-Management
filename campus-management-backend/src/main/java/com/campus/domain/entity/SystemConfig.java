@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
  * @since 2025-06-07
  */
 @Entity
-@Table(name = "system_configs", indexes = {
+@Table(name = "tb_system_config", indexes = {
     @Index(name = "idx_config_key", columnList = "config_key", unique = true),
     @Index(name = "idx_config_group", columnList = "config_group"),
     @Index(name = "idx_is_system", columnList = "is_system")

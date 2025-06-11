@@ -4,8 +4,6 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.data.domain.AuditorAware;
-import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import java.util.Optional;
@@ -19,14 +17,13 @@ import java.util.Optional;
  * @since 2025-01-27
  */
 @TestConfiguration
-@EnableJpaAuditing(auditorAwareRef = "testAuditorProvider")
-@EnableJpaRepositories(basePackages = "com.campus.domain.repository")
 @EnableTransactionManagement
 public class TestJpaConfig {
 
     /**
      * 测试环境审计提供者
      * 返回固定的测试用户
+     * 注意：不启用JPA审计以避免与主配置冲突
      */
     @Bean("testAuditorProvider")
     @Primary

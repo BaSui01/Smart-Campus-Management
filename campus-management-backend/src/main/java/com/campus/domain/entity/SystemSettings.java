@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
  * @since 2025-06-05
  */
 @Entity
-@Table(name = "system_settings")
+@Table(name = "tb_system_settings")
 public class SystemSettings {
     
     @Id

@@ -1,8 +1,9 @@
 package com.campus.application.service;
 
-import com.campus.domain.repository.UserRepository;
-import com.campus.domain.repository.StudentRepository;
-import com.campus.domain.repository.DepartmentRepository;
+import com.campus.domain.repository.auth.UserRepository;
+import com.campus.domain.repository.organization.DepartmentRepository;
+import com.campus.domain.repository.organization.StudentRepository;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;

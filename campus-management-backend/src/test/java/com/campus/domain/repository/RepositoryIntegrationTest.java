@@ -1,8 +1,12 @@
 package com.campus.domain.repository;
 
-import com.campus.domain.entity.User;
-import com.campus.domain.entity.Student;
-import com.campus.domain.entity.Department;
+import com.campus.domain.entity.auth.User;
+import com.campus.domain.entity.organization.Department;
+import com.campus.domain.entity.organization.Student;
+import com.campus.domain.repository.auth.UserRepository;
+import com.campus.domain.repository.organization.DepartmentRepository;
+import com.campus.domain.repository.organization.StudentRepository;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;

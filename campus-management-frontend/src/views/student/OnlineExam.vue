@@ -293,11 +293,11 @@
     </el-dialog>
 
     <!-- 防作弊监控 -->
-    <!-- <anti-cheat-monitor
+    <anti-cheat-monitor
       v-if="examInfo.antiCheatEnabled"
       :exam-record-id="examRecordId"
       @cheat-warning="handleCheatWarning"
-    /> -->
+    />
   </div>
 </template>
 
@@ -307,7 +307,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Timer, ArrowLeft, ArrowRight, Warning } from '@element-plus/icons-vue'
 import { examApi } from '@/api/exam'
-// import AntiCheatMonitor from '@/components/AntiCheatMonitor.vue'
+import AntiCheatMonitor from '@/components/AntiCheatMonitor.vue'
 
 const route = useRoute()
 const router = useRouter()

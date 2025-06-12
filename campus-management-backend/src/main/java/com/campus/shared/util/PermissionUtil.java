@@ -1,7 +1,8 @@
 package com.campus.shared.util;
 
-import com.campus.application.service.UserService;
-import com.campus.domain.entity.User;
+import com.campus.application.service.auth.UserService;
+import com.campus.domain.entity.auth.User;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;

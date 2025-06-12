@@ -1,7 +1,5 @@
 package com.campus.shared.config;
 
-import java.util.Arrays;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,12 +15,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.campus.shared.security.JwtAuthenticationFilter;
-
+import com.campus.shared.security.SecurityConstants;
 
 /**
  * Spring Security 配置类
@@ -38,6 +34,9 @@ public class SecurityConfig {
 
     @Autowired
     private JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    @Autowired
+    private CorsConfigurationSource corsConfigurationSource;
 
     /**
      * 密码编码器
@@ -66,120 +65,72 @@ public class SecurityConfig {
             // 禁用CSRF（因为使用JWT）
             .csrf(AbstractHttpConfigurer::disable)
 
-            // 配置CORS
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            // 配置CORS - 使用WebConfig中的配置源
+            .cors(cors -> cors.configurationSource(corsConfigurationSource))
 
-            // 配置会话管理为有状态（传统session方式）
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+            // 配置会话管理为无状态（适合API）
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
             // 添加JWT认证过滤器
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
 
             // 配置请求授权
             .authorizeHttpRequests(authz -> authz
+                // API接口完全开放，不需要Spring Security认证
+                .requestMatchers(new AntPathRequestMatcher(SecurityConstants.API_PATH_PATTERN)).permitAll()
+
                 // 公开访问的端点 - 首页和静态资源
-                .requestMatchers(
-                    new AntPathRequestMatcher("/"),                    // 首页
-                    new AntPathRequestMatcher("/index"),               // 首页别名
-                    new AntPathRequestMatcher("/home"),                // 首页别名
-                    new AntPathRequestMatcher("/about"),               // 关于我们
-                    new AntPathRequestMatcher("/contact"),             // 联系我们
-                    new AntPathRequestMatcher("/help"),                // 帮助页面
-                    new AntPathRequestMatcher("/privacy"),             // 隐私政策
-                    new AntPathRequestMatcher("/terms"),               // 服务条款
-                    new AntPathRequestMatcher("/admin/login"),         // 登录页面
-                    new AntPathRequestMatcher("/admin/captcha"),       // 验证码接口
-                    new AntPathRequestMatcher("/admin/check-login"),   // 登录状态检查
-                    new AntPathRequestMatcher("/static/**"),           // 静态资源
-                    new AntPathRequestMatcher("/css/**"),              // CSS文件
-                    new AntPathRequestMatcher("/js/**"),               // JavaScript文件
-                    new AntPathRequestMatcher("/images/**"),           // 图片文件
-                    new AntPathRequestMatcher("/fonts/**"),            // 字体文件
-                    new AntPathRequestMatcher("/favicon.ico"),         // 网站图标
-                    new AntPathRequestMatcher("/error")                // 错误页面
-                ).permitAll()
+                .requestMatchers(SecurityConstants.getPublicEndpoints()).permitAll()
 
                 // API文档完全开放，不需要认证
-                .requestMatchers(
-                    new AntPathRequestMatcher("/swagger-ui/**"),       // Swagger UI
-                    new AntPathRequestMatcher("/swagger-ui.html"),     // Swagger UI首页
-                    new AntPathRequestMatcher("/v3/api-docs/**"),      // OpenAPI 3.0文档
-                    new AntPathRequestMatcher("/v2/api-docs/**"),      // OpenAPI 2.0文档
-                    new AntPathRequestMatcher("/swagger-resources/**"), // Swagger资源
-                    new AntPathRequestMatcher("/webjars/**"),          // Web JAR资源
-                    new AntPathRequestMatcher("/doc.html"),            // Knife4j文档
-                    new AntPathRequestMatcher("/favicon.ico")          // 图标
-                ).permitAll()
-
-                // API接口开放访问（使用自定义拦截器处理认证）
-                .requestMatchers(new AntPathRequestMatcher("/api/v1/**")).permitAll()
+                .requestMatchers(SecurityConstants.getApiDocEndpoints()).permitAll()
 
                 // 管理后台使用自定义拦截器认证，这里允许访问
-                .requestMatchers(new AntPathRequestMatcher("/admin/**")).permitAll()
+                .requestMatchers(new AntPathRequestMatcher(SecurityConstants.ADMIN_PATH_PATTERN)).permitAll()
 
                 // 其他所有请求都允许访问
                 .anyRequest().permitAll()
             )
 
-            // 配置登录页面
-            .formLogin(form -> form
-                .loginPage("/admin/login")
-                .permitAll()
-                .disable() // 禁用默认表单登录，使用自定义登录
-            )
+            // 完全禁用表单登录
+            .formLogin(AbstractHttpConfigurer::disable)
+
+            // 禁用HTTP Basic认证
+            .httpBasic(AbstractHttpConfigurer::disable)
 
             // 配置登出
             .logout(logout -> logout
-                .logoutUrl("/admin/logout")
-                .logoutSuccessUrl("/?logout=true")
+                .logoutUrl(SecurityConstants.LOGOUT_URL)
+                .logoutSuccessUrl(SecurityConstants.LOGOUT_SUCCESS_URL)
                 .invalidateHttpSession(true)
                 .deleteCookies("JSESSIONID")
                 .permitAll()
             )
 
-            // 配置异常处理
+            // 配置异常处理 - 对于API请求返回JSON错误
             .exceptionHandling(exceptions -> exceptions
-                .accessDeniedPage("/admin/access-denied")
+                .accessDeniedPage(SecurityConstants.ACCESS_DENIED_PAGE)
                 .authenticationEntryPoint((request, response, authException) -> {
                     String requestURI = request.getRequestURI();
+
+                    // 对于API请求，返回JSON错误
+                    if (requestURI.startsWith(SecurityConstants.API_PREFIX)) {
+                        response.setStatus(401);
+                        response.setContentType("application/json;charset=UTF-8");
+                        response.getWriter().write("{\"code\":401,\"message\":\"未授权访问\",\"data\":null}");
+                        return;
+                    }
+
                     // 如果是管理后台页面，重定向到登录页面
-                    if (requestURI.startsWith("/admin/")) {
-                        response.sendRedirect("/admin/login");
+                    if (requestURI.startsWith(SecurityConstants.ADMIN_PREFIX)) {
+                        response.sendRedirect(SecurityConstants.LOGIN_PAGE);
                     } else {
                         // 其他页面重定向到首页
-                        response.sendRedirect("/");
+                        response.sendRedirect(SecurityConstants.HOME_PAGE);
                     }
                 })
             );
 
         return http.build();
-    }
-
-    /**
-     * CORS配置
-     */
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-
-        // 允许的域名
-        configuration.setAllowedOriginPatterns(Arrays.asList("*"));
-
-        // 允许的HTTP方法
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-
-        // 允许的请求头
-        configuration.setAllowedHeaders(Arrays.asList("*"));
-
-        // 允许发送凭证
-        configuration.setAllowCredentials(true);
-
-        // 预检请求的缓存时间
-        configuration.setMaxAge(3600L);
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-
-        return source;
     }
 }

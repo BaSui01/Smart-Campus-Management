@@ -1,8 +1,27 @@
 <template>
   <div class="teacher-dashboard">
-    <div class="dashboard-header">
-      <h1>教师首页</h1>
-      <p>欢迎回来，{{ userName }}老师！</p>
+    <!-- 欢迎区域 -->
+    <div class="welcome-section">
+      <div class="welcome-content">
+        <div class="welcome-text">
+          <h1>欢迎回来，{{ userName }}老师！</h1>
+          <p>今天是 {{ currentDate }}，{{ currentWeekday }}</p>
+          <p class="weather-info" v-if="weatherInfo">
+            <el-icon><Sunny /></el-icon>
+            {{ weatherInfo.weather }} {{ weatherInfo.temperature }}°C
+          </p>
+        </div>
+        <div class="welcome-actions">
+          <el-button type="primary" @click="quickCreateAssignment">
+            <el-icon><Plus /></el-icon>
+            快速布置作业
+          </el-button>
+          <el-button @click="goToSchedule">
+            <el-icon><Calendar /></el-icon>
+            查看课程表
+          </el-button>
+        </div>
+      </div>
     </div>
     
     <!-- 数据统计 -->
@@ -194,24 +213,44 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import { 
-  Reading, 
-  UserFilled, 
-  Document, 
-  Edit, 
-  Calendar, 
+import { ElMessage, ElMessageBox } from 'element-plus'
+import {
+  Reading,
+  UserFilled,
+  Document,
+  Edit,
+  Calendar,
   Select,
-  Warning,
-  Clock,
+  Sunny,
+  Plus,
+  TrendCharts,
+  Bell,
+  Timer,
   Star
 } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/auth'
+import { teacherApi } from '@/api/teacher'
+import { formatDate, getWeekday } from '@/utils/date'
+
+// 定义页面元信息
+defineOptions({
+  name: 'TeacherDashboard'
+})
 
 const router = useRouter()
 const authStore = useAuthStore()
 
-const userName = computed(() => authStore.userName)
+// 计算属性
+const userName = computed(() => authStore.userName || '老师')
+const currentDate = computed(() => formatDate(new Date()))
+const currentWeekday = computed(() => getWeekday(new Date()))
+
+// 响应式数据
+const loading = ref(false)
+const weatherInfo = ref({
+  weather: '晴',
+  temperature: 22
+})
 
 const teacherStats = ref({
   courseCount: 4,
@@ -356,12 +395,371 @@ const goToGrades = () => {
   router.push('/teacher/grades')
 }
 
+// 新增方法
+const quickCreateAssignment = () => {
+  router.push('/teacher/assignments?action=create')
+}
+
+const loadDashboardData = async () => {
+  try {
+    loading.value = true
+    // 加载教师统计数据
+    const statsResponse = await teacherApi.getTeacherStats()
+    teacherStats.value = statsResponse.data
+
+    // 加载今日课程
+    const coursesResponse = await teacherApi.getTodayCourses()
+    todayCourses.value = coursesResponse.data
+
+    // 加载待处理事项
+    const tasksResponse = await teacherApi.getPendingTasks()
+    pendingTasks.value = tasksResponse.data
+
+    // 加载最近成绩
+    const gradesResponse = await teacherApi.getRecentGrades()
+    recentGrades.value = gradesResponse.data
+
+  } catch (error) {
+    console.error('加载仪表板数据失败:', error)
+    ElMessage.error('加载数据失败，请刷新页面重试')
+  } finally {
+    loading.value = false
+  }
+}
+
+// 生命周期
 onMounted(() => {
-  // 初始化数据
+  loadDashboardData()
 })
 </script>
 
+</script>
 
-<style>
-@import '@/styles/teacher.css';
+<style scoped>
+/* 教师仪表板样式 */
+.teacher-dashboard {
+  padding: 0;
+  background: #f5f7fa;
+  min-height: calc(100vh - 64px);
+}
+
+/* 欢迎区域 */
+.welcome-section {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 32px 24px;
+  margin-bottom: 24px;
+  border-radius: 12px;
+  margin: 24px;
+}
+
+.welcome-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.welcome-text h1 {
+  font-size: 28px;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+}
+
+.welcome-text p {
+  margin: 4px 0;
+  opacity: 0.9;
+  font-size: 16px;
+}
+
+.weather-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.welcome-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.welcome-actions .el-button {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  backdrop-filter: blur(10px);
+}
+
+.welcome-actions .el-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.welcome-actions .el-button--primary {
+  background: rgba(255, 255, 255, 0.9);
+  color: #667eea;
+  border-color: transparent;
+}
+
+.welcome-actions .el-button--primary:hover {
+  background: white;
+}
+
+/* 统计卡片 */
+.stats-row {
+  margin: 0 24px 24px 24px;
+}
+
+.stats-card {
+  border-radius: 12px;
+  border: none;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.stats-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.stats-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px;
+}
+
+.stats-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.stats-icon.courses {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.stats-icon.students {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.stats-icon.grades {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.stats-icon.assignments {
+  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+}
+
+.stats-info h3 {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+  color: #1a202c;
+}
+
+.stats-info p {
+  margin: 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+/* 内容区域 */
+.content-row {
+  margin: 0 24px 24px 24px;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a202c;
+}
+
+/* 课程列表 */
+.course-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.course-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  transition: all 0.3s ease;
+}
+
+.course-item:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.course-time {
+  font-size: 14px;
+  font-weight: 600;
+  color: #667eea;
+  min-width: 120px;
+}
+
+.course-info {
+  flex: 1;
+}
+
+.course-info h4 {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a202c;
+}
+
+.course-info p {
+  margin: 0;
+  font-size: 14px;
+  color: #64748b;
+}
+
+/* 任务列表 */
+.task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.task-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  transition: all 0.3s ease;
+}
+
+.task-item:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.task-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.task-content {
+  flex: 1;
+}
+
+.task-content h5 {
+  margin: 0 0 4px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a202c;
+}
+
+.task-content p {
+  margin: 0 0 4px 0;
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+.task-time {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+/* 空状态 */
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #94a3b8;
+}
+
+.empty-state p {
+  margin: 12px 0 0 0;
+  font-size: 14px;
+}
+
+/* 成绩相关样式 */
+.score-excellent {
+  color: #22c55e;
+  font-weight: 600;
+}
+
+.score-good {
+  color: #3b82f6;
+  font-weight: 600;
+}
+
+.score-fair {
+  color: #f59e0b;
+  font-weight: 600;
+}
+
+.score-poor {
+  color: #ef4444;
+  font-weight: 600;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .teacher-dashboard {
+    padding: 0;
+  }
+
+  .welcome-section {
+    margin: 16px;
+    padding: 24px 16px;
+  }
+
+  .welcome-content {
+    flex-direction: column;
+    gap: 20px;
+    text-align: center;
+  }
+
+  .welcome-actions {
+    justify-content: center;
+  }
+
+  .stats-row,
+  .content-row {
+    margin: 0 16px 16px 16px;
+  }
+
+  .course-item,
+  .task-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .course-time {
+    min-width: auto;
+  }
+}
 </style>

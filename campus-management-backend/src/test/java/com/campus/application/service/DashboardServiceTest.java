@@ -1,7 +1,14 @@
 package com.campus.application.service;
 
+import com.campus.application.Implement.system.DashboardServiceImpl;
+import com.campus.application.service.academic.CourseService;
+import com.campus.application.service.academic.CourseScheduleService;
 import com.campus.application.dto.DashboardStatsDTO;
-import com.campus.application.service.impl.DashboardServiceImpl;
+import com.campus.application.service.auth.UserService;
+import com.campus.application.service.finance.PaymentRecordService;
+import com.campus.application.service.organization.SchoolClassService;
+import com.campus.application.service.academic.StudentService;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

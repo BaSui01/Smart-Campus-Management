@@ -1,6 +1,5 @@
 package com.campus.domain.repository;
 
-import com.campus.domain.entity.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +9,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.ActiveProfiles;
+
+import com.campus.domain.entity.auth.User;
+import com.campus.domain.repository.auth.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;

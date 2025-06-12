@@ -1,9 +1,9 @@
 package com.campus.infrastructure;
 
-import com.campus.domain.entity.Student;
-import com.campus.application.service.EmailService;
-import com.campus.application.service.PaymentRecordService;
-import com.campus.domain.entity.FeeItem;
+import com.campus.application.service.communication.EmailService;
+import com.campus.application.service.finance.PaymentRecordService;
+import com.campus.domain.entity.finance.FeeItem;
+import com.campus.domain.entity.organization.Student;
 import com.campus.shared.util.RedisDistributedLock;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;

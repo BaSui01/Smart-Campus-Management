@@ -149,7 +149,7 @@ public class GlobalExceptionHandler {
 
         logger.warn("业务异常: {}", ex.getMessage());
 
-        ApiResponse<Object> response = ApiResponse.error(ex.getCode(), ex.getMessage());
+        ApiResponse<Object> response = ApiResponse.error(ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
@@ -218,42 +218,6 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 
-    /**
-     * 自定义业务异常类
-     */
-    public static class BusinessException extends RuntimeException {
-        private final Integer code;
-
-        public BusinessException(String message) {
-            super(message);
-            this.code = 400;
-        }
-
-        public BusinessException(Integer code, String message) {
-            super(message);
-            this.code = code;
-        }
-
-        public BusinessException(String message, Throwable cause) {
-            super(message, cause);
-            this.code = 400;
-        }
-
-        public Integer getCode() {
-            return code;
-        }
-    }
-
-    /**
-     * 资源未找到异常类
-     */
-    public static class ResourceNotFoundException extends RuntimeException {
-        public ResourceNotFoundException(String message) {
-            super(message);
-        }
-
-        public ResourceNotFoundException(String message, Throwable cause) {
-            super(message, cause);
-        }
-    }
+    // 注意：BusinessException 和 ResourceNotFoundException 已在独立文件中定义
+    // 不再在此处重复定义，避免类冲突
 }

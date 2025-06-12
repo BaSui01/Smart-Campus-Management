@@ -35,6 +35,7 @@
             :prefix-icon="Search"
             @keyup.enter="searchBooks"
             @clear="searchBooks"
+            @input="debouncedSearch"
           >
             <template #append>
               <el-button @click="searchBooks" :loading="loading.search">
@@ -273,5 +274,648 @@
         />
       </div>
     </el-card>
+
+    <!-- 图书详情弹窗 -->
+    <el-dialog
+      v-model="bookDetailVisible"
+      title="图书详情"
+      width="80%"
+      :before-close="() => { bookDetailVisible = false; selectedBook = null }"
+    >
+      <BookDetail
+        v-if="selectedBook"
+        :book="selectedBook"
+        @borrow="borrowBook"
+        @reserve="reserveBook"
+        @view-book="viewBookDetail"
+      />
+    </el-dialog>
   </div>
 </template>
+
+<script setup>
+import { ref, reactive, onMounted, computed } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import {
+  Reading,
+  Search,
+  Grid,
+  List,
+  Clock,
+  Document,
+  Star,
+  Refresh,
+  Picture
+} from '@element-plus/icons-vue'
+import { libraryApi } from '@/api/library'
+import BookDetail from './components/BookDetail.vue'
+import { debounce } from '@/utils/performance'
+
+// 响应式数据
+const loading = reactive({
+  search: false,
+  books: false
+})
+
+const searchQuery = ref('')
+const filterCategory = ref('')
+const filterStatus = ref('')
+const viewMode = ref('grid')
+const currentPage = ref(1)
+const pageSize = ref(20)
+const total = ref(0)
+
+const books = ref([])
+const myBorrowedBooks = ref([])
+const myReservations = ref([])
+const libraryStats = reactive({
+  totalBooks: 0,
+  borrowedBooks: 0,
+  availableBooks: 0
+})
+
+// 弹窗控制
+const bookDetailVisible = ref(false)
+const selectedBook = ref(null)
+
+// 图书分类
+const bookCategories = ref([])
+
+// 方法
+const loadLibraryStats = async () => {
+  try {
+    const [statsResponse, myStatsResponse] = await Promise.all([
+      libraryApi.getLibraryStats(),
+      libraryApi.getMyLibraryStats()
+    ])
+
+    const stats = statsResponse.data
+    const myStats = myStatsResponse.data
+
+    libraryStats.totalBooks = stats.totalBooks || 50000
+    libraryStats.borrowedBooks = myStats.borrowedCount || 0
+    libraryStats.availableBooks = stats.availableBooks || 49995
+  } catch (error) {
+    console.error('加载图书馆统计失败:', error)
+    // 使用默认值
+    libraryStats.totalBooks = 50000
+    libraryStats.borrowedBooks = 0
+    libraryStats.availableBooks = 49995
+  }
+}
+
+const searchBooks = async () => {
+  loading.books = true
+
+  try {
+    const { data } = await libraryApi.searchBooks({
+      page: currentPage.value,
+      size: pageSize.value,
+      keyword: searchQuery.value,
+      category: filterCategory.value,
+      status: filterStatus.value
+    })
+
+    const bookList = Array.isArray(data) ? data : (data.books || data.list || data.content || [])
+
+    books.value = bookList.map(book => ({
+      id: book.id,
+      title: book.title || book.bookTitle,
+      author: book.author || book.authorName,
+      category: book.category || book.categoryName,
+      isbn: book.isbn,
+      publisher: book.publisher || book.publisherName,
+      publishDate: book.publishDate || book.publishYear,
+      status: book.status || (book.availableCopies > 0 ? 'available' : 'borrowed'),
+      coverUrl: book.coverUrl || book.imageUrl,
+      description: book.description || book.summary,
+      location: book.location || book.shelfLocation,
+      totalCopies: book.totalCopies || 1,
+      availableCopies: book.availableCopies || 0,
+      rating: book.rating || 0,
+      reviewCount: book.reviewCount || 0
+    }))
+
+    total.value = data.total || data.totalElements || bookList.length
+
+  } catch (error) {
+    console.error('搜索图书失败:', error)
+    ElMessage.error('搜索图书失败')
+
+    // 如果API失败，使用模拟数据
+    books.value = generateMockBooks()
+    total.value = 100
+  } finally {
+    loading.books = false
+  }
+}
+
+const generateMockBooks = () => {
+  const mockBooks = []
+  const titles = [
+    'JavaScript高级程序设计',
+    'Vue.js实战',
+    '深入理解计算机系统',
+    '算法导论',
+    '设计模式',
+    '数据结构与算法分析',
+    'Spring Boot实战',
+    'MySQL必知必会',
+    'Redis设计与实现',
+    '高等数学',
+    '线性代数',
+    '概率论与数理统计',
+    '大学物理',
+    '有机化学',
+    '细胞生物学'
+  ]
+
+  const authors = [
+    '张三', '李四', '王五', '赵六', '钱七',
+    'Nicholas C. Zakas', 'Evan You', 'Robert C. Martin'
+  ]
+
+  const categories = ['computer', 'mathematics', 'physics', 'chemistry', 'biology']
+  const statuses = ['available', 'borrowed', 'reserved']
+
+  for (let i = 0; i < 20; i++) {
+    mockBooks.push({
+      id: i + 1,
+      title: titles[i % titles.length],
+      author: authors[i % authors.length],
+      category: categories[i % categories.length],
+      isbn: `978-7-${String(Math.floor(Math.random() * 900000) + 100000)}-${Math.floor(Math.random() * 90) + 10}-${Math.floor(Math.random() * 9) + 1}`,
+      publisher: '清华大学出版社',
+      publishDate: `202${Math.floor(Math.random() * 4)}`,
+      status: statuses[i % statuses.length],
+      coverUrl: null,
+      description: '这是一本优秀的图书，内容丰富，适合学习和研究。',
+      location: `A${Math.floor(Math.random() * 10) + 1}-${Math.floor(Math.random() * 100) + 1}`,
+      totalCopies: Math.floor(Math.random() * 10) + 1,
+      availableCopies: Math.floor(Math.random() * 5) + 1
+    })
+  }
+
+  return mockBooks
+}
+
+const loadMyBorrowedBooks = async () => {
+  try {
+    const { data } = await libraryApi.getMyBorrows({ status: 'borrowed' })
+    const borrowList = Array.isArray(data) ? data : (data.borrows || data.list || [])
+
+    myBorrowedBooks.value = borrowList.map(borrow => ({
+      id: borrow.id,
+      title: borrow.bookTitle || borrow.book?.title,
+      author: borrow.bookAuthor || borrow.book?.author,
+      borrowDate: borrow.borrowDate || borrow.createTime,
+      dueDate: borrow.dueDate || borrow.returnDate,
+      status: borrow.status || 'borrowed',
+      renewCount: borrow.renewCount || 0,
+      maxRenewCount: borrow.maxRenewCount || 2
+    }))
+  } catch (error) {
+    console.error('加载借阅图书失败:', error)
+    myBorrowedBooks.value = []
+  }
+}
+
+const loadMyReservations = async () => {
+  try {
+    const { data } = await libraryApi.getMyReservations({ status: 'active' })
+    const reservationList = Array.isArray(data) ? data : (data.reservations || data.list || [])
+
+    myReservations.value = reservationList.map(reservation => ({
+      id: reservation.id,
+      title: reservation.bookTitle || reservation.book?.title,
+      author: reservation.bookAuthor || reservation.book?.author,
+      reserveDate: reservation.reserveDate || reservation.createTime,
+      status: reservation.status || 'reserved',
+      queuePosition: reservation.queuePosition || 1,
+      estimatedDate: reservation.estimatedDate
+    }))
+  } catch (error) {
+    console.error('加载预约图书失败:', error)
+    myReservations.value = []
+  }
+}
+
+// 加载图书分类
+const loadBookCategories = async () => {
+  try {
+    const { data } = await libraryApi.getBookCategories()
+    const categories = Array.isArray(data) ? data : (data.categories || [])
+
+    bookCategories.value = categories.map(category => ({
+      label: category.name || category.categoryName,
+      value: category.id || category.code || category.value
+    }))
+  } catch (error) {
+    console.error('加载图书分类失败:', error)
+    // 使用默认分类
+    bookCategories.value = [
+      { label: '计算机科学', value: 'computer' },
+      { label: '数学', value: 'mathematics' },
+      { label: '物理学', value: 'physics' },
+      { label: '化学', value: 'chemistry' },
+      { label: '生物学', value: 'biology' },
+      { label: '文学', value: 'literature' },
+      { label: '历史', value: 'history' },
+      { label: '哲学', value: 'philosophy' },
+      { label: '经济学', value: 'economics' },
+      { label: '管理学', value: 'management' }
+    ]
+  }
+}
+
+const refreshBooks = () => {
+  currentPage.value = 1
+  searchBooks()
+}
+
+const borrowBook = async (book) => {
+  try {
+    await ElMessageBox.confirm(
+      `确定要借阅《${book.title}》吗？借期为30天。`,
+      '确认借阅',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+
+    const { data } = await libraryApi.borrowBook({
+      bookId: book.id,
+      borrowDays: 30
+    })
+
+    // 更新图书状态
+    book.status = 'borrowed'
+    book.availableCopies = Math.max(0, book.availableCopies - 1)
+
+    // 添加到我的借阅列表
+    myBorrowedBooks.value.push({
+      id: data.id,
+      title: book.title,
+      author: book.author,
+      borrowDate: data.borrowDate || new Date().toISOString().split('T')[0],
+      dueDate: data.dueDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      status: 'borrowed'
+    })
+
+    ElMessage.success('借阅成功')
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('借阅失败:', error)
+      ElMessage.error('借阅失败，请稍后重试')
+    }
+  }
+}
+
+const reserveBook = async (book) => {
+  try {
+    await ElMessageBox.confirm(
+      `确定要预约《${book.title}》吗？图书可借时会通知您。`,
+      '确认预约',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+
+    const { data } = await libraryApi.reserveBook(book.id)
+
+    // 更新图书状态
+    book.status = 'reserved'
+
+    // 添加到我的预约列表
+    myReservations.value.push({
+      id: data.id,
+      title: book.title,
+      author: book.author,
+      reserveDate: data.reserveDate || new Date().toISOString().split('T')[0],
+      status: 'reserved',
+      queuePosition: data.queuePosition || 1
+    })
+
+    ElMessage.success(`预约成功，您在队列中的位置：第${data.queuePosition || 1}位`)
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('预约失败:', error)
+      ElMessage.error('预约失败，请稍后重试')
+    }
+  }
+}
+
+const viewBookDetail = async (book) => {
+  try {
+    const { data } = await libraryApi.getBookDetail(book.id)
+
+    selectedBook.value = {
+      ...book,
+      ...data
+    }
+    bookDetailVisible.value = true
+  } catch (error) {
+    console.error('加载图书详情失败:', error)
+    ElMessage.error('加载图书详情失败')
+
+    // 如果API失败，使用基本信息显示详情
+    selectedBook.value = book
+    bookDetailVisible.value = true
+  }
+}
+
+const showMyBorrowedBooks = () => {
+  ElMessage.info('显示我的借阅图书')
+}
+
+const showReservations = () => {
+  ElMessage.info('显示我的预约图书')
+}
+
+const showBorrowHistory = () => {
+  ElMessage.info('显示借阅历史')
+}
+
+const showRecommendations = () => {
+  ElMessage.info('显示推荐图书')
+}
+
+const getStatusType = (status) => {
+  const typeMap = {
+    'available': 'success',
+    'borrowed': 'warning',
+    'reserved': 'info'
+  }
+  return typeMap[status] || 'info'
+}
+
+const getStatusText = (status) => {
+  const textMap = {
+    'available': '可借',
+    'borrowed': '已借出',
+    'reserved': '预约中'
+  }
+  return textMap[status] || '未知'
+}
+
+const handleSizeChange = (size) => {
+  pageSize.value = size
+  currentPage.value = 1
+  searchBooks()
+}
+
+const handleCurrentChange = (page) => {
+  currentPage.value = page
+  searchBooks()
+}
+
+// 防抖搜索
+const debouncedSearch = debounce(() => {
+  currentPage.value = 1
+  searchBooks()
+}, 500)
+
+// 生命周期
+onMounted(async () => {
+  await Promise.all([
+    loadLibraryStats(),
+    loadMyBorrowedBooks(),
+    loadMyReservations(),
+    loadBookCategories(),
+    searchBooks()
+  ])
+})
+</script>
+
+<style scoped>
+@import '@/styles/student.css';
+
+.library-page {
+  padding: 20px;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+}
+
+.page-header {
+  margin-bottom: 20px;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.title-section h1 {
+  margin: 0 0 8px 0;
+  font-size: 28px;
+  font-weight: 600;
+}
+
+.title-section p {
+  margin: 0;
+  opacity: 0.9;
+  font-size: 16px;
+}
+
+.header-stats {
+  display: flex;
+  gap: 30px;
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-number {
+  display: block;
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.stat-label {
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.search-card {
+  margin-bottom: 20px;
+}
+
+.view-controls {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.quick-actions {
+  margin-bottom: 20px;
+}
+
+.action-card {
+  cursor: pointer;
+  transition: all 0.3s ease;
+  height: 120px;
+}
+
+.action-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.action-content {
+  text-align: center;
+  padding: 20px;
+}
+
+.action-content h4 {
+  margin: 12px 0 8px 0;
+  color: #303133;
+}
+
+.action-content p {
+  margin: 0;
+  color: #606266;
+  font-size: 14px;
+}
+
+.books-card {
+  background: white;
+  border-radius: 12px;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-header h3 {
+  margin: 0;
+  color: #303133;
+}
+
+.books-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.book-card {
+  border: 1px solid #e4e7ed;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.book-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.book-cover {
+  height: 200px;
+  overflow: hidden;
+}
+
+.book-cover .el-image {
+  width: 100%;
+  height: 100%;
+}
+
+.image-slot {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  background: #f5f7fa;
+  color: #909399;
+}
+
+.book-info {
+  padding: 16px;
+}
+
+.book-title {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.book-author {
+  margin: 0 0 4px 0;
+  color: #606266;
+  font-size: 14px;
+}
+
+.book-category {
+  margin: 0 0 8px 0;
+  color: #909399;
+  font-size: 12px;
+}
+
+.book-status {
+  margin-bottom: 12px;
+}
+
+.book-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.books-list {
+  margin-bottom: 20px;
+}
+
+.pagination-wrapper {
+  margin-top: 20px;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .library-page {
+    padding: 10px;
+  }
+
+  .header-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+    padding: 20px;
+  }
+
+  .header-stats {
+    align-self: stretch;
+    justify-content: space-around;
+  }
+
+  .books-grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 16px;
+  }
+
+  .view-controls {
+    justify-content: center;
+    margin-top: 16px;
+  }
+}
+</style>

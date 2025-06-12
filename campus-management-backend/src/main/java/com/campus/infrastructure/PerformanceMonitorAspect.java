@@ -1,8 +1,8 @@
 package com.campus.infrastructure;
 
-import io.micrometer.core.instrument.Counter;
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Timer;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -13,9 +13,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import jakarta.annotation.PostConstruct;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 /**
  * 应用性能监控切面
@@ -103,37 +104,43 @@ public class PerformanceMonitorAspect {
         String fullMethodName = className + "." + methodName;
         
         // 获取或创建 Timer
-        Timer timer = timers.computeIfAbsent(
-            methodType + "." + fullMethodName,
-            key -> Timer.builder("method.execution.time")
+        String timerKey = methodType + "." + fullMethodName;
+        Timer timer = timers.get(timerKey);
+        if (timer == null) {
+            timer = Timer.builder("method.execution.time")
                 .description("Method execution time")
                 .tag("type", methodType)
                 .tag("class", className)
                 .tag("method", methodName)
-                .register(meterRegistry)
-        );
+                .register(meterRegistry);
+            timers.put(timerKey, timer);
+        }
 
         // 获取或创建 Counter
-        Counter counter = counters.computeIfAbsent(
-            methodType + "." + fullMethodName,
-            key -> Counter.builder("method.execution.count")
+        String counterKey = methodType + "." + fullMethodName;
+        Counter counter = counters.get(counterKey);
+        if (counter == null) {
+            counter = Counter.builder("method.execution.count")
                 .description("Method execution count")
                 .tag("type", methodType)
                 .tag("class", className)
                 .tag("method", methodName)
-                .register(meterRegistry)
-        );
+                .register(meterRegistry);
+            counters.put(counterKey, counter);
+        }
 
         // 获取或创建错误 Counter
-        Counter errorCounter = errorCounters.computeIfAbsent(
-            methodType + "." + fullMethodName,
-            key -> Counter.builder("method.execution.error")
+        String errorCounterKey = methodType + "." + fullMethodName;
+        Counter errorCounter = errorCounters.get(errorCounterKey);
+        if (errorCounter == null) {
+            errorCounter = Counter.builder("method.execution.error")
                 .description("Method execution error count")
                 .tag("type", methodType)
                 .tag("class", className)
                 .tag("method", methodName)
-                .register(meterRegistry)
-        );
+                .register(meterRegistry);
+            errorCounters.put(errorCounterKey, errorCounter);
+        }
 
         Timer.Sample sample = Timer.start(meterRegistry);
         long startTime = System.currentTimeMillis();

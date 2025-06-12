@@ -196,6 +196,12 @@ import {
   Upload
 } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/auth'
+import {
+  getQuickActionsByRole,
+  getRoleHomePath,
+  ROLE_DISPLAY_NAMES,
+  hasPermission
+} from './navigationConfig.js'
 
 // 组件属性
 const props = defineProps({
@@ -226,13 +232,7 @@ const userRole = computed(() => authStore.userRole)
 
 // 角色显示名称
 const roleDisplayName = computed(() => {
-  const roleMap = {
-    'STUDENT': '学生',
-    'TEACHER': '教师',
-    'PARENT': '家长',
-    'ADMIN': '管理员'
-  }
-  return roleMap[userRole.value] || '用户'
+  return ROLE_DISPLAY_NAMES[userRole.value] || '用户'
 })
 
 // 面包屑导航
@@ -243,48 +243,28 @@ const breadcrumbs = computed(() => {
     path: item.path,
     icon: item.meta.icon
   }))
-  
+
   // 添加首页
   if (breadcrumbList.length > 0 && breadcrumbList[0].path !== '/') {
     breadcrumbList.unshift({
       title: '首页',
-      path: getRoleHomePath(),
+      path: getRoleHomePath(userRole.value),
       icon: 'House'
     })
   }
-  
+
   return breadcrumbList
 })
 
-// 根据角色获取首页路径
-const getRoleHomePath = () => {
-  const rolePathMap = {
-    'STUDENT': '/student/dashboard',
-    'TEACHER': '/teacher/dashboard',
-    'PARENT': '/parent/dashboard',
-    'ADMIN': '/admin/dashboard'
-  }
-  return rolePathMap[userRole.value] || '/dashboard'
-}
-
 // 快捷操作按钮配置
 const quickActions = computed(() => {
-  const actionMap = {
-    'STUDENT': [
-      { key: 'new-assignment', title: '新作业', icon: 'Edit', tooltip: '查看新作业', type: 'primary' },
-      { key: 'course-selection', title: '选课', icon: 'Plus', tooltip: '课程选择', type: 'success' }
-    ],
-    'TEACHER': [
-      { key: 'create-assignment', title: '布置作业', icon: 'Edit', tooltip: '创建新作业', type: 'primary' },
-      { key: 'grade-entry', title: '录入成绩', icon: 'Document', tooltip: '成绩录入', type: 'warning' },
-      { key: 'export-data', title: '导出', icon: 'Download', tooltip: '导出数据', type: 'info' }
-    ],
-    'PARENT': [
-      { key: 'view-grades', title: '查看成绩', icon: 'Document', tooltip: '查看子女成绩', type: 'primary' },
-      { key: 'communication', title: '家校沟通', icon: 'Bell', tooltip: '与老师沟通', type: 'success' }
-    ]
-  }
-  return actionMap[userRole.value] || []
+  const actions = getQuickActionsByRole(userRole.value)
+  const userPermissions = authStore.permissions || []
+
+  // 根据权限过滤快捷操作
+  return actions.filter(action => {
+    return hasPermission(userPermissions, action.permission)
+  })
 })
 
 // 搜索建议

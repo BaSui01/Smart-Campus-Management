@@ -4,7 +4,7 @@ import com.campus.config.TestCacheConfig;
 import com.campus.config.TestJpaConfig;
 import com.campus.config.TestJwtUtil;
 import com.campus.config.TestSecurityConfig;
-import com.campus.domain.entity.User;
+import com.campus.domain.entity.auth.User;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,8 +1,9 @@
 package com.campus.application.service;
 
-import com.campus.application.service.impl.UserServiceImpl;
-import com.campus.domain.entity.User;
-import com.campus.domain.repository.UserRepository;
+import com.campus.application.Implement.auth.UserServiceImpl;
+import com.campus.domain.entity.auth.User;
+import com.campus.domain.repository.auth.UserRepository;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

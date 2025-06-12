@@ -1,233 +1,115 @@
 package com.campus.shared.security;
 
-import com.campus.shared.exception.JwtException;
-import io.jsonwebtoken.*;
-import io.jsonwebtoken.security.Keys;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import javax.crypto.SecretKey;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import com.campus.shared.util.JwtUtil;
 
 /**
- * 统一JWT提供者
+ * JWT提供者 - 重构后的统一接口
+ * 
+ * 注意：此类已被重构为 JwtUtil 的代理类，以保持向后兼容性
+ * 新代码应直接使用 JwtUtil 类
  * 
  * @author campus
  * @since 1.0.0
+ * @deprecated 请使用 {@link JwtUtil} 替代此类
  */
 @Component
+@Deprecated
 public class JwtProvider {
     
-    private static final Logger logger = LoggerFactory.getLogger(JwtProvider.class);
-    
-    @Value("${app.jwt.secret:campusManagementSecretKey2024}")
-    private String jwtSecret;
-    
-    @Value("${app.jwt.expiration:86400}")
-    private long jwtExpiration; // 24小时，单位：秒
-    
-    @Value("${app.jwt.refresh-expiration:604800}")
-    private long refreshExpiration; // 7天，单位：秒
-    
-    private SecretKey getSigningKey() {
-        return Keys.hmacShaKeyFor(jwtSecret.getBytes());
-    }
+    @Autowired
+    private JwtUtil jwtUtil;
     
     /**
      * 生成访问令牌
+     * @deprecated 请使用 {@link JwtUtil#generateToken(Long, String, String)}
      */
+    @Deprecated
     public String generateToken(Long userId, String username, String userType) {
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("userId", userId);
-        claims.put("username", username);
-        claims.put("userType", userType);
-        return createToken(claims, username, jwtExpiration * 1000);
+        return jwtUtil.generateToken(userId, username, userType);
     }
     
     /**
      * 生成刷新令牌
+     * @deprecated 请使用 {@link JwtUtil#generateRefreshToken(String)}
      */
+    @Deprecated
     public String generateRefreshToken(Long userId, String username) {
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("userId", userId);
-        claims.put("username", username);
-        claims.put("type", "refresh");
-        return createToken(claims, username, refreshExpiration * 1000);
-    }
-    
-    /**
-     * 创建Token
-     */
-    private String createToken(Map<String, Object> claims, String subject, long expiration) {
-        Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + expiration);
-        
-        return Jwts.builder()
-                .setClaims(claims)
-                .setSubject(subject)
-                .setIssuedAt(now)
-                .setExpiration(expiryDate)
-                .signWith(getSigningKey(), SignatureAlgorithm.HS512)
-                .compact();
+        return jwtUtil.generateRefreshToken(username);
     }
     
     /**
      * 从Token中获取用户名
+     * @deprecated 请使用 {@link JwtUtil#getUsernameFromToken(String)}
      */
+    @Deprecated
     public String getUsernameFromToken(String token) {
-        try {
-            Claims claims = getClaimsFromToken(token);
-            return claims.getSubject();
-        } catch (Exception e) {
-            logger.error("获取用户名失败", e);
-            throw new JwtException("Token无效");
-        }
+        return jwtUtil.getUsernameFromToken(token);
     }
     
     /**
      * 从Token中获取用户ID
+     * @deprecated 请使用 {@link JwtUtil#getUserIdFromToken(String)}
      */
+    @Deprecated
     public Long getUserIdFromToken(String token) {
-        try {
-            Claims claims = getClaimsFromToken(token);
-            Object userId = claims.get("userId");
-            if (userId instanceof Integer) {
-                return ((Integer) userId).longValue();
-            }
-            return (Long) userId;
-        } catch (Exception e) {
-            logger.error("获取用户ID失败", e);
-            throw new JwtException("Token无效");
-        }
+        return jwtUtil.getUserIdFromToken(token);
     }
     
     /**
      * 从Token中获取用户类型
+     * @deprecated 请使用 {@link JwtUtil#getRoleFromToken(String)}
      */
+    @Deprecated
     public String getUserTypeFromToken(String token) {
-        try {
-            Claims claims = getClaimsFromToken(token);
-            return (String) claims.get("userType");
-        } catch (Exception e) {
-            logger.error("获取用户类型失败", e);
-            return null;
-        }
-    }
-    
-    /**
-     * 获取Token的过期时间
-     */
-    public Date getExpirationDateFromToken(String token) {
-        try {
-            Claims claims = getClaimsFromToken(token);
-            return claims.getExpiration();
-        } catch (Exception e) {
-            logger.error("获取过期时间失败", e);
-            throw new JwtException("Token无效");
-        }
+        return jwtUtil.getRoleFromToken(token);
     }
     
     /**
      * 验证Token是否有效
+     * @deprecated 请使用 {@link JwtUtil#validateToken(String)}
      */
+    @Deprecated
     public boolean validateToken(String token) {
-        try {
-            getClaimsFromToken(token);
-            return true;
-        } catch (JwtException e) {
-            logger.error("Token验证失败: {}", e.getMessage());
-            return false;
-        } catch (Exception e) {
-            logger.error("Token验证异常", e);
-            return false;
-        }
+        return jwtUtil.validateToken(token);
     }
     
     /**
      * 检查Token是否过期
+     * @deprecated 请使用 {@link JwtUtil#getTokenRemainingTime(String)} 判断
      */
+    @Deprecated
     public boolean isTokenExpired(String token) {
-        try {
-            Date expiration = getExpirationDateFromToken(token);
-            return expiration.before(new Date());
-        } catch (Exception e) {
-            return true;
-        }
+        Long remainingTime = jwtUtil.getTokenRemainingTime(token);
+        return remainingTime == null || remainingTime <= 0;
     }
     
     /**
      * 刷新Token
+     * @deprecated 请使用 {@link JwtUtil#refreshToken(String)}
      */
+    @Deprecated
     public String refreshToken(String token) {
-        try {
-            Claims claims = getClaimsFromToken(token);
-            String username = claims.getSubject();
-            Long userId = getUserIdFromToken(token);
-            String userType = getUserTypeFromToken(token);
-            
-            return generateToken(userId, username, userType);
-        } catch (Exception e) {
-            logger.error("刷新Token失败", e);
-            throw new JwtException("Token刷新失败");
-        }
-    }
-    
-    /**
-     * 从Token中解析Claims
-     */
-    private Claims getClaimsFromToken(String token) {
-        try {
-            return Jwts.parserBuilder()
-                    .setSigningKey(getSigningKey())
-                    .build()
-                    .parseClaimsJws(token)
-                    .getBody();
-        } catch (ExpiredJwtException e) {
-            logger.warn("Token已过期: {}", e.getMessage());
-            throw new JwtException("Token已过期");
-        } catch (UnsupportedJwtException e) {
-            logger.error("不支持的Token: {}", e.getMessage());
-            throw new JwtException("不支持的Token");
-        } catch (MalformedJwtException e) {
-            logger.error("Token格式错误: {}", e.getMessage());
-            throw new JwtException("Token格式错误");
-        } catch (SecurityException e) {
-            logger.error("Token签名无效: {}", e.getMessage());
-            throw new JwtException("Token签名无效");
-        } catch (IllegalArgumentException e) {
-            logger.error("Token参数无效: {}", e.getMessage());
-            throw new JwtException("Token参数无效");
-        }
+        return jwtUtil.refreshToken(token);
     }
     
     /**
      * 获取Token剩余有效时间（秒）
+     * @deprecated 请使用 {@link JwtUtil#getExpirationTime()}
      */
+    @Deprecated
     public long getExpirationTime() {
-        return jwtExpiration;
+        return jwtUtil.getExpirationTime() / 1000; // 转换为秒
     }
     
     /**
      * 获取刷新Token剩余有效时间（秒）
+     * @deprecated 请使用 JwtUtil 的相关方法
      */
+    @Deprecated
     public long getRefreshExpirationTime() {
-        return refreshExpiration;
-    }
-    
-    /**
-     * 从Token中获取所有Claims
-     */
-    public Map<String, Object> getAllClaimsFromToken(String token) {
-        try {
-            Claims claims = getClaimsFromToken(token);
-            return new HashMap<>(claims);
-        } catch (Exception e) {
-            logger.error("获取Claims失败", e);
-            throw new JwtException("Token无效");
-        }
+        // 返回刷新token的过期时间（7天转换为秒）
+        return 604800L;
     }
 }

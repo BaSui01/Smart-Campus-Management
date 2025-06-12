@@ -1,7 +1,7 @@
 package com.campus.shared.security;
 
-import com.campus.application.service.UserService;
-import com.campus.domain.entity.User;
+import com.campus.application.service.auth.UserService;
+import com.campus.domain.entity.auth.User;
 import com.campus.shared.util.JwtUtil;
 
 import jakarta.servlet.http.HttpServletRequest;

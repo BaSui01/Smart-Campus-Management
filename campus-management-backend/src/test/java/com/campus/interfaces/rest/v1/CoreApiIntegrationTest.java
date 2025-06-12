@@ -10,11 +10,16 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
-import com.campus.application.service.UserService;
-import com.campus.application.service.StudentService;
-import com.campus.application.service.DepartmentService;
-import com.campus.application.service.CourseService;
-import com.campus.application.service.SchoolClassService;
+import com.campus.application.service.academic.StudentService;
+import com.campus.application.service.auth.UserService;
+import com.campus.application.service.organization.DepartmentService;
+import com.campus.application.service.organization.SchoolClassService;
+import com.campus.interfaces.rest.v1.academic.CourseApiController;
+import com.campus.interfaces.rest.v1.organization.OptimizedUserApiController;
+import com.campus.interfaces.rest.v1.organization.OptimizedStudentApiController;
+import com.campus.interfaces.rest.v1.organization.DepartmentApiController;
+import com.campus.interfaces.rest.v1.organization.ClassApiController;
+import com.campus.application.service.academic.CourseService;
 
 import java.util.List;
 import java.util.Map;

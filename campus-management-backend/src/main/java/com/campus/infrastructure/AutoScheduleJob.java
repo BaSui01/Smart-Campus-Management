@@ -1,7 +1,7 @@
 package com.campus.infrastructure;
 
-import com.campus.application.service.CourseScheduleService;
-import com.campus.domain.entity.Course;
+import com.campus.application.service.academic.CourseScheduleService;
+import com.campus.domain.entity.academic.Course;
 import com.campus.shared.util.RedisDistributedLock;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;

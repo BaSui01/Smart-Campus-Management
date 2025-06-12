@@ -371,6 +371,7 @@
 import { ref, computed, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Download, Warning } from '@element-plus/icons-vue'
+import { parentApi } from '@/api/parent'
 
 const selectedChildId = ref('')
 const filterStatus = ref('')
@@ -385,16 +386,13 @@ const currentPage = ref(1)
 const pageSize = ref(20)
 const total = ref(0)
 
-const children = ref([
-  { id: 1, name: '张小明', className: '三年级1班' },
-  { id: 2, name: '张小红', className: '一年级2班' }
-])
+const children = ref([])
 
 const paymentStats = ref({
-  totalUnpaid: '2,350.00',
-  totalPaid: '15,800.00',
-  unpaidCount: 3,
-  overdueCount: 1
+  totalUnpaid: '0.00',
+  totalPaid: '0.00',
+  unpaidCount: 0,
+  overdueCount: 0
 })
 
 const paymentForm = reactive({
@@ -402,60 +400,7 @@ const paymentForm = reactive({
   remark: ''
 })
 
-const payments = ref([
-  {
-    id: 1,
-    name: '2024年春季学费',
-    type: 'tuition',
-    amount: '8000.00',
-    dueDate: '2024-06-15',
-    status: 'unpaid',
-    paymentDate: null,
-    paymentMethod: null,
-    transactionId: null,
-    description: '2024年春季学期学费，包含教学费用和管理费用',
-    isOverdue: false
-  },
-  {
-    id: 2,
-    name: '住宿费',
-    type: 'accommodation',
-    amount: '1200.00',
-    dueDate: '2024-06-20',
-    status: 'unpaid',
-    paymentDate: null,
-    paymentMethod: null,
-    transactionId: null,
-    description: '学生宿舍住宿费用，包含水电费',
-    isOverdue: false
-  },
-  {
-    id: 3,
-    name: '教材费',
-    type: 'textbook',
-    amount: '350.00',
-    dueDate: '2024-05-30',
-    status: 'overdue',
-    paymentDate: null,
-    paymentMethod: null,
-    transactionId: null,
-    description: '本学期教材和学习资料费用',
-    isOverdue: true
-  },
-  {
-    id: 4,
-    name: '2023年秋季学费',
-    type: 'tuition',
-    amount: '8000.00',
-    dueDate: '2024-02-15',
-    status: 'paid',
-    paymentDate: '2024-02-10',
-    paymentMethod: '支付宝',
-    transactionId: 'T202402101234567890',
-    description: '2023年秋季学期学费',
-    isOverdue: false
-  }
-])
+const payments = ref([])
 
 const unpaidItems = computed(() => {
   return payments.value.filter(p => p.status === 'unpaid' || p.status === 'overdue')
@@ -529,15 +474,92 @@ const getRowClassName = ({ row }) => {
   return ''
 }
 
-const handleChildChange = (childId) => {
-  if (childId) {
-    ElMessage.success(`切换到${children.value.find(c => c.id === childId)?.name}的缴费记录`)
-    total.value = payments.value.length
+// 加载子女列表
+const loadChildren = async () => {
+  try {
+    const { data } = await parentApi.getChildren()
+    children.value = data
+
+    if (data.length > 0) {
+      selectedChildId.value = data[0].id
+      await loadPayments()
+    }
+  } catch (error) {
+    console.error('加载子女信息失败:', error)
+    ElMessage.error('加载子女信息失败')
   }
 }
 
-const handleSearch = () => {
-  ElMessage.success('搜索完成')
+// 加载缴费记录
+const loadPayments = async () => {
+  if (!selectedChildId.value) return
+
+  try {
+    const { data } = await parentApi.getPaymentRecords({
+      childId: selectedChildId.value,
+      status: filterStatus.value,
+      type: filterType.value,
+      startDate: dateRange.value?.[0],
+      endDate: dateRange.value?.[1],
+      page: currentPage.value,
+      size: pageSize.value
+    })
+
+    payments.value = data.payments || data.list || []
+    total.value = data.total || data.totalElements || payments.value.length
+
+    // 计算统计数据
+    calculateStats()
+  } catch (error) {
+    console.error('加载缴费记录失败:', error)
+    ElMessage.error('加载缴费记录失败')
+    payments.value = []
+  }
+}
+
+// 计算统计数据
+const calculateStats = () => {
+  const stats = payments.value.reduce((acc, payment) => {
+    const amount = parseFloat(payment.amount || 0)
+
+    if (payment.status === 'paid') {
+      acc.totalPaid += amount
+    } else if (payment.status === 'unpaid') {
+      acc.totalUnpaid += amount
+      acc.unpaidCount++
+    } else if (payment.status === 'overdue') {
+      acc.totalUnpaid += amount
+      acc.overdueCount++
+    }
+
+    return acc
+  }, {
+    totalPaid: 0,
+    totalUnpaid: 0,
+    unpaidCount: 0,
+    overdueCount: 0
+  })
+
+  paymentStats.value = {
+    totalPaid: stats.totalPaid.toFixed(2),
+    totalUnpaid: stats.totalUnpaid.toFixed(2),
+    unpaidCount: stats.unpaidCount,
+    overdueCount: stats.overdueCount
+  }
+}
+
+const handleChildChange = async (childId) => {
+  if (childId) {
+    currentPage.value = 1
+    await loadPayments()
+    const childName = children.value.find(c => c.id === childId)?.name
+    ElMessage.success(`切换到${childName}的缴费记录`)
+  }
+}
+
+const handleSearch = async () => {
+  currentPage.value = 1
+  await loadPayments()
 }
 
 const exportPayments = () => {
@@ -573,20 +595,21 @@ const confirmPayment = async () => {
       }
     )
     
-    // 模拟支付处理
-    const payment = payments.value.find(p => p.id === currentPayment.value.id)
-    if (payment) {
-      payment.status = 'paid'
-      payment.paymentDate = new Date().toISOString().split('T')[0]
-      payment.paymentMethod = getMethodName(paymentForm.method)
-      payment.transactionId = 'T' + Date.now()
-    }
-    
+    // 调用API进行支付
+    await parentApi.makePayment(currentPayment.value.id, {
+      method: paymentForm.method,
+      remark: paymentForm.remark
+    })
+
     ElMessage.success('缴费成功！')
     paymentDialogVisible.value = false
-    
-    // 更新统计数据
-    updateStats()
+
+    // 重新加载缴费记录
+    await loadPayments()
+
+    // 重置表单
+    paymentForm.method = 'alipay'
+    paymentForm.remark = ''
   } catch {
     // 用户取消
   }
@@ -617,19 +640,19 @@ const updateStats = () => {
   }
 }
 
-const handleSizeChange = (size) => {
+const handleSizeChange = async (size) => {
   pageSize.value = size
+  currentPage.value = 1
+  await loadPayments()
 }
 
-const handleCurrentChange = (page) => {
+const handleCurrentChange = async (page) => {
   currentPage.value = page
+  await loadPayments()
 }
 
-onMounted(() => {
-  if (children.value.length > 0) {
-    selectedChildId.value = children.value[0].id
-    updateStats()
-  }
+onMounted(async () => {
+  await loadChildren()
 })
 </script>
 

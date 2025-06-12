@@ -23,6 +23,26 @@ import static org.junit.jupiter.api.Assertions.*;
 @DisplayName("学生管理集成测试")
 class StudentManagementIntegrationTest extends BaseIntegrationTest {
 
+    /**
+     * 验证响应成功的工具方法
+     */
+    private void assertResponseSuccess(ResponseEntity<String> response, String message) {
+        assertEquals(HttpStatus.OK, response.getStatusCode(), "HTTP状态码应该是200");
+        String responseBody = response.getBody();
+        assertNotNull(responseBody, "响应体不应该为空");
+        assertTrue(responseBody.contains("\"success\":true"), message);
+    }
+
+    /**
+     * 验证响应失败的工具方法
+     */
+    private void assertResponseFailure(ResponseEntity<String> response, HttpStatus expectedStatus, String message) {
+        assertEquals(expectedStatus, response.getStatusCode(), "HTTP状态码不符合期望");
+        String responseBody = response.getBody();
+        assertNotNull(responseBody, "响应体不应该为空");
+        assertTrue(responseBody.contains("\"success\":false"), message);
+    }
+
     @Test
     @DisplayName("测试学生管理完整业务流程")
     void testStudentManagementWorkflow() throws Exception {
@@ -53,9 +73,7 @@ class StudentManagementIntegrationTest extends BaseIntegrationTest {
         
         ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
         
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertTrue(response.getBody().contains("\"success\":true"));
+        assertResponseSuccess(response, "获取学生统计信息应该成功");
     }
 
     /**
@@ -80,9 +98,7 @@ class StudentManagementIntegrationTest extends BaseIntegrationTest {
         
         ResponseEntity<String> response = restTemplate.postForEntity(url, request, String.class);
         
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertTrue(response.getBody().contains("\"success\":true"));
+        assertResponseSuccess(response, "创建学生应该成功");
         
         // 从响应中提取学生ID（简化实现）
         return 1L; // 在实际测试中应该解析JSON获取真实ID
@@ -96,9 +112,7 @@ class StudentManagementIntegrationTest extends BaseIntegrationTest {
         
         ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
         
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertTrue(response.getBody().contains("\"success\":true"));
+        assertResponseSuccess(response, "获取学生详情应该成功");
     }
 
     /**
@@ -119,9 +133,7 @@ class StudentManagementIntegrationTest extends BaseIntegrationTest {
         
         ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.PUT, request, String.class);
         
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertTrue(response.getBody().contains("\"success\":true"));
+        assertResponseSuccess(response, "更新学生信息应该成功");
     }
 
     /**
@@ -132,9 +144,7 @@ class StudentManagementIntegrationTest extends BaseIntegrationTest {
         
         ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
         
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertTrue(response.getBody().contains("\"success\":true"));
+        assertResponseSuccess(response, "搜索学生应该成功");
     }
 
     /**
@@ -145,9 +155,7 @@ class StudentManagementIntegrationTest extends BaseIntegrationTest {
         
         ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.DELETE, null, String.class);
         
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertTrue(response.getBody().contains("\"success\":true"));
+        assertResponseSuccess(response, "删除学生应该成功");
     }
 
     @Test
@@ -158,9 +166,10 @@ class StudentManagementIntegrationTest extends BaseIntegrationTest {
         ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
         
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertTrue(response.getBody().contains("\"success\":true"));
-        assertTrue(response.getBody().contains("\"data\""));
+        String responseBody = response.getBody();
+        assertNotNull(responseBody, "响应体不应该为空");
+        assertTrue(responseBody.contains("\"success\":true"), "响应应该包含成功标识");
+        assertTrue(responseBody.contains("\"data\""), "响应应该包含数据字段");
     }
 
     @Test
@@ -179,9 +188,7 @@ class StudentManagementIntegrationTest extends BaseIntegrationTest {
         
         ResponseEntity<String> response = restTemplate.postForEntity(url, request, String.class);
         
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertTrue(response.getBody().contains("\"success\":false"));
+        assertResponseFailure(response, HttpStatus.BAD_REQUEST, "数据验证失败时应该返回错误");
     }
 
     @Test
@@ -200,8 +207,9 @@ class StudentManagementIntegrationTest extends BaseIntegrationTest {
         ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.DELETE, request, String.class);
         
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertTrue(response.getBody().contains("\"success\":true"));
+        String responseBody = response.getBody();
+        assertNotNull(responseBody, "响应体不应该为空");
+        assertTrue(responseBody.contains("\"success\":true"), "响应应该包含成功标识");
     }
 
     /**

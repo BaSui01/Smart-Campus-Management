@@ -347,15 +347,17 @@
 import { ref, computed, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { 
-  Search, 
-  Plus, 
-  Download, 
-  Clock, 
-  Location, 
-  Star, 
-  UserFilled 
+import {
+  Search,
+  Plus,
+  Download,
+  Clock,
+  Location,
+  Star,
+  UserFilled
 } from '@element-plus/icons-vue'
+import { teacherApi } from '@/api/teacher'
+import { courseApi } from '@/api/course'
 
 const router = useRouter()
 
@@ -372,67 +374,16 @@ const currentPage = ref(1)
 const pageSize = ref(20)
 const total = ref(0)
 
+const loading = ref(false)
+
 const courseStats = ref({
-  total: 4,
-  ongoing: 3,
-  totalStudents: 156,
-  avgScore: 85.2
+  total: 0,
+  ongoing: 0,
+  totalStudents: 0,
+  avgScore: 0
 })
 
-const courses = ref([
-  {
-    id: 1,
-    name: '数据结构',
-    code: 'CS301',
-    credits: 3,
-    schedule: '周一 08:00-09:40',
-    location: '教学楼A201',
-    capacity: 50,
-    enrolled: 42,
-    semester: '2024-spring',
-    status: '进行中',
-    description: '数据结构是计算机科学的核心课程，主要讲解各种数据组织方式和相关算法。'
-  },
-  {
-    id: 2,
-    name: '算法设计',
-    code: 'CS401',
-    credits: 4,
-    schedule: '周三 14:00-15:40',
-    location: '教学楼B303',
-    capacity: 45,
-    enrolled: 38,
-    semester: '2024-spring',
-    status: '进行中',
-    description: '算法设计课程教授算法分析与设计的基本方法和技巧。'
-  },
-  {
-    id: 3,
-    name: '数据库原理',
-    code: 'CS501',
-    credits: 3,
-    schedule: '周五 10:00-11:40',
-    location: '实验楼C201',
-    capacity: 40,
-    enrolled: 35,
-    semester: '2024-spring',
-    status: '进行中',
-    description: '数据库原理课程介绍数据库系统的基本概念和设计方法。'
-  },
-  {
-    id: 4,
-    name: '软件工程',
-    code: 'CS601',
-    credits: 2,
-    schedule: '周二 16:00-17:40',
-    location: '教学楼D401',
-    capacity: 60,
-    enrolled: 0,
-    semester: '2024-autumn',
-    status: '未开始',
-    description: '软件工程课程教授软件开发的方法论和最佳实践。'
-  }
-])
+const courses = ref([])
 
 const courseForm = reactive({
   name: '',
@@ -503,8 +454,49 @@ const getStatusValue = (status) => {
   return statusMap[status]
 }
 
-const handleSearch = () => {
-  ElMessage.success('搜索完成')
+// 加载课程统计数据
+const loadCourseStats = async () => {
+  try {
+    const { data } = await teacherApi.getCourseStats()
+    courseStats.value = {
+      total: data.total || 0,
+      ongoing: data.ongoing || 0,
+      totalStudents: data.totalStudents || 0,
+      avgScore: data.avgScore || 0
+    }
+  } catch (error) {
+    console.error('加载课程统计失败:', error)
+  }
+}
+
+// 加载课程列表
+const loadCourses = async () => {
+  loading.value = true
+
+  try {
+    const { data } = await teacherApi.getCourses({
+      page: currentPage.value,
+      size: pageSize.value,
+      keyword: searchQuery.value,
+      semester: filterSemester.value,
+      status: filterStatus.value
+    })
+
+    courses.value = data.courses || data.list || []
+    total.value = data.total || data.totalElements || courses.value.length
+
+  } catch (error) {
+    console.error('加载课程列表失败:', error)
+    ElMessage.error('加载课程列表失败')
+    courses.value = []
+  } finally {
+    loading.value = false
+  }
+}
+
+const handleSearch = async () => {
+  currentPage.value = 1
+  await loadCourses()
 }
 
 const exportCourses = () => {
@@ -599,18 +591,22 @@ const resetForm = () => {
   })
 }
 
-const handleSizeChange = (size) => {
+const handleSizeChange = async (size) => {
   pageSize.value = size
-  // 重新加载数据
+  currentPage.value = 1
+  await loadCourses()
 }
 
-const handleCurrentChange = (page) => {
+const handleCurrentChange = async (page) => {
   currentPage.value = page
-  // 重新加载数据
+  await loadCourses()
 }
 
-onMounted(() => {
-  total.value = courses.value.length
+onMounted(async () => {
+  await Promise.all([
+    loadCourseStats(),
+    loadCourses()
+  ])
 })
 </script>
 

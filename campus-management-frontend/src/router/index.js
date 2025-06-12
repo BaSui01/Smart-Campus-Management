@@ -34,6 +34,7 @@ const Forbidden = () => import('@/views/403.vue')
 const StudentCourseDetail = () => import('@/views/student/CourseDetail.vue')
 const StudentAssignments = () => import('@/views/student/Assignments.vue')
 const StudentExams = () => import('@/views/student/Exams.vue')
+const StudentOnlineExam = () => import('@/views/student/OnlineExam.vue')
 const StudentLibrary = () => import('@/views/student/Library.vue')
 
 const TeacherCourseDetail = () => import('@/views/teacher/CourseDetail.vue')
@@ -45,6 +46,7 @@ const TeacherProfile = () => import('@/views/teacher/Profile.vue')
 
 const ParentCommunication = () => import('@/views/parent/Communication.vue')
 const ParentActivities = () => import('@/views/parent/Activities.vue')
+const ParentLearningMonitor = () => import('@/views/parent/LearningMonitor.vue')
 const ParentProfile = () => import('@/views/parent/Profile.vue')
 
 // 页脚页面组件
@@ -284,6 +286,15 @@ const routes = [
         }
       },
       {
+        path: 'online-exam',
+        name: 'StudentOnlineExam',
+        component: StudentOnlineExam,
+        meta: {
+          title: '在线考试',
+          icon: 'Monitor'
+        }
+      },
+      {
         path: 'library',
         name: 'StudentLibrary',
         component: StudentLibrary,
@@ -474,6 +485,15 @@ const routes = [
         meta: {
           title: '缴费管理',
           icon: 'Money'
+        }
+      },
+      {
+        path: 'learning-monitor',
+        name: 'ParentLearningMonitor',
+        component: ParentLearningMonitor,
+        meta: {
+          title: '学习监控',
+          icon: 'Monitor'
         }
       },
       {

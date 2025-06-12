@@ -475,9 +475,9 @@ public class ClassroomApiController {
 ```java
 package com.campus.interfaces.web;
 
-import com.campus.application.service.GradeService;
-import com.campus.application.service.CourseService;
-import com.campus.application.service.StudentService;
+import com.campus.application.service.academic.CourseSelectionService;
+import com.campus.application.service.academic.CourseService;
+import com.campus.application.service.academic.StudentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;

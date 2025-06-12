@@ -108,11 +108,12 @@ public class QuartzConfig {
         
         // 数据源配置 - 使用主数据源
         properties.setProperty("org.quartz.jobStore.dataSource", "myDS");
-        properties.setProperty("org.quartz.dataSource.myDS.driver", "com.mysql.cj.jdbc.Driver");
-        properties.setProperty("org.quartz.dataSource.myDS.URL", "jdbc:mysql://localhost:3306/campus_management?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai");
-        properties.setProperty("org.quartz.dataSource.myDS.user", "root");
-        properties.setProperty("org.quartz.dataSource.myDS.password", "xiaoxiao123");
-        properties.setProperty("org.quartz.dataSource.myDS.maxConnections", "5");
+        // 注意：在生产环境中应使用环境变量或加密配置
+        properties.setProperty("org.quartz.dataSource.myDS.driver", "${quartz.datasource.driver:com.mysql.cj.jdbc.Driver}");
+        properties.setProperty("org.quartz.dataSource.myDS.URL", "${quartz.datasource.url:jdbc:mysql://localhost:3306/campus_management?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai}");
+        properties.setProperty("org.quartz.dataSource.myDS.user", "${quartz.datasource.username:root}");
+        properties.setProperty("org.quartz.dataSource.myDS.password", "${quartz.datasource.password:}");
+        properties.setProperty("org.quartz.dataSource.myDS.maxConnections", "${quartz.datasource.max-connections:5}");
         
         // 失火处理
         properties.setProperty("org.quartz.jobStore.misfireThreshold", "60000");

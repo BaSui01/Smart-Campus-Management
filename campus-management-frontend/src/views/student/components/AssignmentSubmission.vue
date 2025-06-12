@@ -131,7 +131,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { UploadFilled, Document } from '@element-plus/icons-vue'
-import assignmentApi from '@/api/assignment.js'
+import { assignmentApi } from '@/api/assignment'
 
 const props = defineProps({
   assignment: {

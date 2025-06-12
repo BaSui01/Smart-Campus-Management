@@ -1,11 +1,10 @@
 package com.campus.shared.config;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.annotation.PropertyAccessor;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
@@ -18,9 +17,11 @@ import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
-import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
 
 /**
  * 缓存配置类
@@ -33,6 +34,9 @@ import java.util.Map;
 @Configuration
 @EnableCaching
 public class CacheConfig {
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     /**
      * 配置缓存管理器
@@ -124,17 +128,20 @@ public class CacheConfig {
 
     /**
      * 创建Jackson序列化器
+     * 使用注入的ObjectMapper而不是创建新的实例
      */
     private Jackson2JsonRedisSerializer<Object> createJacksonSerializer() {
-        ObjectMapper om = new ObjectMapper();
-        om.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
-        om.activateDefaultTyping(LaissezFaireSubTypeValidator.instance,
+        // 复制一个ObjectMapper实例，避免修改全局配置
+        ObjectMapper redisObjectMapper = objectMapper.copy();
+
+        // 设置Redis序列化特有的配置
+        redisObjectMapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
+        redisObjectMapper.activateDefaultTyping(LaissezFaireSubTypeValidator.instance,
                 ObjectMapper.DefaultTyping.NON_FINAL, JsonTypeInfo.As.PROPERTY);
-        om.registerModule(new JavaTimeModule());
 
         // 使用新的构造函数方式，避免弃用的setObjectMapper方法
         Jackson2JsonRedisSerializer<Object> jackson2JsonRedisSerializer =
-                new Jackson2JsonRedisSerializer<>(om, Object.class);
+                new Jackson2JsonRedisSerializer<>(redisObjectMapper, Object.class);
 
         return jackson2JsonRedisSerializer;
     }

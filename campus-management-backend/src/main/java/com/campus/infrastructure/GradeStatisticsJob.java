@@ -1,7 +1,7 @@
 package com.campus.infrastructure;
 
-import com.campus.application.service.EmailService;
-import com.campus.application.service.GradeService;
+import com.campus.application.service.academic.GradeService;
+import com.campus.application.service.communication.EmailService;
 import com.campus.shared.util.RedisDistributedLock;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;

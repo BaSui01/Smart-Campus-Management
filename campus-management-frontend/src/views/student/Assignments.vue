@@ -272,6 +272,21 @@
       </div>
     </el-dialog>
 
+    <!-- 作业提交弹窗 -->
+    <el-dialog
+      v-model="submitDialogVisible"
+      title="提交作业"
+      width="70%"
+      :before-close="handleSubmitClose"
+    >
+      <AssignmentSubmission
+        v-if="submissionAssignment"
+        :assignment="submissionAssignment"
+        @submit="handleSubmissionComplete"
+        @cancel="handleSubmitClose"
+      />
+    </el-dialog>
+
     <!-- 提交历史弹窗 -->
     <el-dialog
       v-model="historyDialogVisible"
@@ -320,7 +335,7 @@ import { assignmentApi } from '@/api/assignment'
 import { courseApi } from '@/api/course'
 import { studentApi } from '@/api/student'
 // import AssignmentDetail from './components/AssignmentDetail.vue'
-// import AssignmentSubmission from './components/AssignmentSubmission.vue'
+import AssignmentSubmission from './components/AssignmentSubmission.vue'
 // import SubmissionHistory from './components/SubmissionHistory.vue'
 
 // 响应式数据
@@ -520,25 +535,9 @@ const viewAssignmentDetail = async (assignment) => {
   }
 }
 
-const submitAssignment = async (assignment) => {
-  try {
-    await ElMessageBox.confirm(
-      `确定要提交作业《${assignment.title}》吗？`,
-      '确认提交',
-      {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }
-    )
-
-    // 这里应该打开文件选择器或者跳转到提交页面
-    // 暂时使用简单的提示
-    ElMessage.info('作业提交功能开发中，请联系老师')
-
-  } catch {
-    // 用户取消
-  }
+const submitAssignment = (assignment) => {
+  submissionAssignment.value = assignment
+  submitDialogVisible.value = true
 }
 
 const viewSubmissionHistory = async (assignment) => {

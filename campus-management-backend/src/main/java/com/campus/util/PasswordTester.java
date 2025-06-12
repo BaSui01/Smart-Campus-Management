@@ -4,8 +4,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
-import com.campus.domain.repository.UserRepository;
-import com.campus.domain.entity.User;
+
+import com.campus.domain.entity.auth.User;
+import com.campus.domain.repository.auth.UserRepository;
 
 import java.util.Optional;
 

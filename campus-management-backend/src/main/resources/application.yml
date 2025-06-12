@@ -5,6 +5,10 @@ server:
 spring:
   application:
     name: campus_management_db
+  
+  mvc:
+    favicon:
+      enabled: false  # 禁用Spring Boot默认的favicon处理，避免404错误
 
   profiles:
     active: dev  # 默认激活开发环境
@@ -12,11 +16,12 @@ spring:
   # 启动横幅配置
   main:
     banner-mode: console
+    allow-circular-references: true
 
   # 数据源配置
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/campus_management_db?useUnicode=true&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&autoReconnect=true&failOverReadOnly=false&maxReconnects=3&useAffectedRows=true
+    url: jdbc:mysql://localhost:3306/campus_management_db?useUnicode=true&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&autoReconnect=true&failOverReadOnly=false&maxReconnects=3&useAffectedRows=true&createDatabaseIfNotExist=true
     username: root
     password: xiaoxiao123
     # HikariCP连接池配置
@@ -35,7 +40,7 @@ spring:
   # JPA配置
   jpa:
     hibernate:
-      ddl-auto: none  # 使用SQL脚本创建表结构，不让Hibernate自动创建
+      ddl-auto: update  # 自动创建和更新表结构
       naming:
         physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
         implicit-strategy: org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy
@@ -132,6 +137,24 @@ jwt:
 
 # 自定义配置
 campus:
+  # JWT配置
+  jwt:
+    secret: campus-management-jwt-secret-key-dev-2024
+    expiration: 7200000        # 2小时
+    refresh-expiration: 604800000  # 7天
+    header: Authorization
+    prefix: Bearer
+    redis:
+      prefix: "jwt:token:"
+      refresh-prefix: "jwt:refresh:"
+
+  # 应用JWT配置（兼容性）
+  app:
+    jwt:
+      secret: campus-management-jwt-secret-key-dev-2024
+      expiration: 7200000
+      refresh-expiration: 604800000
+
   # 系统配置
   system:
     name: 智慧校园管理系统

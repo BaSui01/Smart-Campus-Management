@@ -11,10 +11,10 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.campus.domain.entity.Role;
-import com.campus.domain.entity.User;
-import com.campus.domain.entity.UserRole;
-import com.campus.domain.repository.UserRepository;
+import com.campus.domain.entity.auth.Role;
+import com.campus.domain.entity.auth.User;
+import com.campus.domain.entity.auth.UserRole;
+import com.campus.domain.repository.auth.UserRepository;
 
 /**
  * 自定义用户详情服务

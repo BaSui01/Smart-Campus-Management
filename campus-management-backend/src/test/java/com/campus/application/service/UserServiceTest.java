@@ -1,7 +1,9 @@
 package com.campus.application.service;
 
-import com.campus.application.service.impl.UserServiceImpl;
-import com.campus.domain.entity.User;
+
+import com.campus.application.service.auth.UserService;
+import com.campus.domain.entity.auth.User;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +29,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DataJpaTest
 @ActiveProfiles("test")
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Import({UserServiceImpl.class, BCryptPasswordEncoder.class})
+@Import({com.campus.application.Implement.auth.UserServiceImpl.class, BCryptPasswordEncoder.class})
 class UserServiceTest {
 
     @Autowired

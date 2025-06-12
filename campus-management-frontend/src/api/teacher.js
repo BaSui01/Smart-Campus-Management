@@ -115,11 +115,130 @@ export const teacherApi = {
     })
   },
 
+  // 获取教师统计数据
+  getTeacherStats() {
+    return request({
+      url: '/teacher/stats',
+      method: 'get'
+    })
+  },
+
+  // 获取今日课程
+  getTodayCourses() {
+    return request({
+      url: '/teacher/today-courses',
+      method: 'get'
+    })
+  },
+
+  // 获取待处理事项
+  getPendingTasks() {
+    return request({
+      url: '/teacher/pending-tasks',
+      method: 'get'
+    })
+  },
+
+  // 获取最近成绩
+  getRecentGrades() {
+    return request({
+      url: '/teacher/recent-grades',
+      method: 'get'
+    })
+  },
+
   // 获取教师课程统计
   getCourseStats() {
     return request({
       url: '/teacher/course-stats',
       method: 'get'
+    })
+  },
+
+  // 获取教师课程列表
+  getCourses(params = {}) {
+    return request({
+      url: '/teacher/courses',
+      method: 'get',
+      params
+    })
+  },
+
+  // 获取课程详情
+  getCourseDetail(courseId) {
+    return request({
+      url: `/teacher/courses/${courseId}`,
+      method: 'get'
+    })
+  },
+
+  // 创建课程
+  createCourse(data) {
+    return request({
+      url: '/teacher/courses',
+      method: 'post',
+      data
+    })
+  },
+
+  // 更新课程
+  updateCourse(courseId, data) {
+    return request({
+      url: `/teacher/courses/${courseId}`,
+      method: 'put',
+      data
+    })
+  },
+
+  // 删除课程
+  deleteCourse(courseId) {
+    return request({
+      url: `/teacher/courses/${courseId}`,
+      method: 'delete'
+    })
+  },
+
+  // ==================== 学生管理 ====================
+
+  // 获取学生统计
+  getStudentStats() {
+    return request({
+      url: '/teacher/student-stats',
+      method: 'get'
+    })
+  },
+
+  // 获取教师班级列表
+  getTeacherClasses() {
+    return request({
+      url: '/teacher/classes',
+      method: 'get'
+    })
+  },
+
+  // 获取学生列表
+  getStudents(params = {}) {
+    return request({
+      url: '/teacher/students',
+      method: 'get',
+      params
+    })
+  },
+
+  // 获取学生详情
+  getStudentDetail(studentId) {
+    return request({
+      url: `/teacher/students/${studentId}`,
+      method: 'get'
+    })
+  },
+
+  // 更新学生信息
+  updateStudent(studentId, data) {
+    return request({
+      url: `/teacher/students/${studentId}`,
+      method: 'put',
+      data
     })
   },
 

@@ -1,7 +1,7 @@
 package com.campus.application.dto;
 
-import com.campus.domain.entity.User;
-import com.campus.domain.entity.UserRole;
+import com.campus.domain.entity.auth.User;
+import com.campus.domain.entity.auth.UserRole;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 import java.time.LocalDateTime;

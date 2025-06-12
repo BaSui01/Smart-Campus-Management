@@ -184,80 +184,26 @@ const userRole = computed(() => authStore.userRole)
 
 // 角色显示名称
 const roleDisplayName = computed(() => {
-  const roleMap = {
-    'STUDENT': '学生',
-    'TEACHER': '教师', 
-    'PARENT': '家长',
-    'ADMIN': '管理员'
-  }
-  return roleMap[userRole.value] || '用户'
+  return ROLE_DISPLAY_NAMES[userRole.value] || '用户'
 })
 
 // 角色样式类
 const roleClass = computed(() => {
-  const classMap = {
-    'STUDENT': 'role-student',
-    'TEACHER': 'role-teacher',
-    'PARENT': 'role-parent', 
-    'ADMIN': 'role-admin'
-  }
-  return classMap[userRole.value] || 'role-default'
+  const theme = getThemeByRole(userRole.value)
+  return theme.class || 'role-default'
 })
-
-// 学生端菜单配置
-const studentMenuItems = [
-  { path: '/student/dashboard', title: '首页概览', icon: 'House' },
-  { path: '/student/courses', title: '我的课程', icon: 'Reading' },
-  { path: '/student/selection', title: '选课系统', icon: 'Document' },
-  { path: '/student/grades', title: '成绩查询', icon: 'Promotion' },
-  { path: '/student/schedule', title: '课程表', icon: 'Calendar' },
-  { path: '/student/assignments', title: '作业管理', icon: 'Edit' },
-  { path: '/student/exams', title: '考试安排', icon: 'Notebook' },
-  { path: '/student/library', title: '图书馆', icon: 'Files' },
-  { path: '/student/profile', title: '个人信息', icon: 'User' }
-]
-
-// 教师端菜单配置
-const teacherMenuItems = [
-  { path: '/teacher/dashboard', title: '工作台', icon: 'House' },
-  { 
-    path: '/teacher/courses', 
-    title: '课程管理', 
-    icon: 'Reading',
-    children: [
-      { path: '/teacher/courses', title: '课程列表', icon: 'Reading' },
-      { path: '/teacher/course-detail', title: '课程详情', icon: 'Document' }
-    ]
-  },
-  { path: '/teacher/students', title: '学生管理', icon: 'UserFilled' },
-  { path: '/teacher/grades', title: '成绩录入', icon: 'Promotion' },
-  { path: '/teacher/assignments', title: '作业管理', icon: 'Edit' },
-  { path: '/teacher/exams', title: '考试管理', icon: 'Notebook' },
-  { path: '/teacher/schedule', title: '课程安排', icon: 'Calendar' },
-  { path: '/teacher/profile', title: '个人信息', icon: 'User' }
-]
-
-// 家长端菜单配置
-const parentMenuItems = [
-  { path: '/parent/dashboard', title: '家长中心', icon: 'House' },
-  { path: '/parent/children', title: '子女信息', icon: 'UserFilled' },
-  { path: '/parent/grades', title: '成绩查看', icon: 'Promotion' },
-  { path: '/parent/attendance', title: '考勤记录', icon: 'Calendar' },
-  { path: '/parent/communication', title: '家校沟通', icon: 'ChatDotRound' },
-  { path: '/parent/activities', title: '活动通知', icon: 'Bell' },
-  { path: '/parent/payments', title: '缴费记录', icon: 'CreditCard' },
-  { path: '/parent/monitor', title: '学习监控', icon: 'Monitor' },
-  { path: '/parent/profile', title: '个人信息', icon: 'User' }
-]
 
 // 根据用户角色获取当前菜单项
 const currentMenuItems = computed(() => {
-  const menuMap = {
-    'STUDENT': studentMenuItems,
-    'TEACHER': teacherMenuItems,
-    'PARENT': parentMenuItems
+  const menuItems = getMenuItemsByRole(userRole.value)
+
+  // 如果用户有权限信息，则根据权限过滤菜单
+  const userPermissions = authStore.permissions || []
+  if (userPermissions.length > 0) {
+    return filterMenuByPermissions(menuItems, userPermissions)
   }
-  return menuMap[userRole.value] || []
+
+  return menuItems
 })
 
 // 方法

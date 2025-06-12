@@ -14,7 +14,7 @@
     <name>campus-management-backend</name>
     <description>智慧校园管理平台后端服务</description>
     <properties>
-        <java.version>24</java.version>
+        <java.version>17</java.version>
         <jjwt.version>0.11.5</jjwt.version>
         <hutool.version>5.8.21</hutool.version>
     </properties>
@@ -239,8 +239,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.8.1</version>
                 <configuration>
-                    <source>24</source>
-                    <target>24</target>
+                    <source>17</source>
+                    <target>17</target>
                     <encoding>UTF-8</encoding>
                     <compilerArgs>
                         <arg>-Xlint:all</arg>

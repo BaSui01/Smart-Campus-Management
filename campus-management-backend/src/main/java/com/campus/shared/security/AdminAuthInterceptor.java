@@ -1,17 +1,18 @@
 package com.campus.shared.security;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.NonNull;
+import org.springframework.stereotype.Component;
+import org.springframework.web.servlet.HandlerInterceptor;
+
 import com.campus.application.service.auth.UserService;
 import com.campus.domain.entity.auth.User;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import org.springframework.lang.NonNull;
-import org.springframework.web.servlet.HandlerInterceptor;
 
 /**
  * 管理后台权限拦截器
@@ -59,18 +60,27 @@ public class AdminAuthInterceptor implements HandlerInterceptor {
         }
         
         // 检查用户是否有管理员权限 - 使用正确的角色键
-        boolean hasAdminRole = userService.hasRole(currentUser.getId(), "ROLE_SUPER_ADMIN") ||
-                              userService.hasRole(currentUser.getId(), "ROLE_ADMIN") ||
-                              userService.hasRole(currentUser.getId(), "ROLE_SYSTEM_ADMIN") ||
-                              userService.hasRole(currentUser.getId(), "ROLE_ACADEMIC_ADMIN") ||
-                              userService.hasRole(currentUser.getId(), "ROLE_FINANCE_ADMIN") ||
-                              userService.hasRole(currentUser.getId(), "ROLE_TEACHER");
+        logger.info("开始检查用户 {} 的管理员权限", currentUser.getUsername());
+
+        boolean hasSuperAdmin = userService.hasRole(currentUser.getId(), "ROLE_SUPER_ADMIN");
+        boolean hasAdmin = userService.hasRole(currentUser.getId(), "ROLE_ADMIN");
+        boolean hasSystemAdmin = userService.hasRole(currentUser.getId(), "ROLE_SYSTEM_ADMIN");
+        boolean hasAcademicAdmin = userService.hasRole(currentUser.getId(), "ROLE_ACADEMIC_ADMIN");
+        boolean hasFinanceAdmin = userService.hasRole(currentUser.getId(), "ROLE_FINANCE_ADMIN");
+        boolean hasTeacher = userService.hasRole(currentUser.getId(), "ROLE_TEACHER");
+
+        logger.info("用户 {} 权限检查结果: SUPER_ADMIN={}, ADMIN={}, SYSTEM_ADMIN={}, ACADEMIC_ADMIN={}, FINANCE_ADMIN={}, TEACHER={}",
+                   currentUser.getUsername(), hasSuperAdmin, hasAdmin, hasSystemAdmin, hasAcademicAdmin, hasFinanceAdmin, hasTeacher);
+
+        boolean hasAdminRole = hasSuperAdmin || hasAdmin || hasSystemAdmin || hasAcademicAdmin || hasFinanceAdmin || hasTeacher;
 
         if (!hasAdminRole) {
             logger.warn("无管理权限用户尝试访问管理后台: {}", currentUser.getUsername());
             response.sendRedirect("/admin/access-denied");
             return false;
         }
+
+        logger.info("用户 {} 通过管理员权限检查", currentUser.getUsername());
 
         // 检查具体页面权限
         if (!userService.hasMenuPermission(currentUser.getId(), requestURI)) {

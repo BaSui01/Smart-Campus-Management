@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin}">
+
+<head>
+    <!-- 页面特定的CSS -->
+    <th:block layout:fragment="styles">
+        <link rel="stylesheet" th:href="@{/css/components/data-table.css}">
+        <link rel="stylesheet" th:href="@{/css/components/stats-cards.css}">
+        <link rel="stylesheet" th:href="@{/css/components/toast.css}">
+        <link rel="stylesheet" th:href="@{/css/admin/system.css}">
+    </th:block>
+</head>
+
+<body>
+    <!-- 页面标题 -->
+    <th:block layout:fragment="page-title">教师管理</th:block>
+
+    <!-- 面包屑导航 -->
+    <th:block layout:fragment="breadcrumb">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a th:href="@{/admin/dashboard}">首页</a></li>
+                <li class="breadcrumb-item"><a th:href="@{/admin/academic}">教务管理</a></li>
+                <li class="breadcrumb-item active">教师管理</li>
+            </ol>
+        </nav>
+    </th:block>
+
+    <!-- 页面内容 -->
+    <div layout:fragment="content">
+        <!-- 页面标题区域 -->
+        <div class="page-header-section animated fadeInDown">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="page-title-group">
+                    <h1 class="page-title">
+                        <i class="fas fa-chalkboard-teacher me-2"></i>教师管理
+                    </h1>
+                    <p class="page-subtitle">管理系统教师信息，包括教师的创建、编辑、删除和课程分配</p>
+                </div>
+                <div class="page-actions">
+                    <button type="button" class="btn btn-primary btn-enhanced" id="addTeacherBtn">
+                        <i class="fas fa-plus me-2"></i>添加教师
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-enhanced" id="refreshBtn">
+                        <i class="fas fa-sync-alt me-2"></i>刷新
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 统计卡片 -->
+        <div class="dashboard-stats">
+            <div class="row">
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="stats-card stats-card-primary animated fadeInUp delay-1">
+                        <div class="stats-card-body">
+                            <div class="stats-card-content">
+                                <div class="stats-card-info">
+                                    <div class="stats-card-label">教师总数</div>
+                                    <div class="stats-card-value counter" data-target="0" id="totalTeachers">0</div>
+                                    <div class="stats-card-change">
+                                        <i class="fas fa-arrow-up text-success"></i>
+                                        <span class="text-success">+2%</span>
+                                        <span class="text-muted">较上月</span>
+                                    </div>
+                                </div>
+                                <div class="stats-card-icon">
+                                    <i class="fas fa-chalkboard-teacher"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="stats-card stats-card-success animated fadeInUp delay-2">
+                        <div class="stats-card-body">
+                            <div class="stats-card-content">
+                                <div class="stats-card-info">
+                                    <div class="stats-card-label">在职教师</div>
+                                    <div class="stats-card-value counter" data-target="0" id="activeTeachers">0</div>
+                                    <div class="stats-card-change">
+                                        <i class="fas fa-arrow-up text-success"></i>
+                                        <span class="text-success">+3%</span>
+                                        <span class="text-muted">本周活跃</span>
+                                    </div>
+                                </div>
+                                <div class="stats-card-icon">
+                                    <i class="fas fa-user-check"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="stats-card stats-card-info animated fadeInUp delay-3">
+                        <div class="stats-card-body">
+                            <div class="stats-card-content">
+                                <div class="stats-card-info">
+                                    <div class="stats-card-label">教授人数</div>
+                                    <div class="stats-card-value counter" data-target="0" id="professors">0</div>
+                                    <div class="stats-card-change">
+                                        <i class="fas fa-graduation-cap text-info"></i>
+                                        <span class="text-info">高级</span>
+                                        <span class="text-muted">职称</span>
+                                    </div>
+                                </div>
+                                <div class="stats-card-icon">
+                                    <i class="fas fa-graduation-cap"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="stats-card stats-card-warning animated fadeInUp delay-4">
+                        <div class="stats-card-body">
+                            <div class="stats-card-content">
+                                <div class="stats-card-info">
+                                    <div class="stats-card-label">新入职(本月)</div>
+                                    <div class="stats-card-value counter" data-target="0" id="newTeachers">0</div>
+                                    <div class="stats-card-change">
+                                        <i class="fas fa-user-plus text-warning"></i>
+                                        <span class="text-warning">新增</span>
+                                        <span class="text-muted">本月</span>
+                                    </div>
+                                </div>
+                                <div class="stats-card-icon">
+                                    <i class="fas fa-user-plus"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 搜索筛选区域 -->
+        <div class="card-enhanced mb-4 animated fadeInUp delay-5">
+            <div class="card-header card-header-transparent">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">
+                        <i class="fas fa-filter me-2 text-primary"></i>筛选与操作
+                    </h6>
+                    <div class="card-actions">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="toggleFilters">
+                            <i class="fas fa-chevron-up"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body" id="filtersContent">
+                <form id="searchForm" class="needs-validation" novalidate>
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <div class="form-group-enhanced">
+                                <label class="form-label">搜索关键词</label>
+                                <div class="input-group-enhanced">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-search"></i>
+                                    </span>
+                                    <input type="text" class="form-control" id="searchInput"
+                                           placeholder="姓名、工号或邮箱">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group-enhanced">
+                                <label class="form-label">所属部门</label>
+                                <select class="form-select" id="departmentFilter">
+                                    <option value="">全部部门</option>
+                                    <option value="计算机学院">计算机学院</option>
+                                    <option value="软件学院">软件学院</option>
+                                    <option value="信息学院">信息学院</option>
+                                    <option value="数学学院">数学学院</option>
+                                    <option value="物理学院">物理学院</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group-enhanced">
+                                <label class="form-label">职称筛选</label>
+                                <select class="form-select" id="titleFilter">
+                                    <option value="">全部职称</option>
+                                    <option value="教授">教授</option>
+                                    <option value="副教授">副教授</option>
+                                    <option value="讲师">讲师</option>
+                                    <option value="助教">助教</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group-enhanced">
+                                <label class="form-label">状态筛选</label>
+                                <select class="form-select" id="statusFilter">
+                                    <option value="">全部状态</option>
+                                    <option value="1">在职</option>
+                                    <option value="0">离职</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group-enhanced">
+                                <label class="form-label">&nbsp;</label>
+                                <div class="btn-group w-100">
+                                    <button type="button" class="btn btn-primary btn-enhanced" id="searchBtn">
+                                        <i class="fas fa-search me-1"></i>搜索
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary btn-enhanced" id="resetFiltersBtn">
+                                        <i class="fas fa-undo me-1"></i>重置
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row g-3 mt-2">
+                        <div class="col-md-12">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-success btn-enhanced" id="exportBtn">
+                                        <i class="fas fa-download me-1"></i>导出Excel
+                                    </button>
+                                    <button type="button" class="btn btn-info btn-enhanced" id="importBtn">
+                                        <i class="fas fa-upload me-1"></i>批量导入
+                                    </button>
+                                </div>
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-outline-danger btn-enhanced" id="batchDeleteBtn" disabled>
+                                        <i class="fas fa-trash me-1"></i>批量删除
+                                    </button>
+                                    <button type="button" class="btn btn-outline-warning btn-enhanced" id="batchDisableBtn" disabled>
+                                        <i class="fas fa-user-slash me-1"></i>批量禁用
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 教师数据表格 -->
+        <div class="data-table-container animated fadeInUp delay-6">
+            <div class="table-toolbar">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="table-info">
+                        <h6 class="mb-0">
+                            <i class="fas fa-list me-2 text-primary"></i>教师列表
+                        </h6>
+                        <span class="total-records text-muted">
+                            共 <span id="totalRecords">0</span> 条记录
+                        </span>
+                    </div>
+                    <div class="table-controls">
+                        <div class="btn-group btn-group-sm">
+                            <button type="button" class="btn btn-outline-primary action-btn" id="refreshTableBtn">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary action-btn" id="columnSettingsBtn">
+                                <i class="fas fa-columns"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="table-wrapper">
+                <table class="data-table table-striped table-hover" id="teachersTable">
+                    <thead class="table-header">
+                        <tr>
+                            <th class="select-column">
+                                <div class="form-check">
+                                    <input class="form-check-input select-all" type="checkbox" id="selectAll">
+                                </div>
+                            </th>
+                            <th class="sortable" data-column="employeeId">
+                                <div class="column-header">
+                                    <span class="column-title">工号</span>
+                                    <i class="sort-icon fas fa-sort"></i>
+                                </div>
+                            </th>
+                            <th class="sortable" data-column="realName">
+                                <div class="column-header">
+                                    <span class="column-title">教师信息</span>
+                                    <i class="sort-icon fas fa-sort"></i>
+                                </div>
+                            </th>
+                            <th class="sortable" data-column="department">
+                                <div class="column-header">
+                                    <span class="column-title">部门</span>
+                                    <i class="sort-icon fas fa-sort"></i>
+                                </div>
+                            </th>
+                            <th class="sortable" data-column="title">
+                                <div class="column-header">
+                                    <span class="column-title">职称</span>
+                                    <i class="sort-icon fas fa-sort"></i>
+                                </div>
+                            </th>
+                            <th class="sortable" data-column="phone">
+                                <div class="column-header">
+                                    <span class="column-title">联系方式</span>
+                                    <i class="sort-icon fas fa-sort"></i>
+                                </div>
+                            </th>
+                            <th class="sortable" data-column="hireDate">
+                                <div class="column-header">
+                                    <span class="column-title">入职时间</span>
+                                    <i class="sort-icon fas fa-sort"></i>
+                                </div>
+                            </th>
+                            <th class="sortable" data-column="status">
+                                <div class="column-header">
+                                    <span class="column-title">状态</span>
+                                    <i class="sort-icon fas fa-sort"></i>
+                                </div>
+                            </th>
+                            <th width="200">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody class="table-body" id="teachersTableBody">
+                        <!-- 教师数据将通过AJAX加载 -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 分页组件 -->
+            <div class="table-pagination">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="page-size-selector">
+                        <span class="text-muted me-2">每页显示</span>
+                        <select class="form-select page-size-select" id="pageSizeSelect">
+                            <option value="10">10</option>
+                            <option value="20" selected>20</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                        <span class="text-muted ms-2">条记录</span>
+                    </div>
+                    <nav aria-label="教师列表分页">
+                        <ul class="pagination pagination-enhanced mb-0" id="teachersPagination">
+                            <!-- 分页按钮将由JavaScript动态生成 -->
+                        </ul>
+                    </nav>
+                </div>
+                <div class="mt-2">
+                    <small class="text-muted">
+                        显示第 <span id="currentPageInfo">1</span> 页，共 <span id="totalPagesInfo">1</span> 页，
+                        总计 <span id="totalRecordsInfo">0</span> 条记录
+                    </small>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 页面特定的JavaScript -->
+    <th:block layout:fragment="scripts">
+        <!-- 引入组件库 -->
+        <script th:src="@{/js/components/data-table.js}"></script>
+        <script th:src="@{/js/components/form-builder.js}"></script>
+        <script th:src="@{/js/components/toast.js}"></script>
+        <script th:src="@{/js/common/utils.js}"></script>
+
+        <!-- 引入教师管理模块 -->
+        <script th:src="@{/js/modules/teacher-management.js}"></script>
+
+        <!-- 教师管理页面脚本 -->
+        <script>
+            // 页面配置
+            const pageConfig = {
+                apiEndpoints: {
+                    teachers: '/api/v1/teachers',
+                    statistics: '/api/v1/teachers/statistics',
+                    export: '/api/v1/teachers/export',
+                    import: '/api/v1/teachers/import'
+                },
+                pagination: {
+                    page: 0,
+                    size: 20,
+                    sort: 'createTime,desc'
+                },
+                filters: {
+                    keyword: '',
+                    department: '',
+                    title: '',
+                    status: ''
+                }
+            };
+
+            // 页面初始化函数
+            function adminPageInit() {
+                console.log('教师管理页面初始化...');
+
+                // 初始化数据表格组件
+                if (window.DataTableComponent) {
+                    window.teachersDataTable = new DataTableComponent({
+                        tableId: 'teachersTable',
+                        apiUrl: pageConfig.apiEndpoints.teachers,
+                        columns: [
+                            { key: 'select', title: '', sortable: false, width: '50px' },
+                            { key: 'employeeId', title: '工号', sortable: true },
+                            { key: 'teacherInfo', title: '教师信息', sortable: true },
+                            { key: 'department', title: '部门', sortable: true },
+                            { key: 'title', title: '职称', sortable: true },
+                            { key: 'phone', title: '联系方式', sortable: true },
+                            { key: 'hireDate', title: '入职时间', sortable: true },
+                            { key: 'status', title: '状态', sortable: true },
+                            { key: 'actions', title: '操作', sortable: false, width: '200px' }
+                        ],
+                        pageSize: pageConfig.pagination.size,
+                        enableSelection: true,
+                        enableSearch: true,
+                        enableExport: true,
+                        renderRow: renderTeacherRow
+                    });
+                }
+
+                // 初始化Toast组件
+                if (window.ToastComponent) {
+                    window.toast = new ToastComponent();
+                }
+
+                // 绑定事件处理器
+                bindEventHandlers();
+
+                // 加载初始数据
+                loadTeachersData();
+                loadStatistics();
+            }
+
+            // 绑定事件处理器
+            function bindEventHandlers() {
+                // 添加教师按钮
+                $('#addTeacherBtn').on('click', function() {
+                    showAddTeacherModal();
+                });
+
+                // 刷新按钮
+                $('#refreshBtn').on('click', function() {
+                    loadTeachersData();
+                    loadStatistics();
+                });
+
+                // 搜索按钮
+                $('#searchBtn').on('click', function() {
+                    performSearch();
+                });
+
+                // 重置筛选按钮
+                $('#resetFiltersBtn').on('click', function() {
+                    resetFilters();
+                });
+
+                // 导出按钮
+                $('#exportBtn').on('click', function() {
+                    exportTeachersData();
+                });
+
+                // 批量操作按钮
+                $('#batchDeleteBtn').on('click', function() {
+                    batchDeleteTeachers();
+                });
+
+                $('#batchDisableBtn').on('click', function() {
+                    batchDisableTeachers();
+                });
+
+                // 筛选器切换
+                $('#toggleFilters').on('click', function() {
+                    toggleFiltersPanel();
+                });
+            }
+
+            // 渲染教师行数据
+            function renderTeacherRow(teacher) {
+                const statusBadge = teacher.status === 1 ?
+                    '<span class="badge-enhanced badge-success">在职</span>' :
+                    '<span class="badge-enhanced badge-secondary">离职</span>';
+
+                const titleBadge = getTitleBadge(teacher.title);
+
+                return `
+                    <tr class="table-row-clickable">
+                        <td class="select-column">
+                            <div class="form-check">
+                                <input class="form-check-input row-select" type="checkbox" value="${teacher.id}">
+                            </div>
+                        </td>
+                        <td class="data-cell">${teacher.employeeId || '-'}</td>
+                        <td class="data-cell">
+                            <div class="d-flex align-items-center">
+                                <img src="${teacher.avatarUrl || '/images/default-avatar.svg'}"
+                                     alt="头像" class="rounded-circle me-3" width="40" height="40"
+                                     style="border: 2px solid var(--gray-300);">
+                                <div>
+                                    <div class="fw-bold text-dark">${teacher.realName}</div>
+                                    <small class="text-muted">${teacher.email || '-'}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="data-cell">${teacher.department || '-'}</td>
+                        <td class="data-cell">${titleBadge}</td>
+                        <td class="data-cell">${teacher.phone || '-'}</td>
+                        <td class="data-cell">${teacher.hireDate || '-'}</td>
+                        <td class="data-cell">${statusBadge}</td>
+                        <td class="data-cell">
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary row-action" onclick="viewTeacher(${teacher.id})" title="查看详情">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-outline-warning row-action" onclick="editTeacher(${teacher.id})" title="编辑教师">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-outline-info row-action" onclick="viewCourses(${teacher.id})" title="查看课程">
+                                    <i class="fas fa-book"></i>
+                                </button>
+                                <button class="btn btn-outline-danger row-action" onclick="deleteTeacher(${teacher.id})" title="删除教师">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }
+
+            // 获取职称徽章
+            function getTitleBadge(title) {
+                const titleMap = {
+                    '教授': 'badge-danger',
+                    '副教授': 'badge-warning',
+                    '讲师': 'badge-info',
+                    '助教': 'badge-secondary'
+                };
+                const badgeClass = titleMap[title] || 'badge-secondary';
+                return `<span class="badge-enhanced ${badgeClass}">${title || '-'}</span>`;
+            }
+
+            // 加载教师数据
+            function loadTeachersData() {
+                if (window.teachersDataTable) {
+                    window.teachersDataTable.reload();
+                }
+            }
+
+            // 加载统计信息
+            function loadStatistics() {
+                $.get(pageConfig.apiEndpoints.statistics)
+                    .done(function(response) {
+                        if (response.success) {
+                            const stats = response.data;
+                            updateStatsCards(stats);
+                        }
+                    })
+                    .fail(function() {
+                        console.warn('加载统计信息失败');
+                    });
+            }
+
+            // 更新统计卡片
+            function updateStatsCards(stats) {
+                $('#totalTeachers').text(stats.totalTeachers || 0);
+                $('#activeTeachers').text(stats.activeTeachers || 0);
+                $('#professors').text(stats.professors || 0);
+                $('#newTeachers').text(stats.newTeachers || 0);
+
+                // 触发数字动画
+                $('.counter').each(function() {
+                    const $this = $(this);
+                    const target = parseInt($this.attr('data-target')) || parseInt($this.text());
+                    $this.attr('data-target', target);
+                });
+            }
+
+            // 执行搜索
+            function performSearch() {
+                const filters = {
+                    keyword: $('#searchInput').val(),
+                    department: $('#departmentFilter').val(),
+                    title: $('#titleFilter').val(),
+                    status: $('#statusFilter').val()
+                };
+
+                if (window.teachersDataTable) {
+                    window.teachersDataTable.search(filters);
+                }
+            }
+
+            // 重置筛选器
+            function resetFilters() {
+                $('#searchInput').val('');
+                $('#departmentFilter').val('');
+                $('#titleFilter').val('');
+                $('#statusFilter').val('');
+
+                if (window.teachersDataTable) {
+                    window.teachersDataTable.resetFilters();
+                }
+            }
+
+            // 切换筛选面板
+            function toggleFiltersPanel() {
+                const $content = $('#filtersContent');
+                const $icon = $('#toggleFilters i');
+
+                $content.slideToggle();
+                $icon.toggleClass('fa-chevron-up fa-chevron-down');
+            }
+
+            // 显示添加教师模态框
+            function showAddTeacherModal() {
+                // 这里可以集成FormBuilder组件
+                console.log('显示添加教师模态框');
+            }
+
+            // 导出教师数据
+            function exportTeachersData() {
+                const filters = {
+                    keyword: $('#searchInput').val(),
+                    department: $('#departmentFilter').val(),
+                    title: $('#titleFilter').val(),
+                    status: $('#statusFilter').val()
+                };
+
+                const params = new URLSearchParams(filters);
+                window.open(pageConfig.apiEndpoints.export + '?' + params.toString());
+            }
+
+            // 批量删除教师
+            function batchDeleteTeachers() {
+                const selectedIds = $('.row-select:checked').map(function() {
+                    return $(this).val();
+                }).get();
+
+                if (selectedIds.length === 0) {
+                    if (window.toast) {
+                        window.toast.warning('请选择要删除的教师');
+                    }
+                    return;
+                }
+
+                if (confirm(`确定要删除选中的 ${selectedIds.length} 位教师吗？`)) {
+                    // 执行批量删除
+                    console.log('批量删除教师:', selectedIds);
+                }
+            }
+
+            // 批量禁用教师
+            function batchDisableTeachers() {
+                const selectedIds = $('.row-select:checked').map(function() {
+                    return $(this).val();
+                }).get();
+
+                if (selectedIds.length === 0) {
+                    if (window.toast) {
+                        window.toast.warning('请选择要禁用的教师');
+                    }
+                    return;
+                }
+
+                if (confirm(`确定要禁用选中的 ${selectedIds.length} 位教师吗？`)) {
+                    // 执行批量禁用
+                    console.log('批量禁用教师:', selectedIds);
+                }
+            }
+
+            // 兼容旧的函数调用
+            function viewTeacher(teacherId) {
+                window.location.href = `/admin/teachers/${teacherId}`;
+            }
+
+            function editTeacher(teacherId) {
+                window.location.href = `/admin/teachers/${teacherId}/edit`;
+            }
+
+            function viewCourses(teacherId) {
+                window.location.href = `/admin/teachers/${teacherId}/courses`;
+            }
+
+            function deleteTeacher(teacherId) {
+                if (confirm('确定要删除这位教师吗？')) {
+                    $.ajax({
+                        url: `/api/v1/teachers/${teacherId}`,
+                        method: 'DELETE'
+                    })
+                    .done(function(response) {
+                        if (response.success) {
+                            if (window.toast) {
+                                window.toast.success('删除成功');
+                            }
+                            loadTeachersData();
+                            loadStatistics();
+                        } else {
+                            if (window.toast) {
+                                window.toast.error('删除失败：' + response.message);
+                            }
+                        }
+                    })
+                    .fail(function() {
+                        if (window.toast) {
+                            window.toast.error('删除失败，请稍后重试');
+                        }
+                    });
+                }
+            }
+        </script>
+    </th:block>
+</body>
+</html>

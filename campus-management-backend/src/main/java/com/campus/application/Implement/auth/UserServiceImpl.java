@@ -8,15 +8,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,6 +25,9 @@ import com.campus.domain.entity.auth.UserRole;
 import com.campus.domain.repository.auth.RoleRepository;
 import com.campus.domain.repository.auth.UserRepository;
 import com.campus.domain.repository.auth.UserRoleRepository;
+
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 /**
  * 用户服务实现类
@@ -165,7 +164,7 @@ public class UserServiceImpl implements UserService {
             menuPath.startsWith("/admin/roles") ||
             menuPath.startsWith("/admin/permissions") ||
             menuPath.startsWith("/admin/settings")) {
-            return userRoles.contains("SUPER_ADMIN") || userRoles.contains("ADMIN") || userRoles.contains("SYSTEM_ADMIN");
+            return userRoles.contains("ROLE_SUPER_ADMIN") || userRoles.contains("ROLE_ADMIN") || userRoles.contains("ROLE_SYSTEM_ADMIN");
         }
 
         // 教务管理页面 - 系统管理员、教务相关角色、教学人员可以访问
@@ -373,7 +372,8 @@ public class UserServiceImpl implements UserService {
             return new UserStatistics(totalUsers, activeUsers, inactiveUsers, 0);
         } catch (Exception e) {
             System.err.println("获取用户统计失败: " + e.getMessage());
-            e.printStackTrace();
+            // 使用日志记录而不是打印堆栈跟踪
+            System.err.println("详细错误信息: " + e.getClass().getSimpleName() + " - " + e.getMessage());
             // 返回默认统计信息
             return new UserStatistics(0, 0, 0, 0);
         }
@@ -391,7 +391,8 @@ public class UserServiceImpl implements UserService {
             return userRepository.countUsersByRoleName(roleName);
         } catch (Exception e) {
             System.err.println("统计角色用户数量失败: " + e.getMessage());
-            e.printStackTrace();
+            // 使用日志记录而不是打印堆栈跟踪
+            System.err.println("详细错误信息: " + e.getClass().getSimpleName() + " - " + e.getMessage());
             return 0; // 发生异常时返回0
         }
     }
@@ -443,8 +444,14 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     public Page<User> findUsersByPage(Pageable pageable, Map<String, Object> params) {
         try {
-            // 获取所有用户并预加载角色信息，然后根据条件过滤
-            List<User> allUsers = userRepository.findAllWithRoles();
+            // 简化实现：直接使用分页查询，避免复杂的预加载
+            if (params == null || params.isEmpty()) {
+                // 没有筛选条件，直接分页查询
+                return userRepository.findByDeletedOrderByIdDesc(0, pageable);
+            }
+
+            // 有筛选条件时，先获取所有符合条件的用户
+            List<User> allUsers = userRepository.findByDeleted(0);
             List<User> filteredUsers = new ArrayList<>();
 
             System.out.println("📊 获取到用户总数: " + allUsers.size());
@@ -453,13 +460,8 @@ public class UserServiceImpl implements UserService {
             for (User user : allUsers) {
                 boolean matches = true;
 
-                // 首先过滤掉已删除的用户（状态为-1的用户）
-                if (user.getStatus() == -1) {
-                    continue; // 跳过已删除的用户
-                }
-
                 // 搜索条件
-                if (params != null && params.containsKey("search")) {
+                if (params.containsKey("search")) {
                     String search = (String) params.get("search");
                     if (search != null && !search.trim().isEmpty()) {
                         search = search.trim().toLowerCase();
@@ -490,7 +492,7 @@ public class UserServiceImpl implements UserService {
                 }
 
                 // 角色条件
-                if (matches && params != null && params.containsKey("role")) {
+                if (matches && params.containsKey("role")) {
                     String role = (String) params.get("role");
                     if (role != null && !role.trim().isEmpty()) {
                         boolean roleMatch = false;
@@ -528,15 +530,14 @@ public class UserServiceImpl implements UserService {
                 }
 
                 // 状态条件
-                if (matches && params != null && params.containsKey("status")) {
+                if (matches && params.containsKey("status")) {
                     Object statusObj = params.get("status");
                     if (statusObj != null) {
                         try {
                             int status;
-                            if (statusObj instanceof Integer) {
-                                status = (Integer) statusObj;
-                            } else if (statusObj instanceof String) {
-                                String statusStr = (String) statusObj;
+                            if (statusObj instanceof Integer intStatus) {
+                                status = intStatus;
+                            } else if (statusObj instanceof String statusStr) {
                                 if (statusStr.trim().isEmpty()) {
                                     continue; // 空字符串，跳过状态筛选
                                 }
@@ -574,7 +575,8 @@ public class UserServiceImpl implements UserService {
 
         } catch (Exception e) {
             System.err.println("分页查询用户失败: " + e.getMessage());
-            e.printStackTrace();
+            // 使用日志记录而不是打印堆栈跟踪
+            System.err.println("详细错误信息: " + e.getClass().getSimpleName() + " - " + e.getMessage());
             // 返回空页面，避免系统崩溃
             return new PageImpl<>(new ArrayList<>(), pageable, 0);
         }
@@ -617,10 +619,10 @@ public class UserServiceImpl implements UserService {
         if (params != null && params.containsKey("status")) {
             Object statusObj = params.get("status");
             Integer status = null;
-            if (statusObj instanceof String) {
-                status = Integer.parseInt((String) statusObj);
-            } else if (statusObj instanceof Integer) {
-                status = (Integer) statusObj;
+            if (statusObj instanceof String statusStr) {
+                status = Integer.valueOf(statusStr);
+            } else if (statusObj instanceof Integer intStatus) {
+                status = intStatus;
             }
             if (status != null) {
                 return userRepository.findByStatus(status);
@@ -713,7 +715,8 @@ public class UserServiceImpl implements UserService {
         user.setEmail(email.trim());
         user.setRealName((String) userData.get("realName"));
         user.setPhone((String) userData.get("phone"));
-        user.setStatus(userData.get("status") != null ? (Integer) userData.get("status") : 1);
+        Object statusObj = userData.get("status");
+        user.setStatus(statusObj instanceof Integer ? (Integer) statusObj : 1);
         user.setCreatedAt(LocalDateTime.now());
 
         // 保存用户
@@ -837,10 +840,10 @@ public class UserServiceImpl implements UserService {
                     Object idObj = roleData.get("id");
                     if (idObj != null) {
                         Long roleId;
-                        if (idObj instanceof Integer) {
-                            roleId = ((Integer) idObj).longValue();
-                        } else if (idObj instanceof Long) {
-                            roleId = (Long) idObj;
+                        if (idObj instanceof Integer intId) {
+                            roleId = intId.longValue();
+                        } else if (idObj instanceof Long longId) {
+                            roleId = longId;
                         } else {
                             System.out.println("⚠️ 跳过无效的角色ID类型: " + idObj.getClass());
                             continue; // 跳过无效的角色ID
@@ -866,7 +869,8 @@ public class UserServiceImpl implements UserService {
             System.out.println("✅ 用户角色更新完成");
         } catch (Exception e) {
             System.err.println("❌ 更新用户角色失败: " + e.getMessage());
-            e.printStackTrace();
+            // 使用日志记录而不是打印堆栈跟踪
+            System.err.println("详细错误信息: " + e.getClass().getSimpleName() + " - " + e.getMessage());
             throw new RuntimeException("更新用户角色失败: " + e.getMessage());
         }
     }

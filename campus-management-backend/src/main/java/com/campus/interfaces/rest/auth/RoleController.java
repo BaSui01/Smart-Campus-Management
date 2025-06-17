@@ -1,24 +1,34 @@
 package com.campus.interfaces.rest.auth;
 
-import com.campus.application.service.auth.PermissionService;
-import com.campus.application.service.auth.RoleService;
-import com.campus.domain.entity.auth.Permission;
-import com.campus.domain.entity.auth.Role;
-import com.campus.shared.exception.BusinessException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.campus.application.service.auth.PermissionService;
+import com.campus.application.service.auth.RoleService;
+import com.campus.domain.entity.auth.Permission;
+import com.campus.domain.entity.auth.Role;
+import com.campus.shared.exception.BusinessException;
+
 import jakarta.validation.Valid;
-import java.util.List;
-import java.util.Map;
 
 /**
  * 角色管理Web控制器
@@ -339,6 +349,75 @@ public class RoleController {
             logger.error("加载角色统计失败", e);
             model.addAttribute("error", "加载角色统计失败: " + e.getMessage());
             return "redirect:/admin/roles";
+        }
+    }
+    
+    /**
+     * REST API - 获取角色列表（JSON响应）
+     * 用于前端AJAX请求
+     */
+    @GetMapping(produces = "application/json")
+    @ResponseBody
+    public ResponseEntity<?> getRolesJson(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String keyword) {
+        
+        try {
+            Pageable pageable = PageRequest.of(page, size);
+            Page<Role> roles;
+            
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                roles = roleService.searchRoles(keyword.trim(), pageable);
+            } else {
+                roles = roleService.findAllRoles(pageable);
+            }
+            
+            // 构建响应数据
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("data", roles);
+            response.put("totalRoles", roleService.countTotalRoles());
+            response.put("systemRoles", roleService.countSystemRoles());
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            logger.error("获取角色列表JSON失败", e);
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("message", "获取角色信息失败: " + e.getMessage());
+            return ResponseEntity.badRequest().body(errorResponse);
+        }
+    }
+    
+    /**
+     * REST API - 获取角色详情（JSON响应）
+     */
+    @GetMapping(value = "/{id}", produces = "application/json")
+    @ResponseBody
+    public ResponseEntity<?> getRoleDetailJson(@PathVariable Long id) {
+        try {
+            Role role = roleService.findRoleById(id);
+            if (role == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            List<Map<String, Object>> rolePermissions = roleService.getRolePermissions(id);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("role", role);
+            response.put("permissions", rolePermissions);
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            logger.error("获取角色详情JSON失败", e);
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("message", "获取角色详情失败: " + e.getMessage());
+            return ResponseEntity.badRequest().body(errorResponse);
         }
     }
 }

@@ -39,17 +39,17 @@ export const unifiedAuthApi = {
     })
   },
 
-  /**
-   * 角色验证登录
-   * 验证用户是否有指定角色的登录权限
-   */
-  validateRoleLogin(username, role) {
-    return authApi({
-      url: '/auth/validate-role',
-      method: 'post',
-      data: { username, role }
-    })
-  },
+  // /**
+  //  * 角色验证登录
+  //  * 验证用户是否有指定角色的登录权限
+  //  */
+  // validateRoleLogin(username, role) {
+  //   return authApi({
+  //     url: '/auth/validate-role',
+  //     method: 'post',
+  //     data: { username, role }
+  //   })
+  // },
 
   /**
    * 获取用户角色信息

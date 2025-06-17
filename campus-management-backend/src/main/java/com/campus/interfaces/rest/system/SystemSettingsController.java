@@ -1156,15 +1156,15 @@ public class SystemSettingsController {
      * 获取日志级别对应的颜色
      */
     private String getLogLevelColor(String level) {
-        switch (level) {
-            case "TRACE": return "#6c757d";
-            case "DEBUG": return "#17a2b8";
-            case "INFO": return "#28a745";
-            case "WARN": return "#ffc107";
-            case "ERROR": return "#dc3545";
-            case "FATAL": return "#6f42c1";
-            default: return "#6c757d";
-        }
+        return switch (level) {
+            case "TRACE" -> "#6c757d";
+            case "DEBUG" -> "#17a2b8";
+            case "INFO" -> "#28a745";
+            case "WARN" -> "#ffc107";
+            case "ERROR" -> "#dc3545";
+            case "FATAL" -> "#6f42c1";
+            default -> "#6c757d";
+        };
     }
     
     private Map<String, Object> getPerformanceSettings() {

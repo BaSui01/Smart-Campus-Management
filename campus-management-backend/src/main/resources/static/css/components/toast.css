@@ -1,0 +1,524 @@
+/* Toast通知样式 - Toast Notification Styles */
+
+/* Toast变量 */
+:root {
+    /* Toast容器 */
+    --toast-container-padding: 1rem;
+    --toast-container-z-index: 1055;
+    
+    /* Toast基础样式 */
+    --toast-bg: #ffffff;
+    --toast-border: #dee2e6;
+    --toast-border-radius: 0.5rem;
+    --toast-box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    --toast-min-width: 350px;
+    --toast-max-width: 400px;
+    
+    /* Toast头部 */
+    --toast-header-bg: #f8f9fa;
+    --toast-header-border: #dee2e6;
+    --toast-header-padding: 0.75rem 1rem;
+    
+    /* Toast主体 */
+    --toast-body-padding: 1rem;
+    --toast-body-color: #495057;
+    
+    /* Toast进度条 */
+    --toast-progress-height: 3px;
+    --toast-progress-bg: rgba(0, 0, 0, 0.1);
+    
+    /* 动画 */
+    --toast-transition: all 0.3s ease-in-out;
+    --toast-slide-distance: 100%;
+}
+
+/* 深色主题变量 */
+[data-theme="dark"] {
+    --toast-bg: #2d3748;
+    --toast-border: #4a5568;
+    --toast-header-bg: #374151;
+    --toast-header-border: #4a5568;
+    --toast-body-color: #e2e8f0;
+    --toast-progress-bg: rgba(255, 255, 255, 0.1);
+}
+
+/* ==========================================================================
+   Toast容器
+   ========================================================================== */
+
+.toast-container {
+    position: fixed;
+    z-index: var(--toast-container-z-index);
+    padding: var(--toast-container-padding);
+    pointer-events: none;
+}
+
+/* 容器位置 */
+.toast-container.position-fixed.top-0.end-0 {
+    top: 0;
+    right: 0;
+}
+
+.toast-container.position-fixed.top-0.start-0 {
+    top: 0;
+    left: 0;
+}
+
+.toast-container.position-fixed.top-0.start-50 {
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.toast-container.position-fixed.bottom-0.end-0 {
+    bottom: 0;
+    right: 0;
+}
+
+.toast-container.position-fixed.bottom-0.start-0 {
+    bottom: 0;
+    left: 0;
+}
+
+.toast-container.position-fixed.bottom-0.start-50 {
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* ==========================================================================
+   Toast基础样式
+   ========================================================================== */
+
+.toast {
+    background-color: var(--toast-bg);
+    border: 1px solid var(--toast-border);
+    border-radius: var(--toast-border-radius);
+    box-shadow: var(--toast-box-shadow);
+    min-width: var(--toast-min-width);
+    max-width: var(--toast-max-width);
+    margin-bottom: 0.75rem;
+    pointer-events: auto;
+    position: relative;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateX(var(--toast-slide-distance));
+    transition: var(--toast-transition);
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.toast.showing {
+    opacity: 0;
+    transform: translateX(var(--toast-slide-distance));
+}
+
+.toast.hiding {
+    opacity: 0;
+    transform: translateX(var(--toast-slide-distance));
+}
+
+/* ==========================================================================
+   Toast头部
+   ========================================================================== */
+
+.toast-header {
+    display: flex;
+    align-items: center;
+    padding: var(--toast-header-padding);
+    background-color: var(--toast-header-bg);
+    border-bottom: 1px solid var(--toast-header-border);
+    border-top-left-radius: calc(var(--toast-border-radius) - 1px);
+    border-top-right-radius: calc(var(--toast-border-radius) - 1px);
+}
+
+.toast-icon {
+    flex-shrink: 0;
+    margin-right: 0.5rem;
+    font-size: 1.125rem;
+}
+
+.toast-title {
+    font-weight: 600;
+    font-size: 0.875rem;
+    margin-right: auto;
+    margin-bottom: 0;
+}
+
+.toast-time {
+    font-size: 0.75rem;
+    margin-left: auto;
+    margin-right: 0.5rem;
+}
+
+.toast .btn-close {
+    margin-right: -0.375rem;
+    margin-left: 0.75rem;
+}
+
+/* ==========================================================================
+   Toast主体
+   ========================================================================== */
+
+.toast-body {
+    padding: var(--toast-body-padding);
+    color: var(--toast-body-color);
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+/* ==========================================================================
+   Toast进度条
+   ========================================================================== */
+
+.toast-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: var(--toast-progress-height);
+    background-color: var(--toast-progress-bg);
+    overflow: hidden;
+}
+
+.toast-progress-bar {
+    width: 100%;
+    height: 100%;
+    background-color: currentColor;
+    transform-origin: left;
+    animation: toastProgress linear;
+}
+
+.toast-progress-running {
+    animation-play-state: running;
+}
+
+@keyframes toastProgress {
+    from {
+        transform: scaleX(1);
+    }
+    to {
+        transform: scaleX(0);
+    }
+}
+
+/* ==========================================================================
+   Toast类型样式
+   ========================================================================== */
+
+/* 成功Toast */
+.toast-success {
+    border-left: 4px solid var(--success-color);
+}
+
+.toast-success .toast-icon {
+    color: var(--success-color);
+}
+
+.toast-success .toast-progress-bar {
+    background-color: var(--success-color);
+}
+
+/* 错误Toast */
+.toast-error {
+    border-left: 4px solid var(--danger-color);
+}
+
+.toast-error .toast-icon {
+    color: var(--danger-color);
+}
+
+.toast-error .toast-progress-bar {
+    background-color: var(--danger-color);
+}
+
+/* 警告Toast */
+.toast-warning {
+    border-left: 4px solid var(--warning-color);
+}
+
+.toast-warning .toast-icon {
+    color: var(--warning-color);
+}
+
+.toast-warning .toast-progress-bar {
+    background-color: var(--warning-color);
+}
+
+/* 信息Toast */
+.toast-info {
+    border-left: 4px solid var(--info-color);
+}
+
+.toast-info .toast-icon {
+    color: var(--info-color);
+}
+
+.toast-info .toast-progress-bar {
+    background-color: var(--info-color);
+}
+
+/* ==========================================================================
+   Toast主题样式
+   ========================================================================== */
+
+/* 浅色主题 */
+.toast-light {
+    /* 使用默认样式 */
+}
+
+/* 深色主题 */
+.toast-dark {
+    background-color: var(--dark);
+    border-color: var(--gray-700);
+    color: var(--light);
+}
+
+.toast-dark .toast-header {
+    background-color: var(--gray-800);
+    border-bottom-color: var(--gray-700);
+    color: var(--light);
+}
+
+.toast-dark .toast-body {
+    color: var(--light);
+}
+
+/* ==========================================================================
+   Toast动画样式
+   ========================================================================== */
+
+/* 淡入动画 */
+.toast-fade {
+    --toast-slide-distance: 0;
+}
+
+.toast-fade:not(.show) {
+    opacity: 0;
+}
+
+/* 滑动动画 */
+.toast-slide {
+    /* 使用默认滑动动画 */
+}
+
+/* 从左侧滑入 */
+.toast-slide-left {
+    --toast-slide-distance: -100%;
+}
+
+/* 从上方滑入 */
+.toast-slide-up {
+    transform: translateY(-100%);
+}
+
+.toast-slide-up.show {
+    transform: translateY(0);
+}
+
+.toast-slide-up.showing,
+.toast-slide-up.hiding {
+    transform: translateY(-100%);
+}
+
+/* 从下方滑入 */
+.toast-slide-down {
+    transform: translateY(100%);
+}
+
+.toast-slide-down.show {
+    transform: translateY(0);
+}
+
+.toast-slide-down.showing,
+.toast-slide-down.hiding {
+    transform: translateY(100%);
+}
+
+/* ==========================================================================
+   Toast尺寸变体
+   ========================================================================== */
+
+/* 小型Toast */
+.toast-sm {
+    min-width: 280px;
+    max-width: 320px;
+}
+
+.toast-sm .toast-header {
+    padding: 0.5rem 0.75rem;
+}
+
+.toast-sm .toast-body {
+    padding: 0.75rem;
+    font-size: 0.8125rem;
+}
+
+.toast-sm .toast-icon {
+    font-size: 1rem;
+}
+
+.toast-sm .toast-title {
+    font-size: 0.8125rem;
+}
+
+/* 大型Toast */
+.toast-lg {
+    min-width: 400px;
+    max-width: 500px;
+}
+
+.toast-lg .toast-header {
+    padding: 1rem 1.25rem;
+}
+
+.toast-lg .toast-body {
+    padding: 1.25rem;
+    font-size: 1rem;
+}
+
+.toast-lg .toast-icon {
+    font-size: 1.25rem;
+}
+
+.toast-lg .toast-title {
+    font-size: 1rem;
+}
+
+/* ==========================================================================
+   响应式设计
+   ========================================================================== */
+
+@media (max-width: 575.98px) {
+    .toast-container {
+        padding: 0.5rem;
+        left: 0 !important;
+        right: 0 !important;
+        transform: none !important;
+    }
+    
+    .toast {
+        min-width: auto;
+        max-width: none;
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    .toast-sm,
+    .toast-lg {
+        min-width: auto;
+        max-width: none;
+        width: 100%;
+    }
+    
+    .toast-header {
+        padding: 0.75rem;
+    }
+    
+    .toast-body {
+        padding: 0.75rem;
+    }
+    
+    /* 移动端使用从上方滑入的动画 */
+    .toast {
+        transform: translateY(-100%);
+    }
+    
+    .toast.show {
+        transform: translateY(0);
+    }
+    
+    .toast.showing,
+    .toast.hiding {
+        transform: translateY(-100%);
+    }
+}
+
+/* ==========================================================================
+   Toast堆叠效果
+   ========================================================================== */
+
+.toast-container .toast:not(:last-child) {
+    margin-bottom: 0.75rem;
+}
+
+.toast-container .toast:nth-child(n+4) {
+    opacity: 0.8;
+    transform: scale(0.95) translateY(-5px);
+}
+
+.toast-container .toast:nth-child(n+6) {
+    opacity: 0.6;
+    transform: scale(0.9) translateY(-10px);
+}
+
+.toast-container .toast:nth-child(n+8) {
+    display: none;
+}
+
+/* ==========================================================================
+   Toast交互效果
+   ========================================================================== */
+
+.toast:hover {
+    box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.2);
+    transform: translateY(-2px);
+}
+
+.toast:hover .toast-progress-bar {
+    animation-play-state: paused;
+}
+
+/* 点击效果 */
+.toast:active {
+    transform: translateY(0);
+    box-shadow: var(--toast-box-shadow);
+}
+
+/* ==========================================================================
+   Toast可访问性
+   ========================================================================== */
+
+.toast[role="alert"] {
+    /* 确保屏幕阅读器能够读取 */
+}
+
+.toast[aria-live="assertive"] {
+    /* 立即通知屏幕阅读器 */
+}
+
+.toast[aria-live="polite"] {
+    /* 等待当前语音结束后通知 */
+}
+
+/* ==========================================================================
+   减少动画偏好设置
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+    .toast {
+        transition: none;
+        animation: none;
+    }
+    
+    .toast-progress-bar {
+        animation: none;
+    }
+    
+    .toast:hover {
+        transform: none;
+    }
+}
+
+/* ==========================================================================
+   打印样式
+   ========================================================================== */
+
+@media print {
+    .toast-container {
+        display: none;
+    }
+}

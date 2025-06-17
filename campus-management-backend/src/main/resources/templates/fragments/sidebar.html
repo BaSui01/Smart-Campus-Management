@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<!-- 侧边栏主体 -->
+<nav th:fragment="sidebar" class="sidebar" id="sidebar">
+    
+    <!-- 侧边栏头部 -->
+    <div class="sidebar-header">
+        <div class="sidebar-brand">
+            <i class="fas fa-graduation-cap"></i>
+            <span class="brand-text">智慧校园</span>
+        </div>
+        <button class="sidebar-toggle d-lg-none" id="sidebarToggle">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <!-- 侧边栏菜单 -->
+    <div class="sidebar-menu">
+        <ul class="nav nav-sidebar">
+            
+            <!-- 仪表盘 - 所有登录用户都可以访问 -->
+            <li class="nav-item">
+                <a th:href="@{/admin/dashboard}" class="nav-link" th:classappend="${currentPage == 'dashboard' ? 'active' : ''}">
+                    <i class="nav-icon fas fa-tachometer-alt"></i>
+                    <span class="nav-text">仪表盘</span>
+                </a>
+            </li>
+
+            <!-- 系统管理 - 超级管理员和系统管理员 -->
+            <li class="nav-item has-submenu" th:if="${@permissionUtil.hasAnyRole('ROLE_SUPER_ADMIN', 'ROLE_ADMIN')}">
+                <a href="#" class="nav-link" data-bs-toggle="collapse" data-bs-target="#systemMenu" aria-expanded="false">
+                    <i class="nav-icon fas fa-cogs"></i>
+                    <span class="nav-text">系统管理</span>
+                    <i class="nav-arrow fas fa-chevron-down"></i>
+                </a>
+                <div class="collapse" id="systemMenu">
+                    <ul class="nav nav-submenu">
+                        <li class="nav-item">
+                            <a th:href="@{/admin/users}" class="nav-link" th:classappend="${currentPage == 'users' ? 'active' : ''}">
+                                <i class="nav-icon fas fa-users"></i>
+                                <span class="nav-text">用户管理</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a th:href="@{/admin/roles}" class="nav-link" th:classappend="${currentPage == 'roles' ? 'active' : ''}">
+                                <i class="nav-icon fas fa-user-tag"></i>
+                                <span class="nav-text">角色管理</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a th:href="@{/admin/permissions}" class="nav-link" th:classappend="${currentPage == 'permissions' ? 'active' : ''}">
+                                <i class="nav-icon fas fa-key"></i>
+                                <span class="nav-text">权限管理</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a th:href="@{/admin/settings}" class="nav-link" th:classappend="${currentPage == 'settings' ? 'active' : ''}">
+                                <i class="nav-icon fas fa-sliders-h"></i>
+                                <span class="nav-text">系统设置</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a th:href="@{/admin/notifications}" class="nav-link" th:classappend="${currentPage == 'notifications' ? 'active' : ''}">
+                                <i class="nav-icon fas fa-bell"></i>
+                                <span class="nav-text">通知管理</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a th:href="@{/admin/activity-log}" class="nav-link" th:classappend="${currentPage == 'activity-log' ? 'active' : ''}">
+                                <i class="nav-icon fas fa-history"></i>
+                                <span class="nav-text">活动日志</span>
+                            </a>
+                        </li>
+                        <li class="nav-item" th:if="${@permissionUtil.hasAnyRole('ROLE_SUPER_ADMIN', 'ROLE_ADMIN')}">
+                            <a th:href="@{/admin/diagnostic/permissions}" class="nav-link" th:classappend="${currentPage == 'diagnostic' ? 'active' : ''}">
+                                <i class="nav-icon fas fa-stethoscope"></i>
+                                <span class="nav-text">权限诊断</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+
+            <!-- 教务管理 - 教务相关角色 -->
+            <li class="nav-item has-submenu" th:if="${@permissionUtil.hasAnyRole('ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'ROLE_PRINCIPAL', 'ROLE_VICE_PRINCIPAL', 'ROLE_ACADEMIC_DIRECTOR')}">
+                <a href="#" class="nav-link" data-bs-toggle="collapse" data-bs-target="#academicMenu" aria-expanded="false">
+                    <i class="nav-icon fas fa-graduation-cap"></i>
+                    <span class="nav-text">教务管理</span>
+                    <i class="nav-arrow fas fa-chevron-down"></i>
+                </a>
+                <div class="collapse" id="academicMenu">
+                    <ul class="nav nav-submenu">
+                        <li class="nav-item">
+                            <a th:href="@{/admin/courses}" class="nav-link" th:classappend="${currentPage == 'courses' ? 'active' : ''}">
+                                <i class="nav-icon fas fa-book"></i>
+                                <span class="nav-text">课程管理</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a th:href="@{/admin/grades}" class="nav-link" th:classappend="${currentPage == 'grades' ? 'active' : ''}">
+                                <i class="nav-icon fas fa-chart-line"></i>
+                                <span class="nav-text">成绩管理</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a th:href="@{/admin/attendance}" class="nav-link" th:classappend="${currentPage == 'attendance' ? 'active' : ''}">
+                                <i class="nav-icon fas fa-user-check"></i>
+                                <span class="nav-text">考勤管理</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a th:href="@{/admin/academic/classes}" class="nav-link" th:classappend="${currentPage == 'classes' ? 'active' : ''}">
+                                <i class="nav-icon fas fa-chalkboard"></i>
+                                <span class="nav-text">班级管理</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a th:href="@{/admin/academic/schedules}" class="nav-link" th:classappend="${currentPage == 'schedules' ? 'active' : ''}">
+                                <i class="nav-icon fas fa-calendar-alt"></i>
+                                <span class="nav-text">课程安排</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a th:href="@{/admin/academic/course-selection}" class="nav-link" th:classappend="${currentPage == 'course-selection' ? 'active' : ''}">
+                                <i class="nav-icon fas fa-hand-pointer"></i>
+                                <span class="nav-text">选课管理</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+
+            <!-- 学生管理 - 学生事务相关角色 -->
+            <li class="nav-item" th:if="${@permissionUtil.hasAnyRole('ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'ROLE_PRINCIPAL', 'ROLE_VICE_PRINCIPAL', 'ROLE_ACADEMIC_DIRECTOR', 'ROLE_STUDENT_AFFAIRS_DIRECTOR')}">
+                <a th:href="@{/admin/students}" class="nav-link" th:classappend="${currentPage == 'students' ? 'active' : ''}">
+                    <i class="nav-icon fas fa-user-graduate"></i>
+                    <span class="nav-text">学生管理</span>
+                </a>
+            </li>
+
+            <!-- 人事管理 - 人事相关角色 -->
+            <li class="nav-item has-submenu" th:if="${@permissionUtil.hasAnyRole('ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'ROLE_PRINCIPAL', 'ROLE_HR_DIRECTOR')}">
+                <a href="#" class="nav-link" data-bs-toggle="collapse" data-bs-target="#hrMenu" aria-expanded="false">
+                    <i class="nav-icon fas fa-users-cog"></i>
+                    <span class="nav-text">人事管理</span>
+                    <i class="nav-arrow fas fa-chevron-down"></i>
+                </a>
+                <div class="collapse" id="hrMenu">
+                    <ul class="nav nav-submenu">
+                        <li class="nav-item">
+                            <a th:href="@{/admin/teachers}" class="nav-link" th:classappend="${currentPage == 'teachers' ? 'active' : ''}">
+                                <i class="nav-icon fas fa-chalkboard-teacher"></i>
+                                <span class="nav-text">教师管理</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a th:href="@{/admin/staff}" class="nav-link" th:classappend="${currentPage == 'staff' ? 'active' : ''}">
+                                <i class="nav-icon fas fa-user-tie"></i>
+                                <span class="nav-text">员工管理</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a th:href="@{/admin/departments}" class="nav-link" th:classappend="${currentPage == 'departments' ? 'active' : ''}">
+                                <i class="nav-icon fas fa-building"></i>
+                                <span class="nav-text">部门管理</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+
+            <!-- 财务管理 - 财务相关角色 -->
+            <li class="nav-item has-submenu" th:if="${@permissionUtil.hasAnyRole('ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'ROLE_PRINCIPAL', 'ROLE_FINANCE_DIRECTOR')}">
+                <a href="#" class="nav-link" data-bs-toggle="collapse" data-bs-target="#financeMenu" aria-expanded="false">
+                    <i class="nav-icon fas fa-money-bill-wave"></i>
+                    <span class="nav-text">财务管理</span>
+                    <i class="nav-arrow fas fa-chevron-down"></i>
+                </a>
+                <div class="collapse" id="financeMenu">
+                    <ul class="nav nav-submenu">
+                        <li class="nav-item">
+                            <a th:href="@{/admin/fee-items}" class="nav-link" th:classappend="${currentPage == 'fee-items' ? 'active' : ''}">
+                                <i class="nav-icon fas fa-list"></i>
+                                <span class="nav-text">费用项目</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a th:href="@{/admin/payments}" class="nav-link" th:classappend="${currentPage == 'payments' ? 'active' : ''}">
+                                <i class="nav-icon fas fa-credit-card"></i>
+                                <span class="nav-text">缴费管理</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a th:href="@{/admin/payment-records}" class="nav-link" th:classappend="${currentPage == 'payment-records' ? 'active' : ''}">
+                                <i class="nav-icon fas fa-receipt"></i>
+                                <span class="nav-text">缴费记录</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a th:href="@{/admin/finance/statistics}" class="nav-link" th:classappend="${currentPage == 'finance-stats' ? 'active' : ''}">
+                                <i class="nav-icon fas fa-chart-bar"></i>
+                                <span class="nav-text">财务统计</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a th:href="@{/admin/finance/reports}" class="nav-link" th:classappend="${currentPage == 'finance-reports' ? 'active' : ''}">
+                                <i class="nav-icon fas fa-file-invoice-dollar"></i>
+                                <span class="nav-text">财务报表</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+
+            <!-- 教师功能 - 教师角色 -->
+            <li class="nav-item has-submenu" th:if="${@permissionUtil.hasAnyRole('ROLE_TEACHER')}">
+                <a href="#" class="nav-link" data-bs-toggle="collapse" data-bs-target="#teacherMenu" aria-expanded="false">
+                    <i class="nav-icon fas fa-chalkboard-teacher"></i>
+                    <span class="nav-text">教师功能</span>
+                    <i class="nav-arrow fas fa-chevron-down"></i>
+                </a>
+                <div class="collapse" id="teacherMenu">
+                    <ul class="nav nav-submenu">
+                        <li class="nav-item">
+                            <a th:href="@{/teacher/courses}" class="nav-link" th:classappend="${currentPage == 'teacher-courses' ? 'active' : ''}">
+                                <i class="nav-icon fas fa-book"></i>
+                                <span class="nav-text">我的课程</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a th:href="@{/teacher/grades}" class="nav-link" th:classappend="${currentPage == 'teacher-grades' ? 'active' : ''}">
+                                <i class="nav-icon fas fa-chart-line"></i>
+                                <span class="nav-text">成绩录入</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a th:href="@{/teacher/attendance}" class="nav-link" th:classappend="${currentPage == 'teacher-attendance' ? 'active' : ''}">
+                                <i class="nav-icon fas fa-user-check"></i>
+                                <span class="nav-text">考勤管理</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+
+            <!-- 学生功能 - 学生角色 -->
+            <li class="nav-item has-submenu" th:if="${@permissionUtil.hasAnyRole('ROLE_STUDENT')}">
+                <a href="#" class="nav-link" data-bs-toggle="collapse" data-bs-target="#studentMenu" aria-expanded="false">
+                    <i class="nav-icon fas fa-user-graduate"></i>
+                    <span class="nav-text">学生功能</span>
+                    <i class="nav-arrow fas fa-chevron-down"></i>
+                </a>
+                <div class="collapse" id="studentMenu">
+                    <ul class="nav nav-submenu">
+                        <li class="nav-item">
+                            <a th:href="@{/student/courses}" class="nav-link" th:classappend="${currentPage == 'student-courses' ? 'active' : ''}">
+                                <i class="nav-icon fas fa-book"></i>
+                                <span class="nav-text">我的课程</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a th:href="@{/student/grades}" class="nav-link" th:classappend="${currentPage == 'student-grades' ? 'active' : ''}">
+                                <i class="nav-icon fas fa-chart-line"></i>
+                                <span class="nav-text">我的成绩</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a th:href="@{/student/attendance}" class="nav-link" th:classappend="${currentPage == 'student-attendance' ? 'active' : ''}">
+                                <i class="nav-icon fas fa-user-check"></i>
+                                <span class="nav-text">我的考勤</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a th:href="@{/student/payments}" class="nav-link" th:classappend="${currentPage == 'student-payments' ? 'active' : ''}">
+                                <i class="nav-icon fas fa-credit-card"></i>
+                                <span class="nav-text">缴费查询</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+
+            <!-- 分隔线 -->
+            <li class="nav-divider"></li>
+
+            <!-- 个人中心 - 所有用户 -->
+            <li class="nav-item">
+                <a th:href="@{/admin/profile}" class="nav-link" th:classappend="${currentPage == 'profile' ? 'active' : ''}">
+                    <i class="nav-icon fas fa-user-circle"></i>
+                    <span class="nav-text">个人资料</span>
+                </a>
+            </li>
+
+            <!-- API测试 - 开发环境或管理员 -->
+            <li class="nav-item" th:if="${@environment.acceptsProfiles('dev') or @permissionUtil.hasAnyRole('ROLE_SUPER_ADMIN', 'ROLE_ADMIN')}">
+                <a th:href="@{/admin/test-api}" class="nav-link" th:classappend="${currentPage == 'test-api' ? 'active' : ''}">
+                    <i class="nav-icon fas fa-flask"></i>
+                    <span class="nav-text">API测试</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- 侧边栏底部 -->
+    <div class="sidebar-footer">
+        <div class="user-info">
+            <div class="user-avatar">
+                <img th:src="@{/images/default-avatar.svg}" alt="用户头像" class="avatar-img">
+            </div>
+            <div class="user-details">
+                <div class="user-name" th:text="${session.currentUser?.realName ?: session.currentUser?.username ?: '用户'}">用户</div>
+                <div class="user-role" th:text="${session.userRoles != null and !session.userRoles.isEmpty() ? session.userRoles[0] : '普通用户'}">普通用户</div>
+            </div>
+        </div>
+    </div>
+</nav>
+
+</html>

@@ -1,253 +1,239 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout/admin :: html}"
-      lang="zh-CN">
-<head th:replace="~{layout/admin :: head}">
-    <th:block th:fragment="head-extra">
-        <title>权限管理 - 智慧校园管理系统</title>
-        <link th:href="@{/css/components/data-table.css}" rel="stylesheet">
-        <link th:href="@{/css/components/form-components.css}" rel="stylesheet">
-    </th:block>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>权限诊断 - 智慧校园管理系统</title>
+    <link rel="stylesheet" th:href="@{/css/admin/common.css}">
+    <link rel="stylesheet" th:href="@{/css/admin/diagnostic.css}">
+    <style>
+        .diagnostic-container {
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .diagnostic-section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .diagnostic-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 8px;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+        }
+        
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            border-left: 4px solid #007bff;
+        }
+        
+        .info-label {
+            font-weight: 500;
+            color: #555;
+        }
+        
+        .info-value {
+            font-weight: bold;
+        }
+        
+        .status-true {
+            color: #28a745;
+        }
+        
+        .status-false {
+            color: #dc3545;
+        }
+        
+        .role-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            background: #007bff;
+            color: white;
+            border-radius: 4px;
+            font-size: 12px;
+            margin: 2px;
+        }
+        
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 12px;
+            border-radius: 4px;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .refresh-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+        
+        .refresh-btn:hover {
+            background: #0056b3;
+        }
+        
+        .fix-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        
+        .fix-btn:hover {
+            background: #1e7e34;
+        }
+    </style>
 </head>
 <body>
-    <div th:fragment="content">
-        <!-- 页面标题 -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1 class="h3 mb-0">
-                    <i class="fas fa-key me-2 text-primary"></i>权限管理
-                </h1>
-                <p class="text-muted mb-0">管理系统权限配置</p>
-            </div>
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPermissionModal">
-                <i class="fas fa-plus me-2"></i>添加权限
-            </button>
-        </div>
-
-        <!-- 统计卡片 -->
-        <div class="row mb-4">
-            <div class="col-xl-3 col-md-6">
-                <div class="card bg-primary text-white mb-4">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <div class="text-white-75 small">总权限数</div>
-                                <div class="text-lg fw-bold" th:text="${permissions?.totalElements ?: 0}">0</div>
-                            </div>
-                            <i class="fas fa-key fa-2x text-white-50"></i>
-                        </div>
-                    </div>
+    <div class="diagnostic-container">
+        <h1>权限诊断工具</h1>
+        
+        <button class="refresh-btn" onclick="location.reload()">刷新诊断信息</button>
+        <button class="fix-btn" onclick="fixAdminPermissions()">修复Admin权限</button>
+        
+        <div th:if="${error}" class="error-message" th:text="${error}"></div>
+        
+        <!-- 当前用户信息 -->
+        <div class="diagnostic-section" th:if="${currentUser}">
+            <div class="diagnostic-title">当前用户信息</div>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">用户ID:</span>
+                    <span class="info-value" th:text="${currentUser.id}"></span>
                 </div>
-            </div>
-            <div class="col-xl-3 col-md-6">
-                <div class="card bg-success text-white mb-4">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <div class="text-white-75 small">系统权限</div>
-                                <div class="text-lg fw-bold" th:text="${permissions?.totalElements ?: 0}">0</div>
-                            </div>
-                            <i class="fas fa-cog fa-2x text-white-50"></i>
-                        </div>
-                    </div>
+                <div class="info-item">
+                    <span class="info-label">用户名:</span>
+                    <span class="info-value" th:text="${currentUser.username}"></span>
                 </div>
-            </div>
-            <div class="col-xl-3 col-md-6">
-                <div class="card bg-warning text-white mb-4">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <div class="text-white-75 small">当前页数量</div>
-                                <div class="text-lg fw-bold" th:text="${permissions?.numberOfElements ?: 0}">0</div>
-                            </div>
-                            <i class="fas fa-user-plus fa-2x text-white-50"></i>
-                        </div>
-                    </div>
+                <div class="info-item">
+                    <span class="info-label">真实姓名:</span>
+                    <span class="info-value" th:text="${currentUser.realName}"></span>
                 </div>
-            </div>
-            <div class="col-xl-3 col-md-6">
-                <div class="card bg-info text-white mb-4">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <div class="text-white-75 small">总页数</div>
-                                <div class="text-lg fw-bold" th:text="${permissions?.totalPages ?: 0}">0</div>
-                            </div>
-                            <i class="fas fa-layer-group fa-2x text-white-50"></i>
-                        </div>
-                    </div>
+                <div class="info-item">
+                    <span class="info-label">邮箱:</span>
+                    <span class="info-value" th:text="${currentUser.email}"></span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">状态:</span>
+                    <span class="info-value" th:class="${currentUser.status == 1} ? 'status-true' : 'status-false'" 
+                          th:text="${currentUser.status == 1} ? '启用' : '禁用'"></span>
                 </div>
             </div>
         </div>
-
-        <!-- 权限列表 -->
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h6 class="mb-0">
-                    <i class="fas fa-list me-2"></i>权限列表
-                </h6>
+        
+        <!-- 用户角色信息 -->
+        <div class="diagnostic-section" th:if="${roleDetails}">
+            <div class="diagnostic-title">用户角色详情</div>
+            <div th:if="${#lists.isEmpty(roleDetails)}">
+                <p style="color: #dc3545;">用户未分配任何角色！</p>
             </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover" id="permissionTable">
-                        <thead class="table-light">
-                            <tr>
-                                <th>权限代码</th>
-                                <th>权限名称</th>
-                                <th>所属模块</th>
-                                <th>描述</th>
-                                <th>类型</th>
-                                <th>创建时间</th>
-                                <th width="120">操作</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr th:each="permission : ${permissions.content}">
-                                <td>
-                                    <code th:text="${permission.permissionName}">USER_MANAGE</code>
-                                </td>
-                                <td th:text="${permission.permissionDescription}">用户管理</td>
-                                <td>
-                                    <span class="badge bg-secondary" th:text="${permission.module}">系统管理</span>
-                                </td>
-                                <td th:text="${permission.permissionDescription ?: '无描述'}">用户管理权限</td>
-                                <td>
-                                    <span class="badge bg-primary">系统权限</span>
-                                </td>
-                                <td>2024-01-01 00:00</td>
-                                <td>
-                                    <div class="btn-group btn-group-sm">
-                                        <button type="button" class="btn btn-outline-warning"
-                                                th:data-permission-id="${permission.id}"
-                                                onclick="editPermission(this.dataset.permissionId)">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        <button type="button" class="btn btn-outline-danger"
-                                                th:data-permission-id="${permission.id}"
-                                                onclick="deletePermission(this.dataset.permissionId)">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+            <div th:unless="${#lists.isEmpty(roleDetails)}">
+                <div th:each="role : ${roleDetails}" class="info-item">
+                    <span class="info-label" th:text="${role.roleName + ' (' + role.roleKey + ')'}"></span>
+                    <span class="role-badge" th:text="${role.description}"></span>
                 </div>
             </div>
         </div>
-
+        
+        <!-- 角色权限检查 -->
+        <div class="diagnostic-section" th:if="${roleChecks}">
+            <div class="diagnostic-title">角色权限检查</div>
+            <div class="info-grid">
+                <div class="info-item" th:each="entry : ${roleChecks}">
+                    <span class="info-label" th:text="${entry.key + '角色:'}"></span>
+                    <span class="info-value" th:class="${entry.value} ? 'status-true' : 'status-false'" 
+                          th:text="${entry.value} ? '✓ 拥有' : '✗ 没有'"></span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 权限检查结果 -->
+        <div class="diagnostic-section" th:if="${permissionChecks}">
+            <div class="diagnostic-title">权限检查结果</div>
+            <div class="info-grid">
+                <div class="info-item" th:each="entry : ${permissionChecks}">
+                    <span class="info-label" th:text="${entry.key + ':'}"></span>
+                    <span class="info-value" th:class="${entry.value} ? 'status-true' : 'status-false'" 
+                          th:text="${entry.value} ? '✓ 是' : '✗ 否'"></span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 菜单权限检查 -->
+        <div class="diagnostic-section" th:if="${menuPermissions}">
+            <div class="diagnostic-title">菜单权限检查</div>
+            <div class="info-grid">
+                <div class="info-item" th:each="entry : ${menuPermissions}">
+                    <span class="info-label" th:text="${entry.key + ':'}"></span>
+                    <span class="info-value" th:class="${entry.value} ? 'status-true' : 'status-false'" 
+                          th:text="${entry.value} ? '✓ 可访问' : '✗ 无权限'"></span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 诊断建议 -->
+        <div class="diagnostic-section">
+            <div class="diagnostic-title">诊断建议</div>
+            <div th:if="${currentUser == null}">
+                <p style="color: #dc3545;">❌ 用户未登录，请先登录系统</p>
+            </div>
+            <div th:if="${currentUser != null and #lists.isEmpty(roleDetails)}">
+                <p style="color: #dc3545;">❌ 用户未分配任何角色，请联系系统管理员分配角色</p>
+            </div>
+            <div th:if="${currentUser != null and roleChecks != null and !roleChecks['SUPER_ADMIN'] and !roleChecks['ADMIN']}">
+                <p style="color: #ffc107;">⚠️ 用户没有管理员权限，无法访问后台管理系统</p>
+            </div>
+            <div th:if="${currentUser != null and roleChecks != null and (roleChecks['SUPER_ADMIN'] or roleChecks['ADMIN'])}">
+                <p style="color: #28a745;">✅ 用户具有管理员权限，应该可以正常访问后台管理系统</p>
+            </div>
+        </div>
     </div>
-
-        <!-- 添加权限模态框 -->
-        <div class="modal fade" id="addPermissionModal" tabindex="-1">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">添加权限</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <form id="addPermissionForm">
-                            <div class="mb-3">
-                                <label for="permissionCode" class="form-label">权限代码</label>
-                                <input type="text" class="form-control" id="permissionCode" name="permissionCode" placeholder="例如: user:view" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="permissionName" class="form-label">权限名称</label>
-                                <input type="text" class="form-control" id="permissionName" name="permissionName" placeholder="例如: 查看用户" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="permissionModule" class="form-label">所属模块</label>
-                                <select class="form-select" id="permissionModule" name="resourceType" required>
-                                    <option value="">请选择模块</option>
-                                    <option value="用户管理">用户管理</option>
-                                    <option value="角色管理">角色管理</option>
-                                    <option value="权限管理">权限管理</option>
-                                    <option value="课程管理">课程管理</option>
-                                    <option value="学生管理">学生管理</option>
-                                    <option value="财务管理">财务管理</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label for="permissionDescription" class="form-label">描述</label>
-                                <textarea class="form-control" id="permissionDescription" name="permissionDesc" rows="3"></textarea>
-                            </div>
-                        </form>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                        <button type="button" class="btn btn-primary" onclick="savePermission()">保存</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-    <th:block th:fragment="scripts">
-        <!-- 权限管理特定脚本 -->
-        <script>
-            // 权限操作函数
-            function editPermission(permissionId) {
-                alert('编辑权限：' + permissionId);
-            }
-
-            function deletePermission(permissionId) {
-                if (confirm('确定要删除该权限吗？')) {
-                    alert('删除权限：' + permissionId);
-                }
-            }
-
-            function savePermission() {
-                const form = document.getElementById('addPermissionForm');
-                const formData = new FormData(form);
-
-                const permissionData = {
-                    permissionCode: formData.get('permissionCode'),
-                    permissionName: formData.get('permissionName'),
-                    resourceType: formData.get('resourceType'),
-                    permissionDesc: formData.get('permissionDesc')
-                };
-
-                // 验证必填字段
-                if (!permissionData.permissionCode) {
-                    alert('权限代码不能为空');
-                    return;
-                }
-
-                if (!permissionData.permissionName) {
-                    alert('权限名称不能为空');
-                    return;
-                }
-
-                if (!permissionData.resourceType) {
-                    alert('请选择所属模块');
-                    return;
-                }
-
-                fetch('/admin/permissions/add', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(permissionData)
-                })
+    
+    <script>
+        function fixAdminPermissions() {
+            fetch('/admin/diagnostic/fix-admin-permissions')
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        alert('添加权限成功！');
-                        const modal = bootstrap.Modal.getInstance(document.getElementById('addPermissionModal'));
-                        modal.hide();
-                        form.reset();
-                        window.location.reload();
+                        alert('诊断结果：' + data.message);
+                        if (!data.hasSuperAdminRole) {
+                            alert('请联系数据库管理员手动为admin用户分配SUPER_ADMIN角色');
+                        }
                     } else {
-                        alert('添加权限失败：' + data.message);
+                        alert('修复失败：' + data.message);
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('添加权限失败，请稍后重试');
+                    alert('请求失败，请检查网络连接');
                 });
-            }
-        </script>
-    </th:block>
+        }
+    </script>
 </body>
 </html>

@@ -1,331 +1,142 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="zh-CN">
-<head th:fragment="head">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${title != null ? title + ' - 智慧校园管理系统' : '智慧校园管理系统'}">智慧校园管理系统</title>
-    
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <!-- 自定义CSS -->
-    <link th:href="@{/css/admin.css}" rel="stylesheet">
-    
-    <!-- 网站图标 -->
-    <link rel="icon" type="image/svg+xml" th:href="@{/images/favicon.svg}">
-    <link rel="alternate icon" th:href="@{/favicon.ico}">
-    <link rel="apple-touch-icon" th:href="@{/images/favicon.svg}">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout/base :: html}" lang="zh-CN">
 
-    <!-- 页面特定的head元素插槽 -->
-    <th:block th:replace="~{this :: head-extra}">
-        <!-- 页面特定的CSS和其他head元素将在这里插入 -->
+<head th:replace="~{layout/base :: head}">
+    <title>管理后台 - 智慧校园管理系统</title>
+
+    <!-- 管理后台特定样式 -->
+    <th:block th:fragment="page-styles">
+        <link th:href="@{/css/admin/layout.css}" rel="stylesheet">
+        <link th:href="@{/css/admin/sidebar.css}" rel="stylesheet">
+        <link th:href="@{/css/admin/topbar.css}" rel="stylesheet">
+        <link th:href="@{/css/admin/dashboard.css}" rel="stylesheet">
     </th:block>
 </head>
 
-<body th:fragment="html">
-    <!-- 布局容器 -->
-    <div class="wrapper">
-        <!-- 左侧导航栏 -->
-        <nav class="sidebar" id="sidebar">
-            <div class="sidebar-header">
-                <h3>
-                    <i class="fas fa-graduation-cap"></i>
-                    智慧校园管理
-                </h3>
-            </div>
+<body class="admin-layout" th:classappend="${sidebarCollapsed ? 'sidebar-collapsed' : ''}">
 
-            <ul class="list-unstyled components">
-                <!-- 仪表盘 -->
-                <li>
-                    <a href="/admin/dashboard" th:classappend="${currentPage == 'dashboard' ? 'active' : ''}">
-                        <i class="fas fa-tachometer-alt"></i>
-                        仪表盘
-                    </a>
-                </li>
+    <!-- 管理后台布局容器 -->
+    <div class="admin-wrapper" th:fragment="content">
 
-                <!-- 系统管理 -->
-                <li>
-                    <a href="#systemSubmenu" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle">
-                        <i class="fas fa-cogs"></i>
-                        系统管理
-                    </a>
-                    <ul class="collapse list-unstyled" id="systemSubmenu">
-                        <li>
-                            <a href="/admin/users" th:classappend="${currentPage == 'users' ? 'active' : ''}">
-                                <i class="fas fa-users"></i>
-                                用户管理
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/admin/roles" th:classappend="${currentPage == 'roles' ? 'active' : ''}">
-                                <i class="fas fa-user-tag"></i>
-                                角色管理
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/admin/permissions" th:classappend="${currentPage == 'permissions' ? 'active' : ''}">
-                                <i class="fas fa-key"></i>
-                                权限管理
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/admin/settings" th:classappend="${currentPage == 'settings' ? 'active' : ''}">
-                                <i class="fas fa-sliders-h"></i>
-                                系统设置
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/admin/notifications" th:classappend="${currentPage == 'notifications' ? 'active' : ''}">
-                                <i class="fas fa-bell"></i>
-                                通知管理
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/admin/activity-log" th:classappend="${currentPage == 'activity-log' ? 'active' : ''}">
-                                <i class="fas fa-history"></i>
-                                活动日志
-                            </a>
-                        </li>
-                        <li th:if="${@permissionUtil.isSuperAdmin()}">
-                            <a href="/admin/diagnostic/permissions" th:classappend="${currentPage == 'diagnostic' ? 'active' : ''}">
-                                <i class="fas fa-stethoscope"></i>
-                                权限诊断
-                            </a>
-                        </li>
-                    </ul>
-                </li>
-
-                <!-- 教务管理 - 基于权限控制显示 -->
-                <li th:if="${@permissionUtil.hasAnyRole('ROLE_SUPER_ADMIN,ROLE_ADMIN,ROLE_PRINCIPAL,ROLE_ACADEMIC_DIRECTOR,ROLE_DEAN,ROLE_DEPARTMENT_HEAD')}">
-                    <a href="#academicSubmenu" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle">
-                        <i class="fas fa-graduation-cap"></i>
-                        教务管理
-                    </a>
-                    <ul class="collapse list-unstyled" id="academicSubmenu">
-                        <li>
-                            <a href="/admin/students" th:classappend="${currentPage == 'students' ? 'active' : ''}">
-                                <i class="fas fa-user-graduate"></i>
-                                学生管理
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/admin/courses" th:classappend="${currentPage == 'courses' ? 'active' : ''}">
-                                <i class="fas fa-book"></i>
-                                课程管理
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/admin/grades" th:classappend="${currentPage == 'grades' ? 'active' : ''}">
-                                <i class="fas fa-chart-line"></i>
-                                成绩管理
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/admin/attendance" th:classappend="${currentPage == 'attendance' ? 'active' : ''}">
-                                <i class="fas fa-user-check"></i>
-                                考勤管理
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/admin/academic/classes" th:classappend="${currentPage == 'classes' ? 'active' : ''}">
-                                <i class="fas fa-chalkboard"></i>
-                                班级管理
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/admin/academic/schedules" th:classappend="${currentPage == 'schedules' ? 'active' : ''}">
-                                <i class="fas fa-calendar-alt"></i>
-                                课程安排
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/admin/academic/course-selection" th:classappend="${currentPage == 'course-selection' ? 'active' : ''}">
-                                <i class="fas fa-hand-pointer"></i>
-                                选课管理
-                            </a>
-                        </li>
-                    </ul>
-                </li>
-
-                <!-- 财务管理 - 基于权限控制显示 -->
-                <li th:if="${@permissionUtil.hasAnyRole('ROLE_SUPER_ADMIN,ROLE_ADMIN,ROLE_PRINCIPAL,ROLE_FINANCE_DIRECTOR,ROLE_FINANCE_STAFF')}">
-                    <a href="#financeSubmenu" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle">
-                        <i class="fas fa-money-bill-wave"></i>
-                        财务管理
-                    </a>
-                    <ul class="collapse list-unstyled" id="financeSubmenu">
-                        <li>
-                            <a href="/admin/fee-items" th:classappend="${currentPage == 'fee-items' ? 'active' : ''}">
-                                <i class="fas fa-list"></i>
-                                费用项目
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/admin/payments" th:classappend="${currentPage == 'payments' ? 'active' : ''}">
-                                <i class="fas fa-credit-card"></i>
-                                缴费管理
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/admin/payment-records" th:classappend="${currentPage == 'payment-records' ? 'active' : ''}">
-                                <i class="fas fa-receipt"></i>
-                                缴费记录
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/admin/finance/statistics" th:classappend="${currentPage == 'finance-stats' ? 'active' : ''}">
-                                <i class="fas fa-chart-bar"></i>
-                                财务统计
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/admin/finance/reports" th:classappend="${currentPage == 'finance-reports' ? 'active' : ''}">
-                                <i class="fas fa-file-invoice-dollar"></i>
-                                财务报表
-                            </a>
-                        </li>
-                    </ul>
-                </li>
-
-                <!-- 人事管理 - 基于权限控制显示 -->
-                <li th:if="${@permissionUtil.hasAnyRole('ROLE_SUPER_ADMIN,ROLE_ADMIN,ROLE_PRINCIPAL,ROLE_HR_DIRECTOR,ROLE_HR_STAFF')}">
-                    <a href="#hrSubmenu" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle">
-                        <i class="fas fa-users-cog"></i>
-                        人事管理
-                    </a>
-                    <ul class="collapse list-unstyled" id="hrSubmenu">
-                        <li>
-                            <a href="/admin/teachers" th:classappend="${currentPage == 'teachers' ? 'active' : ''}">
-                                <i class="fas fa-chalkboard-teacher"></i>
-                                教师管理
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/admin/staff" th:classappend="${currentPage == 'staff' ? 'active' : ''}">
-                                <i class="fas fa-user-tie"></i>
-                                员工管理
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/admin/departments" th:classappend="${currentPage == 'departments' ? 'active' : ''}">
-                                <i class="fas fa-building"></i>
-                                部门管理
-                            </a>
-                        </li>
-                    </ul>
-                </li>
-
-                <!-- API测试页面 - 所有管理员都可以看到 -->
-                <li>
-                    <a href="/admin/test-api" th:classappend="${currentPage == 'test-api' ? 'active' : ''}">
-                        <i class="fas fa-flask"></i>
-                        API测试
-                    </a>
-                </li>
-            </ul>
-        </nav>
+        <!-- 侧边导航栏 -->
+        <aside class="admin-sidebar" id="adminSidebar">
+            <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+        </aside>
 
         <!-- 主内容区域 -->
-        <div class="content" id="content">
+        <main class="admin-main" id="adminMain">
+
             <!-- 顶部导航栏 -->
-            <nav class="navbar navbar-expand-lg navbar-light bg-white topbar mb-4 static-top shadow">
-                <button type="button" id="sidebarCollapse" class="btn btn-info">
-                    <i class="fas fa-align-left"></i>
-                    <span>切换菜单</span>
-                </button>
+            <header class="admin-header">
+                <div th:replace="~{fragments/topbar :: topbar}"></div>
+            </header>
 
-                <div class="navbar-collapse collapse">
-                    <ul class="navbar-nav ms-auto">
-                        <!-- 用户信息下拉菜单 -->
-                        <li class="nav-item dropdown no-arrow">
-                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
-                               data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <span class="me-2 d-none d-lg-inline text-gray-600 small" th:text="${session.user?.username ?: '管理员'}">管理员</span>
-                                <img class="img-profile rounded-circle" th:src="@{/images/default-avatar.svg}" width="32" height="32">
-                            </a>
-                            <div class="dropdown-menu dropdown-menu-end shadow animated--grow-in">
-                                <a class="dropdown-item" href="/admin/profile">
-                                    <i class="fas fa-user fa-sm fa-fw me-2 text-gray-400"></i>
-                                    个人资料
-                                </a>
-                                <a class="dropdown-item" href="/admin/settings">
-                                    <i class="fas fa-cogs fa-sm fa-fw me-2 text-gray-400"></i>
-                                    设置
-                                </a>
-                                <a class="dropdown-item" href="/admin/activity-log">
-                                    <i class="fas fa-list fa-sm fa-fw me-2 text-gray-400"></i>
-                                    活动日志
-                                </a>
-                                <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#logoutModal">
-                                    <i class="fas fa-sign-out-alt fa-sm fa-fw me-2 text-gray-400"></i>
-                                    退出登录
-                                </a>
-                            </div>
-                        </li>
-                    </ul>
-                </div>
-            </nav>
+            <!-- 内容区域 -->
+            <div class="admin-content">
 
-            <!-- 页面内容包装器 -->
-            <div class="container-fluid">
-                <!-- 页面内容插槽 -->
-                <th:block th:replace="~{this :: content}">
-                    <!-- 默认内容 -->
-                    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-                        <h1 class="h3 mb-0 text-gray-800">页面内容</h1>
+                <!-- 面包屑导航 -->
+                <nav class="breadcrumb-nav" th:if="${showBreadcrumb != false}">
+                    <div th:replace="~{fragments/breadcrumb :: breadcrumb}"></div>
+                </nav>
+
+                <!-- 页面标题区域 -->
+                <div class="page-header" th:if="${pageTitle}">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h1 class="page-title" th:text="${pageTitle}">页面标题</h1>
+                            <p class="page-description" th:if="${pageDescription}" th:text="${pageDescription}">页面描述</p>
+                        </div>
+                        <div class="page-actions" th:if="${pageActions}">
+                            <th:block th:fragment="page-actions">
+                                <!-- 页面操作按钮 -->
+                            </th:block>
+                        </div>
                     </div>
-                </th:block>
+                </div>
+
+                <!-- 页面主要内容 -->
+                <div class="page-content">
+                    <th:block th:fragment="page-content">
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="card-title mb-0">默认内容</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <p>这里是页面的主要内容区域，应该被具体页面覆盖。</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </th:block>
+                </div>
             </div>
-        </div>
+
+            <!-- 页脚 -->
+            <footer class="admin-footer" th:if="${showFooter != false}">
+                <div th:replace="~{fragments/footer :: admin-footer}"></div>
+            </footer>
+        </main>
     </div>
 
-    <!-- 退出登录确认模态框 -->
-    <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
-         aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">确认退出？</h5>
-                    <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">确定要退出当前登录会话吗？</div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">取消</button>
-                    <a class="btn btn-primary" href="/admin/logout">退出登录</a>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- 移动端遮罩层 -->
+    <div class="mobile-overlay" id="mobileOverlay"></div>
 
-    <!-- 脚本片段 -->
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <!-- 管理后台特定脚本 -->
+    <th:block th:fragment="page-scripts">
+        <script th:src="@{/js/admin/layout.js}"></script>
+        <script th:src="@{/js/admin/sidebar.js}"></script>
+        <script th:src="@{/js/admin/topbar.js}"></script>
 
-    <!-- 认证管理器 -->
-    <script th:src="@{/js/auth-manager.js}"></script>
-    <!-- JWT管理器 -->
-    <script th:src="@{/js/jwt-manager.js}"></script>
-    <!-- API客户端 -->
-    <script th:src="@{/js/api-client.js}"></script>
+        <!-- 认证管理器 -->
+        <script th:src="@{/js/auth-manager.js}"></script>
+        <!-- JWT管理器 -->
+        <script th:src="@{/js/jwt-manager.js}"></script>
+        <!-- API客户端 -->
+        <script th:src="@{/js/api-client.js}"></script>
 
-    <!-- 通用工具类 -->
-    <script th:src="@{/js/utils/common-utils.js}"></script>
-    <script th:src="@{/js/utils/crud-base.js}"></script>
-    <script th:src="@{/js/common/admin-utils.js}"></script>
+        <!-- 通用工具类 -->
+        <script th:src="@{/js/utils/common-utils.js}"></script>
+        <script th:src="@{/js/utils/crud-base.js}"></script>
+        <script th:src="@{/js/common/admin-utils.js}"></script>
 
-    <!-- 侧边栏切换脚本 -->
-    <script>
-        $(document).ready(function () {
-            $('#sidebarCollapse').on('click', function () {
-                $('#sidebar').toggleClass('active');
-                $('#content').toggleClass('active');
-            });
-        });
-    </script>
+        <!-- 页面特定脚本 -->
+        <th:block th:fragment="scripts"></th:block>
+
+        <!-- 布局初始化脚本 -->
+        <script>
+            function pageInit() {
+                // 初始化管理后台布局
+                if (typeof AdminLayout !== 'undefined') {
+                    AdminLayout.init();
+                }
+
+                // 初始化侧边栏
+                if (typeof AdminSidebar !== 'undefined') {
+                    AdminSidebar.init();
+                }
+
+                // 初始化顶部导航栏
+                if (typeof AdminTopbar !== 'undefined') {
+                    AdminTopbar.init();
+                }
+
+                // 页面特定初始化
+                if (typeof adminPageInit === 'function') {
+                    adminPageInit();
+                }
+            }
+        </script>
+    </th:block>
+
+    <!-- 侧边栏脚本 - 使用组件 -->
+    <div th:replace="~{components/sidebar :: sidebar-script}"></div>
+
+    <!-- 顶部导航栏样式 - 使用组件 -->
+    <div th:replace="~{components/topbar :: topbar-style}"></div>
 
     <!-- 页面特定脚本插槽 -->
     <th:block th:replace="~{this :: scripts}">

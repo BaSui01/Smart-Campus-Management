@@ -6,8 +6,8 @@
 // API基础配置
 export const API_CONFIG = {
   // 基础URL配置
-  BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8082/api',
-  ADMIN_BASE_URL: import.meta.env.VITE_ADMIN_BASE_URL || 'http://localhost:8082/admin',
+  BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8889/api',
+  ADMIN_BASE_URL: import.meta.env.VITE_ADMIN_BASE_URL || 'http://localhost:8889/admin',
   
   // 超时配置
   TIMEOUT: 15000,
@@ -108,9 +108,9 @@ export const ADMIN_API_PATHS = {
   
   // 系统管理
   DASHBOARD: '/admin/dashboard',
-  USERS: '/admin/users',
-  ROLES: '/admin/roles',
-  PERMISSIONS: '/admin/permissions',
+  USERS: '/api/v1/users',
+  ROLES: '/api/v1/roles',
+  PERMISSIONS: '/api/v1/permissions',
   SYSTEM_CONFIG: '/admin/system-config',
   
   // 学术管理

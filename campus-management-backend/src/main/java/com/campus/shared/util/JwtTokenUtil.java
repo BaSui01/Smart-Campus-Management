@@ -1,7 +1,12 @@
 package com.campus.shared.util;
 
-import io.jsonwebtoken.*;
-import io.jsonwebtoken.security.Keys;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import javax.crypto.SecretKey;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,11 +15,11 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
-import javax.crypto.SecretKey;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 
 /**
  * JWT 工具类 - 支持 Redis 会话管理
@@ -27,19 +32,19 @@ public class JwtTokenUtil {
 
     private static final Logger logger = LoggerFactory.getLogger(JwtTokenUtil.class);
 
-    @Value("${jwt.secret}")
+    @Value("${campus.jwt.secret}")
     private String secret;
 
-    @Value("${jwt.expiration}")
+    @Value("${campus.jwt.expiration}")
     private Long expiration;
 
-    @Value("${jwt.refresh-expiration}")
+    @Value("${campus.jwt.refresh-expiration}")
     private Long refreshExpiration;
 
-    @Value("${jwt.redis.prefix:jwt:token:}")
+    @Value("${campus.jwt.redis.prefix:jwt:token:}")
     private String jwtPrefix;
 
-    @Value("${jwt.redis.refresh-prefix:jwt:refresh:}")
+    @Value("${campus.jwt.redis.refresh-prefix:jwt:refresh:}")
     private String refreshPrefix;
 
     @Autowired

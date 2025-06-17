@@ -37,67 +37,25 @@ SELECT '=== Smart Campus Management System 大规模数据生成开始 ===' as '
 
 SELECT '步骤1: 插入基础角色和权限数据...' as '状态', NOW() as '时间';
 
--- 插入角色数据（扩展版 - 50个角色）
+-- 插入角色数据（精简版 - 10个核心角色）
 INSERT IGNORE INTO tb_role (role_name, role_key, description, is_system, role_level) VALUES
--- 核心管理角色 (1-10)
-('系统管理员', 'ROLE_ADMIN', '系统管理员，拥有所有权限', 1, 1),
+-- 核心管理角色 (1-4)
 ('超级管理员', 'ROLE_SUPER_ADMIN', '超级管理员，拥有系统最高权限', 1, 1),
+('系统管理员', 'ROLE_ADMIN', '系统管理员，拥有所有权限', 1, 1),
 ('校长', 'ROLE_PRINCIPAL', '校长角色，拥有学校最高管理权限', 1, 2),
-('副校长', 'ROLE_VICE_PRINCIPAL', '副校长角色，拥有学校高级管理权限', 1, 3),
-('教务处长', 'ROLE_ACADEMIC_DIRECTOR', '教务处长，负责教学管理', 1, 4),
-('学生处长', 'ROLE_STUDENT_AFFAIRS_DIRECTOR', '学生处长，负责学生事务管理', 1, 4),
-('人事处长', 'ROLE_HR_DIRECTOR', '人事处长，负责人力资源管理', 1, 4),
-('财务处长', 'ROLE_FINANCE_DIRECTOR', '财务处长，负责财务管理', 1, 4),
-('后勤处长', 'ROLE_LOGISTICS_DIRECTOR', '后勤处长，负责后勤保障', 1, 4),
-('信息中心主任', 'ROLE_IT_DIRECTOR', '信息中心主任，负责信息化建设', 1, 4),
+('教务处长', 'ROLE_ACADEMIC_DIRECTOR', '教务处长，负责教学管理', 1, 3),
 
--- 学院管理角色 (11-20)
-('院长', 'ROLE_DEAN', '学院院长，负责学院全面管理', 1, 5),
-('副院长', 'ROLE_VICE_DEAN', '学院副院长，协助院长管理学院', 1, 6),
-('系主任', 'ROLE_DEPARTMENT_HEAD', '系主任，负责系部管理', 1, 7),
-('副系主任', 'ROLE_VICE_DEPARTMENT_HEAD', '副系主任，协助系主任工作', 1, 8),
-('教研室主任', 'ROLE_TEACHING_GROUP_HEAD', '教研室主任，负责教研室管理', 1, 9),
-('实验室主任', 'ROLE_LAB_DIRECTOR', '实验室主任，负责实验室管理', 1, 9),
-('图书馆馆长', 'ROLE_LIBRARY_DIRECTOR', '图书馆馆长，负责图书馆管理', 1, 5),
-('体育部主任', 'ROLE_SPORTS_DIRECTOR', '体育部主任，负责体育工作', 1, 6),
-('国际交流处长', 'ROLE_INTERNATIONAL_DIRECTOR', '国际交流处长，负责国际合作', 1, 4),
-('招生办主任', 'ROLE_ADMISSION_DIRECTOR', '招生办主任，负责招生工作', 1, 5),
-
--- 教学角色 (21-30)
+-- 教学角色 (5-7)
 ('教师', 'ROLE_TEACHER', '教师角色，拥有教学相关权限', 1, 10),
-('教授', 'ROLE_PROFESSOR', '教授，高级教学科研人员', 1, 10),
-('副教授', 'ROLE_ASSOCIATE_PROFESSOR', '副教授，中级教学科研人员', 1, 11),
-('讲师', 'ROLE_LECTURER', '讲师，初级教学人员', 1, 12),
-('助教', 'ROLE_ASSISTANT', '助教，教学辅助人员', 1, 13),
-('班主任', 'ROLE_CLASS_TEACHER', '班主任角色，拥有班级管理权限', 1, 15),
-('辅导员', 'ROLE_COUNSELOR', '辅导员，负责学生思想政治教育', 1, 14),
-('导师', 'ROLE_SUPERVISOR', '导师，负责研究生指导', 1, 10),
-('实验员', 'ROLE_LAB_TECHNICIAN', '实验员，负责实验室技术支持', 1, 16),
-('外聘教师', 'ROLE_VISITING_TEACHER', '外聘教师，临时教学人员', 1, 17),
+('班主任', 'ROLE_CLASS_TEACHER', '班主任角色，拥有班级管理权限', 1, 11),
+('辅导员', 'ROLE_COUNSELOR', '辅导员，负责学生思想政治教育', 1, 12),
 
--- 学生角色 (31-40)
+-- 学生角色 (8-9)
 ('学生', 'ROLE_STUDENT', '学生角色，拥有学习相关权限', 1, 20),
 ('本科生', 'ROLE_UNDERGRADUATE', '本科生，四年制学生', 1, 20),
-('研究生', 'ROLE_GRADUATE', '研究生，硕士博士学生', 1, 19),
-('硕士研究生', 'ROLE_MASTER_STUDENT', '硕士研究生', 1, 19),
-('博士研究生', 'ROLE_PHD_STUDENT', '博士研究生', 1, 18),
-('留学生', 'ROLE_INTERNATIONAL_STUDENT', '留学生，国际学生', 1, 21),
-('交换生', 'ROLE_EXCHANGE_STUDENT', '交换生，短期交流学生', 1, 22),
-('旁听生', 'ROLE_AUDITOR', '旁听生，非正式学生', 1, 25),
-('学生干部', 'ROLE_STUDENT_LEADER', '学生干部，学生组织负责人', 1, 18),
-('班长', 'ROLE_CLASS_MONITOR', '班长，班级学生负责人', 1, 19),
 
--- 行政支持角色 (41-50)
-('家长', 'ROLE_PARENT', '家长角色，拥有查看学生信息权限', 1, 30),
-('财务人员', 'ROLE_FINANCE_STAFF', '财务人员，负责财务操作', 1, 16),
-('人事专员', 'ROLE_HR_STAFF', '人事专员，负责人事管理', 1, 16),
-('教务员', 'ROLE_ACADEMIC_STAFF', '教务员，负责教务管理', 1, 16),
-('学工人员', 'ROLE_STUDENT_AFFAIRS_STAFF', '学工人员，负责学生工作', 1, 16),
-('后勤人员', 'ROLE_LOGISTICS_STAFF', '后勤人员，负责后勤服务', 1, 18),
-('保安人员', 'ROLE_SECURITY', '保安人员，负责校园安全', 1, 20),
-('清洁人员', 'ROLE_CLEANER', '清洁人员，负责环境卫生', 1, 22),
-('维修人员', 'ROLE_MAINTENANCE', '维修人员，负责设备维护', 1, 20),
-('访客', 'ROLE_VISITOR', '访客角色，临时访问权限', 1, 50);
+-- 其他角色 (10)
+('家长', 'ROLE_PARENT', '家长角色，拥有查看学生信息权限', 1, 30);
 
 -- 插入权限数据（扩展版 - 80个权限）
 INSERT IGNORE INTO tb_permission (permission_name, permission_key, description, permission_type, is_system) VALUES
@@ -208,12 +166,6 @@ WHERE r.role_key = 'ROLE_PRINCIPAL'
 AND p.permission_key IN ('system:manage', 'user:manage', 'department:manage', 'teacher:manage', 'student:manage',
                         'finance:manage', 'report:view', 'statistics:view', 'config:manage');
 
--- 为副校长分配管理权限
-INSERT IGNORE INTO tb_role_permission (role_id, permission_id)
-SELECT r.id, p.id FROM tb_role r, tb_permission p
-WHERE r.role_key = 'ROLE_VICE_PRINCIPAL'
-AND p.permission_key IN ('user:manage', 'department:manage', 'teacher:manage', 'student:manage', 'report:view');
-
 -- 为教务处长分配教务管理权限
 INSERT IGNORE INTO tb_role_permission (role_id, permission_id)
 SELECT r.id, p.id FROM tb_role r, tb_permission p
@@ -221,35 +173,10 @@ WHERE r.role_key = 'ROLE_ACADEMIC_DIRECTOR'
 AND p.permission_key IN ('course:manage', 'schedule:manage', 'classroom:manage', 'exam:manage', 'grade:manage',
                         'teaching_plan:manage', 'timetable:view', 'teacher:view', 'student:view');
 
--- 为学生处长分配学生事务权限
-INSERT IGNORE INTO tb_role_permission (role_id, permission_id)
-SELECT r.id, p.id FROM tb_role r, tb_permission p
-WHERE r.role_key = 'ROLE_STUDENT_AFFAIRS_DIRECTOR'
-AND p.permission_key IN ('student:manage', 'class:manage', 'student_status:manage', 'transfer:approve',
-                        'leave:manage', 'notification:manage', 'message:manage');
-
--- 为财务处长分配财务管理权限
-INSERT IGNORE INTO tb_role_permission (role_id, permission_id)
-SELECT r.id, p.id FROM tb_role r, tb_permission p
-WHERE r.role_key = 'ROLE_FINANCE_DIRECTOR'
-AND p.permission_key IN ('finance:manage', 'tuition:manage', 'payment:view', 'refund:manage', 'finance_report:view');
-
--- 为院长分配学院管理权限
-INSERT IGNORE INTO tb_role_permission (role_id, permission_id)
-SELECT r.id, p.id FROM tb_role r, tb_permission p
-WHERE r.role_key = 'ROLE_DEAN'
-AND p.permission_key IN ('department:manage', 'teacher:manage', 'student:view', 'course:manage', 'report:view');
-
--- 为系主任分配系部管理权限
-INSERT IGNORE INTO tb_role_permission (role_id, permission_id)
-SELECT r.id, p.id FROM tb_role r, tb_permission p
-WHERE r.role_key = 'ROLE_DEPARTMENT_HEAD'
-AND p.permission_key IN ('teacher:view', 'course:manage', 'schedule:manage', 'student:view', 'grade:view');
-
 -- 为教师分配教学相关权限
 INSERT IGNORE INTO tb_role_permission (role_id, permission_id)
 SELECT r.id, p.id FROM tb_role r, tb_permission p
-WHERE r.role_key IN ('ROLE_TEACHER', 'ROLE_PROFESSOR', 'ROLE_ASSOCIATE_PROFESSOR', 'ROLE_LECTURER')
+WHERE r.role_key = 'ROLE_TEACHER'
 AND p.permission_key IN ('course:view', 'grade:input', 'grade:view', 'exam:schedule', 'assignment:manage',
                         'attendance:manage', 'student:view', 'timetable:view');
 
@@ -269,7 +196,7 @@ AND p.permission_key IN ('student:view', 'student:edit', 'class:view', 'notifica
 -- 为学生分配基础权限
 INSERT IGNORE INTO tb_role_permission (role_id, permission_id)
 SELECT r.id, p.id FROM tb_role r, tb_permission p
-WHERE r.role_key IN ('ROLE_STUDENT', 'ROLE_UNDERGRADUATE', 'ROLE_GRADUATE', 'ROLE_MASTER_STUDENT', 'ROLE_PHD_STUDENT')
+WHERE r.role_key IN ('ROLE_STUDENT', 'ROLE_UNDERGRADUATE')
 AND p.permission_key IN ('course:view', 'grade:view', 'timetable:view', 'payment:view', 'course_selection:manage');
 
 -- 为家长分配查看权限
@@ -277,18 +204,6 @@ INSERT IGNORE INTO tb_role_permission (role_id, permission_id)
 SELECT r.id, p.id FROM tb_role r, tb_permission p
 WHERE r.role_key = 'ROLE_PARENT'
 AND p.permission_key IN ('student:view', 'grade:view', 'attendance:view', 'payment:view');
-
--- 为财务人员分配财务操作权限
-INSERT IGNORE INTO tb_role_permission (role_id, permission_id)
-SELECT r.id, p.id FROM tb_role r, tb_permission p
-WHERE r.role_key = 'ROLE_FINANCE_STAFF'
-AND p.permission_key IN ('tuition:manage', 'payment:view', 'refund:manage', 'finance_report:view');
-
--- 为教务员分配教务操作权限
-INSERT IGNORE INTO tb_role_permission (role_id, permission_id)
-SELECT r.id, p.id FROM tb_role r, tb_permission p
-WHERE r.role_key = 'ROLE_ACADEMIC_STAFF'
-AND p.permission_key IN ('course:view', 'schedule:manage', 'classroom:manage', 'exam:schedule', 'grade:view');
 
 SELECT '✓ 基础角色权限数据插入完成' as '状态', NOW() as '时间';
 
@@ -797,14 +712,14 @@ INSERT IGNORE INTO tb_user (
     created_at, updated_at, deleted, status
 ) VALUES (
     'admin',
-    '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iKXIgBTrEDQ/pR7L5N6.k6xKe6S2', -- admin123 的BCrypt加密
-    'admin@smartuniversity.edu.cn',
+    '$2a$10$rRd0JNaj9KBpbCV0AWK24uHOFTenfDdw6xSKsWVEA/Y78s3li2KLu', -- admin123 的BCrypt加密
+    'admin@smartuniversity.edu.cn',  --  $2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.
     '系统管理员',
     '13800138000',
     '男',
     '1980-01-01',
     '系统管理员办公室',
-    '/static/images/avatar/admin.png',
+    '/static/images/avatar/admin.svg',
     1,
     NOW(),
     NOW(),
@@ -818,16 +733,17 @@ INSERT IGNORE INTO tb_user (
     birthday, address, avatar_url, account_non_locked,
     created_at, updated_at, deleted, status
 )
+-- $2a$10$rRd0JNaj9KBpbCV0AWK24uHOFTenfDdw6xSKsWVEA/Y78s3li2KLu
 SELECT
     CONCAT('admin', LPAD(num, 3, '0')) as username,
-    '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iKXIgBTrEDQ/pR7L5N6.k6xKe6S2' as password, -- admin123
+    '$2a$10$rRd0JNaj9KBpbCV0AWK24uHOFTenfDdw6xSKsWVEA/Y78s3li2KLu' as password, -- admin123
     CONCAT('admin', LPAD(num, 3, '0'), '@smartuniversity.edu.cn') as email,
     CONCAT('管理员', LPAD(num, 3, '0')) as real_name,
     CONCAT('138', LPAD(num, 8, '0')) as phone,
     CASE WHEN num % 2 = 1 THEN '男' ELSE '女' END as gender,
     DATE_SUB('1990-01-01', INTERVAL (num % 10) YEAR) as birthday,
     CONCAT('管理员办公室', num, '号') as address,
-    '/static/images/avatar/admin.png' as avatar_url,
+    '/static/images/avatar/admin.svg' as avatar_url,
     1 as account_non_locked,
     NOW() as created_at,
     NOW() as updated_at,
@@ -844,7 +760,7 @@ INSERT IGNORE INTO tb_user (
 )
 SELECT
     CONCAT('teacher', LPAD(num, 3, '0')) as username,
-    '$2a$10$8.UnVuG9HHgffUDAlhs8lOXuZr3VkM7B4SO8rmp/O/ZUAAESQ2XuO' as password, -- teacher123
+    '$2a$10$rRd0JNaj9KBpbCV0AWK24uHOFTenfDdw6xSKsWVEA/Y78s3li2KLu' as password, -- admin123
     CONCAT('teacher', LPAD(num, 3, '0'), '@smartuniversity.edu.cn') as email,
     CASE
         WHEN num % 20 = 1 THEN CONCAT('张', '教授', LPAD(num, 2, '0'))
@@ -992,7 +908,12 @@ SELECT '✓ 基础用户数据创建完成 (200个用户)' as '状态', NOW() as
 
 SELECT '步骤8: 分配用户角色...' as '状态', NOW() as '时间';
 
--- 8.1 为系统管理员分配角色
+-- 8.1 为系统管理员分配角色 (分配SUPER_ADMIN和ADMIN角色)
+INSERT IGNORE INTO tb_user_role (user_id, role_id, created_at, updated_at, deleted, status)
+SELECT u.id, r.id, NOW(), NOW(), 0, 1
+FROM tb_user u, tb_role r
+WHERE u.username = 'admin' AND r.role_key = 'ROLE_SUPER_ADMIN';
+
 INSERT IGNORE INTO tb_user_role (user_id, role_id, created_at, updated_at, deleted, status)
 SELECT u.id, r.id, NOW(), NOW(), 0, 1
 FROM tb_user u, tb_role r

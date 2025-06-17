@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -436,7 +437,18 @@ public class CourseResourceServiceImpl implements CourseResourceService {
     @Transactional(readOnly = true)
     public Page<CourseResource> findWithFilters(Long courseId, Long teacherId, String resourceType,
                                                Boolean isPublic, String keyword, Pageable pageable) {
-        return courseResourceRepository.findAll((root, query, criteriaBuilder) -> {
+        return courseResourceRepository.findAll(
+            createFilterSpecification(courseId, teacherId, resourceType, isPublic, keyword),
+            pageable
+        );
+    }
+
+    /**
+     * 创建资源过滤条件
+     */
+    private Specification<CourseResource> createFilterSpecification(Long courseId, Long teacherId,
+                                                                   String resourceType, Boolean isPublic, String keyword) {
+        return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
             // 基础过滤：未删除的资源
@@ -475,8 +487,8 @@ public class CourseResourceServiceImpl implements CourseResourceService {
                 predicates.add(criteriaBuilder.or(fileNameLike, resourceNameLike, descriptionLike));
             }
 
-            return criteriaBuilder.and(predicates.toArray(new Predicate[predicates.size()]));
-        }, pageable);
+            return criteriaBuilder.and(predicates.toArray(Predicate[]::new));
+        };
     }
 
     @Override
@@ -488,7 +500,17 @@ public class CourseResourceServiceImpl implements CourseResourceService {
     @Override
     @Transactional(readOnly = true)
     public List<CourseResource> findPublicResourcesByCourse(Long courseId) {
-        return courseResourceRepository.findAll((root, query, criteriaBuilder) -> {
+        return courseResourceRepository.findAll(createPublicResourcesSpecification(courseId))
+            .stream()
+            .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
+            .collect(java.util.stream.Collectors.toList());
+    }
+
+    /**
+     * 创建公开资源查询条件
+     */
+    private Specification<CourseResource> createPublicResourcesSpecification(Long courseId) {
+        return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
             // 基础条件：未删除且为公开资源
@@ -497,16 +519,32 @@ public class CourseResourceServiceImpl implements CourseResourceService {
             predicates.add(criteriaBuilder.equal(root.get("isPublic"), true));
             predicates.add(criteriaBuilder.equal(root.get("status"), 1)); // 启用状态
 
-            return criteriaBuilder.and(predicates.toArray(new Predicate[predicates.size()]));
-        }).stream()
-        .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
-        .collect(java.util.stream.Collectors.toList());
+            return criteriaBuilder.and(predicates.toArray(Predicate[]::new));
+        };
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<CourseResource> findRequiredResourcesByCourse(Long courseId) {
-        return courseResourceRepository.findAll((root, query, criteriaBuilder) -> {
+        return courseResourceRepository.findAll(createRequiredResourcesSpecification(courseId))
+            .stream()
+            .sorted((a, b) -> {
+                // 按排序序号排序，然后按创建时间
+                Integer aSortOrder = a.getSortOrder();
+                Integer bSortOrder = b.getSortOrder();
+                int aSort = aSortOrder != null ? aSortOrder : 0;
+                int bSort = bSortOrder != null ? bSortOrder : 0;
+                int sortCompare = Integer.compare(aSort, bSort);
+                return sortCompare != 0 ? sortCompare : b.getCreatedAt().compareTo(a.getCreatedAt());
+            })
+            .collect(java.util.stream.Collectors.toList());
+    }
+
+    /**
+     * 创建必读资源查询条件
+     */
+    private Specification<CourseResource> createRequiredResourcesSpecification(Long courseId) {
+        return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
             // 基础条件：未删除且为必读资料
@@ -515,18 +553,8 @@ public class CourseResourceServiceImpl implements CourseResourceService {
             predicates.add(criteriaBuilder.equal(root.get("isRequired"), true));
             predicates.add(criteriaBuilder.equal(root.get("status"), 1));
 
-            return criteriaBuilder.and(predicates.toArray(new Predicate[predicates.size()]));
-        }).stream()
-        .sorted((a, b) -> {
-            // 按排序序号排序，然后按创建时间
-            Integer aSortOrder = a.getSortOrder();
-            Integer bSortOrder = b.getSortOrder();
-            int aSort = aSortOrder != null ? aSortOrder : 0;
-            int bSort = bSortOrder != null ? bSortOrder : 0;
-            int sortCompare = Integer.compare(aSort, bSort);
-            return sortCompare != 0 ? sortCompare : b.getCreatedAt().compareTo(a.getCreatedAt());
-        })
-        .collect(java.util.stream.Collectors.toList());
+            return criteriaBuilder.and(predicates.toArray(Predicate[]::new));
+        };
     }
 
     @Override
@@ -536,7 +564,25 @@ public class CourseResourceServiceImpl implements CourseResourceService {
             return new ArrayList<>();
         }
 
-        return courseResourceRepository.findAll((root, query, criteriaBuilder) -> {
+        return courseResourceRepository.findAll(createChapterResourcesSpecification(courseId, chapter))
+            .stream()
+            .sorted((a, b) -> {
+                // 按章节内排序序号排序
+                Integer aSortOrder = a.getSortOrder();
+                Integer bSortOrder = b.getSortOrder();
+                int aSortOrderValue = aSortOrder != null ? aSortOrder : 0;
+                int bSortOrderValue = bSortOrder != null ? bSortOrder : 0;
+                int sortCompare = Integer.compare(aSortOrderValue, bSortOrderValue);
+                return sortCompare != 0 ? sortCompare : a.getCreatedAt().compareTo(b.getCreatedAt());
+            })
+            .collect(java.util.stream.Collectors.toList());
+    }
+
+    /**
+     * 创建章节资源查询条件
+     */
+    private Specification<CourseResource> createChapterResourcesSpecification(Long courseId, String chapter) {
+        return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
             predicates.add(criteriaBuilder.equal(root.get("deleted"), 0));
@@ -544,16 +590,8 @@ public class CourseResourceServiceImpl implements CourseResourceService {
             predicates.add(criteriaBuilder.equal(root.get("chapter"), chapter.trim()));
             predicates.add(criteriaBuilder.equal(root.get("status"), 1));
 
-            return criteriaBuilder.and(predicates.toArray(new Predicate[predicates.size()]));
-        }).stream()
-        .sorted((a, b) -> {
-            // 按章节内排序序号排序
-            int aSortOrder = a.getSortOrder() != null ? a.getSortOrder() : 0;
-            int bSortOrder = b.getSortOrder() != null ? b.getSortOrder() : 0;
-            int sortCompare = Integer.compare(aSortOrder, bSortOrder);
-            return sortCompare != 0 ? sortCompare : a.getCreatedAt().compareTo(b.getCreatedAt());
-        })
-        .collect(java.util.stream.Collectors.toList());
+            return criteriaBuilder.and(predicates.toArray(Predicate[]::new));
+        };
     }
 
     @Override
@@ -563,7 +601,17 @@ public class CourseResourceServiceImpl implements CourseResourceService {
             return new ArrayList<>();
         }
 
-        return courseResourceRepository.findAll((root, query, criteriaBuilder) -> {
+        return courseResourceRepository.findAll(createTagResourcesSpecification(courseId, tag))
+            .stream()
+            .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
+            .collect(java.util.stream.Collectors.toList());
+    }
+
+    /**
+     * 创建标签资源查询条件
+     */
+    private Specification<CourseResource> createTagResourcesSpecification(Long courseId, String tag) {
+        return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
             predicates.add(criteriaBuilder.equal(root.get("deleted"), 0));
@@ -571,10 +619,8 @@ public class CourseResourceServiceImpl implements CourseResourceService {
             predicates.add(criteriaBuilder.like(root.get("tags"), "%" + tag.trim() + "%"));
             predicates.add(criteriaBuilder.equal(root.get("status"), 1));
 
-            return criteriaBuilder.and(predicates.toArray(new Predicate[predicates.size()]));
-        }).stream()
-        .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
-        .collect(java.util.stream.Collectors.toList());
+            return criteriaBuilder.and(predicates.toArray(Predicate[]::new));
+        };
     }
 
     @Override
@@ -706,12 +752,14 @@ public class CourseResourceServiceImpl implements CourseResourceService {
 
             // 下载统计
             long totalDownloads = allResources.stream()
-                .mapToLong(r -> r.getDownloadCount() != null ? r.getDownloadCount() : 0)
+                .filter(r -> r.getDownloadCount() != null)
+                .mapToLong(r -> r.getDownloadCount().longValue())
                 .sum();
 
             // 查看统计
             long totalViews = allResources.stream()
-                .mapToLong(r -> r.getViewCount() != null ? r.getViewCount() : 0)
+                .filter(r -> r.getViewCount() != null)
+                .mapToLong(r -> r.getViewCount().longValue())
                 .sum();
 
             // 创建统计对象
@@ -849,53 +897,73 @@ public class CourseResourceServiceImpl implements CourseResourceService {
     @Transactional(readOnly = true)
     public List<CourseResource> findPopularResources(int limit) {
         try {
-            return courseResourceRepository.findAll((root, query, criteriaBuilder) -> {
-                List<Predicate> predicates = new ArrayList<>();
-
-                predicates.add(criteriaBuilder.equal(root.get("deleted"), 0));
-                predicates.add(criteriaBuilder.equal(root.get("status"), 1));
-                predicates.add(criteriaBuilder.equal(root.get("isPublic"), true));
-
-                return criteriaBuilder.and(predicates.toArray(new Predicate[predicates.size()]));
-            }).stream()
-            .sorted((a, b) -> {
-                // 按下载次数和查看次数的综合热度排序
-                int aDownloadCount = a.getDownloadCount() != null ? a.getDownloadCount() : 0;
-                int aViewCount = a.getViewCount() != null ? a.getViewCount() : 0;
-                int bDownloadCount = b.getDownloadCount() != null ? b.getDownloadCount() : 0;
-                int bViewCount = b.getViewCount() != null ? b.getViewCount() : 0;
-                int aPopularity = aDownloadCount * 2 + aViewCount;
-                int bPopularity = bDownloadCount * 2 + bViewCount;
-                return Integer.compare(bPopularity, aPopularity);
-            })
-            .limit(limit)
-            .collect(java.util.stream.Collectors.toList());
+            return courseResourceRepository.findAll(createPopularResourcesSpecification())
+                .stream()
+                .sorted((a, b) -> {
+                    // 按下载次数和查看次数的综合热度排序
+                    Integer aDownloadCount = a.getDownloadCount();
+                    Integer aViewCount = a.getViewCount();
+                    Integer bDownloadCount = b.getDownloadCount();
+                    Integer bViewCount = b.getViewCount();
+                    int aDownloads = aDownloadCount != null ? aDownloadCount : 0;
+                    int aViews = aViewCount != null ? aViewCount : 0;
+                    int bDownloads = bDownloadCount != null ? bDownloadCount : 0;
+                    int bViews = bViewCount != null ? bViewCount : 0;
+                    int aPopularity = aDownloads * 2 + aViews;
+                    int bPopularity = bDownloads * 2 + bViews;
+                    return Integer.compare(bPopularity, aPopularity);
+                })
+                .limit(limit)
+                .collect(java.util.stream.Collectors.toList());
         } catch (Exception e) {
             logger.error("查询热门资源失败", e);
             return Collections.emptyList();
         }
     }
 
+    /**
+     * 创建热门资源查询条件
+     */
+    private Specification<CourseResource> createPopularResourcesSpecification() {
+        return (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            predicates.add(criteriaBuilder.equal(root.get("deleted"), 0));
+            predicates.add(criteriaBuilder.equal(root.get("status"), 1));
+            predicates.add(criteriaBuilder.equal(root.get("isPublic"), true));
+
+            return criteriaBuilder.and(predicates.toArray(Predicate[]::new));
+        };
+    }
+
     @Override
     @Transactional(readOnly = true)
     public List<CourseResource> findLatestResources(int limit) {
         try {
-            return courseResourceRepository.findAll((root, query, criteriaBuilder) -> {
-                List<Predicate> predicates = new ArrayList<>();
-
-                predicates.add(criteriaBuilder.equal(root.get("deleted"), 0));
-                predicates.add(criteriaBuilder.equal(root.get("status"), 1));
-                predicates.add(criteriaBuilder.equal(root.get("isPublic"), true));
-
-                return criteriaBuilder.and(predicates.toArray(new Predicate[predicates.size()]));
-            }).stream()
-            .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
-            .limit(limit)
-            .collect(java.util.stream.Collectors.toList());
+            return courseResourceRepository.findAll(createLatestResourcesSpecification())
+                .stream()
+                .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
+                .limit(limit)
+                .collect(java.util.stream.Collectors.toList());
         } catch (Exception e) {
             logger.error("查询最新资源失败", e);
             return Collections.emptyList();
         }
+    }
+
+    /**
+     * 创建最新资源查询条件
+     */
+    private Specification<CourseResource> createLatestResourcesSpecification() {
+        return (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            predicates.add(criteriaBuilder.equal(root.get("deleted"), 0));
+            predicates.add(criteriaBuilder.equal(root.get("status"), 1));
+            predicates.add(criteriaBuilder.equal(root.get("isPublic"), true));
+
+            return criteriaBuilder.and(predicates.toArray(Predicate[]::new));
+        };
     }
 
     @Override
@@ -910,21 +978,29 @@ public class CourseResourceServiceImpl implements CourseResourceService {
         try {
             LocalDateTime now = LocalDateTime.now();
 
-            return courseResourceRepository.findAll((root, query, criteriaBuilder) -> {
-                List<Predicate> predicates = new ArrayList<>();
-
-                predicates.add(criteriaBuilder.equal(root.get("deleted"), 0));
-                predicates.add(criteriaBuilder.isNotNull(root.get("validUntil")));
-                predicates.add(criteriaBuilder.lessThan(root.get("validUntil"), now));
-
-                return criteriaBuilder.and(predicates.toArray(new Predicate[predicates.size()]));
-            }).stream()
-            .sorted((a, b) -> a.getValidUntil().compareTo(b.getValidUntil()))
-            .collect(java.util.stream.Collectors.toList());
+            return courseResourceRepository.findAll(createExpiredResourcesSpecification(now))
+                .stream()
+                .sorted((a, b) -> a.getValidUntil().compareTo(b.getValidUntil()))
+                .collect(java.util.stream.Collectors.toList());
         } catch (Exception e) {
             logger.error("查询过期资源失败", e);
             return Collections.emptyList();
         }
+    }
+
+    /**
+     * 创建过期资源查询条件
+     */
+    private Specification<CourseResource> createExpiredResourcesSpecification(LocalDateTime now) {
+        return (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            predicates.add(criteriaBuilder.equal(root.get("deleted"), 0));
+            predicates.add(criteriaBuilder.isNotNull(root.get("validUntil")));
+            predicates.add(criteriaBuilder.lessThan(root.get("validUntil"), now));
+
+            return criteriaBuilder.and(predicates.toArray(Predicate[]::new));
+        };
     }
 
     @Override
@@ -934,21 +1010,29 @@ public class CourseResourceServiceImpl implements CourseResourceService {
             LocalDateTime now = LocalDateTime.now();
             LocalDateTime futureDate = now.plusDays(days);
 
-            return courseResourceRepository.findAll((root, query, criteriaBuilder) -> {
-                List<Predicate> predicates = new ArrayList<>();
-
-                predicates.add(criteriaBuilder.equal(root.get("deleted"), 0));
-                predicates.add(criteriaBuilder.isNotNull(root.get("validUntil")));
-                predicates.add(criteriaBuilder.between(root.get("validUntil"), now, futureDate));
-
-                return criteriaBuilder.and(predicates.toArray(new Predicate[predicates.size()]));
-            }).stream()
-            .sorted((a, b) -> a.getValidUntil().compareTo(b.getValidUntil()))
-            .collect(java.util.stream.Collectors.toList());
+            return courseResourceRepository.findAll(createExpiringResourcesSpecification(now, futureDate))
+                .stream()
+                .sorted((a, b) -> a.getValidUntil().compareTo(b.getValidUntil()))
+                .collect(java.util.stream.Collectors.toList());
         } catch (Exception e) {
             logger.error("查询即将过期资源失败", e);
             return Collections.emptyList();
         }
+    }
+
+    /**
+     * 创建即将过期资源查询条件
+     */
+    private Specification<CourseResource> createExpiringResourcesSpecification(LocalDateTime now, LocalDateTime futureDate) {
+        return (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            predicates.add(criteriaBuilder.equal(root.get("deleted"), 0));
+            predicates.add(criteriaBuilder.isNotNull(root.get("validUntil")));
+            predicates.add(criteriaBuilder.between(root.get("validUntil"), now, futureDate));
+
+            return criteriaBuilder.and(predicates.toArray(Predicate[]::new));
+        };
     }
 
     @Override
@@ -1021,7 +1105,18 @@ public class CourseResourceServiceImpl implements CourseResourceService {
             return false;
         }
 
-        List<CourseResource> resources = courseResourceRepository.findAll((root, query, criteriaBuilder) -> {
+        List<CourseResource> resources = courseResourceRepository.findAll(
+            createFileNameDuplicateSpecification(courseId, fileName, excludeId)
+        );
+
+        return !resources.isEmpty();
+    }
+
+    /**
+     * 创建文件名重复检查查询条件
+     */
+    private Specification<CourseResource> createFileNameDuplicateSpecification(Long courseId, String fileName, Long excludeId) {
+        return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
             predicates.add(criteriaBuilder.equal(root.get("deleted"), 0));
@@ -1033,10 +1128,8 @@ public class CourseResourceServiceImpl implements CourseResourceService {
                 predicates.add(criteriaBuilder.notEqual(root.get("id"), excludeId));
             }
 
-            return criteriaBuilder.and(predicates.toArray(new Predicate[predicates.size()]));
-        });
-
-        return !resources.isEmpty();
+            return criteriaBuilder.and(predicates.toArray(Predicate[]::new));
+        };
     }
 
     @Override
@@ -1617,4 +1710,6 @@ public class CourseResourceServiceImpl implements CourseResourceService {
             super(message);
         }
     }
+
+
 }

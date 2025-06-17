@@ -1,9 +1,11 @@
 package com.campus.application.Implement.auth;
 
-import com.campus.application.service.auth.RoleService;
-import com.campus.domain.entity.auth.Role;
-import com.campus.domain.repository.auth.RoleRepository;
-import com.campus.domain.repository.auth.UserRoleRepository;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -13,12 +15,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import com.campus.application.service.auth.RoleService;
+import com.campus.domain.entity.auth.Role;
+import com.campus.domain.repository.auth.RoleRepository;
+import com.campus.domain.repository.auth.UserRoleRepository;
 
 
 /**
@@ -96,22 +96,22 @@ public class RoleServiceImpl implements RoleService {
                     Object statusObj = params.get("status");
                     if (statusObj != null) {
                         try {
-                            Integer status;
-                            if (statusObj instanceof Integer) {
-                                status = (Integer) statusObj;
-                            } else if (statusObj instanceof String) {
-                                String statusStr = (String) statusObj;
+                            Integer statusValue;
+                            if (statusObj instanceof Integer intStatus) {
+                                statusValue = intStatus;
+                            } else if (statusObj instanceof String statusStr) {
                                 if (statusStr.trim().isEmpty()) {
                                     continue;
                                 }
-                                status = Integer.parseInt(statusStr);
+                                statusValue = Integer.valueOf(statusStr);
                             } else {
                                 continue;
                             }
 
-                            if (!role.getStatus().equals(status)) {
+                            if (!role.getStatus().equals(statusValue)) {
                                 matches = false;
                             }
+
                         } catch (NumberFormatException e) {
                             // 状态参数格式错误，忽略该条件
                         }
@@ -136,7 +136,8 @@ public class RoleServiceImpl implements RoleService {
 
         } catch (Exception e) {
             System.err.println("分页查询角色失败: " + e.getMessage());
-            e.printStackTrace();
+            // 使用日志记录而不是打印堆栈跟踪
+            System.err.println("详细错误信息: " + e.getClass().getSimpleName() + " - " + e.getMessage());
             return new PageImpl<>(new ArrayList<>(), pageable, 0);
         }
     }
@@ -206,6 +207,8 @@ public class RoleServiceImpl implements RoleService {
             role.setUpdatedAt(LocalDateTime.now());
 
             return roleRepository.save(role);
+        } catch (IllegalArgumentException e) {
+            throw e;
         } catch (Exception e) {
             System.err.println("创建角色失败: " + e.getMessage());
             throw new RuntimeException("创建角色失败: " + e.getMessage());
@@ -251,6 +254,8 @@ public class RoleServiceImpl implements RoleService {
             role.setUpdatedAt(LocalDateTime.now());
 
             return roleRepository.save(role);
+        } catch (IllegalArgumentException e) {
+            throw e;
         } catch (Exception e) {
             System.err.println("更新角色失败: " + e.getMessage());
             throw new RuntimeException("更新角色失败: " + e.getMessage());
@@ -276,6 +281,9 @@ public class RoleServiceImpl implements RoleService {
             roleRepository.save(role);
 
             return true;
+        } catch (IllegalArgumentException e) {
+            System.err.println("删除角色失败: " + e.getMessage());
+            return false;
         } catch (Exception e) {
             System.err.println("删除角色失败: " + e.getMessage());
             return false;

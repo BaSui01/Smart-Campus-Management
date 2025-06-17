@@ -296,11 +296,13 @@ public class ScheduleController {
 
     private Object getScheduleById(Long scheduleId) {
         // 注意：根据ID获取日程逻辑待实现
+        System.out.println("获取日程ID: " + scheduleId);
         return new Object();
     }
 
     private Object getUserSchedules(Long userId) {
         // 注意：获取用户日程逻辑待实现
+        System.out.println("获取用户日程，用户ID: " + userId);
         return new Object();
     }
 

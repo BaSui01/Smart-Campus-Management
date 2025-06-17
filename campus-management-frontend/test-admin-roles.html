@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试管理员角色API</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .result { margin: 10px 0; padding: 10px; background: #f5f5f5; border-radius: 3px; }
+        .error { background: #ffe6e6; color: #d00; }
+        .success { background: #e6ffe6; color: #080; }
+        button { padding: 8px 16px; margin: 5px; cursor: pointer; }
+        pre { white-space: pre-wrap; word-wrap: break-word; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>管理员角色API测试</h1>
+        
+        <div class="test-section">
+            <h3>测试1: 直接访问 /admin/roles (原问题URL)</h3>
+            <button onclick="testDirectAdminRoles()">测试原问题URL</button>
+            <div id="test1-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>测试2: 使用新的管理员API</h3>
+            <button onclick="testAdminRequest()">测试新的管理员请求</button>
+            <div id="test2-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>测试3: 使用API v1接口</h3>
+            <button onclick="testApiV1Roles()">测试API v1</button>
+            <div id="test3-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>测试4: 检查服务器配置</h3>
+            <button onclick="testServerHealth()">检查服务器健康状态</button>
+            <div id="test4-result" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        // 测试原问题URL
+        async function testDirectAdminRoles() {
+            const resultDiv = document.getElementById('test1-result');
+            resultDiv.innerHTML = '正在测试...';
+            
+            try {
+                const response = await fetch('http://localhost:8889/admin/roles', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const text = await response.text();
+                
+                if (response.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `
+                        <strong>成功!</strong><br>
+                        状态码: ${response.status}<br>
+                        响应类型: ${response.headers.get('content-type')}<br>
+                        <details>
+                            <summary>响应内容</summary>
+                            <pre>${text}</pre>
+                        </details>
+                    `;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `
+                        <strong>HTTP错误:</strong> ${response.status}<br>
+                        响应: ${text}
+                    `;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `
+                    <strong>网络错误:</strong><br>
+                    错误类型: ${error.name}<br>
+                    错误信息: ${error.message}<br>
+                    这可能就是原来的ERR_INCOMPLETE_CHUNKED_ENCODING错误
+                `;
+            }
+        }
+
+        // 测试新的管理员API
+        async function testAdminRequest() {
+            const resultDiv = document.getElementById('test2-result');
+            resultDiv.innerHTML = '正在测试...';
+            
+            try {
+                const response = await fetch('http://localhost:8889/admin/roles?page=0&size=10', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const text = await response.text();
+                
+                if (response.ok) {
+                    try {
+                        const jsonData = JSON.parse(text);
+                        resultDiv.className = 'result success';
+                        resultDiv.innerHTML = `
+                            <strong>成功获取JSON数据!</strong><br>
+                            状态码: ${response.status}<br>
+                            <details>
+                                <summary>JSON响应</summary>
+                                <pre>${JSON.stringify(jsonData, null, 2)}</pre>
+                            </details>
+                        `;
+                    } catch (parseError) {
+                        resultDiv.className = 'result error';
+                        resultDiv.innerHTML = `
+                            <strong>响应成功但不是JSON:</strong><br>
+                            状态码: ${response.status}<br>
+                            内容类型: ${response.headers.get('content-type')}<br>
+                            <details>
+                                <summary>响应内容</summary>
+                                <pre>${text}</pre>
+                            </details>
+                        `;
+                    }
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `<strong>HTTP错误:</strong> ${response.status}<br>响应: ${text}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `<strong>网络错误:</strong> ${error.message}`;
+            }
+        }
+
+        // 测试API v1接口
+        async function testApiV1Roles() {
+            const resultDiv = document.getElementById('test3-result');
+            resultDiv.innerHTML = '正在测试...';
+            
+            try {
+                const response = await fetch('http://localhost:8889/api/v1/roles', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const text = await response.text();
+                
+                if (response.ok) {
+                    try {
+                        const jsonData = JSON.parse(text);
+                        resultDiv.className = 'result success';
+                        resultDiv.innerHTML = `
+                            <strong>API v1成功!</strong><br>
+                            状态码: ${response.status}<br>
+                            <details>
+                                <summary>JSON响应</summary>
+                                <pre>${JSON.stringify(jsonData, null, 2)}</pre>
+                            </details>
+                        `;
+                    } catch (parseError) {
+                        resultDiv.className = 'result error';
+                        resultDiv.innerHTML = `响应成功但不是JSON: ${text}`;
+                    }
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `<strong>HTTP错误:</strong> ${response.status}<br>响应: ${text}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `<strong>网络错误:</strong> ${error.message}`;
+            }
+        }
+
+        // 测试服务器健康状态
+        async function testServerHealth() {
+            const resultDiv = document.getElementById('test4-result');
+            resultDiv.innerHTML = '正在测试...';
+            
+            try {
+                const response = await fetch('http://localhost:8889/actuator/health', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                const text = await response.text();
+                
+                if (response.ok) {
+                    try {
+                        const jsonData = JSON.parse(text);
+                        resultDiv.className = 'result success';
+                        resultDiv.innerHTML = `
+                            <strong>服务器健康状态:</strong><br>
+                            状态码: ${response.status}<br>
+                            <details>
+                                <summary>健康信息</summary>
+                                <pre>${JSON.stringify(jsonData, null, 2)}</pre>
+                            </details>
+                        `;
+                    } catch (parseError) {
+                        resultDiv.className = 'result success';
+                        resultDiv.innerHTML = `服务器响应: ${text}`;
+                    }
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `<strong>健康检查失败:</strong> ${response.status}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `<strong>无法连接服务器:</strong> ${error.message}`;
+            }
+        }
+
+        // 页面加载时显示说明
+        window.onload = function() {
+            console.log('测试页面已加载，请点击按钮进行测试');
+            console.log('这个页面用于测试 ERR_INCOMPLETE_CHUNKED_ENCODING 错误是否已修复');
+        }
+    </script>
+</body>
+</html>

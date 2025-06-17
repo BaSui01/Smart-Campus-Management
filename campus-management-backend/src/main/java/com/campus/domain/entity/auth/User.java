@@ -171,7 +171,8 @@ public class User extends BaseEntity {
     /**
      * 用户角色关联
      */
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "user_id")
     @JsonIgnore
     private List<UserRole> userRoles;
 

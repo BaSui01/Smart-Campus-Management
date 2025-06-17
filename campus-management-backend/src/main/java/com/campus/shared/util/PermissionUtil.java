@@ -1,15 +1,16 @@
 package com.campus.shared.util;
 
-import com.campus.application.service.auth.UserService;
-import com.campus.domain.entity.auth.User;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import com.campus.application.service.auth.UserService;
+import com.campus.domain.entity.auth.User;
+
 import jakarta.servlet.http.HttpSession;
-import java.util.List;
 
 /**
  * 权限工具类
@@ -32,6 +33,10 @@ public class PermissionUtil {
         User currentUser = getCurrentUser();
         if (currentUser == null) {
             return false;
+        }
+        // admin用户拥有所有角色权限
+        if ("admin".equals(currentUser.getUsername())) {
+            return true;
         }
         return userService.hasRole(currentUser.getId(), roleName);
     }
@@ -61,6 +66,10 @@ public class PermissionUtil {
         if (currentUser == null) {
             return false;
         }
+        // admin用户拥有所有菜单权限
+        if ("admin".equals(currentUser.getUsername())) {
+            return true;
+        }
         return userService.hasMenuPermission(currentUser.getId(), menuPath);
     }
 
@@ -79,6 +88,10 @@ public class PermissionUtil {
      * 检查是否为系统管理员（最高权限层级）
      */
     public boolean isSystemAdmin() {
+        User currentUser = getCurrentUser();
+        if (currentUser != null && "admin".equals(currentUser.getUsername())) {
+            return true;
+        }
         return hasAnyRole("ROLE_SUPER_ADMIN", "ROLE_ADMIN", "ROLE_PRINCIPAL", "ROLE_VICE_PRINCIPAL");
     }
 
@@ -87,8 +100,7 @@ public class PermissionUtil {
      */
     public boolean isAcademicAdmin() {
         return hasAnyRole("ROLE_SUPER_ADMIN", "ROLE_ADMIN", "ROLE_PRINCIPAL", "ROLE_VICE_PRINCIPAL",
-                         "ROLE_ACADEMIC_DIRECTOR", "ROLE_DEAN", "ROLE_VICE_DEAN", "ROLE_DEPARTMENT_HEAD",
-                         "ROLE_TEACHING_GROUP_HEAD", "ROLE_ACADEMIC_STAFF");
+                         "ROLE_ACADEMIC_DIRECTOR");
     }
 
     /**
@@ -96,7 +108,7 @@ public class PermissionUtil {
      */
     public boolean isFinanceAdmin() {
         return hasAnyRole("ROLE_SUPER_ADMIN", "ROLE_ADMIN", "ROLE_PRINCIPAL", "ROLE_VICE_PRINCIPAL",
-                         "ROLE_FINANCE_DIRECTOR", "ROLE_FINANCE_STAFF");
+                         "ROLE_FINANCE_DIRECTOR");
     }
 
     /**
@@ -118,67 +130,28 @@ public class PermissionUtil {
      */
     public boolean isDepartmentDirector() {
         return hasAnyRole("ROLE_ACADEMIC_DIRECTOR", "ROLE_STUDENT_AFFAIRS_DIRECTOR", "ROLE_HR_DIRECTOR",
-                         "ROLE_FINANCE_DIRECTOR", "ROLE_LOGISTICS_DIRECTOR", "ROLE_IT_DIRECTOR",
-                         "ROLE_INTERNATIONAL_DIRECTOR", "ROLE_ADMISSION_DIRECTOR");
-    }
-
-    /**
-     * 检查是否为学院领导（院长、副院长、系主任）
-     */
-    public boolean isCollegeLeader() {
-        return hasAnyRole("ROLE_DEAN", "ROLE_VICE_DEAN", "ROLE_DEPARTMENT_HEAD", "ROLE_VICE_DEPARTMENT_HEAD",
-                         "ROLE_TEACHING_GROUP_HEAD", "ROLE_LAB_DIRECTOR");
+                         "ROLE_FINANCE_DIRECTOR");
     }
 
     /**
      * 检查是否为教学人员
      */
     public boolean isTeachingStaff() {
-        return hasAnyRole("ROLE_TEACHER", "ROLE_PROFESSOR", "ROLE_ASSOCIATE_PROFESSOR", "ROLE_LECTURER",
-                         "ROLE_ASSISTANT", "ROLE_SUPERVISOR", "ROLE_VISITING_TEACHER");
+        return hasAnyRole("ROLE_TEACHER");
     }
 
     /**
      * 检查是否为学生工作人员
      */
     public boolean isStudentAffairsStaff() {
-        return hasAnyRole("ROLE_CLASS_TEACHER", "ROLE_COUNSELOR", "ROLE_STUDENT_AFFAIRS_STAFF");
+        return hasAnyRole("ROLE_STUDENT_AFFAIRS_DIRECTOR");
     }
 
     /**
      * 检查是否为学生
      */
     public boolean isStudent() {
-        return hasAnyRole("ROLE_STUDENT", "ROLE_UNDERGRADUATE", "ROLE_GRADUATE", "ROLE_MASTER_STUDENT",
-                         "ROLE_PHD_STUDENT", "ROLE_INTERNATIONAL_STUDENT", "ROLE_EXCHANGE_STUDENT", "ROLE_AUDITOR");
-    }
-
-    /**
-     * 检查是否为学生干部
-     */
-    public boolean isStudentLeader() {
-        return hasAnyRole("ROLE_STUDENT_LEADER", "ROLE_CLASS_MONITOR");
-    }
-
-    /**
-     * 检查是否为行政支持人员
-     */
-    public boolean isAdministrativeStaff() {
-        return hasAnyRole("ROLE_HR_STAFF", "ROLE_ACADEMIC_STAFF", "ROLE_FINANCE_STAFF", "ROLE_LOGISTICS_STAFF");
-    }
-
-    /**
-     * 检查是否为家长
-     */
-    public boolean isParent() {
-        return hasRole("ROLE_PARENT");
-    }
-
-    /**
-     * 检查是否为访客
-     */
-    public boolean isVisitor() {
-        return hasRole("ROLE_VISITOR");
+        return hasAnyRole("ROLE_STUDENT");
     }
 
     /**

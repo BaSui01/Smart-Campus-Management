@@ -578,7 +578,7 @@ public class DepartmentServiceImpl implements DepartmentService {
             }
 
             return updateDepartment(department.getId(), department);
-        } catch (Exception e) {
+        } catch (IllegalArgumentException e) {
             log.error("更新院系失败: department={}", department, e);
             throw new RuntimeException("更新院系失败: " + e.getMessage());
         }

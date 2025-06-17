@@ -42,15 +42,29 @@ spring:
       enabled: true
       path: /h2-console
 
+  # Redis配置 - 测试环境使用嵌入式Redis或模拟Redis
+  data:
+    redis:
+      host: localhost
+      port: 6370  # 使用不同端口避免与开发环境冲突
+      database: 15  # 使用不同数据库
+      timeout: 3000ms
+      lettuce:
+        pool:
+          max-active: 5
+          max-wait: -1ms
+          max-idle: 3
+          min-idle: 1
+
   # 缓存配置
   cache:
-    type: simple
+    type: redis
+    redis:
+      time-to-live: 300000  # 5分钟测试缓存
 
-  # 禁用Redis和其他不需要的自动配置
+  # 禁用部分不需要的自动配置，但保留Redis配置
   autoconfigure:
     exclude:
-      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
-      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
       - org.springframework.boot.autoconfigure.quartz.QuartzAutoConfiguration
       - org.springframework.boot.autoconfigure.mail.MailSenderAutoConfiguration
 
@@ -78,6 +92,60 @@ logging:
     "[org.springframework.transaction]": WARN
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# 校园管理系统配置
+campus:
+  app:
+    name: "智慧校园管理系统-测试"
+    version: "1.0.0-TEST"
+    description: "测试环境"
+    jwt:
+      secret: "test-jwt-secret-key-for-testing-only"
+      expiration: 3600000
+      refresh-expiration: 7200000
+
+  system:
+    name: "测试系统"
+    version: "1.0.0"
+    debug: true
+
+  upload:
+    enabled: true
+    path: "test-uploads/"
+    max-size-bytes: 5242880  # 5MB for testing
+    allowed-types:
+      - jpg
+      - jpeg
+      - png
+      - gif
+      - pdf
+
+  security:
+    enabled: false
+    ignored-urls:
+      - "/api/v1/auth/**"
+      - "/h2-console/**"
+    max-login-attempts: 5
+    lockout-duration: 300000
+
+  business:
+    enable-notification: false
+    enable-audit: false
+    default-page-size: 10
+
+  cache:
+    enabled: false
+    type: "simple"
+    default-ttl: 300
+
+  monitor:
+    enabled: false
+    endpoints: []
+
+  mail:
+    enabled: false
+    from: "test@campus.edu.cn"
+    admin-emails: []
 
 # 测试专用配置
 test:

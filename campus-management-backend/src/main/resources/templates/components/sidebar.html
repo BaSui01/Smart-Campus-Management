@@ -18,124 +18,231 @@
         <ul class="components">
             <!-- 仪表盘 -->
             <li th:classappend="${currentPage == 'dashboard'} ? 'active'">
-                <a th:href="@{/admin/dashboard}" data-tooltip="仪表盘">
+                <a th:href="@{/admin/dashboard}" data-tooltip="仪表盘" aria-label="仪表盘">
                     <i class="fas fa-tachometer-alt"></i>
                     <span>仪表盘</span>
                 </a>
             </li>
 
-            <!-- 系统管理分组 - 只有系统管理员可见 -->
-            <li class="nav-section" th:if="${@permissionUtil.isSystemAdmin()}">系统管理</li>
-
-            <li th:classappend="${currentPage == 'users'} ? 'active'" th:if="${@permissionUtil.hasMenuPermission('/admin/users')}">
-                <a th:href="@{/admin/users}" data-tooltip="用户管理">
-                    <i class="fas fa-users"></i>
-                    <span>用户管理</span>
-                </a>
+            <!-- 教务管理分组 -->
+            <li class="nav-section" th:if="${@permissionUtil.hasAnyRole('ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'ROLE_PRINCIPAL', 'ROLE_VICE_PRINCIPAL', 'ROLE_ACADEMIC_DIRECTOR')}">
+                <i class="fas fa-graduation-cap"></i>
+                教务管理
             </li>
 
-            <li th:classappend="${currentPage == 'roles'} ? 'active'" th:if="${@permissionUtil.hasMenuPermission('/admin/roles')}">
-                <a th:href="@{/admin/roles}" data-tooltip="角色管理">
-                    <i class="fas fa-user-tag"></i>
-                    <span>角色管理</span>
-                </a>
-            </li>
-
-            <li th:classappend="${currentPage == 'permissions'} ? 'active'" th:if="${@permissionUtil.hasMenuPermission('/admin/permissions')}">
-                <a th:href="@{/admin/permissions}" data-tooltip="权限管理">
-                    <i class="fas fa-key"></i>
-                    <span>权限管理</span>
-                </a>
-            </li>
-
-            <li th:classappend="${currentPage == 'settings'} ? 'active'" th:if="${@permissionUtil.hasMenuPermission('/admin/settings')}">
-                <a th:href="@{/admin/settings}" data-tooltip="系统设置">
-                    <i class="fas fa-cogs"></i>
-                    <span>系统设置</span>
-                </a>
-            </li>
-
-            <li th:classappend="${currentPage == 'notifications'} ? 'active'" th:if="${@permissionUtil.hasMenuPermission('/admin/notifications')}">
-                <a th:href="@{/admin/notifications}" data-tooltip="通知管理">
-                    <i class="fas fa-bell"></i>
-                    <span>通知管理</span>
-                </a>
-            </li>
-
-            <!-- 教务管理分组 - 教务管理员可见 -->
-            <li class="nav-section" th:if="${@permissionUtil.isAcademicAdmin()}">教务管理</li>
-
-            <li th:classappend="${currentPage == 'courses'} ? 'active'" th:if="${@permissionUtil.hasMenuPermission('/admin/academic/courses')}">
-                <a th:href="@{/admin/academic/courses}" data-tooltip="课程管理">
+            <!-- 课程管理子菜单 -->
+            <li class="nav-item has-submenu" th:if="${@permissionUtil.hasAnyRole('ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'ROLE_PRINCIPAL', 'ROLE_VICE_PRINCIPAL', 'ROLE_ACADEMIC_DIRECTOR')}">
+                <a href="#" class="nav-link" data-tooltip="课程管理" aria-label="课程管理">
                     <i class="fas fa-book"></i>
                     <span>课程管理</span>
+                    <i class="fas fa-chevron-down submenu-arrow"></i>
                 </a>
+                <ul class="submenu">
+                    <li th:classappend="${currentPage == 'courses'} ? 'active'">
+                        <a th:href="@{/admin/courses}" aria-label="课程列表">
+                            <i class="fas fa-list"></i>
+                            <span>课程列表</span>
+                        </a>
+                    </li>
+                    <li th:classappend="${currentPage == 'grades'} ? 'active'">
+                        <a th:href="@{/admin/grades}" aria-label="成绩管理">
+                            <i class="fas fa-chart-line"></i>
+                            <span>成绩管理</span>
+                        </a>
+                    </li>
+                    <li th:classappend="${currentPage == 'attendance'} ? 'active'">
+                        <a th:href="@{/admin/attendance}" aria-label="考勤管理">
+                            <i class="fas fa-user-check"></i>
+                            <span>考勤管理</span>
+                        </a>
+                    </li>
+                    <li th:classappend="${currentPage == 'classes'} ? 'active'">
+                        <a th:href="@{/admin/academic/classes}" aria-label="班级管理">
+                            <i class="fas fa-chalkboard"></i>
+                            <span>班级管理</span>
+                        </a>
+                    </li>
+                    <li th:classappend="${currentPage == 'schedules'} ? 'active'">
+                        <a th:href="@{/admin/academic/schedules}" aria-label="课程安排">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>课程安排</span>
+                        </a>
+                    </li>
+                    <li th:classappend="${currentPage == 'course-selection'} ? 'active'">
+                        <a th:href="@{/admin/academic/course-selection}" aria-label="选课管理">
+                            <i class="fas fa-hand-pointer"></i>
+                            <span>选课管理</span>
+                        </a>
+                    </li>
+                </ul>
             </li>
 
-            <li th:classappend="${currentPage == 'classes'} ? 'active'" th:if="${@permissionUtil.hasMenuPermission('/admin/academic/classes')}">
-                <a th:href="@{/admin/academic/classes}" data-tooltip="班级管理">
-                    <i class="fas fa-chalkboard-teacher"></i>
-                    <span>班级管理</span>
-                </a>
+            <!-- 学生管理分组 -->
+            <li class="nav-section" th:if="${@permissionUtil.hasAnyRole('ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'ROLE_PRINCIPAL', 'ROLE_VICE_PRINCIPAL', 'ROLE_ACADEMIC_DIRECTOR', 'ROLE_STUDENT_AFFAIRS_DIRECTOR')}">
+                <i class="fas fa-user-graduate"></i>
+                学生管理
             </li>
 
-            <li th:classappend="${currentPage == 'schedules'} ? 'active'" th:if="${@permissionUtil.hasMenuPermission('/admin/academic/schedules')}">
-                <a th:href="@{/admin/academic/schedules}" data-tooltip="课表管理">
-                    <i class="fas fa-calendar-alt"></i>
-                    <span>课表管理</span>
-                </a>    
-            </li>
-
-            <li th:classappend="${currentPage == 'students'} ? 'active'" th:if="${@permissionUtil.hasMenuPermission('/admin/students')}">
-                <a th:href="@{/admin/students}" data-tooltip="学生管理">
+            <!-- 学生管理 -->
+            <li th:classappend="${currentPage == 'students'} ? 'active'" th:if="${@permissionUtil.hasAnyRole('ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'ROLE_PRINCIPAL', 'ROLE_VICE_PRINCIPAL', 'ROLE_ACADEMIC_DIRECTOR', 'ROLE_STUDENT_AFFAIRS_DIRECTOR')}">
+                <a th:href="@{/admin/students}" data-tooltip="学生管理" aria-label="学生管理">
                     <i class="fas fa-user-graduate"></i>
                     <span>学生管理</span>
                 </a>
             </li>
 
-            <!-- 财务管理分组 - 财务管理员可见 -->
-            <li class="nav-section" th:if="${@permissionUtil.isFinanceAdmin()}">财务管理</li>
+            <!-- 人事管理分组 -->
+            <li class="nav-section" th:if="${@permissionUtil.hasAnyRole('ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'ROLE_PRINCIPAL', 'ROLE_HR_DIRECTOR')}">
+                <i class="fas fa-users-cog"></i>
+                人事管理
+            </li>
 
-            <li th:classappend="${currentPage == 'finance'} ? 'active'" th:if="${@permissionUtil.hasMenuPermission('/admin/finance')}">
-                <a th:href="@{/admin/finance}" data-tooltip="财务概览">
-                    <i class="fas fa-chart-line"></i>
-                    <span>财务概览</span>
+            <!-- 教师管理 -->
+            <li th:classappend="${currentPage == 'teachers'} ? 'active'" th:if="${@permissionUtil.hasAnyRole('ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'ROLE_PRINCIPAL', 'ROLE_HR_DIRECTOR')}">
+                <a th:href="@{/admin/teachers}" data-tooltip="教师管理" aria-label="教师管理">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                    <span>教师管理</span>
                 </a>
             </li>
 
-            <li th:classappend="${currentPage == 'fee-items'} ? 'active'" th:if="${@permissionUtil.hasMenuPermission('/admin/finance/fee-items')}">
-                <a th:href="@{/admin/finance/fee-items}" data-tooltip="收费项目">
-                    <i class="fas fa-list-alt"></i>
-                    <span>收费项目</span>
+            <!-- 员工管理 -->
+            <li th:classappend="${currentPage == 'staff'} ? 'active'" th:if="${@permissionUtil.hasAnyRole('ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'ROLE_PRINCIPAL', 'ROLE_HR_DIRECTOR')}">
+                <a th:href="@{/admin/staff}" data-tooltip="员工管理" aria-label="员工管理">
+                    <i class="fas fa-user-tie"></i>
+                    <span>员工管理</span>
                 </a>
             </li>
 
-            <li th:classappend="${currentPage == 'payment-records'} ? 'active'" th:if="${@permissionUtil.hasMenuPermission('/admin/finance/payment-records')}">
-                <a th:href="@{/admin/finance/payment-records}" data-tooltip="缴费记录">
-                    <i class="fas fa-receipt"></i>
-                    <span>缴费记录</span>
+            <!-- 部门管理 -->
+            <li th:classappend="${currentPage == 'departments'} ? 'active'" th:if="${@permissionUtil.hasAnyRole('ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'ROLE_PRINCIPAL', 'ROLE_HR_DIRECTOR')}">
+                <a th:href="@{/admin/departments}" data-tooltip="部门管理" aria-label="部门管理">
+                    <i class="fas fa-building"></i>
+                    <span>部门管理</span>
                 </a>
             </li>
 
-            <li th:classappend="${currentPage == 'finance-reports'} ? 'active'" th:if="${@permissionUtil.hasMenuPermission('/admin/finance/reports')}">
-                <a th:href="@{/admin/finance/reports}" data-tooltip="财务报表">
-                    <i class="fas fa-chart-bar"></i>
-                    <span>财务报表</span>
-                </a>
+            <!-- 财务管理分组 -->
+            <li class="nav-section" th:if="${@permissionUtil.hasAnyRole('ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'ROLE_PRINCIPAL', 'ROLE_FINANCE_DIRECTOR')}">
+                <i class="fas fa-money-bill-wave"></i>
+                财务管理
             </li>
 
-            <!-- 其他功能分组 -->
-            <li class="nav-section">其他功能</li>
+            <!-- 财务管理子菜单 -->
+            <li class="nav-item has-submenu" th:if="${@permissionUtil.hasAnyRole('ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'ROLE_PRINCIPAL', 'ROLE_FINANCE_DIRECTOR')}">
+                <a href="#" class="nav-link" data-tooltip="财务管理" aria-label="财务管理">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <span>财务管理</span>
+                    <i class="fas fa-chevron-down submenu-arrow"></i>
+                </a>
+                <ul class="submenu">
+                    <li th:classappend="${currentPage == 'fee-items'} ? 'active'">
+                        <a th:href="@{/admin/fee-items}" aria-label="费用项目">
+                            <i class="fas fa-list"></i>
+                            <span>费用项目</span>
+                        </a>
+                    </li>
+                    <li th:classappend="${currentPage == 'payments'} ? 'active'">
+                        <a th:href="@{/admin/payments}" aria-label="缴费管理">
+                            <i class="fas fa-credit-card"></i>
+                            <span>缴费管理</span>
+                        </a>
+                    </li>
+                    <li th:classappend="${currentPage == 'payment-records'} ? 'active'">
+                        <a th:href="@{/admin/payment-records}" aria-label="缴费记录">
+                            <i class="fas fa-receipt"></i>
+                            <span>缴费记录</span>
+                        </a>
+                    </li>
+                    <li th:classappend="${currentPage == 'finance-stats'} ? 'active'">
+                        <a th:href="@{/admin/finance/statistics}" aria-label="财务统计">
+                            <i class="fas fa-chart-bar"></i>
+                            <span>财务统计</span>
+                        </a>
+                    </li>
+                    <li th:classappend="${currentPage == 'finance-reports'} ? 'active'">
+                        <a th:href="@{/admin/finance/reports}" aria-label="财务报表">
+                            <i class="fas fa-file-invoice-dollar"></i>
+                            <span>财务报表</span>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+
+            <!-- 系统管理分组 -->
+            <li class="nav-section" th:if="${@permissionUtil.hasAnyRole('ROLE_SUPER_ADMIN', 'ROLE_ADMIN')}">
+                <i class="fas fa-cogs"></i>
+                系统管理
+            </li>
+
+            <!-- 系统管理子菜单 -->
+            <li class="nav-item has-submenu" th:if="${@permissionUtil.hasAnyRole('ROLE_SUPER_ADMIN', 'ROLE_ADMIN')}">
+                <a href="#" class="nav-link" data-tooltip="系统管理" aria-label="系统管理">
+                    <i class="fas fa-cogs"></i>
+                    <span>系统管理</span>
+                    <i class="fas fa-chevron-down submenu-arrow"></i>
+                </a>
+                <ul class="submenu">
+                    <li th:classappend="${currentPage == 'users'} ? 'active'">
+                        <a th:href="@{/admin/users}" aria-label="用户管理">
+                            <i class="fas fa-users"></i>
+                            <span>用户管理</span>
+                        </a>
+                    </li>
+                    <li th:classappend="${currentPage == 'roles'} ? 'active'">
+                        <a th:href="@{/admin/roles}" aria-label="角色管理">
+                            <i class="fas fa-user-tag"></i>
+                            <span>角色管理</span>
+                        </a>
+                    </li>
+                    <li th:classappend="${currentPage == 'permissions'} ? 'active'">
+                        <a th:href="@{/admin/permissions}" aria-label="权限管理">
+                            <i class="fas fa-key"></i>
+                            <span>权限管理</span>
+                        </a>
+                    </li>
+                    <li th:classappend="${currentPage == 'settings'} ? 'active'">
+                        <a th:href="@{/admin/settings}" aria-label="系统设置">
+                            <i class="fas fa-sliders-h"></i>
+                            <span>系统设置</span>
+                        </a>
+                    </li>
+                    <li th:classappend="${currentPage == 'notifications'} ? 'active'">
+                        <a th:href="@{/admin/notifications}" aria-label="通知管理">
+                            <i class="fas fa-bell"></i>
+                            <span>通知管理</span>
+                        </a>
+                    </li>
+                    <li th:classappend="${currentPage == 'activity-log'} ? 'active'">
+                        <a th:href="@{/admin/activity-log}" aria-label="活动日志">
+                            <i class="fas fa-history"></i>
+                            <span>活动日志</span>
+                        </a>
+                    </li>
+                    <li th:classappend="${currentPage == 'diagnostic'} ? 'active'">
+                        <a th:href="@{/admin/diagnostic/permissions}" aria-label="权限诊断">
+                            <i class="fas fa-stethoscope"></i>
+                            <span>权限诊断</span>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+
+            <!-- 个人中心分组 -->
+            <li class="nav-section">
+                <i class="fas fa-user"></i>
+                个人中心
+            </li>
 
             <li th:classappend="${currentPage == 'profile'} ? 'active'">
-                <a th:href="@{/admin/profile}" data-tooltip="个人资料">
+                <a th:href="@{/admin/profile}" data-tooltip="个人资料" aria-label="个人资料">
                     <i class="fas fa-user-circle"></i>
                     <span>个人资料</span>
                 </a>
             </li>
 
+            <!-- API测试页面 - 所有管理员都可以看到 -->
             <li th:classappend="${currentPage == 'test-api'} ? 'active'">
-                <a th:href="@{/admin/test-api}" data-tooltip="API测试">
+                <a th:href="@{/admin/test-api}" data-tooltip="API测试" aria-label="API测试">
                     <i class="fas fa-flask"></i>
                     <span>API测试</span>
                 </a>
@@ -270,6 +377,34 @@
             }
         }
 
+        // 初始化子菜单切换功能
+        function initSubmenuToggle() {
+            const submenuItems = document.querySelectorAll('.has-submenu > .nav-link');
+
+            submenuItems.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+
+                    const parentItem = this.parentElement;
+                    const isOpen = parentItem.classList.contains('submenu-open');
+
+                    // 关闭其他打开的子菜单
+                    document.querySelectorAll('.has-submenu.submenu-open').forEach(openItem => {
+                        if (openItem !== parentItem) {
+                            openItem.classList.remove('submenu-open');
+                        }
+                    });
+
+                    // 切换当前子菜单
+                    if (isOpen) {
+                        parentItem.classList.remove('submenu-open');
+                    } else {
+                        parentItem.classList.add('submenu-open');
+                    }
+                });
+            });
+        }
+
         // 移除独立切换按钮功能，只保留顶部导航栏中的切换按钮
 
         // 页面加载时执行
@@ -296,6 +431,9 @@
             // 监听窗口大小变化
             window.addEventListener('resize', handleResize);
 
+            // 初始化子菜单功能
+            initSubmenuToggle();
+
             // 高亮当前页面菜单项
             const currentPath = window.location.pathname;
             const menuLinks = document.querySelectorAll('.sidebar ul li a');
@@ -303,6 +441,14 @@
             menuLinks.forEach(link => {
                 if (link.getAttribute('href') === currentPath) {
                     link.parentElement.classList.add('active');
+                    // 如果是子菜单项，展开父菜单
+                    const parentSubmenu = link.closest('.submenu');
+                    if (parentSubmenu) {
+                        const parentItem = parentSubmenu.closest('.has-submenu');
+                        if (parentItem) {
+                            parentItem.classList.add('submenu-open');
+                        }
+                    }
                 }
             });
 

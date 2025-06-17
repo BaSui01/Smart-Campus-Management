@@ -1,14 +1,32 @@
 # 智慧校园管理系统 - 统一配置文件
 server:
-  port: 8888  # 开发环境端口（避免端口冲突）
+  port: 8889  # 开发环境端口（避免端口冲突）
+  # HTTP传输配置，解决chunked编码问题
+  http2:
+    enabled: false
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/xml,text/plain,text/css,application/javascript
+    min-response-size: 1024
+  tomcat:
+    connection-timeout: 30000
+    max-connections: 8192
+    max-http-form-post-size: 2MB
+    max-swallow-size: 2MB
+    threads:
+      max: 200
+      min-spare: 10
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-stacktrace: on-param
+    include-exception: false
 
 spring:
   application:
     name: campus_management_db
   
-  mvc:
-    favicon:
-      enabled: false  # 禁用Spring Boot默认的favicon处理，避免404错误
+
 
   profiles:
     active: dev  # 默认激活开发环境
@@ -40,7 +58,7 @@ spring:
   # JPA配置
   jpa:
     hibernate:
-      ddl-auto: update  # 自动创建和更新表结构
+      ddl-auto: none  # 临时禁用DDL自动更新
       naming:
         physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
         implicit-strategy: org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy
@@ -48,19 +66,19 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
-        format_sql: false
-        use_sql_comments: false
-        query.timeout: 5000
-        connection.provider_disables_autocommit: false
-        enable_lazy_load_no_trans: false
-        current_session_context_class: thread
-        connection.release_mode: after_transaction
-        generate_statistics: false
-        query.plan_cache_max_size: 2048
+        '[format_sql]': false
+        '[use_sql_comments]': false
+        '[query.timeout]': 5000
+        '[connection.provider_disables_autocommit]': false
+        '[enable_lazy_load_no_trans]': false
+        '[current_session_context_class]': thread
+        '[connection.release_mode]': after_transaction
+        '[generate_statistics]': false
+        '[query.plan_cache_max_size]': 2048
         jdbc:
-          batch_size: 20
-        order_inserts: true
-        order_updates: true
+          '[batch_size]': 20
+        '[order_inserts]': true
+        '[order_updates]': true
     open-in-view: true
 
   # Redis配置
@@ -77,7 +95,7 @@ spring:
           max-idle: 10
           min-idle: 5
 
-  # 缓存配置
+  # 缓存配置 - 使用Redis缓存
   cache:
     type: redis
     redis:
@@ -124,17 +142,6 @@ spring:
     basename: messages
     encoding: UTF-8
 
-# JWT配置
-jwt:
-  secret: campus-management-jwt-secret-key-dev-2024
-  expiration: 7200000        # 2小时
-  refresh-expiration: 604800000  # 7天
-  header: Authorization
-  prefix: Bearer
-  redis:
-    prefix: "jwt:token:"
-    refresh-prefix: "jwt:refresh:"
-
 # 自定义配置
 campus:
   # JWT配置
@@ -145,11 +152,15 @@ campus:
     header: Authorization
     prefix: Bearer
     redis:
+      enabled: true
       prefix: "jwt:token:"
       refresh-prefix: "jwt:refresh:"
 
-  # 应用JWT配置（兼容性）
+  # 应用配置
   app:
+    name: 智慧校园管理系统
+    version: 1.0.0
+    description: 智慧校园综合管理平台
     jwt:
       secret: campus-management-jwt-secret-key-dev-2024
       expiration: 7200000
@@ -159,67 +170,104 @@ campus:
   system:
     name: 智慧校园管理系统
     version: 1.0.0
-    author: Campus Team
-    domain: localhost:8082
+    # author: Campus Management Team  # Removed due to unknown property error
+    # domain: localhost:8889  # Removed due to unknown property error
+    debug: false
 
   # 文件上传配置
   upload:
+    enabled: true
     path: uploads/
-    max-size: 10MB
-    allowed-types: jpg,jpeg,png,gif,pdf,doc,docx,xls,xlsx,ppt,pptx,txt,zip,rar
+    # max-file-size: 10MB  # 10MB  # Commented out to avoid unknown property error
+    allowed-types: 
+      - jpg
+      - jpeg
+      - png
+      - gif
+      - pdf
+      - doc
+      - docx
+      - xls
+      - xlsx
+      - ppt
+      - pptx
+      - txt
+      - zip
+      - rar
 
   # 安全配置
   security:
+    enabled: true
     password:
       min-length: 6
       max-attempts: 5
       strength-check: true
+      lockout-duration: 300000  # 5分钟
     session:
       timeout: 1800
+      max-sessions: 1
     captcha:
       enabled: true
       length: 4
       expire: 300
+    ignored-urls:
+      - /api/v1/auth/login
+      - /api/v1/auth/register
+      - /api/v1/auth/captcha
+      - /swagger-ui/**
+      - /api/v1/api-docs/**
 
   # 业务配置
   business:
+    enable-notification: true
+    enable-audit: true
+    default-page-size: 20
     # 选课配置
     course-selection:
+      enabled: true
       max-courses-per-student: 10
       allow-drop-after-deadline: false
     # 成绩配置
     grade:
+      enabled: true
       scale: 100
       pass-score: 60
       gpa-scale: 4.0
     # 缴费配置
     payment:
+      enabled: true
       reminder-days: 7
       late-fee-rate: 0.001
 
   # 缓存配置
   cache:
-    # 课程信息缓存 - 30分钟
-    course-ttl: 1800
-    # 用户权限缓存 - 15分钟
-    permission-ttl: 900
-    # 系统配置缓存 - 1小时
-    config-ttl: 3600
-    # 学生信息缓存 - 30分钟
-    student-ttl: 1800
-    # 班级信息缓存 - 1小时
-    class-ttl: 3600
+    enabled: true
+    type: redis
+    default-ttl: 1800  # 30分钟
+    # 具体缓存TTL配置
+    course-ttl: 1800      # 课程信息缓存 - 30分钟
+    permission-ttl: 900   # 用户权限缓存 - 15分钟
+    config-ttl: 3600      # 系统配置缓存 - 1小时
+    student-ttl: 1800     # 学生信息缓存 - 30分钟
+    class-ttl: 3600       # 班级信息缓存 - 1小时
 
   # 性能监控配置
   monitor:
     enabled: false  # 临时禁用监控
+    endpoints:
+      - health
+      - metrics
+      - info
     redis-monitor-interval: 60000  # Redis监控间隔 1分钟
     performance-log: false  # 临时禁用性能日志
 
-  # 邮件模板配置
+  # 邮件配置
   mail:
+    enabled: false  # 暂时禁用邮件
     template-path: classpath:/templates/email/
     from-name: 智慧校园管理系统
+    admin-emails:
+      - admin@campus.edu.cn
 
 # 监控配置
 management:
@@ -239,7 +287,23 @@ management:
       export:
         enabled: true
 
-# 日志配置 - 开发环境（减少输出）
+# 日志配置 - 开发环境（增加详细输出用于调试）
+logging:
+  level:
+    '[com.campus]': DEBUG
+    '[com.campus.interfaces.rest.v1.auth]': DEBUG
+    '[com.campus.application.Implement.auth]': DEBUG
+    '[com.campus.shared.util.JwtTokenUtil]': DEBUG
+    '[com.campus.shared.security]': DEBUG
+    '[org.springframework.security]': DEBUG
+    '[org.springframework.web]': DEBUG
+    '[org.springframework.web.servlet.DispatcherServlet]': DEBUG
+    '[org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping]': DEBUG
+    '[org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter]': DEBUG
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n"
+
 # SpringDoc OpenAPI配置
 springdoc:
   api-docs:

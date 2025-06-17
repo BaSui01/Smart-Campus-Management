@@ -1,18 +1,26 @@
 package com.campus.application.Implement.auth;
 
-import com.campus.application.service.auth.PermissionService;
-import com.campus.domain.entity.auth.Permission;
-import com.campus.domain.repository.auth.PermissionRepository;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.*;
-import java.util.stream.Collectors;
+import com.campus.application.service.auth.PermissionService;
+import com.campus.domain.entity.auth.Permission;
+import com.campus.domain.repository.auth.PermissionRepository;
 
 /**
  * 权限管理服务实现类
@@ -108,8 +116,14 @@ public class PermissionServiceImpl implements PermissionService {
             }
             
             return permissionRepository.save(permission);
-        } catch (Exception e) {
-            logger.error("创建权限失败", e);
+        } catch (DataIntegrityViolationException e) {
+            logger.error("创建权限失败 - 数据完整性违反", e);
+            throw new RuntimeException("创建权限失败: 权限代码已存在或数据不完整");
+        } catch (DataAccessException e) {
+            logger.error("创建权限失败 - 数据访问异常", e);
+            throw new RuntimeException("创建权限失败: 数据库访问错误");
+        } catch (RuntimeException e) {
+            logger.error("创建权限失败 - 未知异常", e);
             throw new RuntimeException("创建权限失败: " + e.getMessage());
         }
     }
@@ -138,8 +152,14 @@ public class PermissionServiceImpl implements PermissionService {
             existingPermission.setUpdatedAt(LocalDateTime.now());
             
             return permissionRepository.save(existingPermission);
-        } catch (Exception e) {
-            logger.error("更新权限失败: {}", id, e);
+        } catch (DataIntegrityViolationException e) {
+            logger.error("更新权限失败 - 数据完整性违反: {}", id, e);
+            throw new RuntimeException("更新权限失败: 权限代码已存在或数据不完整");
+        } catch (DataAccessException e) {
+            logger.error("更新权限失败 - 数据访问异常: {}", id, e);
+            throw new RuntimeException("更新权限失败: 数据库访问错误");
+        } catch (RuntimeException e) {
+            logger.error("更新权限失败 - 未知异常: {}", id, e);
             throw new RuntimeException("更新权限失败: " + e.getMessage());
         }
     }

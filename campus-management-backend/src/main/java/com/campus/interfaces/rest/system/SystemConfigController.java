@@ -687,54 +687,39 @@ public class SystemConfigController {
      * 根据分类获取配置键
      */
     private String[] getConfigKeysByCategory(String category) {
-        switch (category) {
-            case "system":
-                return new String[]{"system.name", "system.version", "system.timezone", "system.language", "system.debug"};
-            case "database":
-                return new String[]{"db.host", "db.port", "db.username", "db.password", "db.pool.size"};
-            case "cache":
-                return new String[]{"cache.host", "cache.port", "cache.password", "cache.timeout", "cache.max.memory"};
-            case "email":
-                return new String[]{"email.host", "email.port", "email.username", "email.password", "email.ssl"};
-            default:
-                return new String[]{"config.key1", "config.key2", "config.key3", "config.key4", "config.key5"};
-        }
+        return switch (category) {
+            case "system" -> new String[]{"system.name", "system.version", "system.timezone", "system.language", "system.debug"};
+            case "database" -> new String[]{"db.host", "db.port", "db.username", "db.password", "db.pool.size"};
+            case "cache" -> new String[]{"cache.host", "cache.port", "cache.password", "cache.timeout", "cache.max.memory"};
+            case "email" -> new String[]{"email.host", "email.port", "email.username", "email.password", "email.ssl"};
+            default -> new String[]{"config.key1", "config.key2", "config.key3", "config.key4", "config.key5"};
+        };
     }
 
     /**
      * 根据分类获取配置名称
      */
     private String[] getConfigNamesByCategory(String category) {
-        switch (category) {
-            case "system":
-                return new String[]{"系统名称", "系统版本", "系统时区", "系统语言", "调试模式"};
-            case "database":
-                return new String[]{"数据库主机", "数据库端口", "数据库用户名", "数据库密码", "连接池大小"};
-            case "cache":
-                return new String[]{"缓存主机", "缓存端口", "缓存密码", "连接超时", "最大内存"};
-            case "email":
-                return new String[]{"邮件主机", "邮件端口", "邮件用户名", "邮件密码", "SSL加密"};
-            default:
-                return new String[]{"配置名称1", "配置名称2", "配置名称3", "配置名称4", "配置名称5"};
-        }
+        return switch (category) {
+            case "system" -> new String[]{"系统名称", "系统版本", "系统时区", "系统语言", "调试模式"};
+            case "database" -> new String[]{"数据库主机", "数据库端口", "数据库用户名", "数据库密码", "连接池大小"};
+            case "cache" -> new String[]{"缓存主机", "缓存端口", "缓存密码", "连接超时", "最大内存"};
+            case "email" -> new String[]{"邮件主机", "邮件端口", "邮件用户名", "邮件密码", "SSL加密"};
+            default -> new String[]{"配置名称1", "配置名称2", "配置名称3", "配置名称4", "配置名称5"};
+        };
     }
 
     /**
      * 根据分类获取配置值
      */
     private String[] getConfigValuesByCategory(String category) {
-        switch (category) {
-            case "system":
-                return new String[]{"智慧校园管理系统", "v2.0.0", "Asia/Shanghai", "zh_CN", "false"};
-            case "database":
-                return new String[]{"localhost", "3306", "campus_user", "********", "20"};
-            case "cache":
-                return new String[]{"localhost", "6379", "********", "3000", "512MB"};
-            case "email":
-                return new String[]{"smtp.campus.edu.cn", "587", "noreply@campus.edu.cn", "********", "true"};
-            default:
-                return new String[]{"配置值1", "配置值2", "配置值3", "配置值4", "配置值5"};
-        }
+        return switch (category) {
+            case "system" -> new String[]{"智慧校园管理系统", "v2.0.0", "Asia/Shanghai", "zh_CN", "false"};
+            case "database" -> new String[]{"localhost", "3306", "campus_user", "********", "20"};
+            case "cache" -> new String[]{"localhost", "6379", "********", "3000", "512MB"};
+            case "email" -> new String[]{"smtp.campus.edu.cn", "587", "noreply@campus.edu.cn", "********", "true"};
+            default -> new String[]{"配置值1", "配置值2", "配置值3", "配置值4", "配置值5"};
+        };
     }
 
     /**

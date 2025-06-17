@@ -155,7 +155,7 @@ public abstract class BaseController {
     }
     
     // ==================== 参数验证方法 ====================
-    
+
     /**
      * 验证ID参数
      */
@@ -164,7 +164,7 @@ public abstract class BaseController {
             throw new IllegalArgumentException(entityName + "ID不能为空或小于等于0");
         }
     }
-    
+
     /**
      * 验证分页参数
      */
@@ -174,6 +174,36 @@ public abstract class BaseController {
         }
         if (size < 1 || size > MAX_PAGE_SIZE) {
             throw new IllegalArgumentException("页面大小必须在1到" + MAX_PAGE_SIZE + "之间");
+        }
+    }
+
+    // ==================== 工具方法 ====================
+
+    /**
+     * 处理搜索关键词
+     */
+    protected String processSearchKeyword(String keyword) {
+        if (!StringUtils.hasText(keyword)) {
+            return null;
+        }
+        return keyword.trim();
+    }
+
+    /**
+     * 记录操作日志
+     */
+    protected void logOperation(String operation, Object... params) {
+        if (log.isInfoEnabled()) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("执行操作: ").append(operation);
+            if (params != null && params.length > 0) {
+                sb.append(", 参数: ");
+                for (int i = 0; i < params.length; i++) {
+                    if (i > 0) sb.append(", ");
+                    sb.append(params[i]);
+                }
+            }
+            log.info(sb.toString());
         }
     }
     
@@ -195,25 +225,7 @@ public abstract class BaseController {
         }
     }
     
-    // ==================== 工具方法 ====================
-    
-    /**
-     * 处理搜索关键词
-     */
-    protected String processSearchKeyword(String keyword) {
-        if (!StringUtils.hasText(keyword)) {
-            return "";
-        }
-        // 去除首尾空格，转换为小写
-        return keyword.trim().toLowerCase();
-    }
-    
-    /**
-     * 记录操作日志
-     */
-    protected void logOperation(String operation, Object... params) {
-        log.info("API操作: {} - 参数: {}", operation, params);
-    }
+
     
     /**
      * 记录错误日志
@@ -268,7 +280,7 @@ public abstract class BaseController {
      */
     protected Long safeParseLong(String value, Long defaultValue) {
         try {
-            return StringUtils.hasText(value) ? Long.parseLong(value) : defaultValue;
+            return StringUtils.hasText(value) ? Long.valueOf(value) : defaultValue;
         } catch (NumberFormatException e) {
             return defaultValue;
         }
@@ -279,7 +291,7 @@ public abstract class BaseController {
      */
     protected Integer safeParseInteger(String value, Integer defaultValue) {
         try {
-            return StringUtils.hasText(value) ? Integer.parseInt(value) : defaultValue;
+            return StringUtils.hasText(value) ? Integer.valueOf(value) : defaultValue;
         } catch (NumberFormatException e) {
             return defaultValue;
         }

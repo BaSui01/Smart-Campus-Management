@@ -163,7 +163,7 @@ public class AutoScheduleController {
         
         if (!semester.isEmpty() && !academicYear.isEmpty()) {
             try {
-                Integer year = Integer.parseInt(academicYear);
+                Integer year = Integer.valueOf(academicYear);
                 
                 // 获取排课统计
                 AutoScheduleService.ScheduleStatistics statistics = 
@@ -210,7 +210,7 @@ public class AutoScheduleController {
         if (!semester.isEmpty() && !academicYear.isEmpty()) {
             try {
                 // 验证学年格式
-                Integer.parseInt(academicYear);
+                Integer.valueOf(academicYear);
 
                 // 获取冲突信息（这里需要实现具体的冲突检查逻辑）
                 List<AutoScheduleService.ConflictInfo> conflicts = List.of();
@@ -256,7 +256,7 @@ public class AutoScheduleController {
         model.addAttribute("activeMenu", "autoSchedule");
         
         // 构建查询参数
-        Integer statusValue = status.isEmpty() ? null : Integer.parseInt(status);
+        Integer statusValue = status.isEmpty() ? null : Integer.valueOf(status);
         
         List<com.campus.domain.entity.infrastructure.Classroom> classrooms = classroomRepository.searchClassrooms(
             search.isEmpty() ? null : search,
@@ -298,8 +298,8 @@ public class AutoScheduleController {
         model.addAttribute("activeMenu", "autoSchedule");
         
         // 构建查询参数
-        Integer dayValue = dayOfWeek.isEmpty() ? null : Integer.parseInt(dayOfWeek);
-        Integer statusValue = status.isEmpty() ? null : Integer.parseInt(status);
+        Integer dayValue = dayOfWeek.isEmpty() ? null : Integer.valueOf(dayOfWeek);
+        Integer statusValue = status.isEmpty() ? null : Integer.valueOf(status);
         
         List<com.campus.domain.entity.academic.TimeSlot> timeSlots = timeSlotRepository.searchTimeSlots(
             null, dayValue, null, slotType.isEmpty() ? null : slotType, statusValue

@@ -1,5 +1,15 @@
 package com.campus.application.Implement.system;
 
+import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.campus.application.service.academic.TimeSlotService;
 import com.campus.application.service.auth.PermissionService;
 import com.campus.application.service.auth.RoleService;
@@ -11,16 +21,6 @@ import com.campus.domain.entity.auth.Permission;
 import com.campus.domain.entity.auth.Role;
 import com.campus.domain.entity.auth.User;
 import com.campus.domain.entity.organization.Department;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * 数据初始化服务实现类
@@ -175,9 +175,16 @@ public class DataInitServiceImpl implements DataInitService {
                 User savedUser = userService.createUser(adminUser);
                 
                 // 分配超级管理员角色
-                Role adminRole = roleService.findByCode("SUPER_ADMIN");
+                Role adminRole = roleService.findByCode("ROLE_SUPER_ADMIN");
+                if (adminRole == null) {
+                    // 如果没有找到SUPER_ADMIN，尝试查找ADMIN角色
+                    adminRole = roleService.findByCode("ROLE_ADMIN");
+                }
                 if (adminRole != null) {
                     userService.assignRole(savedUser.getId(), adminRole.getId());
+                    logger.info("为admin用户分配角色: {}", adminRole.getRoleKey());
+                } else {
+                    logger.warn("未找到管理员角色，请检查角色数据初始化");
                 }
                 
                 logger.info("管理员用户创建成功: {}", adminUsername);

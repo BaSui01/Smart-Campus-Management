@@ -1,5 +1,8 @@
 package com.campus;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -8,9 +11,6 @@ import org.springframework.core.env.Environment;
 import org.springframework.lang.NonNull;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
-
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 
 /**
  * 智慧校园管理平台启动类

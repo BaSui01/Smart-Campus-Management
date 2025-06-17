@@ -98,23 +98,6 @@
               />
             </el-form-item>
 
-            <!-- 验证码 -->
-            <el-form-item prop="captcha" class="captcha-item">
-              <div class="captcha-container">
-                <el-input
-                  v-model="loginForm.captcha"
-                  placeholder="请输入验证码"
-                  :prefix-icon="SafetyIcon"
-                  clearable
-                  style="flex: 1; margin-right: 12px;"
-                />
-                <div class="captcha-image" @click="refreshCaptcha" title="点击刷新验证码">
-                  <img v-if="captchaImage" :src="captchaImage" alt="验证码" />
-                  <span v-else-if="captchaCode" class="captcha-text">{{ captchaCode }}</span>
-                  <el-icon v-else class="refresh-icon"><RefreshRight /></el-icon>
-                </div>
-              </div>
-            </el-form-item>
 
             <!-- 记住我 -->
             <div class="form-options">
@@ -176,23 +159,18 @@ import {
   Reading,
   Management,
   Check,
-  RefreshRight,
   Platform,
   Position,
   Promotion,
   School
 } from '@element-plus/icons-vue'
 
-// 使用Reading图标替代Shield
-const SafetyIcon = Reading
 
 const router = useRouter()
 
 // 响应式数据
 const loginFormRef = ref()
 const loading = ref(false)
-const captchaCode = ref('')
-const captchaImage = ref('')
 
 // 角色配置 - 前端显示用
 const roles = [
@@ -205,7 +183,6 @@ const roles = [
 const loginForm = reactive({
   username: '',
   password: '',
-  captcha: '',
   role: 'STUDENT',
   remember: false
 })
@@ -243,10 +220,6 @@ const loginRules = computed(() => {
     password: [
       { required: true, message: '请输入密码', trigger: 'blur' },
       { min: 6, max: 20, message: '密码长度在 6 到 20 个字符', trigger: 'blur' }
-    ],
-    captcha: [
-      { required: true, message: '请输入验证码', trigger: 'blur' },
-      { min: 4, max: 6, message: '验证码为4-6位字符', trigger: 'blur' }
     ]
   }
 })
@@ -271,107 +244,6 @@ const getPlaceholder = (field) => {
   return roleMap[loginForm.role][field]
 }
 
-// 从后端获取验证码
-const getCaptchaFromServer = async () => {
-  try {
-    console.log('正在获取验证码...')
-    
-    // 1. 优先尝试管理员验证码接口
-    try {
-      const adminResponse = await adminAuthApi.getCaptcha()
-      
-      if (adminResponse && adminResponse.success && adminResponse.data) {
-        console.log('成功获取管理员验证码')
-        captchaCode.value = adminResponse.data.code || ''
-        captchaImage.value = adminResponse.data.image || ''
-        return
-      }
-      
-      // 如果管理员接口返回的是图片blob
-      if (adminResponse && adminResponse.data) {
-        console.log('获取到管理员验证码图片')
-        captchaImage.value = adminResponse.data
-        captchaCode.value = '' // 图片验证码不返回文本
-        return
-      }
-    } catch (adminError) {
-      console.warn('管理员验证码接口失败:', adminError)
-    }
-    
-    // 2. 尝试统一认证验证码接口
-    try {
-      const unifiedResponse = await unifiedAuthApi.getCaptcha()
-      
-      if (unifiedResponse && unifiedResponse.success && unifiedResponse.data) {
-        console.log('成功获取统一验证码')
-        captchaCode.value = unifiedResponse.data.code || ''
-        captchaImage.value = unifiedResponse.data.image || ''
-        return
-      }
-    } catch (unifiedError) {
-      console.warn('统一验证码接口失败:', unifiedError)
-    }
-    
-    // 3. 尝试通用验证码接口
-    try {
-      const commonResponse = await adminAuthApi.getCommonCaptcha()
-      
-      if (commonResponse && commonResponse.success && commonResponse.data) {
-        console.log('成功获取通用验证码')
-        captchaCode.value = commonResponse.data.code || ''
-        captchaImage.value = commonResponse.data.image || ''
-        return
-      }
-    } catch (commonError) {
-      console.warn('通用验证码接口失败:', commonError)
-    }
-    
-    // 4. 如果所有后端接口都失败，使用前端生成
-    console.warn('所有后端验证码服务不可用，使用前端生成')
-    generateCaptcha()
-    
-  } catch (error) {
-    console.warn('获取验证码过程中出现异常:', error)
-    generateCaptcha()
-  }
-}
-
-// 前端生成验证码的备用方案
-const generateCaptcha = () => {
-  console.log('生成前端验证码')
-  const chars = '123456789ABCDEFGHJKLMNPQRSTUVWXYZ' // 与后端保持一致
-  let result = ''
-  const length = Math.random() > 0.5 ? 4 : 6 // 随机4位或6位
-  
-  for (let i = 0; i < length; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length))
-  }
-  
-  captchaCode.value = result
-  captchaImage.value = '' // 清除图片，显示文本验证码
-  
-  // 模拟保存到session（实际上在前端无法真正保存到session）
-  sessionStorage.setItem('frontendCaptcha', result.toLowerCase())
-  
-  console.log('前端验证码生成完成:', result)
-}
-
-// 验证前端生成的验证码
-const validateFrontendCaptcha = (inputCaptcha) => {
-  const storedCaptcha = sessionStorage.getItem('frontendCaptcha')
-  return storedCaptcha && storedCaptcha === inputCaptcha.toLowerCase()
-}
-
-// 刷新验证码
-const refreshCaptcha = () => {
-  // 清除之前的验证码
-  captchaCode.value = ''
-  captchaImage.value = ''
-  sessionStorage.removeItem('frontendCaptcha')
-  
-  // 获取新的验证码
-  getCaptchaFromServer()
-}
 
 // 处理登录
 const handleLogin = async () => {
@@ -387,7 +259,6 @@ const handleLogin = async () => {
     const loginData = {
       username: loginForm.username.trim(),
       password: loginForm.password,
-      captcha: loginForm.captcha.trim(),
       remember: loginForm.remember,
       role: loginForm.role // 传递角色信息给后端
     }
@@ -399,20 +270,10 @@ const handleLogin = async () => {
     let loginSuccess = false
 
     try {
-      // 验证前端生成的验证码
-      if (captchaCode.value && !captchaImage.value) {
-        if (!validateFrontendCaptcha(loginData.captcha)) {
-          ElMessage.error('验证码错误')
-          refreshCaptcha()
-          return
-        }
-      }
-
       // 使用统一认证API，它会根据后端实际情况选择合适的登录方式
       loginResponse = await unifiedAuthApi.simulateRoleLogin({
         username: loginData.username,
         password: loginData.password,
-        captcha: loginData.captcha,
         role: loginForm.role,
         rememberMe: loginData.remember
       })
@@ -453,7 +314,6 @@ const handleLogin = async () => {
 
     // 如果走到这里说明登录失败
     ElMessage.error('登录失败，请重试')
-    refreshCaptcha()
 
   } catch (validationError) {
     console.error('表单验证失败:', validationError)
@@ -552,7 +412,6 @@ const handleLoginError = (loginError) => {
   }
 
   ElMessage.error(errorMessage)
-  refreshCaptcha()
 }
 
 // 检查登录状态
@@ -600,9 +459,6 @@ onMounted(async () => {
   
   // 恢复记住的登录信息
   restoreRememberedLogin()
-  
-  // 获取验证码
-  await getCaptchaFromServer()
   
   // 可选：检查系统健康状态
   try {

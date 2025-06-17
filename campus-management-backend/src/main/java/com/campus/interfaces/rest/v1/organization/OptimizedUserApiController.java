@@ -1,13 +1,13 @@
 package com.campus.interfaces.rest.v1.organization;
 
-import com.campus.application.service.auth.UserService;
-import com.campus.domain.entity.auth.User;
-import com.campus.interfaces.rest.common.BaseController;
-import com.campus.shared.common.ApiResponse;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.regex.Pattern;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -16,16 +16,26 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
+import com.campus.application.service.auth.UserService;
+import com.campus.domain.entity.auth.User;
+import com.campus.interfaces.rest.common.BaseController;
+import com.campus.shared.common.ApiResponse;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.regex.Pattern;
 
 /**
  * 优化的用户管理API控制器
@@ -185,7 +195,7 @@ public class OptimizedUserApiController extends BaseController {
     /**
      * 根据ID查询用户详情
      */
-    @GetMapping("/{id}")
+    @GetMapping("/{id:[0-9]+}")  // 限制只匹配数字ID，避免与/disabled冲突
     @Operation(summary = "查询用户详情", description = "根据用户ID查询详细信息")
     @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN')")
     public ResponseEntity<ApiResponse<User>> getUserById(
@@ -266,7 +276,7 @@ public class OptimizedUserApiController extends BaseController {
     /**
      * 更新用户信息
      */
-    @PutMapping("/{id}")
+    @PutMapping("/{id:[0-9]+}")  // 限制只匹配数字ID
     @Operation(summary = "更新用户信息", description = "修改用户的详细信息")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<User>> updateUser(
@@ -325,7 +335,7 @@ public class OptimizedUserApiController extends BaseController {
     /**
      * 删除用户
      */
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id:[0-9]+}")  // 限制只匹配数字ID
     @Operation(summary = "删除用户", description = "根据ID删除用户信息")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> deleteUser(
@@ -357,6 +367,32 @@ public class OptimizedUserApiController extends BaseController {
         }
     }
 
+    // ==================== 特殊查询端点 ====================
+
+    /**
+     * 获取禁用用户列表
+     */
+    @GetMapping("/disabled")
+    @Operation(summary = "获取禁用用户列表", description = "获取所有状态为禁用的用户")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM_ADMIN')")
+    public ResponseEntity<ApiResponse<List<User>>> getDisabledUsers() {
+        try {
+            log.info("获取禁用用户列表");
+
+            // 查询状态为0（禁用）的用户
+            List<User> disabledUsers = userService.findUsersByStatus(0, Pageable.unpaged()).getContent();
+
+            // 清除敏感信息
+            disabledUsers.forEach(user -> user.setPassword(null));
+
+            return success("获取禁用用户列表成功", disabledUsers);
+
+        } catch (Exception e) {
+            log.error("获取禁用用户列表失败: ", e);
+            return error("获取禁用用户列表失败: " + e.getMessage());
+        }
+    }
+
     // ==================== 批量操作端点 ====================
 
     /**
@@ -372,7 +408,10 @@ public class OptimizedUserApiController extends BaseController {
             logOperation("批量删除用户", ids.size());
 
             // 验证参数
-            if (ids == null || ids.isEmpty()) {
+            if (ids == null) {
+                return badRequest("用户ID列表不能为空");
+            }
+            if (ids.isEmpty()) {
                 return badRequest("用户ID列表不能为空");
             }
 

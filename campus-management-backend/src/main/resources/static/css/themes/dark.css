@@ -1,0 +1,472 @@
+/* 深色主题样式 - Dark Theme Styles */
+
+/* 深色主题变量覆盖 */
+[data-theme="dark"] {
+    /* 主色调 */
+    --primary-color: #0d6efd;
+    --primary-dark: #0a58ca;
+    --primary-light: #6ea8fe;
+    
+    /* 辅助色 */
+    --secondary-color: #6c757d;
+    --success-color: #198754;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --info-color: #0dcaf0;
+    
+    /* 基础色调 */
+    --white: #ffffff;
+    --light: #1a1a1a;
+    --dark: #e9ecef;
+    --black: #000000;
+    
+    /* 灰色系 */
+    --gray-100: #212529;
+    --gray-200: #343a40;
+    --gray-300: #495057;
+    --gray-400: #6c757d;
+    --gray-500: #adb5bd;
+    --gray-600: #ced4da;
+    --gray-700: #dee2e6;
+    --gray-800: #e9ecef;
+    --gray-900: #f8f9fa;
+    
+    /* 背景色 */
+    --body-bg: #121212;
+    --body-color: #e9ecef;
+    
+    /* 边框色 */
+    --border-color: #495057;
+    --border-color-translucent: rgba(255, 255, 255, 0.175);
+    
+    /* 阴影 */
+    --box-shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.3);
+    --box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.4);
+    --box-shadow-lg: 0 1rem 3rem rgba(0, 0, 0, 0.5);
+    
+    /* 管理后台特定颜色 */
+    --admin-bg: #121212;
+    --admin-sidebar-bg: #1e1e1e;
+    --admin-sidebar-text: #e9ecef;
+    --admin-sidebar-text-muted: #adb5bd;
+    --admin-sidebar-hover-bg: #2d3748;
+    --admin-sidebar-active-bg: #0d6efd;
+    --admin-sidebar-border: #495057;
+    --admin-sidebar-submenu-bg: #171717;
+    --admin-sidebar-submenu-hover-bg: #2d3748;
+    
+    --admin-topbar-bg: #1e1e1e;
+    --admin-topbar-text: #e9ecef;
+    --admin-content-bg: #1e1e1e;
+    
+    /* 卡片背景 */
+    --card-bg: #1e1e1e;
+    --card-border-color: #495057;
+    
+    /* 表格颜色 */
+    --table-bg: #1e1e1e;
+    --table-accent-bg: #252525;
+    --table-striped-bg: #252525;
+    --table-hover-bg: #2d3748;
+    --table-border-color: #495057;
+    
+    /* 表单控件 */
+    --input-bg: #2d3748;
+    --input-border-color: #495057;
+    --input-color: #e9ecef;
+    --input-placeholder-color: #adb5bd;
+    --input-focus-border-color: #0d6efd;
+    --input-focus-box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    
+    /* 按钮颜色 */
+    --btn-close-color: #e9ecef;
+    --btn-close-bg: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23e9ecef'%3e%3cpath d='m.235.867 8 8a.5.5 0 0 1 0 .708l-8 8a.5.5 0 0 1-.708-.708L7.293 8.5.527 1.734A.5.5 0 0 1 .235.867z'/%3e%3c/svg%3e");
+    
+    /* 下拉菜单 */
+    --dropdown-bg: #2d3748;
+    --dropdown-border-color: #495057;
+    --dropdown-divider-bg: #495057;
+    --dropdown-link-color: #e9ecef;
+    --dropdown-link-hover-color: #ffffff;
+    --dropdown-link-hover-bg: #495057;
+    
+    /* 模态框 */
+    --modal-content-bg: #2d3748;
+    --modal-content-border-color: #495057;
+    --modal-header-border-color: #495057;
+    --modal-footer-border-color: #495057;
+    
+    /* Toast通知 */
+    --toast-bg: #2d3748;
+    --toast-border-color: #495057;
+    --toast-header-bg: #343a40;
+    --toast-header-border-color: #495057;
+}
+
+/* 深色主题下的全局样式调整 */
+[data-theme="dark"] body {
+    background-color: var(--admin-bg);
+    color: var(--body-color);
+}
+
+/* 卡片样式 */
+[data-theme="dark"] .card {
+    background-color: var(--card-bg);
+    border-color: var(--card-border-color);
+    color: var(--body-color);
+}
+
+[data-theme="dark"] .card-header {
+    background-color: var(--gray-200);
+    border-bottom-color: var(--card-border-color);
+    color: var(--body-color);
+}
+
+[data-theme="dark"] .card-footer {
+    background-color: var(--gray-200);
+    border-top-color: var(--card-border-color);
+}
+
+/* 表格样式 */
+[data-theme="dark"] .table {
+    --bs-table-bg: var(--table-bg);
+    --bs-table-accent-bg: var(--table-accent-bg);
+    --bs-table-striped-bg: var(--table-striped-bg);
+    --bs-table-hover-bg: var(--table-hover-bg);
+    --bs-table-border-color: var(--table-border-color);
+    color: var(--body-color);
+}
+
+[data-theme="dark"] .table > :not(caption) > * > * {
+    border-bottom-color: var(--table-border-color);
+}
+
+[data-theme="dark"] .table-bordered > :not(caption) > * {
+    border-width: 1px 0;
+}
+
+[data-theme="dark"] .table-bordered > :not(caption) > * > * {
+    border-width: 0 1px;
+}
+
+/* 表单控件样式 */
+[data-theme="dark"] .form-control {
+    background-color: var(--input-bg);
+    border-color: var(--input-border-color);
+    color: var(--input-color);
+}
+
+[data-theme="dark"] .form-control::placeholder {
+    color: var(--input-placeholder-color);
+}
+
+[data-theme="dark"] .form-control:focus {
+    background-color: var(--input-bg);
+    border-color: var(--input-focus-border-color);
+    box-shadow: var(--input-focus-box-shadow);
+    color: var(--input-color);
+}
+
+[data-theme="dark"] .form-select {
+    background-color: var(--input-bg);
+    border-color: var(--input-border-color);
+    color: var(--input-color);
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23e9ecef' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m1 6 7 7 7-7'/%3e%3c/svg%3e");
+}
+
+[data-theme="dark"] .form-select:focus {
+    border-color: var(--input-focus-border-color);
+    box-shadow: var(--input-focus-box-shadow);
+}
+
+[data-theme="dark"] .form-check-input {
+    background-color: var(--input-bg);
+    border-color: var(--input-border-color);
+}
+
+[data-theme="dark"] .form-check-input:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+/* 按钮样式调整 */
+[data-theme="dark"] .btn-outline-secondary {
+    color: var(--gray-600);
+    border-color: var(--gray-600);
+}
+
+[data-theme="dark"] .btn-outline-secondary:hover {
+    color: var(--gray-900);
+    background-color: var(--gray-600);
+    border-color: var(--gray-600);
+}
+
+[data-theme="dark"] .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+/* 下拉菜单样式 */
+[data-theme="dark"] .dropdown-menu {
+    background-color: var(--dropdown-bg);
+    border-color: var(--dropdown-border-color);
+}
+
+[data-theme="dark"] .dropdown-item {
+    color: var(--dropdown-link-color);
+}
+
+[data-theme="dark"] .dropdown-item:hover,
+[data-theme="dark"] .dropdown-item:focus {
+    color: var(--dropdown-link-hover-color);
+    background-color: var(--dropdown-link-hover-bg);
+}
+
+[data-theme="dark"] .dropdown-divider {
+    border-top-color: var(--dropdown-divider-bg);
+}
+
+/* 模态框样式 */
+[data-theme="dark"] .modal-content {
+    background-color: var(--modal-content-bg);
+    border-color: var(--modal-content-border-color);
+    color: var(--body-color);
+}
+
+[data-theme="dark"] .modal-header {
+    border-bottom-color: var(--modal-header-border-color);
+}
+
+[data-theme="dark"] .modal-footer {
+    border-top-color: var(--modal-footer-border-color);
+}
+
+/* 分页样式 */
+[data-theme="dark"] .page-link {
+    background-color: var(--input-bg);
+    border-color: var(--input-border-color);
+    color: var(--body-color);
+}
+
+[data-theme="dark"] .page-link:hover {
+    background-color: var(--gray-300);
+    border-color: var(--gray-300);
+    color: var(--body-color);
+}
+
+[data-theme="dark"] .page-item.active .page-link {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+[data-theme="dark"] .page-item.disabled .page-link {
+    background-color: var(--gray-200);
+    border-color: var(--gray-200);
+    color: var(--gray-500);
+}
+
+/* 徽章样式 */
+[data-theme="dark"] .badge {
+    color: var(--white);
+}
+
+/* 警告框样式 */
+[data-theme="dark"] .alert {
+    border-color: transparent;
+}
+
+[data-theme="dark"] .alert-primary {
+    background-color: rgba(13, 110, 253, 0.2);
+    border-color: rgba(13, 110, 253, 0.3);
+    color: #6ea8fe;
+}
+
+[data-theme="dark"] .alert-secondary {
+    background-color: rgba(108, 117, 125, 0.2);
+    border-color: rgba(108, 117, 125, 0.3);
+    color: #a7acb1;
+}
+
+[data-theme="dark"] .alert-success {
+    background-color: rgba(25, 135, 84, 0.2);
+    border-color: rgba(25, 135, 84, 0.3);
+    color: #75b798;
+}
+
+[data-theme="dark"] .alert-danger {
+    background-color: rgba(220, 53, 69, 0.2);
+    border-color: rgba(220, 53, 69, 0.3);
+    color: #ea868f;
+}
+
+[data-theme="dark"] .alert-warning {
+    background-color: rgba(255, 193, 7, 0.2);
+    border-color: rgba(255, 193, 7, 0.3);
+    color: #ffda6a;
+}
+
+[data-theme="dark"] .alert-info {
+    background-color: rgba(13, 202, 240, 0.2);
+    border-color: rgba(13, 202, 240, 0.3);
+    color: #6edff6;
+}
+
+/* Toast通知样式 */
+[data-theme="dark"] .toast {
+    background-color: var(--toast-bg);
+    border-color: var(--toast-border-color);
+    color: var(--body-color);
+}
+
+[data-theme="dark"] .toast-header {
+    background-color: var(--toast-header-bg);
+    border-bottom-color: var(--toast-header-border-color);
+    color: var(--body-color);
+}
+
+/* 进度条样式 */
+[data-theme="dark"] .progress {
+    background-color: var(--gray-200);
+}
+
+/* 导航标签样式 */
+[data-theme="dark"] .nav-tabs {
+    border-bottom-color: var(--border-color);
+}
+
+[data-theme="dark"] .nav-tabs .nav-link {
+    color: var(--body-color);
+    border-color: transparent;
+}
+
+[data-theme="dark"] .nav-tabs .nav-link:hover,
+[data-theme="dark"] .nav-tabs .nav-link:focus {
+    border-color: var(--gray-300) var(--gray-300) var(--border-color);
+    isolation: isolate;
+}
+
+[data-theme="dark"] .nav-tabs .nav-link.active {
+    color: var(--primary-color);
+    background-color: var(--card-bg);
+    border-color: var(--border-color) var(--border-color) var(--card-bg);
+}
+
+/* 手风琴样式 */
+[data-theme="dark"] .accordion-item {
+    background-color: var(--card-bg);
+    border-color: var(--card-border-color);
+}
+
+[data-theme="dark"] .accordion-button {
+    background-color: var(--card-bg);
+    color: var(--body-color);
+}
+
+[data-theme="dark"] .accordion-button:not(.collapsed) {
+    background-color: var(--gray-200);
+    color: var(--primary-color);
+}
+
+[data-theme="dark"] .accordion-button::after {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23e9ecef'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
+}
+
+[data-theme="dark"] .accordion-button:not(.collapsed)::after {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%230d6efd'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
+}
+
+/* 滚动条样式 */
+[data-theme="dark"] ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-track {
+    background: var(--gray-200);
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+    background: var(--gray-400);
+    border-radius: var(--border-radius);
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+    background: var(--gray-500);
+}
+
+/* 选择文本样式 */
+[data-theme="dark"] ::selection {
+    background-color: rgba(13, 110, 253, 0.4);
+    color: var(--white);
+}
+
+[data-theme="dark"] ::-moz-selection {
+    background-color: rgba(13, 110, 253, 0.4);
+    color: var(--white);
+}
+
+/* 代码样式 */
+[data-theme="dark"] code {
+    color: #f8f8f2;
+    background-color: var(--gray-200);
+}
+
+[data-theme="dark"] pre {
+    color: #f8f8f2;
+    background-color: var(--gray-200);
+}
+
+/* 链接样式 */
+[data-theme="dark"] a {
+    color: var(--primary-light);
+}
+
+[data-theme="dark"] a:hover {
+    color: #a6d5fa;
+}
+
+/* 文本颜色工具类覆盖 */
+[data-theme="dark"] .text-muted {
+    color: var(--gray-500) !important;
+}
+
+[data-theme="dark"] .text-dark {
+    color: var(--gray-800) !important;
+}
+
+[data-theme="dark"] .text-light {
+    color: var(--gray-300) !important;
+}
+
+/* 背景颜色工具类覆盖 */
+[data-theme="dark"] .bg-light {
+    background-color: var(--gray-200) !important;
+}
+
+[data-theme="dark"] .bg-dark {
+    background-color: var(--gray-800) !important;
+}
+
+[data-theme="dark"] .bg-white {
+    background-color: var(--card-bg) !important;
+}
+
+/* 边框颜色工具类覆盖 */
+[data-theme="dark"] .border {
+    border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .border-top {
+    border-top-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .border-right {
+    border-right-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .border-bottom {
+    border-bottom-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .border-left {
+    border-left-color: var(--border-color) !important;
+}

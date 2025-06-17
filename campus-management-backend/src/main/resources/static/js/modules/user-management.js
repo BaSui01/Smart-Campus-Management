@@ -1,11 +1,16 @@
 /**
  * 用户管理模块
  * 提供用户的增删改查功能
- * 
+ *
  * @author Campus Management Team
- * @version 2.2.0 - 修复重复声明和角色更新问题
+ * @version 2.3.0 - 修复重复声明和500错误问题
  * @since 2025-06-06
  */
+
+// 防止重复声明
+if (typeof window.UserManagement !== 'undefined') {
+    console.warn('⚠️ UserManagement 已经定义，跳过重复声明');
+} else {
 
 class UserManagement {
     constructor() {
@@ -1667,32 +1672,41 @@ window.enableUser = function(userId) {
     }
 };
 
-// 确保只实例化一次UserManagement
+// 防止重复声明和初始化
 (function() {
     'use strict';
-
-    // 检查是否已经初始化过
-    if (window.userManagement) {
-        console.log('⚠️ 用户管理模块已存在，跳过初始化');
-        return;
-    }
 
     // 检查是否在用户管理页面
     function isUserManagementPage() {
         return document.getElementById('userTableBody') ||
                document.getElementById('userTable') ||
-               document.querySelector('.user-management-page');
+               document.querySelector('.user-management-page') ||
+               document.querySelector('[data-current-page="users"]') ||
+               window.location.pathname.includes('/users');
     }
 
     // 初始化函数
     function initializeUserManagement() {
+        // 防止重复初始化
+        if (window.userManagement) {
+            console.log('⚠️ 用户管理实例已存在，跳过重复初始化');
+            return;
+        }
+
         if (!isUserManagementPage()) {
             console.log('📄 非用户管理页面，跳过初始化');
             return;
         }
 
         try {
-            console.log('🚀 初始化用户管理模块 v2.1');
+            console.log('🚀 初始化用户管理模块 v2.2');
+
+            // 确保UserManagement类可用
+            if (typeof UserManagement === 'undefined') {
+                console.error('❌ UserManagement类未定义');
+                return;
+            }
+
             window.userManagement = new UserManagement();
             window.userManagement.init();
             console.log('✅ 用户管理模块初始化完成');
@@ -1701,11 +1715,18 @@ window.enableUser = function(userId) {
         }
     }
 
+    // 延迟初始化，确保DOM完全加载
+    function delayedInit() {
+        setTimeout(initializeUserManagement, 100);
+    }
+
     // 页面加载完成后初始化
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initializeUserManagement);
+        document.addEventListener('DOMContentLoaded', delayedInit);
     } else {
         // DOM已经加载完成
-        initializeUserManagement();
+        delayedInit();
     }
 })();
+
+} // 结束防重复声明的条件块

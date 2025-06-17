@@ -111,6 +111,8 @@ public class SecurityConfig {
             .exceptionHandling(exceptions -> exceptions
                 .accessDeniedPage(SecurityConstants.ACCESS_DENIED_PAGE)
                 .authenticationEntryPoint((request, response, authException) -> {
+                    @SuppressWarnings("unused") // authException parameter is required by interface
+                    var unused = authException;
                     String requestURI = request.getRequestURI();
 
                     // 对于API请求，返回JSON错误

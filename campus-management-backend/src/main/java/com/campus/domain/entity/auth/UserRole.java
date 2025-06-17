@@ -75,7 +75,7 @@ public class UserRole extends BaseEntity {
      * 用户信息
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    @JoinColumn(name = "user_id", referencedColumnName = "id", insertable = false, updatable = false)
     @JsonIgnore
     private User user;
 
@@ -83,7 +83,7 @@ public class UserRole extends BaseEntity {
      * 角色信息
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "role_id", insertable = false, updatable = false)
+    @JoinColumn(name = "role_id", referencedColumnName = "id", insertable = false, updatable = false)
     @JsonIgnore
     private Role role;
 

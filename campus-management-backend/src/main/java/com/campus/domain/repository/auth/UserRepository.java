@@ -180,8 +180,20 @@ public interface UserRepository extends BaseRepository<User> {
     /**
      * 查找所有用户并预加载角色信息
      */
-    @Query("SELECT DISTINCT u FROM User u LEFT JOIN FETCH u.userRoles ur LEFT JOIN FETCH ur.role WHERE u.deleted = 0")
+    @Query("SELECT u FROM User u WHERE u.deleted = 0 ORDER BY u.id DESC")
     List<User> findAllWithRoles();
+
+    /**
+     * 根据删除状态查找用户（分页）
+     */
+    @Query("SELECT u FROM User u WHERE u.deleted = :deleted ORDER BY u.id DESC")
+    Page<User> findByDeletedOrderByIdDesc(@Param("deleted") Integer deleted, Pageable pageable);
+
+    /**
+     * 根据删除状态查找用户（列表）
+     */
+    @Query("SELECT u FROM User u WHERE u.deleted = :deleted ORDER BY u.id DESC")
+    List<User> findByDeleted(@Param("deleted") Integer deleted);
 
     // ================================
     // 统计查询方法

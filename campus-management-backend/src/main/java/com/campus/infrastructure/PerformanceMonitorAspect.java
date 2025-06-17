@@ -185,20 +185,13 @@ public class PerformanceMonitorAspect {
      * 获取慢方法阈值
      */
     private long getSlowThreshold(String methodType) {
-        switch (methodType) {
-            case "controller":
-                return 1000; // 1秒
-            case "service":
-                return 500;  // 500毫秒
-            case "repository":
-                return 200;  // 200毫秒
-            case "cacheable":
-            case "cache_evict":
-            case "cache_put":
-                return 100;  // 100毫秒
-            default:
-                return 1000; // 默认1秒
-        }
+        return switch (methodType) {
+            case "controller" -> 1000; // 1秒
+            case "service" -> 500;  // 500毫秒
+            case "repository" -> 200;  // 200毫秒
+            case "cacheable", "cache_evict", "cache_put" -> 100;  // 100毫秒
+            default -> 1000; // 默认1秒
+        };
     }
 
     /**

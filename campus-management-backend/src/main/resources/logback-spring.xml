@@ -160,21 +160,48 @@
     </logger>
     
     <!-- 应用程序日志 -->
-    <logger name="com.campus" level="INFO" additivity="false">
+    <logger name="com.campus" level="DEBUG" additivity="false">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="ASYNC_FILE"/>
         <appender-ref ref="ERROR_FILE"/>
     </logger>
+
+    <!-- 认证相关详细日志 -->
+    <logger name="com.campus.interfaces.rest.v1.auth" level="DEBUG" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="ASYNC_FILE"/>
+    </logger>
+
+    <logger name="com.campus.application.Implement.auth" level="DEBUG" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="ASYNC_FILE"/>
+    </logger>
+
+    <logger name="com.campus.shared.util.JwtTokenUtil" level="DEBUG" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="ASYNC_FILE"/>
+    </logger>
+
+    <logger name="com.campus.shared.security" level="DEBUG" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="ASYNC_FILE"/>
+    </logger>
     
     <!-- 环境特定配置 -->
     <springProfile name="dev">
-        <logger name="com.campus" level="INFO" additivity="false">
+        <logger name="com.campus" level="DEBUG" additivity="false">
             <appender-ref ref="CONSOLE"/>
             <appender-ref ref="ASYNC_FILE"/>
         </logger>
-        
+
+        <!-- 开发环境启用Spring Security详细日志 -->
+        <logger name="org.springframework.security" level="DEBUG" additivity="false">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="ASYNC_FILE"/>
+        </logger>
+
         <!-- 开发环境可以临时启用SQL日志调试 -->
-        <!-- 
+        <!--
         <logger name="org.hibernate.SQL" level="DEBUG" additivity="false">
             <appender-ref ref="CONSOLE"/>
         </logger>

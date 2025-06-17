@@ -1,0 +1,438 @@
+/* 侧边栏样式 - Sidebar Styles */
+
+/* 侧边栏变量 */
+:root {
+    --sidebar-bg: #343a40;
+    --sidebar-text: #ffffff;
+    --sidebar-text-muted: #adb5bd;
+    --sidebar-hover-bg: #495057;
+    --sidebar-active-bg: #007bff;
+    --sidebar-border: #495057;
+    --sidebar-submenu-bg: #2c3034;
+    --sidebar-submenu-hover-bg: #3a3f44;
+}
+
+/* 深色主题 */
+[data-theme="dark"] {
+    --sidebar-bg: #1a202c;
+    --sidebar-text: #e2e8f0;
+    --sidebar-text-muted: #a0aec0;
+    --sidebar-hover-bg: #2d3748;
+    --sidebar-active-bg: #3182ce;
+    --sidebar-border: #2d3748;
+    --sidebar-submenu-bg: #171923;
+    --sidebar-submenu-hover-bg: #2d3748;
+}
+
+/* 侧边栏容器 */
+.sidebar {
+    background-color: var(--sidebar-bg);
+    color: var(--sidebar-text);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
+/* 侧边栏头部 */
+.sidebar-header {
+    padding: 1rem;
+    border-bottom: 1px solid var(--sidebar-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: var(--topbar-height);
+}
+
+.sidebar-brand {
+    display: flex;
+    align-items: center;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--sidebar-text);
+    text-decoration: none;
+    transition: var(--transition-base);
+}
+
+.sidebar-brand i {
+    font-size: 1.5rem;
+    margin-right: 0.75rem;
+    color: var(--primary-color);
+}
+
+.sidebar-brand .brand-text {
+    transition: var(--transition-base);
+}
+
+.sidebar-toggle {
+    background: none;
+    border: none;
+    color: var(--sidebar-text);
+    font-size: 1.25rem;
+    padding: 0.25rem;
+    cursor: pointer;
+    transition: var(--transition-base);
+}
+
+.sidebar-toggle:hover {
+    color: var(--primary-color);
+}
+
+/* 侧边栏菜单 */
+.sidebar-menu {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 1rem 0;
+}
+
+.nav-sidebar {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.nav-sidebar .nav-item {
+    margin-bottom: 0.25rem;
+}
+
+.nav-sidebar .nav-link {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    color: var(--sidebar-text);
+    text-decoration: none;
+    transition: var(--transition-base);
+    border-radius: 0;
+    position: relative;
+}
+
+.nav-sidebar .nav-link:hover {
+    background-color: var(--sidebar-hover-bg);
+    color: var(--sidebar-text);
+    text-decoration: none;
+}
+
+.nav-sidebar .nav-link.active {
+    background-color: var(--sidebar-active-bg);
+    color: var(--white);
+}
+
+.nav-sidebar .nav-link.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background-color: var(--primary-color);
+}
+
+/* 导航图标 */
+.nav-icon {
+    width: 1.25rem;
+    text-align: center;
+    margin-right: 0.75rem;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+/* 导航文本 */
+.nav-text {
+    flex: 1;
+    transition: var(--transition-base);
+}
+
+/* 导航箭头 */
+.nav-arrow {
+    margin-left: auto;
+    font-size: 0.75rem;
+    transition: transform 0.3s ease;
+}
+
+.nav-link[aria-expanded="true"] .nav-arrow {
+    transform: rotate(180deg);
+}
+
+/* 子菜单 */
+.nav-submenu {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    background-color: var(--sidebar-submenu-bg);
+    border-left: 2px solid var(--sidebar-border);
+    margin-left: 1rem;
+}
+
+.nav-submenu .nav-item {
+    margin-bottom: 0;
+}
+
+.nav-submenu .nav-link {
+    padding: 0.5rem 1rem 0.5rem 2rem;
+    font-size: 0.9rem;
+    color: var(--sidebar-text-muted);
+}
+
+.nav-submenu .nav-link:hover {
+    background-color: var(--sidebar-submenu-hover-bg);
+    color: var(--sidebar-text);
+}
+
+.nav-submenu .nav-link.active {
+    background-color: var(--sidebar-active-bg);
+    color: var(--white);
+}
+
+.nav-submenu .nav-icon {
+    width: 1rem;
+    margin-right: 0.5rem;
+    font-size: 0.875rem;
+}
+
+/* 分隔线 */
+.nav-divider {
+    height: 1px;
+    background-color: var(--sidebar-border);
+    margin: 1rem 0;
+    list-style: none;
+}
+
+/* 侧边栏底部 */
+.sidebar-footer {
+    padding: 1rem;
+    border-top: 1px solid var(--sidebar-border);
+    background-color: var(--sidebar-submenu-bg);
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+}
+
+.user-avatar {
+    width: 2.5rem;
+    height: 2.5rem;
+    margin-right: 0.75rem;
+    flex-shrink: 0;
+}
+
+.avatar-img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--sidebar-border);
+}
+
+.user-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.user-name {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--sidebar-text);
+    margin-bottom: 0.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.user-role {
+    font-size: 0.75rem;
+    color: var(--sidebar-text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 侧边栏收起状态 */
+.sidebar-collapsed .sidebar {
+    width: var(--sidebar-collapsed-width);
+}
+
+.sidebar-collapsed .sidebar-brand .brand-text {
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+}
+
+.sidebar-collapsed .nav-text {
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+}
+
+.sidebar-collapsed .nav-arrow {
+    opacity: 0;
+}
+
+.sidebar-collapsed .nav-submenu {
+    display: none;
+}
+
+.sidebar-collapsed .user-details {
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+}
+
+.sidebar-collapsed .nav-sidebar .nav-link {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.sidebar-collapsed .nav-icon {
+    margin-right: 0;
+}
+
+/* 工具提示（收起状态下显示） */
+.sidebar-collapsed .nav-link {
+    position: relative;
+}
+
+.sidebar-collapsed .nav-link:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: var(--dark);
+    color: var(--white);
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--border-radius);
+    font-size: 0.875rem;
+    white-space: nowrap;
+    z-index: 1000;
+    margin-left: 0.5rem;
+    box-shadow: var(--box-shadow);
+}
+
+/* 响应式设计 */
+@media (max-width: 991.98px) {
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        z-index: 1050;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease-in-out;
+    }
+    
+    .sidebar.show {
+        transform: translateX(0);
+    }
+    
+    .sidebar-header {
+        padding: 0.75rem 1rem;
+    }
+    
+    .sidebar-toggle {
+        display: block;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .sidebar {
+        width: 280px;
+    }
+    
+    .sidebar-menu {
+        padding: 0.5rem 0;
+    }
+    
+    .nav-sidebar .nav-link {
+        padding: 0.625rem 1rem;
+    }
+    
+    .nav-submenu .nav-link {
+        padding: 0.5rem 1rem 0.5rem 1.75rem;
+    }
+    
+    .sidebar-footer {
+        padding: 0.75rem 1rem;
+    }
+}
+
+/* 动画效果 */
+@keyframes slideInLeft {
+    from {
+        transform: translateX(-100%);
+    }
+    to {
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideOutLeft {
+    from {
+        transform: translateX(0);
+    }
+    to {
+        transform: translateX(-100%);
+    }
+}
+
+.sidebar.animate-in {
+    animation: slideInLeft 0.3s ease-out;
+}
+
+.sidebar.animate-out {
+    animation: slideOutLeft 0.3s ease-in;
+}
+
+/* 滚动条样式 */
+.sidebar-menu::-webkit-scrollbar {
+    width: 4px;
+}
+
+.sidebar-menu::-webkit-scrollbar-track {
+    background: var(--sidebar-bg);
+}
+
+.sidebar-menu::-webkit-scrollbar-thumb {
+    background: var(--sidebar-border);
+    border-radius: 2px;
+}
+
+.sidebar-menu::-webkit-scrollbar-thumb:hover {
+    background: var(--sidebar-hover-bg);
+}
+
+/* 徽章样式 */
+.nav-badge {
+    background-color: var(--danger-color);
+    color: var(--white);
+    font-size: 0.625rem;
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.75rem;
+    margin-left: auto;
+    min-width: 1.25rem;
+    text-align: center;
+    line-height: 1;
+}
+
+.nav-badge.badge-primary {
+    background-color: var(--primary-color);
+}
+
+.nav-badge.badge-success {
+    background-color: var(--success-color);
+}
+
+.nav-badge.badge-warning {
+    background-color: var(--warning-color);
+}
+
+.nav-badge.badge-info {
+    background-color: var(--info-color);
+}
+
+/* 收起状态下隐藏徽章 */
+.sidebar-collapsed .nav-badge {
+    display: none;
+}

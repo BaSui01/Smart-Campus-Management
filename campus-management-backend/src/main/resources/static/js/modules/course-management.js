@@ -22,62 +22,52 @@ class CourseManagement extends CrudBase {
     }
 
     renderTableRow(course) {
-        return \
+        return `
             <tr>
                 <td>
-                    <div class=\
-form-check\>
-                        <input class=\form-check-input\ type=\checkbox\ value=\\\>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="${course.id}">
                     </div>
                 </td>
                 <td>
                     <div>
-                        <div class=\fw-bold\>\</div>
-                        <small class=\text-muted\>\</small>
+                        <div class="fw-bold">${course.courseName}</div>
+                        <small class="text-muted">${course.courseCode}</small>
                     </div>
                 </td>
                 <td>
-                    <span class=\badge
-bg-info\>\</span>
+                    <span class="badge bg-info">${course.courseType}</span>
                 </td>
                 <td>
-                    <span class=\badge
-bg-secondary\>\</span>
+                    <span class="badge bg-secondary">${course.semester}</span>
                 </td>
                 <td>
-                    <span class=\badge
-bg-primary\>\</span>
+                    <span class="badge bg-primary">${course.credits}学分</span>
                 </td>
                 <td>
-                    \
+                    ${course.teacherName || '未分配'}
                 </td>
                 <td>
-                    <small class=\text-muted\>\</small>
+                    <small class="text-muted">${course.createdAt}</small>
                 </td>
                 <td>
-                    <div class=\action-buttons\>
-                        <button type=\button\ class=\btn-action
-btn-view\ 
-                                data-action=\view\ data-id=\\\ title=\查看详情\>
-                            <i class=\fas
-fa-eye\></i>
+                    <div class="action-buttons">
+                        <button type="button" class="btn-action btn-view"
+                                data-action="view" data-id="${course.id}" title="查看详情">
+                            <i class="fas fa-eye"></i>
                         </button>
-                        <button type=\button\ class=\btn-action
-btn-edit\ 
-                                data-action=\edit\ data-id=\\\ title=\编辑\>
-                            <i class=\fas
-fa-edit\></i>
+                        <button type="button" class="btn-action btn-edit"
+                                data-action="edit" data-id="${course.id}" title="编辑">
+                            <i class="fas fa-edit"></i>
                         </button>
-                        <button type=\button\ class=\btn-action
-btn-delete\ 
-                                data-action=\delete\ data-id=\\\ title=\删除\>
-                            <i class=\fas
-fa-trash\></i>
+                        <button type="button" class="btn-action btn-delete"
+                                data-action="delete" data-id="${course.id}" title="删除">
+                            <i class="fas fa-trash"></i>
                         </button>
                     </div>
                 </td>
             </tr>
-        \;
+        `;
     }
 
     getFormData() {
@@ -103,18 +93,14 @@ fa-trash\></i>
         document.getElementById('status').value = data.status || 1;
         document.getElementById('description').value = data.description || '';
         
-        document.getElementById('courseModalLabel').innerHTML = '<i class=\fas
-fa-edit
-me-2\></i>编辑课程';
+        document.getElementById('courseModalLabel').innerHTML = '<i class="fas fa-edit me-2"></i>编辑课程';
     }
 
     resetForm() {
         const form = document.getElementById(this.config.formId);
         form.reset();
         document.getElementById('courseId').value = '';
-        document.getElementById('courseModalLabel').innerHTML = '<i class=\fas
-fa-plus
-me-2\></i>添加课程';
+        document.getElementById('courseModalLabel').innerHTML = '<i class="fas fa-plus me-2"></i>添加课程';
         
         if (this.formValidator) {
             this.formValidator.clearAllErrors();
@@ -140,25 +126,25 @@ me-2\></i>添加课程';
     populateFormSelects() {
         const courseTypeSelect = document.getElementById('courseType');
         if (courseTypeSelect) {
-            courseTypeSelect.innerHTML = '<option value=\\>请选择课程类型</option>';
+            courseTypeSelect.innerHTML = '<option value="">请选择课程类型</option>';
             this.formData.courseTypes.forEach(type => {
-                courseTypeSelect.innerHTML += \<option value=\\\>\</option>\;
+                courseTypeSelect.innerHTML += `<option value="${type.value}">${type.label}</option>`;
             });
         }
 
         const semesterSelect = document.getElementById('semester');
         if (semesterSelect && this.formData.semesters) {
-            semesterSelect.innerHTML = '<option value=\\>请选择学期</option>';
+            semesterSelect.innerHTML = '<option value="">请选择学期</option>';
             this.formData.semesters.forEach(semester => {
-                semesterSelect.innerHTML += \<option value=\\\>\</option>\;
+                semesterSelect.innerHTML += `<option value="${semester.value}">${semester.label}</option>`;
             });
         }
 
         const teacherSelect = document.getElementById('teacherId');
         if (teacherSelect && this.formData.teachers) {
-            teacherSelect.innerHTML = '<option value=\\>请选择教师</option>';
+            teacherSelect.innerHTML = '<option value="">请选择教师</option>';
             this.formData.teachers.forEach(teacher => {
-                teacherSelect.innerHTML += \<option value=\\\>\</option>\;
+                teacherSelect.innerHTML += `<option value="${teacher.id}">${teacher.realName}</option>`;
             });
         }
     }

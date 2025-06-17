@@ -444,7 +444,7 @@ public class AttendanceController {
             stats.put("todayLeave", todayLeave);
 
             // 计算出勤率
-            if (todayAttendance.size() > 0) {
+            if (!todayAttendance.isEmpty()) {
                 double attendanceRate = (double) todayPresent / todayAttendance.size() * 100;
                 stats.put("attendanceRate", Math.round(attendanceRate * 100.0) / 100.0);
             } else {
@@ -498,7 +498,7 @@ public class AttendanceController {
                 stat.put("absentCount", absentCount);
 
                 // 计算出勤率
-                if (courseAttendances.size() > 0) {
+                if (!courseAttendances.isEmpty()) {
                     double attendanceRate = (double) presentCount / courseAttendances.size() * 100;
                     stat.put("attendanceRate", Math.round(attendanceRate * 100.0) / 100.0);
                 } else {

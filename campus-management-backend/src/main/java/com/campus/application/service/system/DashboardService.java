@@ -1,6 +1,6 @@
 package com.campus.application.service.system;
 
-import com.campus.interfaces.rest.dto.DashboardStatsDTO;
+import com.campus.application.dto.DashboardStatsDTO;
 
 /**
  * 仪表盘服务接口

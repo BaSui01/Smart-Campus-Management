@@ -1,10 +1,7 @@
 package com.campus.application.Implement.system;
 
-import com.campus.interfaces.rest.dto.DashboardStatsDTO;
-import com.campus.interfaces.rest.dto.DashboardStatsDTO.ChartDataDTO;
-import com.campus.interfaces.rest.dto.DashboardStatsDTO.QuickStatsDTO;
-import com.campus.interfaces.rest.dto.DashboardStatsDTO.RecentActivityDTO;
-import com.campus.interfaces.rest.dto.DashboardStatsDTO.SystemNotificationDTO;
+import com.campus.application.dto.DashboardStatsDTO;
+import com.campus.application.dto.ChartDataDTO;
 import com.campus.application.service.academic.CourseService;
 import com.campus.application.service.academic.CourseScheduleService;
 import com.campus.application.service.auth.UserService;
@@ -106,25 +103,25 @@ public class DashboardServiceImpl implements DashboardService {
                 totalSchedules = courseScheduleService.count();
             }
 
-            stats.setTotalStudents((int) totalStudents);
-            stats.setTotalCourses((int) totalCourses);
-            stats.setTotalClasses((int) totalClasses);
-            stats.setTotalUsers((int) totalUsers);
-            stats.setTotalTeachers((int) (totalUsers * 0.1)); // 假设教师占用户的10%
+            stats.setTotalStudents(totalStudents);
+            stats.setTotalCourses(totalCourses);
+            stats.setTotalClasses(totalClasses);
+            stats.setTotalUsers(totalUsers);
+            stats.setTotalTeachers((long) (totalUsers * 0.1)); // 假设教师占用户的10%
             stats.setActiveSchedules((int) totalSchedules);
 
             // 缴费相关数据
             if (paymentRecordService != null) {
                 try {
                     PaymentRecordService.PaymentStatistics paymentStats = paymentRecordService.getStatistics();
-                    stats.setMonthlyRevenue(formatCurrency(paymentStats.getSuccessAmount()));
+                    stats.setMonthlyRevenue(paymentStats.getSuccessAmount().doubleValue());
                     stats.setPendingPayments((int) (paymentStats.getTotalRecords() - paymentStats.getSuccessRecords()));
                 } catch (Exception e) {
-                    stats.setMonthlyRevenue("¥0.00");
+                    stats.setMonthlyRevenue(0.0);
                     stats.setPendingPayments(0);
                 }
             } else {
-                stats.setMonthlyRevenue("¥0.00");
+                stats.setMonthlyRevenue(0.0);
                 stats.setPendingPayments(0);
             }
 
@@ -149,12 +146,12 @@ public class DashboardServiceImpl implements DashboardService {
 
         } catch (Exception e) {
             // 如果获取真实数据失败，返回默认值
-            stats.setTotalStudents(0);
-            stats.setTotalCourses(0);
-            stats.setTotalClasses(0);
-            stats.setMonthlyRevenue("¥0.00");
-            stats.setTotalTeachers(0);
-            stats.setTotalUsers(0);
+            stats.setTotalStudents(0L);
+            stats.setTotalCourses(0L);
+            stats.setTotalClasses(0L);
+            stats.setMonthlyRevenue(0.0);
+            stats.setTotalTeachers(0L);
+            stats.setTotalUsers(0L);
             stats.setPendingPayments(0);
             stats.setActiveSchedules(0);
 
@@ -167,7 +164,7 @@ public class DashboardServiceImpl implements DashboardService {
             stats.setMajorDistribution(new ArrayList<>());
             stats.setRecentActivities(new ArrayList<>());
             stats.setSystemNotifications(new ArrayList<>());
-            stats.setQuickStats(new QuickStatsDTO());
+            stats.setQuickStats(new DashboardStatsDTO.QuickStatsDTO());
         }
 
         return stats;
@@ -183,10 +180,10 @@ public class DashboardServiceImpl implements DashboardService {
             DashboardStatsDTO stats = new DashboardStatsDTO();
 
             // 1. 获取实时基础统计
-            stats.setTotalStudents((int) studentService.count());
-            stats.setTotalTeachers((int) calculateTeacherCount());
-            stats.setTotalCourses((int) courseService.count());
-            stats.setTotalClasses((int) schoolClassService.count());
+            stats.setTotalStudents(studentService.count());
+            stats.setTotalTeachers(calculateTeacherCount());
+            stats.setTotalCourses(courseService.count());
+            stats.setTotalClasses(schoolClassService.count());
 
             // 2. 生成实时图表数据
             stats.setMajorDistribution(generateRealTimeMajorDistribution());
@@ -386,8 +383,8 @@ public class DashboardServiceImpl implements DashboardService {
     /**
      * 生成真实的最近活动数据
      */
-    private List<RecentActivityDTO> generateRealRecentActivities() {
-        List<RecentActivityDTO> activities = new ArrayList<>();
+    private List<Map<String, Object>> generateRealRecentActivities() {
+        List<Map<String, Object>> activities = new ArrayList<>();
 
         try {
             // 基于真实数据生成最近活动
@@ -395,31 +392,41 @@ public class DashboardServiceImpl implements DashboardService {
             long totalCourses = courseService.count();
             PaymentRecordService.PaymentStatistics paymentStats = paymentRecordService.getStatistics();
 
-            activities.add(new RecentActivityDTO(
-                "系统统计", "当前系统共有 " + totalStudents + " 名学生", "系统管理员",
-                LocalDateTime.now().minusMinutes(30)
-            ));
+            Map<String, Object> activity1 = new HashMap<>();
+            activity1.put("title", "系统统计");
+            activity1.put("content", "当前系统共有 " + totalStudents + " 名学生");
+            activity1.put("user", "系统管理员");
+            activity1.put("time", LocalDateTime.now().minusMinutes(30));
+            activities.add(activity1);
 
-            activities.add(new RecentActivityDTO(
-                "课程统计", "系统共开设 " + totalCourses + " 门课程", "教务老师",
-                LocalDateTime.now().minusHours(1)
-            ));
+            Map<String, Object> activity2 = new HashMap<>();
+            activity2.put("title", "课程统计");
+            activity2.put("content", "系统共开设 " + totalCourses + " 门课程");
+            activity2.put("user", "教务老师");
+            activity2.put("time", LocalDateTime.now().minusHours(1));
+            activities.add(activity2);
 
-            activities.add(new RecentActivityDTO(
-                "缴费统计", "成功缴费记录 " + paymentStats.getSuccessRecords() + " 条", "财务老师",
-                LocalDateTime.now().minusHours(2)
-            ));
+            Map<String, Object> activity3 = new HashMap<>();
+            activity3.put("title", "缴费统计");
+            activity3.put("content", "成功缴费记录 " + paymentStats.getSuccessRecords() + " 条");
+            activity3.put("user", "财务老师");
+            activity3.put("time", LocalDateTime.now().minusHours(2));
+            activities.add(activity3);
 
-            activities.add(new RecentActivityDTO(
-                "数据更新", "仪表盘数据已更新", "系统",
-                LocalDateTime.now().minusHours(3)
-            ));
+            Map<String, Object> activity4 = new HashMap<>();
+            activity4.put("title", "数据更新");
+            activity4.put("content", "仪表盘数据已更新");
+            activity4.put("user", "系统");
+            activity4.put("time", LocalDateTime.now().minusHours(3));
+            activities.add(activity4);
 
         } catch (Exception e) {
-            activities.add(new RecentActivityDTO(
-                "系统状态", "系统运行正常", "系统管理员",
-                LocalDateTime.now()
-            ));
+            Map<String, Object> defaultActivity = new HashMap<>();
+            defaultActivity.put("title", "系统状态");
+            defaultActivity.put("content", "系统运行正常");
+            defaultActivity.put("user", "系统管理员");
+            defaultActivity.put("time", LocalDateTime.now());
+            activities.add(defaultActivity);
         }
 
         return activities;
@@ -428,8 +435,8 @@ public class DashboardServiceImpl implements DashboardService {
     /**
      * 生成真实的快速统计数据
      */
-    private QuickStatsDTO generateRealQuickStats() {
-        QuickStatsDTO quickStats = new QuickStatsDTO();
+    private DashboardStatsDTO.QuickStatsDTO generateRealQuickStats() {
+        DashboardStatsDTO.QuickStatsDTO quickStats = new DashboardStatsDTO.QuickStatsDTO();
 
         try {
             // 基于真实数据生成快速统计
@@ -452,7 +459,7 @@ public class DashboardServiceImpl implements DashboardService {
 
             // 智能计算今日收入
             BigDecimal todayRevenue = calculateIntelligentTodayRevenue(paymentStats.getSuccessAmount(), hour, dayOfMonth);
-            quickStats.setTodayRevenue(todayRevenue);
+            quickStats.setTodayRevenue("¥" + todayRevenue.toString());
 
             // 智能计算在线用户
             int onlineUsers = calculateIntelligentOnlineUsers(userStats.getActiveUsers(), hour);
@@ -465,7 +472,7 @@ public class DashboardServiceImpl implements DashboardService {
         } catch (Exception e) {
             quickStats.setTodayNewStudents(0);
             quickStats.setTodayPayments(0);
-            quickStats.setTodayRevenue(BigDecimal.ZERO);
+            quickStats.setTodayRevenue("¥0.00");
             quickStats.setOnlineUsers(0);
             quickStats.setSystemAlerts(0);
         }
@@ -476,33 +483,53 @@ public class DashboardServiceImpl implements DashboardService {
     /**
      * 生成系统通知数据
      */
-    private List<SystemNotificationDTO> generateSystemNotifications() {
-        List<SystemNotificationDTO> notifications = new ArrayList<>();
-        
-        notifications.add(new SystemNotificationDTO(
-            "数据备份提醒", "系统将在今晚2:00进行自动数据备份。", 
-            "系统管理员", LocalDateTime.now().minusHours(3)
-        ));
-        
-        notifications.add(new SystemNotificationDTO(
-            "新学期开始", "2024春季学期即将开始，请检查课程安排。", 
-            "教务处", LocalDateTime.now().minusDays(1)
-        ));
-        
-        notifications.add(new SystemNotificationDTO(
-            "系统更新完成", "智慧校园管理系统已更新至v2.1版本。", 
-            "技术部", LocalDateTime.now().minusDays(3)
-        ));
-        
-        notifications.add(new SystemNotificationDTO(
-            "缴费提醒", "本月学费缴纳截止日期为月底，请及时提醒学生。", 
-            "财务处", LocalDateTime.now().minusDays(5)
-        ));
-        
-        notifications.add(new SystemNotificationDTO(
-            "安全更新", "系统安全补丁已安装，请重启相关服务。", 
-            "技术部", LocalDateTime.now().minusWeeks(1)
-        ));
+    private List<DashboardStatsDTO.SystemNotificationDTO> generateSystemNotifications() {
+        List<DashboardStatsDTO.SystemNotificationDTO> notifications = new ArrayList<>();
+
+        DashboardStatsDTO.SystemNotificationDTO notification1 = new DashboardStatsDTO.SystemNotificationDTO();
+        notification1.setTitle("数据备份提醒");
+        notification1.setContent("系统将在今晚2:00进行自动数据备份。");
+        notification1.setSender("系统管理员");
+        notification1.setCreateTime(LocalDateTime.now().minusHours(3).toString());
+        notification1.setType("info");
+        notification1.setIsRead(false);
+        notifications.add(notification1);
+
+        DashboardStatsDTO.SystemNotificationDTO notification2 = new DashboardStatsDTO.SystemNotificationDTO();
+        notification2.setTitle("新学期开始");
+        notification2.setContent("2024春季学期即将开始，请检查课程安排。");
+        notification2.setSender("教务处");
+        notification2.setCreateTime(LocalDateTime.now().minusDays(1).toString());
+        notification2.setType("warning");
+        notification2.setIsRead(false);
+        notifications.add(notification2);
+
+        DashboardStatsDTO.SystemNotificationDTO notification3 = new DashboardStatsDTO.SystemNotificationDTO();
+        notification3.setTitle("系统更新完成");
+        notification3.setContent("智慧校园管理系统已更新至v2.1版本。");
+        notification3.setSender("技术部");
+        notification3.setCreateTime(LocalDateTime.now().minusDays(3).toString());
+        notification3.setType("success");
+        notification3.setIsRead(true);
+        notifications.add(notification3);
+
+        DashboardStatsDTO.SystemNotificationDTO notification4 = new DashboardStatsDTO.SystemNotificationDTO();
+        notification4.setTitle("缴费提醒");
+        notification4.setContent("本月学费缴纳截止日期为月底，请及时提醒学生。");
+        notification4.setSender("财务处");
+        notification4.setCreateTime(LocalDateTime.now().minusDays(5).toString());
+        notification4.setType("warning");
+        notification4.setIsRead(false);
+        notifications.add(notification4);
+
+        DashboardStatsDTO.SystemNotificationDTO notification5 = new DashboardStatsDTO.SystemNotificationDTO();
+        notification5.setTitle("安全更新");
+        notification5.setContent("系统安全补丁已安装，请重启相关服务。");
+        notification5.setSender("技术部");
+        notification5.setCreateTime(LocalDateTime.now().minusWeeks(1).toString());
+        notification5.setType("info");
+        notification5.setIsRead(true);
+        notifications.add(notification5);
         
         return notifications;
     }
@@ -613,9 +640,9 @@ public class DashboardServiceImpl implements DashboardService {
     /**
      * 生成实时快速统计
      */
-    private QuickStatsDTO generateRealTimeQuickStats() {
+    private DashboardStatsDTO.QuickStatsDTO generateRealTimeQuickStats() {
         try {
-            QuickStatsDTO quickStats = new QuickStatsDTO();
+            DashboardStatsDTO.QuickStatsDTO quickStats = new DashboardStatsDTO.QuickStatsDTO();
 
             // 获取基础数据
             long totalStudents = studentService.count();
@@ -637,7 +664,7 @@ public class DashboardServiceImpl implements DashboardService {
 
             // 今日收入（基于缴费数据）
             BigDecimal todayRevenue = calculateTodayRevenue(paymentStats.getSuccessAmount(), hour);
-            quickStats.setTodayRevenue(todayRevenue);
+            quickStats.setTodayRevenue("¥" + todayRevenue.toString());
 
             // 在线用户（基于时间段活跃度）
             int onlineUsers = calculateOnlineUsers(userStats.getActiveUsers(), hour);
@@ -885,6 +912,7 @@ public class DashboardServiceImpl implements DashboardService {
     }
 
     // 工具方法
+    @SuppressWarnings("unused")
     private String formatCurrency(BigDecimal amount) {
         if (amount == null) {
             return "¥0.00";

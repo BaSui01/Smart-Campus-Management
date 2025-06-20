@@ -1,0 +1,271 @@
+# 智慧校园管理系统 GraphQL Schema
+
+# 查询根类型
+type Query {
+    # 学生查询
+    students(page: Int = 0, size: Int = 20): [Student!]!
+    student(id: ID!): Student
+    studentByNo(studentNo: String!): Student
+    searchStudents(keyword: String, grade: String, major: String, page: Int = 0, size: Int = 20): [Student!]!
+    studentStatistics: StudentStatistics!
+    
+    # 课程查询
+    courses(page: Int = 0, size: Int = 20): [Course!]!
+    course(id: ID!): Course
+    courseByCode(courseCode: String!): Course
+    searchCourses(keyword: String, semester: String, page: Int = 0, size: Int = 20): [Course!]!
+    
+    # 成绩查询
+    grades(studentId: ID, courseId: ID, semester: String, page: Int = 0, size: Int = 20): [Grade!]!
+    grade(id: ID!): Grade
+    gradeStatistics(studentId: ID, courseId: ID, semester: String): GradeStatistics!
+    
+    # 考勤查询
+    attendances(studentId: ID, courseId: ID, date: String, page: Int = 0, size: Int = 20): [Attendance!]!
+    attendance(id: ID!): Attendance
+    attendanceStatistics(studentId: ID, courseId: ID, startDate: String, endDate: String): AttendanceStatistics!
+}
+
+# 变更根类型
+type Mutation {
+    # 学生变更
+    createStudent(input: StudentInput!): Student!
+    updateStudent(id: ID!, input: StudentInput!): Student!
+    deleteStudent(id: ID!): Boolean!
+    createStudents(inputs: [StudentInput!]!): [Student!]!
+    
+    # 课程变更
+    createCourse(input: CourseInput!): Course!
+    updateCourse(id: ID!, input: CourseInput!): Course!
+    deleteCourse(id: ID!): Boolean!
+    
+    # 成绩变更
+    createGrade(input: GradeInput!): Grade!
+    updateGrade(id: ID!, input: GradeInput!): Grade!
+    deleteGrade(id: ID!): Boolean!
+    batchCreateGrades(inputs: [GradeInput!]!): [Grade!]!
+    
+    # 考勤变更
+    createAttendance(input: AttendanceInput!): Attendance!
+    updateAttendance(id: ID!, input: AttendanceInput!): Attendance!
+    deleteAttendance(id: ID!): Boolean!
+    batchCreateAttendances(inputs: [AttendanceInput!]!): [Attendance!]!
+}
+
+# 学生类型
+type Student {
+    id: ID!
+    studentNo: String!
+    realName: String!
+    gender: String
+    idCard: String
+    phone: String
+    email: String
+    grade: String
+    major: String
+    enrollmentYear: Int
+    studentStatus: String
+    className: String
+    createdAt: String
+    updatedAt: String
+    
+    # 关联查询
+    grades: [Grade!]!
+    attendances: [Attendance!]!
+    courses: [Course!]!
+}
+
+# 课程类型
+type Course {
+    id: ID!
+    courseCode: String!
+    courseName: String!
+    credits: Int!
+    courseType: String
+    semester: String
+    maxStudents: Int
+    currentStudents: Int
+    teacherName: String
+    courseStatus: String
+    description: String
+    createdAt: String
+    updatedAt: String
+    
+    # 关联查询
+    students: [Student!]!
+    grades: [Grade!]!
+    attendances: [Attendance!]!
+}
+
+# 成绩类型
+type Grade {
+    id: ID!
+    studentId: ID!
+    courseId: ID!
+    score: Float!
+    examType: String
+    semester: String
+    gradeLevel: String
+    remarks: String
+    createdAt: String
+    updatedAt: String
+    
+    # 关联查询
+    student: Student!
+    course: Course!
+}
+
+# 考勤类型
+type Attendance {
+    id: ID!
+    studentId: ID!
+    courseId: ID!
+    attendanceDate: String!
+    attendanceTime: String
+    attendanceStatus: String!
+    remarks: String
+    createdAt: String
+    updatedAt: String
+    
+    # 关联查询
+    student: Student!
+    course: Course!
+}
+
+# 学生统计类型
+type StudentStatistics {
+    totalCount: Int!
+    activeCount: Int!
+    gradeDistribution: GradeDistribution!
+    majorDistribution: MajorDistribution!
+    genderDistribution: GenderDistribution!
+}
+
+# 成绩统计类型
+type GradeStatistics {
+    totalCount: Int!
+    averageScore: Float!
+    maxScore: Float!
+    minScore: Float!
+    passRate: Float!
+    excellentRate: Float!
+    scoreDistribution: ScoreDistribution!
+}
+
+# 考勤统计类型
+type AttendanceStatistics {
+    totalCount: Int!
+    presentCount: Int!
+    absentCount: Int!
+    lateCount: Int!
+    leaveCount: Int!
+    attendanceRate: Float!
+}
+
+# 分布统计类型
+type GradeDistribution {
+    freshman: Int!
+    sophomore: Int!
+    junior: Int!
+    senior: Int!
+}
+
+type MajorDistribution {
+    computerScience: Int!
+    mathematics: Int!
+    physics: Int!
+    chemistry: Int!
+    biology: Int!
+    other: Int!
+}
+
+type GenderDistribution {
+    male: Int!
+    female: Int!
+    other: Int!
+}
+
+type ScoreDistribution {
+    excellent: Int!  # 90-100
+    good: Int!       # 80-89
+    medium: Int!     # 70-79
+    pass: Int!       # 60-69
+    fail: Int!       # 0-59
+}
+
+# 输入类型
+input StudentInput {
+    studentNo: String!
+    realName: String!
+    gender: String
+    idCard: String
+    phone: String
+    email: String
+    grade: String
+    major: String
+    enrollmentYear: Int
+}
+
+input CourseInput {
+    courseCode: String!
+    courseName: String!
+    credits: Int!
+    courseType: String
+    semester: String
+    maxStudents: Int
+    teacherId: ID
+    description: String
+}
+
+input GradeInput {
+    studentId: ID!
+    courseId: ID!
+    score: Float!
+    examType: String
+    semester: String
+    remarks: String
+}
+
+input AttendanceInput {
+    studentId: ID!
+    courseId: ID!
+    attendanceDate: String!
+    attendanceTime: String
+    attendanceStatus: String!
+    remarks: String
+}
+
+# 枚举类型
+enum StudentStatus {
+    ACTIVE
+    INACTIVE
+    GRADUATED
+    SUSPENDED
+}
+
+enum CourseStatus {
+    ACTIVE
+    INACTIVE
+    COMPLETED
+}
+
+enum AttendanceStatus {
+    PRESENT
+    ABSENT
+    LATE
+    LEAVE
+}
+
+enum ExamType {
+    MIDTERM
+    FINAL
+    QUIZ
+    ASSIGNMENT
+    PROJECT
+}
+
+enum Gender {
+    MALE
+    FEMALE
+    OTHER
+}

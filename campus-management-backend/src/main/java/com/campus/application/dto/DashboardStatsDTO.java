@@ -59,10 +59,23 @@ public class DashboardStatsDTO {
     private List<ChartDataDTO> gradeData;
     private List<ChartDataDTO> revenueData;
 
+    // 扩展的图表数据
+    private List<ChartDataDTO> studentTrendData;
+    private List<ChartDataDTO> courseTrendData;
+    private List<ChartDataDTO> revenueTrendData;
+    private List<ChartDataDTO> courseDistribution;
+    private List<ChartDataDTO> gradeDistribution;
+    private List<ChartDataDTO> majorDistribution;
+
     // 快速操作统计
-    private Map<String, Object> quickStats;
+    private QuickStatsDTO quickStats;
     private List<Map<String, Object>> recentActivities;
     private List<Map<String, Object>> systemAlerts;
+    private List<SystemNotificationDTO> systemNotifications;
+
+    // 额外的统计字段
+    private Integer activeSchedules;
+    private Integer pendingPayments;
 
     // 构造函数
     public DashboardStatsDTO() {
@@ -320,11 +333,11 @@ public class DashboardStatsDTO {
         this.revenueData = revenueData;
     }
 
-    public Map<String, Object> getQuickStats() {
+    public QuickStatsDTO getQuickStats() {
         return quickStats;
     }
 
-    public void setQuickStats(Map<String, Object> quickStats) {
+    public void setQuickStats(QuickStatsDTO quickStats) {
         this.quickStats = quickStats;
     }
 
@@ -344,6 +357,78 @@ public class DashboardStatsDTO {
         this.systemAlerts = systemAlerts;
     }
 
+    public List<ChartDataDTO> getStudentTrendData() {
+        return studentTrendData;
+    }
+
+    public void setStudentTrendData(List<ChartDataDTO> studentTrendData) {
+        this.studentTrendData = studentTrendData;
+    }
+
+    public List<ChartDataDTO> getCourseTrendData() {
+        return courseTrendData;
+    }
+
+    public void setCourseTrendData(List<ChartDataDTO> courseTrendData) {
+        this.courseTrendData = courseTrendData;
+    }
+
+    public List<ChartDataDTO> getRevenueTrendData() {
+        return revenueTrendData;
+    }
+
+    public void setRevenueTrendData(List<ChartDataDTO> revenueTrendData) {
+        this.revenueTrendData = revenueTrendData;
+    }
+
+    public List<ChartDataDTO> getCourseDistribution() {
+        return courseDistribution;
+    }
+
+    public void setCourseDistribution(List<ChartDataDTO> courseDistribution) {
+        this.courseDistribution = courseDistribution;
+    }
+
+    public List<ChartDataDTO> getGradeDistribution() {
+        return gradeDistribution;
+    }
+
+    public void setGradeDistribution(List<ChartDataDTO> gradeDistribution) {
+        this.gradeDistribution = gradeDistribution;
+    }
+
+    public List<ChartDataDTO> getMajorDistribution() {
+        return majorDistribution;
+    }
+
+    public void setMajorDistribution(List<ChartDataDTO> majorDistribution) {
+        this.majorDistribution = majorDistribution;
+    }
+
+    public List<SystemNotificationDTO> getSystemNotifications() {
+        return systemNotifications;
+    }
+
+    public void setSystemNotifications(List<SystemNotificationDTO> systemNotifications) {
+        this.systemNotifications = systemNotifications;
+    }
+
+    public Integer getActiveSchedules() {
+        return activeSchedules;
+    }
+
+    public void setActiveSchedules(Integer activeSchedules) {
+        this.activeSchedules = activeSchedules;
+    }
+
+    public Integer getPendingPayments() {
+        return pendingPayments;
+    }
+
+    public void setPendingPayments(Integer pendingPayments) {
+        this.pendingPayments = pendingPayments;
+    }
+
     @Override
     public String toString() {
         return "DashboardStatsDTO{" +
@@ -355,5 +440,116 @@ public class DashboardStatsDTO {
                 ", averageGrade=" + averageGrade +
                 ", lastUpdated=" + lastUpdated +
                 '}';
+    }
+
+    /**
+     * 系统通知DTO
+     */
+    public static class SystemNotificationDTO {
+        private String title;
+        private String content;
+        private String sender;
+        private String createTime;
+        private String type;
+        private Boolean isRead;
+
+        public String getTitle() {
+            return title;
+        }
+
+        public void setTitle(String title) {
+            this.title = title;
+        }
+
+        public String getContent() {
+            return content;
+        }
+
+        public void setContent(String content) {
+            this.content = content;
+        }
+
+        public String getSender() {
+            return sender;
+        }
+
+        public void setSender(String sender) {
+            this.sender = sender;
+        }
+
+        public String getCreateTime() {
+            return createTime;
+        }
+
+        public void setCreateTime(String createTime) {
+            this.createTime = createTime;
+        }
+
+        public String getType() {
+            return type;
+        }
+
+        public void setType(String type) {
+            this.type = type;
+        }
+
+        public Boolean getIsRead() {
+            return isRead;
+        }
+
+        public void setIsRead(Boolean isRead) {
+            this.isRead = isRead;
+        }
+    }
+
+    /**
+     * 快速统计DTO
+     */
+    public static class QuickStatsDTO {
+        private Integer todayNewStudents;
+        private Integer todayPayments;
+        private String todayRevenue;
+        private Integer onlineUsers;
+        private Integer systemAlerts;
+
+        public Integer getTodayNewStudents() {
+            return todayNewStudents;
+        }
+
+        public void setTodayNewStudents(Integer todayNewStudents) {
+            this.todayNewStudents = todayNewStudents;
+        }
+
+        public Integer getTodayPayments() {
+            return todayPayments;
+        }
+
+        public void setTodayPayments(Integer todayPayments) {
+            this.todayPayments = todayPayments;
+        }
+
+        public String getTodayRevenue() {
+            return todayRevenue;
+        }
+
+        public void setTodayRevenue(String todayRevenue) {
+            this.todayRevenue = todayRevenue;
+        }
+
+        public Integer getOnlineUsers() {
+            return onlineUsers;
+        }
+
+        public void setOnlineUsers(Integer onlineUsers) {
+            this.onlineUsers = onlineUsers;
+        }
+
+        public Integer getSystemAlerts() {
+            return systemAlerts;
+        }
+
+        public void setSystemAlerts(Integer systemAlerts) {
+            this.systemAlerts = systemAlerts;
+        }
     }
 }

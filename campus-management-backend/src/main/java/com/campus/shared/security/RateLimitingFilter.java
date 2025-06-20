@@ -38,6 +38,7 @@ public class RateLimitingFilter extends OncePerRequestFilter {
     private static final Logger logger = LoggerFactory.getLogger(RateLimitingFilter.class);
 
     @Autowired
+    @SuppressWarnings("unused")
     private RedisTemplate<String, Object> redisTemplate;
 
     @Autowired
@@ -145,9 +146,10 @@ public class RateLimitingFilter extends OncePerRequestFilter {
     /**
      * 获取或创建令牌桶
      */
+    @SuppressWarnings("deprecation")
     private Bucket getBucket(String key, RateLimitConfig config) {
         return bucketCache.computeIfAbsent(key, k -> {
-            Bandwidth limit = Bandwidth.classic(config.getCapacity(), 
+            Bandwidth limit = Bandwidth.classic(config.getCapacity(),
                 Refill.intervally(config.getCapacity(), config.getRefillPeriod()));
             return Bucket4j.builder()
                 .addLimit(limit)

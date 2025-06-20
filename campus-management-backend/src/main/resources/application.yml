@@ -127,9 +127,10 @@ spring:
   # 文件上传配置
   servlet:
     multipart:
-      max-file-size: 10MB
-      max-request-size: 100MB
+      max-file-size: 100MB
+      max-request-size: 500MB
       enabled: true
+      file-size-threshold: 2KB
 
   # 国际化配置
   messages:
@@ -177,16 +178,18 @@ campus:
     # domain: localhost:8889  # Removed due to unknown property error
     debug: false
 
-  # 文件上传配置
-  upload:
-    enabled: true
-    path: uploads/
-    # max-file-size: 10MB  # 10MB  # Commented out to avoid unknown property error
-    allowed-types: 
+  # 文件管理配置
+  file:
+    upload-path: /data/campus/uploads/
+    temp-path: /data/campus/temp/
+    max-file-size: 100MB
+    max-request-size: 500MB
+    allowed-types:
       - jpg
       - jpeg
       - png
       - gif
+      - bmp
       - pdf
       - doc
       - docx
@@ -197,6 +200,49 @@ campus:
       - txt
       - zip
       - rar
+      - 7z
+      - mp4
+      - avi
+      - mov
+    forbidden-types:
+      - exe
+      - bat
+      - cmd
+      - com
+      - scr
+      - vbs
+      - js
+      - jar
+    storage:
+      type: local
+      local:
+        base-path: /data/campus/uploads/
+        url-prefix: /files/
+      oss:
+        endpoint: https://oss-cn-hangzhou.aliyuncs.com
+        bucket: campus-files
+        access-key-id:
+        access-key-secret:
+      minio:
+        endpoint: http://localhost:9000
+        bucket: campus-files
+        access-key:
+        secret-key:
+    security:
+      enable-virus-scan: true
+      virus-scan-timeout: 30000
+      enable-content-check: true
+      max-filename-length: 255
+      enable-watermark: false
+    cache:
+      enable-file-cache: true
+      cache-expire-time: 3600
+      max-cache-size: 1GB
+    cleanup:
+      enable-auto-cleanup: true
+      temp-file-expire: 86400
+      deleted-file-retain: 2592000
+      cleanup-schedule: "0 2 * * *"
 
   # 安全配置
   security:

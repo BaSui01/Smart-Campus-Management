@@ -1758,7 +1758,9 @@ public class NotificationServiceImpl implements NotificationService {
         private String title;
         private String content;
         private String priority;
+        @SuppressWarnings("unused")
         private String status;
+        @SuppressWarnings("unused")
         private java.time.LocalDateTime reminderTime;
 
         public SystemReminder() {

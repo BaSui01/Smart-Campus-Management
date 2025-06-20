@@ -20,6 +20,10 @@ public class ChartDataDTO {
     private String subtitle;   // 图表副标题
     private String description; // 图表描述
 
+    // 简化的数据点（用于测试兼容性）
+    private String label;      // 数据标签
+    private Object value;      // 数据值
+
     // 数据系列
     private List<DataSeries> series;
     
@@ -49,6 +53,21 @@ public class ChartDataDTO {
         this();
         this.chartType = chartType;
         this.title = title;
+    }
+
+    public ChartDataDTO(String label, Object value) {
+        this();
+        this.label = label;
+        this.value = value;
+    }
+
+    public ChartDataDTO(String label, Object value, String color) {
+        this(label, value);
+        // 可以将color存储在options中或者扩展字段
+        if (this.options == null) {
+            this.options = new java.util.HashMap<>();
+        }
+        this.options.put("color", color);
     }
 
     // 数据系列内部类
@@ -286,6 +305,22 @@ public class ChartDataDTO {
 
     public void setAvgValue(Object avgValue) {
         this.avgValue = avgValue;
+    }
+
+    public String getLabel() {
+        return label;
+    }
+
+    public void setLabel(String label) {
+        this.label = label;
+    }
+
+    public Object getValue() {
+        return value;
+    }
+
+    public void setValue(Object value) {
+        this.value = value;
     }
 
     @Override

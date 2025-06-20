@@ -1,6 +1,7 @@
 package com.campus.interfaces.rest.v1.system;
 
-import com.campus.interfaces.rest.dto.DashboardStatsDTO;
+import com.campus.application.dto.DashboardStatsDTO;
+import com.campus.application.dto.ChartDataDTO;
 import com.campus.application.service.system.DashboardService;
 import com.campus.shared.common.ApiResponse;
 
@@ -88,19 +89,19 @@ public class DashboardApiController {
             DashboardStatsDTO stats = new DashboardStatsDTO();
 
             // 基础统计 - 使用保守的默认值
-            stats.setTotalStudents(0);
-            stats.setTotalCourses(0);
-            stats.setTotalClasses(0);
-            stats.setTotalUsers(0);
-            stats.setTotalTeachers(0);
+            stats.setTotalStudents(0L);
+            stats.setTotalCourses(0L);
+            stats.setTotalClasses(0L);
+            stats.setTotalUsers(0L);
+            stats.setTotalTeachers(0L);
             stats.setActiveSchedules(0);
-            stats.setMonthlyRevenue("¥0.00");
+            stats.setMonthlyRevenue(0.0);
             stats.setPendingPayments(0);
 
             // 快速统计
             DashboardStatsDTO.QuickStatsDTO quickStats = new DashboardStatsDTO.QuickStatsDTO();
             quickStats.setTodayPayments(0);
-            quickStats.setTodayRevenue(new java.math.BigDecimal("0.00"));
+            quickStats.setTodayRevenue("¥0.00");
             quickStats.setOnlineUsers(0);
             quickStats.setSystemAlerts(0);
             stats.setQuickStats(quickStats);
@@ -121,7 +122,7 @@ public class DashboardApiController {
     /**
      * 创建空的趋势数据
      */
-    private java.util.List<DashboardStatsDTO.ChartDataDTO> createEmptyTrendData() {
+    private java.util.List<ChartDataDTO> createEmptyTrendData() {
         // 注意：返回空列表，前端可以显示"暂无数据"状态
         return new java.util.ArrayList<>();
     }
@@ -129,7 +130,7 @@ public class DashboardApiController {
     /**
      * 创建空的课程分布数据
      */
-    private java.util.List<DashboardStatsDTO.ChartDataDTO> createEmptyCourseData() {
+    private java.util.List<ChartDataDTO> createEmptyCourseData() {
         // 注意：返回空列表，前端可以显示"暂无数据"状态
         return new java.util.ArrayList<>();
     }
@@ -137,7 +138,7 @@ public class DashboardApiController {
     /**
      * 创建空的年级分布数据
      */
-    private java.util.List<DashboardStatsDTO.ChartDataDTO> createEmptyGradeData() {
+    private java.util.List<ChartDataDTO> createEmptyGradeData() {
         // 注意：返回空列表，前端可以显示"暂无数据"状态
         return new java.util.ArrayList<>();
     }
@@ -145,7 +146,7 @@ public class DashboardApiController {
     /**
      * 创建空的收入趋势数据
      */
-    private java.util.List<DashboardStatsDTO.ChartDataDTO> createEmptyRevenueData() {
+    private java.util.List<ChartDataDTO> createEmptyRevenueData() {
         // 注意：返回空列表，前端可以显示"暂无数据"状态
         return new java.util.ArrayList<>();
     }
@@ -213,11 +214,11 @@ public class DashboardApiController {
     @GetMapping("/charts/{type}")
     @Operation(summary = "获取图表数据", description = "根据类型获取特定图表数据")
     @Cacheable(value = "dashboard:charts", key = "#type", unless = "#result == null")
-    public ApiResponse<List<DashboardStatsDTO.ChartDataDTO>> getChartData(
+    public ApiResponse<List<ChartDataDTO>> getChartData(
             @Parameter(description = "图表类型") @PathVariable String type) {
         try {
             DashboardStatsDTO stats = dashboardService.getDashboardStats();
-            List<DashboardStatsDTO.ChartDataDTO> chartData = new ArrayList<>();
+            List<ChartDataDTO> chartData = new ArrayList<>();
 
             switch (type) {
                 case "student-trend":
@@ -251,7 +252,7 @@ public class DashboardApiController {
     @GetMapping("/activities")
     @Operation(summary = "获取最近活动", description = "获取系统最近活动记录")
     @Cacheable(value = "dashboard:activities", unless = "#result == null")
-    public ApiResponse<List<DashboardStatsDTO.RecentActivityDTO>> getRecentActivities() {
+    public ApiResponse<List<Map<String, Object>>> getRecentActivities() {
         try {
             DashboardStatsDTO stats = dashboardService.getDashboardStats();
             return ApiResponse.success("获取最近活动成功", stats.getRecentActivities());

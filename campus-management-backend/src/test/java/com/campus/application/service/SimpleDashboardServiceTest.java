@@ -220,8 +220,8 @@ class SimpleDashboardServiceTest {
         DashboardStatsDTO result = dashboardService.getDashboardStats();
 
         // 验证货币格式 - 调整期望值以匹配实际格式
-        assertThat(result.getMonthlyRevenue()).startsWith("¥");
-        assertThat(result.getMonthlyRevenue()).endsWith(".00");
+        assertThat(result.getMonthlyRevenue().toString()).startsWith("¥");
+        assertThat(result.getMonthlyRevenue().toString()).endsWith(".00");
         // 对于较大金额才会有逗号分隔符，这里不强制要求
     }
 

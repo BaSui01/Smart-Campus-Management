@@ -1,0 +1,356 @@
+c73a0c9e-844b-475c-bfbf-090b5ad3c16b# 智慧校园管理系统 - Kubernetes部署配置
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: campus-management-app
+  namespace: campus-system
+  labels:
+    app: campus-management
+    version: v1.0.0
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: campus-management
+  template:
+    metadata:
+      labels:
+        app: campus-management
+        version: v1.0.0
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/actuator/prometheus"
+    spec:
+      serviceAccountName: campus-service-account
+      containers:
+      - name: campus-app
+        image: campus/management:1.0.0
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "k8s"
+        - name: SPRING_DATASOURCE_URL
+          valueFrom:
+            secretKeyRef:
+              name: campus-db-secret
+              key: database-url
+        - name: SPRING_DATASOURCE_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: campus-db-secret
+              key: database-username
+        - name: SPRING_DATASOURCE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: campus-db-secret
+              key: database-password
+        - name: SPRING_REDIS_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: campus-config
+              key: redis-host
+        - name: SPRING_REDIS_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: campus-config
+              key: redis-port
+        - name: SPRING_RABBITMQ_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: campus-config
+              key: rabbitmq-host
+        - name: SPRING_RABBITMQ_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: campus-config
+              key: rabbitmq-port
+        - name: SPRING_RABBITMQ_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: campus-rabbitmq-secret
+              key: username
+        - name: SPRING_RABBITMQ_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: campus-rabbitmq-secret
+              key: password
+        - name: JAVA_OPTS
+          value: "-Xms512m -Xmx1024m -XX:+UseG1GC -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        startupProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 30
+        volumeMounts:
+        - name: app-logs
+          mountPath: /app/logs
+        - name: app-uploads
+          mountPath: /app/uploads
+        - name: config-volume
+          mountPath: /app/config
+          readOnly: true
+      volumes:
+      - name: app-logs
+        persistentVolumeClaim:
+          claimName: campus-logs-pvc
+      - name: app-uploads
+        persistentVolumeClaim:
+          claimName: campus-uploads-pvc
+      - name: config-volume
+        configMap:
+          name: campus-app-config
+      nodeSelector:
+        kubernetes.io/os: linux
+      tolerations:
+      - key: "campus.edu/dedicated"
+        operator: "Equal"
+        value: "app"
+        effect: "NoSchedule"
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - campus-management
+              topologyKey: kubernetes.io/hostname
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: campus-management-service
+  namespace: campus-system
+  labels:
+    app: campus-management
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 8080
+    protocol: TCP
+    name: http
+  selector:
+    app: campus-management
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: campus-config
+  namespace: campus-system
+data:
+  redis-host: "campus-redis-service"
+  redis-port: "6379"
+  rabbitmq-host: "campus-rabbitmq-service"
+  rabbitmq-port: "5672"
+  elasticsearch-host: "campus-elasticsearch-service"
+  elasticsearch-port: "9200"
+  zipkin-url: "http://campus-zipkin-service:9411"
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: campus-app-config
+  namespace: campus-system
+data:
+  application-k8s.yml: |
+    server:
+      port: 8080
+      servlet:
+        context-path: /api
+    
+    spring:
+      application:
+        name: campus-management-system
+      
+      datasource:
+        hikari:
+          maximum-pool-size: 20
+          minimum-idle: 5
+          connection-timeout: 30000
+          idle-timeout: 600000
+          max-lifetime: 1800000
+      
+      jpa:
+        hibernate:
+          ddl-auto: validate
+        show-sql: false
+        properties:
+          hibernate:
+            format_sql: false
+            use_sql_comments: false
+      
+      redis:
+        timeout: 5000ms
+        lettuce:
+          pool:
+            max-active: 20
+            max-idle: 10
+            min-idle: 5
+      
+      rabbitmq:
+        virtual-host: campus_vhost
+        connection-timeout: 15000
+        publisher-confirm-type: correlated
+        publisher-returns: true
+        listener:
+          simple:
+            acknowledge-mode: manual
+            concurrency: 3
+            max-concurrency: 10
+    
+    management:
+      endpoints:
+        web:
+          exposure:
+            include: health,info,metrics,prometheus
+      endpoint:
+        health:
+          show-details: when-authorized
+          probes:
+            enabled: true
+      health:
+        livenessstate:
+          enabled: true
+        readinessstate:
+          enabled: true
+    
+    logging:
+      level:
+        com.campus: INFO
+        org.springframework.security: WARN
+      pattern:
+        console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+        file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+      file:
+        name: /app/logs/campus-management.log
+        max-size: 100MB
+        max-history: 30
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: campus-db-secret
+  namespace: campus-system
+type: Opaque
+data:
+  database-url: amRiYzpteXNxbDovL2NhbXB1cy1teXNxbC1zZXJ2aWNlOjMzMDYvY2FtcHVzX21hbmFnZW1lbnRfZGI/dXNlVW5pY29kZT10cnVlJmNoYXJhY3RlckVuY29kaW5nPXV0ZjgmdXNlU1NMPWZhbHNlJnNlcnZlclRpbWV6b25lPUFzaWEvU2hhbmdoYWk=
+  database-username: Y2FtcHVzX3VzZXI=
+  database-password: Y2FtcHVzX3Bhc3N3b3Jk
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: campus-rabbitmq-secret
+  namespace: campus-system
+type: Opaque
+data:
+  username: Y2FtcHVzX3VzZXI=
+  password: Y2FtcHVzX3Bhc3N3b3Jk
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: campus-logs-pvc
+  namespace: campus-system
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: nfs-storage
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: campus-uploads-pvc
+  namespace: campus-system
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 50Gi
+  storageClassName: nfs-storage
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: campus-service-account
+  namespace: campus-system
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: campus-management-ingress
+  namespace: campus-system
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  tls:
+  - hosts:
+    - campus.example.com
+    secretName: campus-tls-secret
+  rules:
+  - host: campus.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: campus-management-service
+            port:
+              number: 80

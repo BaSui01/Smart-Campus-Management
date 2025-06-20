@@ -665,4 +665,36 @@ public class Student extends BaseEntity {
     public void setPaymentRecords(List<PaymentRecord> paymentRecords) {
         this.paymentRecords = paymentRecords;
     }
+
+    // ================================
+    // 兼容性方法（用于数据导出等功能）
+    // ================================
+
+    /**
+     * 获取身份证号（从关联的用户信息中获取）
+     */
+    public String getIdCard() {
+        if (this.user != null) {
+            // 如果User实体有身份证字段，从那里获取
+            // 否则可以从UserProfile中获取
+            // 从关联的用户信息中获取身份证号码
+            // 这里可以根据实际的User实体结构来实现
+            return this.user.getIdCard(); // 假设User实体有idCard字段
+        }
+        return null;
+    }
+
+    /**
+     * 获取学生状态文本
+     */
+    public String getStudentStatus() {
+        if (status == null) return "未知";
+        return switch (status) {
+            case 1 -> "正常";
+            case 0 -> "禁用";
+            default -> "未知";
+        };
+    }
+
+
 }

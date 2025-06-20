@@ -145,8 +145,28 @@ public class ExamServiceImpl implements ExamService {
     @Override
     @Transactional(readOnly = true)
     public List<Exam> findByClassroomId(Long classroomId) {
-        // 简化实现：返回空列表，因为ExamRepository中没有这个方法
-        return Collections.emptyList();
+        logger.debug("根据教室ID查找考试: classroomId={}", classroomId);
+
+        try {
+            // 教室考试查询
+            List<Exam> allExams = examRepository.findAll();
+
+            return allExams.stream()
+                .filter(exam -> exam.getDeleted() == 0)
+                .filter(exam -> Objects.equals(exam.getClassroomId(), classroomId))
+                .sorted((e1, e2) -> {
+                    // 按考试时间排序
+                    if (e1.getStartTime() != null && e2.getStartTime() != null) {
+                        return e1.getStartTime().compareTo(e2.getStartTime());
+                    }
+                    return e1.getId().compareTo(e2.getId());
+                })
+                .collect(Collectors.toList());
+
+        } catch (Exception e) {
+            logger.error("根据教室ID查找考试失败: classroomId={}", classroomId, e);
+            return Collections.emptyList();
+        }
     }
 
     @Override
@@ -219,8 +239,67 @@ public class ExamServiceImpl implements ExamService {
 
     @Override
     public void extendExamTime(Long examId, int additionalMinutes) {
-        // 简化实现：仅更新考试状态
-        examRepository.updateExamStatus(examId, "extended");
+        logger.info("延长考试时间: examId={}, additionalMinutes={}", examId, additionalMinutes);
+
+        try {
+            // 考试延时处理
+            Optional<Exam> examOpt = examRepository.findById(examId);
+            if (examOpt.isEmpty()) {
+                throw new IllegalArgumentException("考试不存在: " + examId);
+            }
+
+            Exam exam = examOpt.get();
+
+            // 验证考试状态
+            if (!"in_progress".equals(exam.getExamStatus())) {
+                throw new IllegalStateException("只有进行中的考试才能延长时间");
+            }
+
+            // 验证延长时间的合理性
+            if (additionalMinutes <= 0 || additionalMinutes > 120) {
+                throw new IllegalArgumentException("延长时间必须在1-120分钟之间");
+            }
+
+            // 更新考试结束时间
+            if (exam.getEndTime() != null) {
+                LocalDateTime newEndTime = exam.getEndTime().plusMinutes(additionalMinutes);
+                exam.setEndTime(newEndTime);
+                examRepository.save(exam);
+            }
+
+            // 更新考试状态为已延时
+            examRepository.updateExamStatus(examId, "extended");
+
+            // 通知所有参与考试的学生
+            notifyExamTimeExtension(examId, additionalMinutes);
+
+            logger.info("考试时间延长成功: examId={}, additionalMinutes={}", examId, additionalMinutes);
+
+        } catch (Exception e) {
+            logger.error("延长考试时间失败: examId={}, additionalMinutes={}", examId, additionalMinutes, e);
+            throw new RuntimeException("延长考试时间失败: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 通知考试时间延长
+     */
+    private void notifyExamTimeExtension(Long examId, int additionalMinutes) {
+        try {
+            // 获取所有参与考试的学生
+            List<ExamRecord> records = examRecordRepository.findByExamId(examId);
+
+            for (ExamRecord record : records) {
+                if ("in_progress".equals(record.getExamStatus())) {
+                    // 这里可以发送通知给学生
+                    logger.debug("通知学生考试延时: studentId={}, examId={}, additionalMinutes={}",
+                        record.getStudentId(), examId, additionalMinutes);
+                }
+            }
+
+        } catch (Exception e) {
+            logger.warn("通知考试延时失败: examId={}", examId, e);
+        }
     }
 
     @Override
@@ -296,16 +375,9 @@ public class ExamServiceImpl implements ExamService {
 
     @Override
     public void generateRandomQuestions(Long examId, int questionCount) {
-        // 简化实现：创建示例题目
-        for (int i = 1; i <= questionCount; i++) {
-            ExamQuestion question = new ExamQuestion();
-            question.setExamId(examId);
-            question.setQuestionType("single_choice");
-            question.setQuestionContent("随机生成题目 " + i);
-            question.setCorrectAnswer("A");
-            question.setDeleted(0);
-            examQuestionRepository.save(question);
-        }
+        // 从题库中随机选择真实的题目
+        // 当前仅记录操作，等待QuestionBankService集成
+        logger.warn("generateRandomQuestions方法需要集成真实的题库服务: examId={}, questionCount={}", examId, questionCount);
     }
 
     @Override
@@ -363,7 +435,124 @@ public class ExamServiceImpl implements ExamService {
 
     @Override
     public void autoSubmitTimeoutExams() {
-        // 简化实现：不执行实际操作
+        logger.info("开始自动提交超时考试");
+
+        try {
+            // 超时考试自动提交处理
+            LocalDateTime now = LocalDateTime.now();
+            int submittedCount = 0;
+
+            // 1. 查找所有进行中的考试
+            List<Exam> ongoingExams = examRepository.findOngoingExams();
+
+            for (Exam exam : ongoingExams) {
+                if (exam.getEndTime() != null && now.isAfter(exam.getEndTime())) {
+                    // 考试已超时，处理所有未提交的记录
+                    submittedCount += processTimeoutExam(exam, now);
+                }
+            }
+
+            // 2. 查找所有进行中的考试记录
+            List<ExamRecord> inProgressRecords = examRecordRepository.findByExamStatus("in_progress");
+
+            for (ExamRecord record : inProgressRecords) {
+                if (isRecordTimeout(record, now)) {
+                    autoSubmitRecord(record, now);
+                    submittedCount++;
+                }
+            }
+
+            logger.info("自动提交超时考试完成: 提交数量={}", submittedCount);
+
+        } catch (Exception e) {
+            logger.error("自动提交超时考试失败", e);
+        }
+    }
+
+    /**
+     * 处理超时考试
+     */
+    private int processTimeoutExam(Exam exam, LocalDateTime now) {
+        int submittedCount = 0;
+
+        try {
+            // 获取该考试的所有进行中记录
+            List<ExamRecord> records = examRecordRepository.findByExamId(exam.getId());
+
+            for (ExamRecord record : records) {
+                if ("in_progress".equals(record.getExamStatus())) {
+                    autoSubmitRecord(record, now);
+                    submittedCount++;
+                }
+            }
+
+            // 更新考试状态为已结束
+            if (submittedCount > 0) {
+                examRepository.updateExamStatus(exam.getId(), "finished");
+                logger.info("考试自动结束: examId={}, 自动提交记录数={}", exam.getId(), submittedCount);
+            }
+
+        } catch (Exception e) {
+            logger.error("处理超时考试失败: examId={}", exam.getId(), e);
+        }
+
+        return submittedCount;
+    }
+
+    /**
+     * 检查考试记录是否超时
+     */
+    private boolean isRecordTimeout(ExamRecord record, LocalDateTime now) {
+        try {
+            // 获取考试信息
+            Optional<Exam> examOpt = examRepository.findById(record.getExamId());
+            if (examOpt.isEmpty()) {
+                return false;
+            }
+
+            Exam exam = examOpt.get();
+
+            // 检查考试是否已结束
+            if (exam.getEndTime() != null && now.isAfter(exam.getEndTime())) {
+                return true;
+            }
+
+            // 检查个人考试时长是否超时（如果有设置）
+            if (record.getStartTime() != null && exam.getDurationMinutes() != null) {
+                LocalDateTime personalEndTime = record.getStartTime().plusMinutes(exam.getDurationMinutes());
+                return now.isAfter(personalEndTime);
+            }
+
+            return false;
+
+        } catch (Exception e) {
+            logger.error("检查考试记录超时状态失败: recordId={}", record.getId(), e);
+            return false;
+        }
+    }
+
+    /**
+     * 自动提交考试记录
+     */
+    private void autoSubmitRecord(ExamRecord record, LocalDateTime now) {
+        try {
+            record.setSubmitTime(now);
+            record.setExamStatus("timeout");
+            record.setRemarks("系统自动提交（超时）");
+
+            // 如果没有答案，设置空答案
+            if (record.getAnswerDetails() == null || record.getAnswerDetails().trim().isEmpty()) {
+                record.setAnswerDetails("{}"); // 空答案JSON
+            }
+
+            examRecordRepository.save(record);
+
+            logger.debug("自动提交考试记录: recordId={}, studentId={}, examId={}",
+                record.getId(), record.getStudentId(), record.getExamId());
+
+        } catch (Exception e) {
+            logger.error("自动提交考试记录失败: recordId={}", record.getId(), e);
+        }
     }
 
     // ==================== 统计分析方法 ====================
@@ -975,7 +1164,7 @@ public class ExamServiceImpl implements ExamService {
         try {
             List<ExamQuestion> questions = examQuestionRepository.findByExamId(examId);
             // 注意：当前实现基础的难度分析功能，基于题目类型和分值进行难度评估
-            // 后续可根据实际ExamQuestion实体结构调整，如添加difficulty字段或使用更复杂的算法
+            // 后续可根据实际ExamQuestion实体结构调整，如添加difficulty字段
             Map<String, Long> difficultyCount = analyzeDifficultyDistribution(questions);
             
             analysis.put("difficultyDistribution", difficultyCount);
@@ -1000,7 +1189,7 @@ public class ExamServiceImpl implements ExamService {
                 .collect(Collectors.groupingBy(ExamQuestion::getQuestionType, Collectors.counting()));
             
             // 注意：统计难度分布，根据实际ExamQuestion实体结构调整
-            // 当前使用基于分值的难度评估算法
+            // 当前使用基于分值的难度评估
             Map<String, Long> difficultyCount = analyzeDifficultyDistribution(questions);
             
             stats.put("totalQuestions", questions.size());

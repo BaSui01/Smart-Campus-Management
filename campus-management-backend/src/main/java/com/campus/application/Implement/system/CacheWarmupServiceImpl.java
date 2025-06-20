@@ -9,6 +9,7 @@ import com.campus.application.service.system.CacheWarmupService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.core.env.Environment;
@@ -23,12 +24,13 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * 缓存预热服务实现类
- * 
+ *
  * @author Campus Management Team
  * @version 1.0.0
  * @since 2025-06-07
  */
 @Service
+@ConditionalOnProperty(name = "spring.cache.type", havingValue = "redis")
 public class CacheWarmupServiceImpl implements CacheWarmupService {
     
     private static final Logger logger = LoggerFactory.getLogger(CacheWarmupServiceImpl.class);

@@ -101,30 +101,139 @@ public class PermissionServiceImpl implements PermissionService {
     @Override
     public Permission createPermission(Permission permission) {
         try {
-            // 检查权限代码是否已存在
+            logger.info("创建权限: code={}, name={}", permission.getPermissionCode(), permission.getPermissionName());
+            
+            // 1. 数据验证
+            validatePermissionData(permission);
+            
+            // 2. 检查权限代码是否已存在
             if (existsByPermissionCode(permission.getPermissionCode())) {
                 throw new RuntimeException("权限代码已存在: " + permission.getPermissionCode());
             }
             
-            // 设置创建时间
-            permission.setCreatedAt(LocalDateTime.now());
-            permission.setUpdatedAt(LocalDateTime.now());
-            
-            // 默认状态为启用
-            if (permission.getStatus() == null) {
-                permission.setStatus(1);
+            // 3. 智能权限代码生成
+            if (permission.getPermissionCode() == null || permission.getPermissionCode().trim().isEmpty()) {
+                permission.setPermissionCode(generatePermissionCode(permission));
             }
             
-            return permissionRepository.save(permission);
+            // 4. 设置默认值和元数据
+            setPermissionDefaults(permission);
+            
+            // 5. 保存权限
+            Permission savedPermission = permissionRepository.save(permission);
+            
+            // 6. 异步更新权限缓存
+            updatePermissionCache(savedPermission);
+            
+            logger.info("权限创建成功: id={}, code={}", savedPermission.getId(), savedPermission.getPermissionCode());
+            return savedPermission;
+            
         } catch (DataIntegrityViolationException e) {
-            logger.error("创建权限失败 - 数据完整性违反", e);
+            logger.error("创建权限失败 - 数据完整性违反: {}", permission.getPermissionCode(), e);
             throw new RuntimeException("创建权限失败: 权限代码已存在或数据不完整");
         } catch (DataAccessException e) {
-            logger.error("创建权限失败 - 数据访问异常", e);
+            logger.error("创建权限失败 - 数据访问异常: {}", permission.getPermissionCode(), e);
             throw new RuntimeException("创建权限失败: 数据库访问错误");
         } catch (RuntimeException e) {
-            logger.error("创建权限失败 - 未知异常", e);
+            logger.error("创建权限失败: {}", permission.getPermissionCode(), e);
             throw new RuntimeException("创建权限失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 验证权限数据
+     */
+    private void validatePermissionData(Permission permission) {
+        if (permission == null) {
+            throw new IllegalArgumentException("权限对象不能为空");
+        }
+        
+        if (permission.getPermissionName() == null || permission.getPermissionName().trim().isEmpty()) {
+            throw new IllegalArgumentException("权限名称不能为空");
+        }
+        
+        if (permission.getResourceType() == null || permission.getResourceType().trim().isEmpty()) {
+            throw new IllegalArgumentException("资源类型不能为空");
+        }
+        
+        // 验证权限名称长度
+        if (permission.getPermissionName().length() > 100) {
+            throw new IllegalArgumentException("权限名称长度不能超过100个字符");
+        }
+        
+        // 验证资源URL格式
+        if (permission.getResourceUrl() != null && !permission.getResourceUrl().trim().isEmpty()) {
+            if (!isValidResourceUrl(permission.getResourceUrl())) {
+                throw new IllegalArgumentException("资源URL格式不正确");
+            }
+        }
+    }
+
+    /**
+     * 生成权限代码
+     */
+    private String generatePermissionCode(Permission permission) {
+        String resourceType = permission.getResourceType().toUpperCase();
+        String permissionName = permission.getPermissionName().replaceAll("[^a-zA-Z0-9]", "_").toUpperCase();
+        
+        String baseCode = resourceType + ":" + permissionName;
+        
+        // 确保代码唯一性
+        String finalCode = baseCode;
+        int counter = 1;
+        while (existsByPermissionCode(finalCode)) {
+            finalCode = baseCode + "_" + counter;
+            counter++;
+        }
+        
+        return finalCode;
+    }
+
+    /**
+     * 设置权限默认值
+     */
+    private void setPermissionDefaults(Permission permission) {
+        LocalDateTime now = LocalDateTime.now();
+        
+        permission.setCreatedAt(now);
+        permission.setUpdatedAt(now);
+        
+        // 默认状态为启用
+        if (permission.getStatus() == null) {
+            permission.setStatus(1);
+        }
+        
+        // 设置默认描述
+        if (permission.getPermissionDesc() == null || permission.getPermissionDesc().trim().isEmpty()) {
+            permission.setPermissionDesc(generateDefaultDescription(permission));
+        }
+    }
+
+    /**
+     * 生成默认描述
+     */
+    private String generateDefaultDescription(Permission permission) {
+        return String.format("对%s资源的%s权限",
+            permission.getResourceType(), permission.getPermissionName());
+    }
+
+    /**
+     * 验证资源URL格式
+     */
+    private boolean isValidResourceUrl(String url) {
+        // 简单的URL格式验证
+        return url.matches("^/.*") || url.matches("^https?://.*");
+    }
+
+    /**
+     * 更新权限缓存
+     */
+    private void updatePermissionCache(Permission permission) {
+        try {
+            // 这里可以集成Redis缓存更新
+            logger.debug("更新权限缓存: {}", permission.getPermissionCode());
+        } catch (Exception e) {
+            logger.warn("更新权限缓存失败: {}", permission.getPermissionCode(), e);
         }
     }
 

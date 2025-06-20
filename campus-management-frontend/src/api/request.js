@@ -1,136 +1,64 @@
-import axios from 'axios'
 import { ElMessage } from 'element-plus'
 import { useAuthStore } from '@/stores/auth'
 import CryptoUtil from '@/utils/crypto'
+import secureHttp, { secureGet, securePost, securePut, secureDelete, securePatch } from '@/utils/secureHttp'
 import { API_CONFIG, HTTP_STATUS, ERROR_MESSAGES } from './config'
 
-// 创建 axios 实例
-const request = axios.create({
-  baseURL: API_CONFIG.BASE_URL,
-  timeout: API_CONFIG.TIMEOUT,
-  headers: API_CONFIG.HEADERS
-})
+// 使用安全HTTP客户端作为默认请求实例
+const request = secureHttp
 
-// 是否启用加密通信
-const ENABLE_ENCRYPTION = true
+// 加密通信配置 - 从环境变量读取
+const ENABLE_ENCRYPTION = import.meta.env.VITE_ENCRYPTION_ENABLED === 'true'
 
-// 请求拦截器
-request.interceptors.request.use(
-  (config) => {
-    const authStore = useAuthStore()
-    
-    // 添加 token 到请求头
-    if (authStore.token) {
-      config.headers.Authorization = `Bearer ${authStore.token}`
-    }
-    
-    // 添加请求ID用于追踪
-    config.headers['X-Request-ID'] = CryptoUtil.generateRandomString(16)
-    
-    // 加密请求数据
-    if (ENABLE_ENCRYPTION && config.data) {
-      try {
-        // 对敏感数据进行加密
-        if (shouldEncryptRequest(config.url, config.method)) {
-          const encryptedData = CryptoUtil.encryptWithTimestamp(config.data)
-          config.data = {
-            encrypted: true,
-            data: encryptedData
-          }
-          
-          // 添加数据签名
-          const signature = CryptoUtil.sha256(encryptedData + config.headers['X-Request-ID'])
-          config.headers['X-Data-Signature'] = signature
-        }
-      } catch (error) {
-        console.error('请求数据加密失败:', error)
-      }
-    }
-    
-    // 添加时间戳
-    config.headers['X-Timestamp'] = Date.now()
-    
-    return config
-  },
-  (error) => {
-    console.error('请求拦截器错误:', error)
-    return Promise.reject(error)
-  }
-)
+// 注意：安全HTTP客户端已经包含了拦截器逻辑
+// 这里保留一些额外的业务逻辑处理
 
-// 响应拦截器
-request.interceptors.response.use(
-  (response) => {
-    const { data: responseData } = response
-    
-    // 解密响应数据
-    if (ENABLE_ENCRYPTION && responseData.encrypted) {
-      try {
-        const decryptedData = CryptoUtil.decryptWithTimestamp(responseData.data)
-        response.data = decryptedData
-      } catch (error) {
-        console.error('响应数据解密失败:', error)
-        ElMessage.error('数据解密失败，请刷新重试')
-        return Promise.reject(new Error('数据解密失败'))
-      }
-    }
-    
-    const { code, message, data } = response.data
-    
+/**
+ * 响应数据标准化处理
+ * @param {Object} response - 响应对象
+ * @returns {Object} 标准化后的响应
+ */
+const normalizeResponse = (response) => {
+  const { data: responseData } = response
+
+  // 如果响应数据有标准格式
+  if (responseData && typeof responseData === 'object') {
+    const { code, message, data } = responseData
+
     // 请求成功
     if (code === 200 || code === 0) {
-      return { data, message }
+      return { data, message, success: true }
     }
-    
+
     // 业务错误
-    ElMessage.error(message || '请求失败')
-    return Promise.reject(new Error(message || '请求失败'))
-  },
-  (error) => {
-    const { response } = error
-    const authStore = useAuthStore()
-    
-    if (response) {
-      const { status, data } = response
-      
-      switch (status) {
-        case 401:
-          // 未授权，清除登录状态
-          authStore.logout()
-          ElMessage.error('登录已过期，请重新登录')
-          break
-        case 403:
-          ElMessage.error('权限不足')
-          break
-        case 404:
-          ElMessage.error('请求的资源不存在')
-          break
-        case 429:
-          ElMessage.error('请求过于频繁，请稍后重试')
-          break
-        case 500:
-          ElMessage.error('服务器内部错误')
-          break
-        case 502:
-          ElMessage.error('网关错误，请稍后重试')
-          break
-        case 503:
-          ElMessage.error('服务暂时不可用')
-          break
-        default:
-          ElMessage.error(data?.message || `请求失败 (${status})`)
-      }
-    } else if (error.code === 'ECONNABORTED') {
-      ElMessage.error('请求超时，请稍后重试')
-    } else if (error.code === 'ERR_NETWORK') {
-      ElMessage.error('网络连接失败，请检查网络')
-    } else {
-      ElMessage.error('网络错误，请检查网络连接')
+    return {
+      data: null,
+      message: message || '请求失败',
+      success: false,
+      code
     }
-    
-    return Promise.reject(error)
   }
-)
+
+  // 直接返回数据
+  return {
+    data: responseData,
+    message: '请求成功',
+    success: true
+  }
+}
+
+// 为安全HTTP客户端添加响应标准化
+const originalThen = request.then
+if (originalThen) {
+  request.then = function(onFulfilled, onRejected) {
+    const wrappedOnFulfilled = onFulfilled ? (response) => {
+      const normalized = normalizeResponse(response)
+      return onFulfilled(normalized)
+    } : undefined
+
+    return originalThen.call(this, wrappedOnFulfilled, onRejected)
+  }
+}
 
 /**
  * 判断是否需要加密请求
@@ -216,6 +144,9 @@ class ConcurrencyManager {
 
 // 创建并发管理器实例
 export const concurrencyManager = new ConcurrencyManager()
+
+// 导出便捷方法
+export { secureGet, securePost, securePut, secureDelete, securePatch }
 
 // 导出请求实例
 export default request

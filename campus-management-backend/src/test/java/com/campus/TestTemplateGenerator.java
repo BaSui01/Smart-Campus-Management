@@ -154,19 +154,9 @@ public class TestTemplateGenerator {
         sb.append("                .andExpect(status().isBadRequest());\n");
         sb.append("    }\n\n");
 
-        // Add createMockStats method
-        sb.append("    /**\n");
-        sb.append("     * 创建模拟统计数据\n");
-        sb.append("     */\n");
-        sb.append("    private Map<String, Object> createMockStats() {\n");
-        sb.append("        Map<String, Object> stats = new HashMap<>();\n");
-        sb.append("        stats.put(\"total\", 100L);\n");
-        sb.append("        stats.put(\"active\", 80L);\n");
-        sb.append("        stats.put(\"todayCount\", 5L);\n");
-        sb.append("        stats.put(\"weekCount\", 25L);\n");
-        sb.append("        stats.put(\"monthCount\", 100L);\n");
-        sb.append("        return stats;\n");
-        sb.append("    }\n");
+        // 注意：测试应该使用真实数据或者通过@MockBean模拟Service层
+        // 不应该在测试中生成硬编码的模拟数据
+        // 测试数据应该通过@Sql脚本或测试数据库初始化
         sb.append("}\n");
 
         return sb.toString();

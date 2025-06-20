@@ -3,6 +3,7 @@ package com.campus.shared.util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Component;
@@ -13,12 +14,13 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Redis 分布式锁工具类
- * 
+ *
  * @author Campus Team
  * @since 2025-06-05
  */
 @Component
-public class RedisDistributedLock {
+@ConditionalOnProperty(name = "spring.cache.type", havingValue = "redis")
+public class RedisDistributedLock implements DistributedLock {
 
     private static final Logger logger = LoggerFactory.getLogger(RedisDistributedLock.class);
 

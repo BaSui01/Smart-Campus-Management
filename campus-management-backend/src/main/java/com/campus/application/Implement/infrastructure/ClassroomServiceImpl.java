@@ -249,13 +249,15 @@ public class ClassroomServiceImpl implements ClassroomService {
                 return 0.0;
             }
 
-            // 注意：这里应该查询课程安排表计算实际使用率
-            // 当前返回模拟的使用率数据
+            // 查询课程安排表计算实际使用率
             // 使用率 = 已使用时间段 / 总可用时间段
-            double simulatedUtilizationRate = Math.random() * 0.8; // 0-80%的模拟使用率
+            // 当前返回0.0，等待课程安排系统集成
+            logger.warn("教室使用率计算功能需要集成课程安排系统: classroomId={}", classroomId);
+            double utilizationRate = 0.0;
 
-            logger.debug("教室使用率计算完成: classroomId={}, rate={}", classroomId, simulatedUtilizationRate);
-            return Math.round(simulatedUtilizationRate * 100.0) / 100.0; // 保留两位小数
+            logger.debug("教室使用率计算完成: classroomId={}, rate={}", classroomId, utilizationRate);
+            logger.warn("教室使用率计算需要集成课程安排系统获取真实数据");
+            return utilizationRate;
 
         } catch (Exception e) {
             logger.error("计算教室使用率失败: classroomId={}", classroomId, e);

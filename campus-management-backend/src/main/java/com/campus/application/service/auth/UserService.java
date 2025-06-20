@@ -7,7 +7,7 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import com.campus.application.dto.UserDTO;
+import com.campus.interfaces.rest.dto.UserDTO;
 import com.campus.domain.entity.auth.User;
 
 /**

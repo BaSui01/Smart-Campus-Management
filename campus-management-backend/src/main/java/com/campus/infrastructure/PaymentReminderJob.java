@@ -4,7 +4,7 @@ import com.campus.application.service.communication.EmailService;
 import com.campus.application.service.finance.PaymentRecordService;
 import com.campus.domain.entity.finance.FeeItem;
 import com.campus.domain.entity.organization.Student;
-import com.campus.shared.util.RedisDistributedLock;
+import com.campus.shared.util.DistributedLock;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -39,7 +39,7 @@ public class PaymentReminderJob implements Job {
     private EmailService emailService;
 
     @Autowired
-    private RedisDistributedLock distributedLock;
+    private DistributedLock distributedLock;
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {

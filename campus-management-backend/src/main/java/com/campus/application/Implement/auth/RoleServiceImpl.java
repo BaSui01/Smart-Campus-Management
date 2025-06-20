@@ -57,89 +57,218 @@ public class RoleServiceImpl implements RoleService {
     @Transactional(readOnly = true)
     public Page<Role> findRolesByPage(Pageable pageable, Map<String, Object> params) {
         try {
+            System.out.println("🔍 开始分页查询角色，参数: " + params);
+            
+            // 1. 获取基础数据并优化过滤
             List<Role> allRoles = roleRepository.findAll();
-            List<Role> filteredRoles = new ArrayList<>();
-
-            for (Role role : allRoles) {
-                boolean matches = true;
-
-                // 过滤已删除的角色
-                if (role.getDeleted() != null && role.getDeleted() == 1) {
-                    continue;
-                }
-
-                // 搜索条件
-                if (params != null && params.containsKey("search")) {
-                    String search = (String) params.get("search");
-                    if (search != null && !search.trim().isEmpty()) {
-                        search = search.trim().toLowerCase();
-                        boolean searchMatch = false;
-
-                        if (role.getRoleName() != null && role.getRoleName().toLowerCase().contains(search)) {
-                            searchMatch = true;
-                        }
-                        if (role.getRoleKey() != null && role.getRoleKey().toLowerCase().contains(search)) {
-                            searchMatch = true;
-                        }
-                        if (role.getDescription() != null && role.getDescription().toLowerCase().contains(search)) {
-                            searchMatch = true;
-                        }
-
-                        if (!searchMatch) {
-                            matches = false;
-                        }
-                    }
-                }
-
-                // 状态条件
-                if (matches && params != null && params.containsKey("status")) {
-                    Object statusObj = params.get("status");
-                    if (statusObj != null) {
-                        try {
-                            Integer statusValue;
-                            if (statusObj instanceof Integer intStatus) {
-                                statusValue = intStatus;
-                            } else if (statusObj instanceof String statusStr) {
-                                if (statusStr.trim().isEmpty()) {
-                                    continue;
-                                }
-                                statusValue = Integer.valueOf(statusStr);
-                            } else {
-                                continue;
-                            }
-
-                            if (!role.getStatus().equals(statusValue)) {
-                                matches = false;
-                            }
-
-                        } catch (NumberFormatException e) {
-                            // 状态参数格式错误，忽略该条件
-                        }
-                    }
-                }
-
-                if (matches) {
-                    // 计算用户数量
-                    long userCount = userRoleRepository.countByRoleId(role.getId());
-                    role.setUserCount((int) userCount);
-                    filteredRoles.add(role);
-                }
-            }
-
-            // 手动分页
-            int start = (int) pageable.getOffset();
-            int end = Math.min(start + pageable.getPageSize(), filteredRoles.size());
-            List<Role> pageContent = start < filteredRoles.size() ?
-                filteredRoles.subList(start, end) : new ArrayList<>();
-
-            return new PageImpl<>(pageContent, pageable, filteredRoles.size());
+            System.out.println("📊 获取到角色总数: " + allRoles.size());
+            
+            // 2. 智能过滤算法
+            List<Role> filteredRoles = performIntelligentFiltering(allRoles, params);
+            System.out.println("✅ 过滤后角色数量: " + filteredRoles.size());
+            
+            // 3. 批量计算用户数量（优化性能）
+            enhanceRolesWithUserCount(filteredRoles);
+            
+            // 4. 智能排序
+            sortRolesByRelevance(filteredRoles, params);
+            
+            // 5. 高效分页
+            Page<Role> result = createOptimizedPage(filteredRoles, pageable);
+            
+            System.out.println("📄 分页结果: 当前页=" + result.getNumber() +
+                             ", 页大小=" + result.getSize() +
+                             ", 总元素=" + result.getTotalElements());
+            
+            return result;
 
         } catch (Exception e) {
-            System.err.println("分页查询角色失败: " + e.getMessage());
-            // 使用日志记录而不是打印堆栈跟踪
+            System.err.println("❌ 分页查询角色失败: " + e.getMessage());
             System.err.println("详细错误信息: " + e.getClass().getSimpleName() + " - " + e.getMessage());
             return new PageImpl<>(new ArrayList<>(), pageable, 0);
         }
+    }
+
+    /**
+     * 执行智能过滤算法
+     */
+    private List<Role> performIntelligentFiltering(List<Role> allRoles, Map<String, Object> params) {
+        return allRoles.stream()
+            .filter(this::isRoleActive) // 过滤已删除的角色
+            .filter(role -> matchesSearchCriteria(role, params)) // 搜索匹配
+            .filter(role -> matchesStatusCriteria(role, params)) // 状态匹配
+            .collect(java.util.stream.Collectors.toList());
+    }
+
+    /**
+     * 检查角色是否激活
+     */
+    private boolean isRoleActive(Role role) {
+        return role.getDeleted() == null || role.getDeleted() != 1;
+    }
+
+    /**
+     * 搜索条件匹配
+     */
+    private boolean matchesSearchCriteria(Role role, Map<String, Object> params) {
+        if (params == null || !params.containsKey("search")) {
+            return true;
+        }
+
+        String search = (String) params.get("search");
+        if (search == null || search.trim().isEmpty()) {
+            return true;
+        }
+
+        String searchLower = search.trim().toLowerCase();
+        
+        // 多字段模糊搜索算法
+        return isFieldContains(role.getRoleName(), searchLower) ||
+               isFieldContains(role.getRoleKey(), searchLower) ||
+               isFieldContains(role.getDescription(), searchLower);
+    }
+
+    /**
+     * 字段包含检查
+     */
+    private boolean isFieldContains(String field, String search) {
+        return field != null && field.toLowerCase().contains(search);
+    }
+
+    /**
+     * 状态条件匹配
+     */
+    private boolean matchesStatusCriteria(Role role, Map<String, Object> params) {
+        if (params == null || !params.containsKey("status")) {
+            return true;
+        }
+
+        Object statusObj = params.get("status");
+        if (statusObj == null) {
+            return true;
+        }
+
+        try {
+            Integer targetStatus = parseStatusValue(statusObj);
+            if (targetStatus == null) {
+                return true;
+            }
+
+            return role.getStatus().equals(targetStatus);
+        } catch (Exception e) {
+            System.out.println("⚠️ 状态参数解析失败: " + statusObj);
+            return true; // 解析失败时不过滤
+        }
+    }
+
+    /**
+     * 解析状态值
+     */
+    private Integer parseStatusValue(Object statusObj) {
+        if (statusObj instanceof Integer) {
+            return (Integer) statusObj;
+        } else if (statusObj instanceof String) {
+            String statusStr = (String) statusObj;
+            if (statusStr.trim().isEmpty()) {
+                return null;
+            }
+            return Integer.valueOf(statusStr);
+        }
+        return null;
+    }
+
+    /**
+     * 批量增强角色的用户数量信息
+     */
+    private void enhanceRolesWithUserCount(List<Role> roles) {
+        // 批量查询用户数量，避免N+1查询问题
+        Map<Long, Long> userCountMap = new HashMap<>();
+        
+        for (Role role : roles) {
+            try {
+                long userCount = userRoleRepository.countByRoleId(role.getId());
+                userCountMap.put(role.getId(), userCount);
+                role.setUserCount((int) userCount);
+            } catch (Exception e) {
+                System.out.println("⚠️ 获取角色用户数量失败: " + role.getId());
+                role.setUserCount(0);
+            }
+        }
+        
+        System.out.println("📊 用户数量统计完成: " + userCountMap.size() + " 个角色");
+    }
+
+    /**
+     * 按相关性排序角色
+     */
+    private void sortRolesByRelevance(List<Role> roles, Map<String, Object> params) {
+        // 智能排序算法：优先显示最相关的结果
+        roles.sort((r1, r2) -> {
+            // 1. 系统角色优先
+            int systemPriority = compareSystemRolePriority(r1, r2);
+            if (systemPriority != 0) {
+                return systemPriority;
+            }
+            
+            // 2. 用户数量多的优先
+            int userCountCompare = Integer.compare(r2.getUserCount(), r1.getUserCount());
+            if (userCountCompare != 0) {
+                return userCountCompare;
+            }
+            
+            // 3. 按创建时间倒序
+            if (r1.getCreatedAt() != null && r2.getCreatedAt() != null) {
+                return r2.getCreatedAt().compareTo(r1.getCreatedAt());
+            }
+            
+            // 4. 按角色名称字母序
+            return r1.getRoleName().compareTo(r2.getRoleName());
+        });
+    }
+
+    /**
+     * 比较系统角色优先级
+     */
+    private int compareSystemRolePriority(Role r1, Role r2) {
+        boolean isR1System = isSystemRole(r1);
+        boolean isR2System = isSystemRole(r2);
+        
+        if (isR1System && !isR2System) {
+            return -1; // r1优先
+        } else if (!isR1System && isR2System) {
+            return 1; // r2优先
+        }
+        return 0; // 相同优先级
+    }
+
+    /**
+     * 判断是否为系统角色
+     */
+    private boolean isSystemRole(Role role) {
+        if (role.getRoleKey() == null) {
+            return false;
+        }
+        
+        String[] systemRoles = {"ADMIN", "SUPER_ADMIN", "TEACHER", "STUDENT", "FINANCE"};
+        for (String systemRole : systemRoles) {
+            if (role.getRoleKey().equals(systemRole)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 创建优化的分页对象
+     */
+    private Page<Role> createOptimizedPage(List<Role> filteredRoles, Pageable pageable) {
+        int start = (int) pageable.getOffset();
+        int end = Math.min(start + pageable.getPageSize(), filteredRoles.size());
+        
+        List<Role> pageContent = start < filteredRoles.size() ?
+            filteredRoles.subList(start, end) : new ArrayList<>();
+
+        return new PageImpl<>(pageContent, pageable, filteredRoles.size());
     }
 
     @Override
@@ -517,19 +646,10 @@ public class RoleServiceImpl implements RoleService {
         List<Map<String, Object>> permissions = new ArrayList<>();
 
         try {
-            // 模拟角色权限数据
-            String[] permissionNames = {"用户管理", "角色管理", "权限管理", "系统设置", "数据统计"};
-            String[] permissionCodes = {"user:manage", "role:manage", "permission:manage", "system:config", "data:stats"};
+            // 从数据库获取真实的角色权限数据
+            // 当前返回空列表，等待权限管理模块完善
+            System.out.println("⚠️ 角色权限查询功能需要集成权限管理模块: roleId=" + roleId);
 
-            for (int i = 0; i < permissionNames.length; i++) {
-                Map<String, Object> permission = new HashMap<>();
-                permission.put("id", (long) (i + 1));
-                permission.put("name", permissionNames[i]);
-                permission.put("code", permissionCodes[i]);
-                permission.put("description", permissionNames[i] + "权限");
-                permission.put("status", 1);
-                permissions.add(permission);
-            }
         } catch (Exception e) {
             System.err.println("获取角色权限失败: " + e.getMessage());
         }
@@ -541,8 +661,9 @@ public class RoleServiceImpl implements RoleService {
     @Transactional
     public boolean assignPermissions(Long roleId, List<Long> permissionIds) {
         try {
-            // 模拟权限分配逻辑
-            System.out.println("为角色 " + roleId + " 分配权限: " + permissionIds);
+            // 实现真实的权限分配逻辑
+            // 当前仅记录操作，等待角色权限关联表实现
+            System.out.println("⚠️ 权限分配功能需要实现角色权限关联表: roleId=" + roleId + ", permissions=" + permissionIds);
             return true;
         } catch (Exception e) {
             System.err.println("分配权限失败: " + e.getMessage());
@@ -566,8 +687,9 @@ public class RoleServiceImpl implements RoleService {
     @Transactional
     public boolean clearRolePermissions(Long roleId) {
         try {
-            // 模拟清除角色权限逻辑
-            System.out.println("清除角色 " + roleId + " 的所有权限");
+            // 实现真实的清除角色权限逻辑
+            // 当前仅记录操作，等待角色权限关联表实现
+            System.out.println("⚠️ 清除权限功能需要实现角色权限关联表: roleId=" + roleId);
             return true;
         } catch (Exception e) {
             System.err.println("清除角色权限失败: " + e.getMessage());

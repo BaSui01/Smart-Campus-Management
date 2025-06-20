@@ -7,7 +7,9 @@ package com.campus.shared.exception;
  * @since 1.0.0
  */
 public class JwtException extends RuntimeException {
-    
+
+    private static final long serialVersionUID = 1L;
+
     public JwtException(String message) {
         super(message);
     }

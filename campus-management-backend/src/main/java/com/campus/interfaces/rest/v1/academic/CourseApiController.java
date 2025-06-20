@@ -1,6 +1,7 @@
 package com.campus.interfaces.rest.v1.academic;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -199,43 +200,34 @@ public class CourseApiController extends BaseController {
     @GetMapping("/form-data")
     @Operation(summary = "获取课程表单数据", description = "获取创建/编辑课程表单所需的数据")
     public ApiResponse<Map<String, Object>> getCourseFormData() {
-        Map<String, Object> formData = new HashMap<>();
+        try {
+            Map<String, Object> formData = new HashMap<>();
 
-        // 课程类型选项
-        List<Map<String, String>> courseTypes = Arrays.asList(
-            Map.of("value", "REQUIRED", "label", "必修课"),
-            Map.of("value", "ELECTIVE", "label", "选修课"),
-            Map.of("value", "PUBLIC", "label", "公共课"),
-            Map.of("value", "PROFESSIONAL", "label", "专业课")
-        );
+            // 从数据库动态获取课程类型选项
+            List<Map<String, String>> courseTypes = getDynamicCourseTypes();
 
-        // 学期选项
-        List<Map<String, String>> semesters = Arrays.asList(
-            Map.of("value", "2024-1", "label", "2024年春季学期"),
-            Map.of("value", "2024-2", "label", "2024年秋季学期"),
-            Map.of("value", "2025-1", "label", "2025年春季学期"),
-            Map.of("value", "2025-2", "label", "2025年秋季学期")
-        );
+            // 从数据库动态获取学期选项
+            List<Map<String, String>> semesters = getDynamicSemesters();
 
-        // 学年选项
-        List<Map<String, Object>> academicYears = Arrays.asList(
-            Map.of("value", 2024, "label", "2024学年"),
-            Map.of("value", 2025, "label", "2025学年"),
-            Map.of("value", 2026, "label", "2026学年")
-        );
+            // 动态生成学年选项
+            List<Map<String, Object>> academicYears = getDynamicAcademicYears();
 
-        // 状态选项
-        List<Map<String, Object>> statusOptions = Arrays.asList(
-            Map.of("value", 1, "label", "启用"),
-            Map.of("value", 0, "label", "禁用")
-        );
+            // 状态选项（这个可以保持固定）
+            List<Map<String, Object>> statusOptions = Arrays.asList(
+                Map.of("value", 1, "label", "启用"),
+                Map.of("value", 0, "label", "禁用")
+            );
 
-        formData.put("courseTypes", courseTypes);
-        formData.put("semesters", semesters);
-        formData.put("academicYears", academicYears);
-        formData.put("statusOptions", statusOptions);
+            formData.put("courseTypes", courseTypes);
+            formData.put("semesters", semesters);
+            formData.put("academicYears", academicYears);
+            formData.put("statusOptions", statusOptions);
 
-        return ApiResponse.success("获取课程表单数据成功", formData);
+            return ApiResponse.success("获取课程表单数据成功", formData);
+        } catch (Exception e) {
+            log.error("获取课程表单数据失败", e);
+            return ApiResponse.error(500, "获取课程表单数据失败：" + e.getMessage());
+        }
     }
 
     /**
@@ -468,5 +460,157 @@ public class CourseApiController extends BaseController {
 
         List<Course> courses = courseService.exportCourses(params);
         return ApiResponse.success("导出课程数据成功", courses);
+    }
+
+    // ==================== 动态数据获取方法 ====================
+
+    /**
+     * 动态获取课程类型选项
+     */
+    private List<Map<String, String>> getDynamicCourseTypes() {
+        try {
+            // 从现有课程中获取已使用的课程类型
+            List<Course> allCourses = courseService.findAll();
+            Set<String> existingTypes = allCourses.stream()
+                .map(Course::getCourseType)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+            List<Map<String, String>> courseTypes = new ArrayList<>();
+
+            // 添加从数据库获取的类型
+            for (String type : existingTypes) {
+                String label = getCourseTypeLabel(type);
+                courseTypes.add(Map.of("value", type, "label", label));
+            }
+
+            // 如果数据库中没有数据，提供默认选项
+            if (courseTypes.isEmpty()) {
+                courseTypes.addAll(Arrays.asList(
+                    Map.of("value", "REQUIRED", "label", "必修课"),
+                    Map.of("value", "ELECTIVE", "label", "选修课"),
+                    Map.of("value", "PUBLIC", "label", "公共课"),
+                    Map.of("value", "PROFESSIONAL", "label", "专业课")
+                ));
+            }
+
+            return courseTypes;
+        } catch (Exception e) {
+            log.warn("获取动态课程类型失败，使用默认选项", e);
+            return Arrays.asList(
+                Map.of("value", "REQUIRED", "label", "必修课"),
+                Map.of("value", "ELECTIVE", "label", "选修课"),
+                Map.of("value", "PUBLIC", "label", "公共课"),
+                Map.of("value", "PROFESSIONAL", "label", "专业课")
+            );
+        }
+    }
+
+    /**
+     * 动态获取学期选项
+     */
+    private List<Map<String, String>> getDynamicSemesters() {
+        try {
+            // 从现有课程中获取已使用的学期
+            List<Course> allCourses = courseService.findAll();
+            Set<String> existingSemesters = allCourses.stream()
+                .map(Course::getSemester)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+            List<Map<String, String>> semesters = new ArrayList<>();
+
+            // 添加从数据库获取的学期
+            for (String semester : existingSemesters) {
+                String label = getSemesterLabel(semester);
+                semesters.add(Map.of("value", semester, "label", label));
+            }
+
+            // 如果数据库中没有数据，生成当前和未来几个学期
+            if (semesters.isEmpty()) {
+                semesters = generateDefaultSemesters();
+            }
+
+            return semesters;
+        } catch (Exception e) {
+            log.warn("获取动态学期失败，使用默认选项", e);
+            return generateDefaultSemesters();
+        }
+    }
+
+    /**
+     * 动态生成学年选项
+     */
+    private List<Map<String, Object>> getDynamicAcademicYears() {
+        try {
+            List<Map<String, Object>> academicYears = new ArrayList<>();
+
+            // 获取当前年份
+            int currentYear = java.time.LocalDate.now().getYear();
+
+            // 生成当前年份前后各2年的学年选项
+            for (int i = -2; i <= 3; i++) {
+                int year = currentYear + i;
+                academicYears.add(Map.of("value", year, "label", year + "学年"));
+            }
+
+            return academicYears;
+        } catch (Exception e) {
+            log.warn("生成动态学年失败，使用默认选项", e);
+            return Arrays.asList(
+                Map.of("value", 2024, "label", "2024学年"),
+                Map.of("value", 2025, "label", "2025学年"),
+                Map.of("value", 2026, "label", "2026学年")
+            );
+        }
+    }
+
+    /**
+     * 获取课程类型标签
+     */
+    private String getCourseTypeLabel(String type) {
+        switch (type) {
+            case "REQUIRED": return "必修课";
+            case "ELECTIVE": return "选修课";
+            case "PUBLIC": return "公共课";
+            case "PROFESSIONAL": return "专业课";
+            default: return type;
+        }
+    }
+
+    /**
+     * 获取学期标签
+     */
+    private String getSemesterLabel(String semester) {
+        try {
+            if (semester.contains("-")) {
+                String[] parts = semester.split("-");
+                String year = parts[0];
+                String term = parts[1];
+                String termLabel = "1".equals(term) ? "春季学期" : "秋季学期";
+                return year + "年" + termLabel;
+            }
+            return semester;
+        } catch (Exception e) {
+            return semester;
+        }
+    }
+
+    /**
+     * 生成默认学期选项
+     */
+    private List<Map<String, String>> generateDefaultSemesters() {
+        List<Map<String, String>> semesters = new ArrayList<>();
+
+        // 获取当前年份
+        int currentYear = java.time.LocalDate.now().getYear();
+
+        // 生成当前年份和下一年的学期
+        for (int year = currentYear; year <= currentYear + 1; year++) {
+            semesters.add(Map.of("value", year + "-1", "label", year + "年春季学期"));
+            semesters.add(Map.of("value", year + "-2", "label", year + "年秋季学期"));
+        }
+
+        return semesters;
     }
 }

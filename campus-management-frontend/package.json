@@ -5,11 +5,16 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0 --port 3000",
     "build": "vite build",
+    "build:secure": "node scripts/build-secure.js",
+    "build:prod": "NODE_ENV=production npm run build:secure",
     "preview": "vite preview",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-path .gitignore",
     "format": "prettier --write src/",
+    "security-check": "npm audit && node scripts/build-secure.js",
     "sync-config": "node scripts/sync-backend-config.js",
-    "predev": "npm run sync-config"
+    "predev": "npm run sync-config",
+    "test:security": "node scripts/build-secure.js",
+    "clean": "rm -rf dist node_modules/.cache"
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",

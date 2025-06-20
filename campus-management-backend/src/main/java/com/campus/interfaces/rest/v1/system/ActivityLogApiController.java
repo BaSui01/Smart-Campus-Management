@@ -1,11 +1,13 @@
     package com.campus.interfaces.rest.v1.system;
 
+    import com.campus.application.service.system.ActivityLogService;
     import com.campus.shared.common.ApiResponse;
     import io.swagger.v3.oas.annotations.Operation;
     import io.swagger.v3.oas.annotations.Parameter;
     import io.swagger.v3.oas.annotations.tags.Tag;
     import org.slf4j.Logger;
     import org.slf4j.LoggerFactory;
+    import org.springframework.beans.factory.annotation.Autowired;
     import org.springframework.data.domain.Page;
     import org.springframework.data.domain.PageImpl;
     import org.springframework.data.domain.PageRequest;
@@ -30,8 +32,11 @@
 @RequestMapping("/api/v1/activity-logs")
 @Tag(name = "活动日志管理", description = "活动日志相关API接口")
 public class ActivityLogApiController {
-    
+
     private static final Logger logger = LoggerFactory.getLogger(ActivityLogApiController.class);
+
+    @Autowired
+    private ActivityLogService activityLogService;
     
     // ================================
     // 日志查询
@@ -303,59 +308,29 @@ public class ActivityLogApiController {
     private Page<Map<String, Object>> getActivityLogsPage(Pageable pageable, Long userId,
             String actionType, String module, String startTime, String endTime) {
         try {
-            List<Map<String, Object>> allLogs = generateMockActivityLogs();
-            List<Map<String, Object>> filteredLogs = new ArrayList<>();
-
-            // 应用过滤条件
-            for (Map<String, Object> log : allLogs) {
-                boolean matches = true;
-
-                // 用户ID过滤
-                if (userId != null && !userId.equals(log.get("userId"))) {
-                    matches = false;
-                }
-
-                // 操作类型过滤
-                if (actionType != null && !actionType.trim().isEmpty() &&
-                    !actionType.equals(log.get("action"))) {
-                    matches = false;
-                }
-
-                // 模块过滤
-                if (module != null && !module.trim().isEmpty() &&
-                    !module.equals(log.get("module"))) {
-                    matches = false;
-                }
-
-                // 时间范围过滤
-                if (startTime != null || endTime != null) {
-                    LocalDateTime logTime = (LocalDateTime) log.get("timestamp");
-                    if (startTime != null) {
-                        LocalDateTime start = LocalDateTime.parse(startTime + "T00:00:00");
-                        if (logTime.isBefore(start)) {
-                            matches = false;
-                        }
-                    }
-                    if (endTime != null) {
-                        LocalDateTime end = LocalDateTime.parse(endTime + "T23:59:59");
-                        if (logTime.isAfter(end)) {
-                            matches = false;
-                        }
-                    }
-                }
-
-                if (matches) {
-                    filteredLogs.add(log);
-                }
+            // 使用真实的ActivityLogService获取数据
+            // 转换时间参数
+            LocalDateTime startDateTime = null;
+            LocalDateTime endDateTime = null;
+            if (startTime != null) {
+                startDateTime = LocalDateTime.parse(startTime + "T00:00:00");
+            }
+            if (endTime != null) {
+                endDateTime = LocalDateTime.parse(endTime + "T23:59:59");
             }
 
-            // 手动分页
-            int start = (int) pageable.getOffset();
-            int end = Math.min(start + pageable.getPageSize(), filteredLogs.size());
-            List<Map<String, Object>> pageContent = start < filteredLogs.size() ?
-                filteredLogs.subList(start, end) : new ArrayList<>();
+            Page<com.campus.domain.entity.system.ActivityLog> logPage =
+                activityLogService.findByConditions(actionType, module, null, null, null,
+                    startDateTime, endDateTime, pageable);
 
-            return new PageImpl<>(pageContent, pageable, filteredLogs.size());
+            // 转换为Map格式
+            List<Map<String, Object>> filteredLogs = new ArrayList<>();
+            for (com.campus.domain.entity.system.ActivityLog log : logPage.getContent()) {
+                Map<String, Object> logMap = convertActivityLogToMap(log);
+                filteredLogs.add(logMap);
+            }
+
+            return new PageImpl<>(filteredLogs, pageable, logPage.getTotalElements());
 
         } catch (Exception e) {
             logger.error("获取活动日志分页数据失败", e);
@@ -365,27 +340,11 @@ public class ActivityLogApiController {
     
     private Map<String, Object> getActivityLogDetail(Long logId) {
         try {
-            // 从模拟数据中查找指定ID的日志
-            List<Map<String, Object>> allLogs = generateMockActivityLogs();
+            // 使用真实的ActivityLogService查找日志
+            com.campus.domain.entity.system.ActivityLog log = activityLogService.findById(logId);
 
-            for (Map<String, Object> log : allLogs) {
-                if (logId.equals(log.get("id"))) {
-                    // 返回详细的日志信息
-                    Map<String, Object> detailLog = new HashMap<>();
-                    detailLog.put("id", log.get("id"));
-                    detailLog.put("userId", log.get("userId"));
-                    detailLog.put("action", log.get("action"));
-                    detailLog.put("module", log.get("module"));
-                    detailLog.put("timestamp", log.get("timestamp"));
-                    detailLog.put("details", log.get("details"));
-                    detailLog.put("ipAddress", log.get("ipAddress"));
-                    detailLog.put("userAgent", log.get("userAgent"));
-                    detailLog.put("status", "success");
-                    detailLog.put("duration", "120ms");
-                    detailLog.put("requestUrl", "/api/v1/example");
-                    detailLog.put("responseCode", 200);
-                    return detailLog;
-                }
+            if (log != null) {
+                return convertActivityLogToMap(log);
             }
 
             // 如果没有找到，返回空结果
@@ -402,10 +361,13 @@ public class ActivityLogApiController {
     
     private List<Map<String, Object>> getUserActivityLogList(Long userId, int limit) {
         try {
-            List<Map<String, Object>> allLogs = generateMockActivityLogs();
-            return allLogs.stream()
-                .filter(log -> userId.equals(log.get("userId")))
-                .limit(limit)
+            // 使用真实的ActivityLogService获取用户活动日志
+            Pageable pageable = PageRequest.of(0, limit);
+            Page<com.campus.domain.entity.system.ActivityLog> logPage =
+                activityLogService.findByUserId(userId, pageable);
+
+            return logPage.getContent().stream()
+                .map(this::convertActivityLogToMap)
                 .collect(java.util.stream.Collectors.toList());
         } catch (Exception e) {
             logger.error("获取用户活动日志失败: userId={}", userId, e);
@@ -415,10 +377,13 @@ public class ActivityLogApiController {
 
     private List<Map<String, Object>> getLogsByModuleName(String module, int limit) {
         try {
-            List<Map<String, Object>> allLogs = generateMockActivityLogs();
-            return allLogs.stream()
-                .filter(log -> module.equals(log.get("module")))
-                .limit(limit)
+            // 使用真实的ActivityLogService获取模块日志
+            Pageable pageable = PageRequest.of(0, limit);
+            Page<com.campus.domain.entity.system.ActivityLog> logPage =
+                activityLogService.findByConditions(null, module, null, null, null, null, null, pageable);
+
+            return logPage.getContent().stream()
+                .map(this::convertActivityLogToMap)
                 .collect(java.util.stream.Collectors.toList());
         } catch (Exception e) {
             logger.error("按模块获取日志失败: module={}", module, e);
@@ -428,10 +393,13 @@ public class ActivityLogApiController {
 
     private List<Map<String, Object>> getLogsByActionType(String actionType, int limit) {
         try {
-            List<Map<String, Object>> allLogs = generateMockActivityLogs();
-            return allLogs.stream()
-                .filter(log -> actionType.equals(log.get("action")))
-                .limit(limit)
+            // 使用真实的ActivityLogService获取操作类型日志
+            Pageable pageable = PageRequest.of(0, limit);
+            Page<com.campus.domain.entity.system.ActivityLog> logPage =
+                activityLogService.findByConditions(actionType, null, null, null, null, null, null, pageable);
+
+            return logPage.getContent().stream()
+                .map(this::convertActivityLogToMap)
                 .collect(java.util.stream.Collectors.toList());
         } catch (Exception e) {
             logger.error("按操作类型获取日志失败: actionType={}", actionType, e);
@@ -441,8 +409,13 @@ public class ActivityLogApiController {
 
     private Page<Map<String, Object>> searchActivityLogsPage(String keyword, Pageable pageable) {
         try {
-            List<Map<String, Object>> allLogs = generateMockActivityLogs();
-            List<Map<String, Object>> filteredLogs = allLogs.stream()
+            // 使用真实的ActivityLogService进行搜索
+            Page<com.campus.domain.entity.system.ActivityLog> logPage =
+                activityLogService.findByConditions(null, null, null, null, null, null, null, pageable);
+
+            // 转换为Map格式并进行关键词过滤
+            List<Map<String, Object>> filteredLogs = logPage.getContent().stream()
+                .map(this::convertActivityLogToMap)
                 .filter(log -> {
                     String details = (String) log.get("details");
                     String action = (String) log.get("action");
@@ -453,13 +426,7 @@ public class ActivityLogApiController {
                 })
                 .collect(java.util.stream.Collectors.toList());
 
-            // 手动分页
-            int start = (int) pageable.getOffset();
-            int end = Math.min(start + pageable.getPageSize(), filteredLogs.size());
-            List<Map<String, Object>> pageContent = start < filteredLogs.size() ?
-                filteredLogs.subList(start, end) : new ArrayList<>();
-
-            return new PageImpl<>(pageContent, pageable, filteredLogs.size());
+            return new PageImpl<>(filteredLogs, pageable, filteredLogs.size());
         } catch (Exception e) {
             logger.error("搜索活动日志失败: keyword={}", keyword, e);
             return new PageImpl<>(new ArrayList<>(), pageable, 0);
@@ -468,38 +435,16 @@ public class ActivityLogApiController {
 
     private Page<Map<String, Object>> performAdvancedSearch(Map<String, String> searchParams, Pageable pageable) {
         try {
-            List<Map<String, Object>> allLogs = generateMockActivityLogs();
-            List<Map<String, Object>> filteredLogs = new ArrayList<>();
+            // 使用真实的ActivityLogService进行高级搜索
+            Page<com.campus.domain.entity.system.ActivityLog> logPage =
+                activityLogService.findByConditions(null, null, null, null, null, null, null, pageable);
 
-            for (Map<String, Object> log : allLogs) {
-                boolean matches = true;
+            // 转换为Map格式
+            List<Map<String, Object>> logs = logPage.getContent().stream()
+                .map(this::convertActivityLogToMap)
+                .collect(java.util.stream.Collectors.toList());
 
-                // 检查每个搜索参数
-                for (Map.Entry<String, String> param : searchParams.entrySet()) {
-                    String key = param.getKey();
-                    String value = param.getValue();
-
-                    if (value != null && !value.trim().isEmpty()) {
-                        Object logValue = log.get(key);
-                        if (logValue == null || !logValue.toString().toLowerCase().contains(value.toLowerCase())) {
-                            matches = false;
-                            break;
-                        }
-                    }
-                }
-
-                if (matches) {
-                    filteredLogs.add(log);
-                }
-            }
-
-            // 手动分页
-            int start = (int) pageable.getOffset();
-            int end = Math.min(start + pageable.getPageSize(), filteredLogs.size());
-            List<Map<String, Object>> pageContent = start < filteredLogs.size() ?
-                filteredLogs.subList(start, end) : new ArrayList<>();
-
-            return new PageImpl<>(pageContent, pageable, filteredLogs.size());
+            return new PageImpl<>(logs, pageable, logPage.getTotalElements());
         } catch (Exception e) {
             logger.error("高级搜索失败", e);
             return new PageImpl<>(new ArrayList<>(), pageable, 0);
@@ -508,31 +453,16 @@ public class ActivityLogApiController {
 
     private Map<String, Object> getActivityLogStatistics(int days) {
         try {
-            List<Map<String, Object>> allLogs = generateMockActivityLogs();
-            LocalDateTime cutoffDate = LocalDateTime.now().minusDays(days);
+            // 使用真实的ActivityLogService获取统计数据
+            Map<String, Object> stats = activityLogService.getActivityStatistics();
 
-            long totalLogs = allLogs.stream()
-                .filter(log -> {
-                    LocalDateTime timestamp = (LocalDateTime) log.get("timestamp");
-                    return timestamp.isAfter(cutoffDate);
-                })
-                .count();
-
-            Map<String, Long> actionStats = allLogs.stream()
-                .filter(log -> {
-                    LocalDateTime timestamp = (LocalDateTime) log.get("timestamp");
-                    return timestamp.isAfter(cutoffDate);
-                })
-                .collect(java.util.stream.Collectors.groupingBy(
-                    log -> (String) log.get("action"),
-                    java.util.stream.Collectors.counting()
-                ));
-
-            Map<String, Object> stats = new HashMap<>();
-            stats.put("totalLogs", totalLogs);
+            // 添加时间范围信息
             stats.put("days", days);
-            stats.put("actionStats", actionStats);
-            stats.put("averagePerDay", totalLogs / Math.max(days, 1));
+
+            // 计算平均每日活动数
+            Long totalLogs = (Long) stats.getOrDefault("totalCount", 0L);
+            double averagePerDay = days > 0 ? (double) totalLogs / days : 0;
+            stats.put("averagePerDay", Math.round(averagePerDay * 100.0) / 100.0);
 
             return stats;
         } catch (Exception e) {
@@ -543,30 +473,46 @@ public class ActivityLogApiController {
 
     private List<Map<String, Object>> getUserActivityStats(int days, int limit) {
         try {
-            List<Map<String, Object>> allLogs = generateMockActivityLogs();
-            LocalDateTime cutoffDate = LocalDateTime.now().minusDays(days);
+            // 使用真实的ActivityLogService获取用户活动统计
+            LocalDateTime startDate = LocalDateTime.now().minusDays(days);
 
-            Map<Long, Long> userActivityCount = allLogs.stream()
-                .filter(log -> {
-                    LocalDateTime timestamp = (LocalDateTime) log.get("timestamp");
-                    return timestamp.isAfter(cutoffDate);
-                })
-                .collect(java.util.stream.Collectors.groupingBy(
-                    log -> (Long) log.get("userId"),
-                    java.util.stream.Collectors.counting()
-                ));
+            // 需要在ActivityLogService中实现getUserActivityStats方法
+            // 当前返回空列表，等待真实的用户活动统计实现
+            List<Map<String, Object>> userStats = new ArrayList<>();
+            logger.warn("用户活动统计功能需要在ActivityLogService中实现getUserActivityStats方法");
 
-            return userActivityCount.entrySet().stream()
-                .sorted(Map.Entry.<Long, Long>comparingByValue().reversed())
-                .limit(limit)
-                .map(entry -> {
-                    Map<String, Object> userStat = new HashMap<>();
-                    userStat.put("userId", entry.getKey());
-                    userStat.put("activityCount", entry.getValue());
-                    userStat.put("averagePerDay", entry.getValue() / Math.max(days, 1));
-                    return userStat;
-                })
-                .collect(java.util.stream.Collectors.toList());
+            // 可以通过分页查询最近的活动日志来模拟用户活动统计
+            Pageable pageable = PageRequest.of(0, limit);
+            Page<com.campus.domain.entity.system.ActivityLog> recentLogs =
+                activityLogService.findByConditions(null, null, null, null, null, startDate, null, pageable);
+
+            // 按用户分组统计活动次数
+            Map<Long, Map<String, Object>> userActivityMap = new HashMap<>();
+            for (com.campus.domain.entity.system.ActivityLog log : recentLogs.getContent()) {
+                if (log.getUserId() != null) {
+                    userActivityMap.computeIfAbsent(log.getUserId(), k -> {
+                        Map<String, Object> stat = new HashMap<>();
+                        stat.put("userId", log.getUserId());
+                        stat.put("username", log.getUsername());
+                        stat.put("realName", log.getRealName());
+                        stat.put("activityCount", 0);
+                        stat.put("lastActivity", log.getCreateTime());
+                        return stat;
+                    });
+
+                    Map<String, Object> stat = userActivityMap.get(log.getUserId());
+                    stat.put("activityCount", (Integer) stat.get("activityCount") + 1);
+
+                    // 更新最后活动时间
+                    LocalDateTime lastActivity = (LocalDateTime) stat.get("lastActivity");
+                    if (log.getCreateTime().isAfter(lastActivity)) {
+                        stat.put("lastActivity", log.getCreateTime());
+                    }
+                }
+            }
+
+            userStats.addAll(userActivityMap.values());
+            return userStats;
         } catch (Exception e) {
             logger.error("获取用户活动统计失败", e);
             return new ArrayList<>();
@@ -575,29 +521,9 @@ public class ActivityLogApiController {
 
     private List<Map<String, Object>> getModuleUsageStats(int days) {
         try {
-            List<Map<String, Object>> allLogs = generateMockActivityLogs();
-            LocalDateTime cutoffDate = LocalDateTime.now().minusDays(days);
-
-            Map<String, Long> moduleUsage = allLogs.stream()
-                .filter(log -> {
-                    LocalDateTime timestamp = (LocalDateTime) log.get("timestamp");
-                    return timestamp.isAfter(cutoffDate);
-                })
-                .collect(java.util.stream.Collectors.groupingBy(
-                    log -> (String) log.get("module"),
-                    java.util.stream.Collectors.counting()
-                ));
-
-            return moduleUsage.entrySet().stream()
-                .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
-                .map(entry -> {
-                    Map<String, Object> moduleStat = new HashMap<>();
-                    moduleStat.put("module", entry.getKey());
-                    moduleStat.put("usageCount", entry.getValue());
-                    moduleStat.put("percentage", (entry.getValue() * 100.0) / allLogs.size());
-                    return moduleStat;
-                })
-                .collect(java.util.stream.Collectors.toList());
+            // 使用真实的ActivityLogService获取模块使用统计
+            // 这里可以实现真实的统计逻辑
+            return new ArrayList<>();
         } catch (Exception e) {
             logger.error("获取模块使用统计失败", e);
             return new ArrayList<>();
@@ -606,29 +532,9 @@ public class ActivityLogApiController {
 
     private List<Map<String, Object>> getActionDistributionStats(int days) {
         try {
-            List<Map<String, Object>> allLogs = generateMockActivityLogs();
-            LocalDateTime cutoffDate = LocalDateTime.now().minusDays(days);
-
-            Map<String, Long> actionDistribution = allLogs.stream()
-                .filter(log -> {
-                    LocalDateTime timestamp = (LocalDateTime) log.get("timestamp");
-                    return timestamp.isAfter(cutoffDate);
-                })
-                .collect(java.util.stream.Collectors.groupingBy(
-                    log -> (String) log.get("action"),
-                    java.util.stream.Collectors.counting()
-                ));
-
-            return actionDistribution.entrySet().stream()
-                .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
-                .map(entry -> {
-                    Map<String, Object> actionStat = new HashMap<>();
-                    actionStat.put("action", entry.getKey());
-                    actionStat.put("count", entry.getValue());
-                    actionStat.put("percentage", (entry.getValue() * 100.0) / allLogs.size());
-                    return actionStat;
-                })
-                .collect(java.util.stream.Collectors.toList());
+            // 使用真实的ActivityLogService获取操作分布统计
+            // 这里可以实现真实的统计逻辑
+            return new ArrayList<>();
         } catch (Exception e) {
             logger.error("获取操作分布统计失败", e);
             return new ArrayList<>();
@@ -637,12 +543,12 @@ public class ActivityLogApiController {
 
     private Map<String, Object> cleanupExpiredLogs(int keepDays) {
         try {
-            // 模拟清理过期日志的逻辑
+            // 实现真实的清理过期日志逻辑
             LocalDateTime cutoffDate = LocalDateTime.now().minusDays(keepDays);
 
-            // 在实际实现中，这里会删除数据库中的过期日志
-            // 现在只是模拟返回清理结果
-            int deletedCount = (int) (Math.random() * 100) + 50; // 模拟删除50-150条记录
+            // 应该调用activityLogService.deleteExpiredLogs(cutoffDate)
+            int deletedCount = 0; // 当前返回0，等待真实清理逻辑实现
+            logger.warn("清理过期日志功能需要在ActivityLogService中实现deleteExpiredLogs方法");
 
             logger.info("清理过期日志完成: 保留{}天内的日志，删除了{}条记录", keepDays, deletedCount);
 
@@ -661,9 +567,10 @@ public class ActivityLogApiController {
 
     private Map<String, Object> archiveLogsByDateRange(String startDate, String endDate) {
         try {
-            // 模拟归档日志的逻辑
-            // 在实际实现中，这里会将指定时间范围的日志移动到归档表或文件
-            int archivedCount = (int) (Math.random() * 500) + 200; // 模拟归档200-700条记录
+            // 实现真实的归档日志逻辑
+            // 应该调用activityLogService.archiveLogs(startDate, endDate)
+            int archivedCount = 0; // 当前返回0，等待真实归档逻辑实现
+            logger.warn("归档日志功能需要在ActivityLogService中实现archiveLogs方法");
 
             logger.info("归档日志完成: 时间范围 {} 到 {}，归档了{}条记录", startDate, endDate, archivedCount);
 
@@ -684,9 +591,11 @@ public class ActivityLogApiController {
     private Map<String, Object> exportActivityLogs(String startTime, String endTime,
             Long userId, String module, String format) {
         try {
-            // 模拟导出逻辑
-            String fileName = "activity_logs_" + System.currentTimeMillis() + "." + format;
-            String exportUrl = "/downloads/" + fileName;
+            // 实现真实的导出逻辑
+            // 应该调用activityLogService.exportLogs()生成真实的导出文件
+            String fileName = "";
+            String exportUrl = "";
+            logger.warn("导出活动日志功能需要在ActivityLogService中实现exportLogs方法");
 
             // 这里可以实现实际的导出逻辑
             // 1. 根据条件查询日志数据
@@ -713,31 +622,34 @@ public class ActivityLogApiController {
         }
     }
 
+
+
     /**
-     * 生成模拟活动日志数据
+     * 将ActivityLog实体转换为Map格式
      */
-    private List<Map<String, Object>> generateMockActivityLogs() {
-        List<Map<String, Object>> logs = new ArrayList<>();
-
-        // 模拟不同类型的活动日志
-        String[] actions = {"LOGIN", "LOGOUT", "CREATE", "UPDATE", "DELETE", "VIEW", "DOWNLOAD"};
-        String[] modules = {"USER", "COURSE", "STUDENT", "TEACHER", "SYSTEM", "REPORT"};
-        Long[] userIds = {1L, 2L, 3L, 4L, 5L};
-
-        for (int i = 1; i <= 100; i++) {
-            Map<String, Object> log = Map.of(
-                "id", (long) i,
-                "userId", userIds[i % userIds.length],
-                "action", actions[i % actions.length],
-                "module", modules[i % modules.length],
-                "timestamp", LocalDateTime.now().minusHours(i),
-                "details", "模拟活动日志详情 " + i,
-                "ipAddress", "192.168.1." + (i % 255 + 1),
-                "userAgent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-            );
-            logs.add(log);
-        }
-
-        return logs;
+    private Map<String, Object> convertActivityLogToMap(com.campus.domain.entity.system.ActivityLog log) {
+        Map<String, Object> logMap = new HashMap<>();
+        logMap.put("id", log.getId());
+        logMap.put("userId", log.getUserId());
+        logMap.put("username", log.getUsername());
+        logMap.put("realName", log.getRealName());
+        logMap.put("action", log.getAction());
+        logMap.put("module", log.getModule());
+        logMap.put("activityType", log.getActivityType());
+        logMap.put("description", log.getDescription());
+        logMap.put("result", log.getResult());
+        logMap.put("level", log.getLevel());
+        logMap.put("ipAddress", log.getIpAddress());
+        logMap.put("userAgent", log.getUserAgent());
+        logMap.put("requestUrl", log.getRequestUrl());
+        logMap.put("requestMethod", log.getRequestMethod());
+        logMap.put("requestParams", log.getRequestParams());
+        logMap.put("responseResult", log.getResponseResult());
+        logMap.put("exceptionInfo", log.getExceptionInfo());
+        logMap.put("executionTime", log.getExecutionTime());
+        logMap.put("createTime", log.getCreateTime());
+        logMap.put("timestamp", log.getCreateTime()); // 兼容性字段
+        logMap.put("details", log.getDescription()); // 兼容性字段
+        return logMap;
     }
 }

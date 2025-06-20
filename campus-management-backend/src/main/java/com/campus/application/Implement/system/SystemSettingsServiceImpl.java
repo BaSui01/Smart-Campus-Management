@@ -296,9 +296,11 @@ public class SystemSettingsServiceImpl implements SystemSettingsService {
             systemInfo.put("systemVersion", getSettingValue("system.version", "1.0.0"));
             
             // 其他系统信息
-            systemInfo.put("cpuUsage", 25); // 模拟CPU使用率
-            systemInfo.put("diskUsage", 45); // 模拟磁盘使用率
-            systemInfo.put("networkStatus", "正常");
+            // 当前返回默认值，等待系统监控服务集成
+            systemInfo.put("cpuUsage", 0);
+            systemInfo.put("diskUsage", 0);
+            systemInfo.put("networkStatus", "未知");
+            logger.warn("系统监控信息功能需要集成系统监控服务获取CPU、磁盘使用率等数据");
             
         } catch (Exception e) {
             logger.error("获取系统信息失败", e);

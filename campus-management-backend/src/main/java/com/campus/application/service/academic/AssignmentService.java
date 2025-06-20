@@ -382,4 +382,55 @@ public interface AssignmentService {
      * @return 评分结果
      */
     Map<String, Object> batchGradeSubmissions(Map<String, Object> batchGradeData);
+
+    // ==================== 时间统计方法 ====================
+
+    /**
+     * 获取今日提交数量
+     *
+     * @return 今日提交数量
+     */
+    long getTodaySubmissionsCount();
+
+    /**
+     * 获取本周提交数量
+     *
+     * @return 本周提交数量
+     */
+    long getWeekSubmissionsCount();
+
+    /**
+     * 获取本月提交数量
+     *
+     * @return 本月提交数量
+     */
+    long getMonthSubmissionsCount();
+
+    /**
+     * 获取提交状态统计
+     *
+     * @return 状态统计Map
+     */
+    Map<String, Long> getSubmissionStatusStats();
+
+    /**
+     * 获取成绩统计
+     *
+     * @return 成绩统计数据
+     */
+    Map<String, Object> getGradeStatistics();
+
+    /**
+     * 获取分数分布
+     *
+     * @return 分数分布数据
+     */
+    Map<String, Object> getScoreDistribution();
+
+    /**
+     * 获取最近提交活动
+     *
+     * @return 最近提交活动列表
+     */
+    List<Map<String, Object>> getRecentSubmissionActivity();
 }

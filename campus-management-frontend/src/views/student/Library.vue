@@ -402,62 +402,15 @@ const searchBooks = async () => {
     console.error('搜索图书失败:', error)
     ElMessage.error('搜索图书失败')
 
-    // 如果API失败，使用模拟数据
-    books.value = generateMockBooks()
-    total.value = 100
+    // API失败时返回空数据
+    books.value = []
+    total.value = 0
   } finally {
     loading.books = false
   }
 }
 
-const generateMockBooks = () => {
-  const mockBooks = []
-  const titles = [
-    'JavaScript高级程序设计',
-    'Vue.js实战',
-    '深入理解计算机系统',
-    '算法导论',
-    '设计模式',
-    '数据结构与算法分析',
-    'Spring Boot实战',
-    'MySQL必知必会',
-    'Redis设计与实现',
-    '高等数学',
-    '线性代数',
-    '概率论与数理统计',
-    '大学物理',
-    '有机化学',
-    '细胞生物学'
-  ]
 
-  const authors = [
-    '张三', '李四', '王五', '赵六', '钱七',
-    'Nicholas C. Zakas', 'Evan You', 'Robert C. Martin'
-  ]
-
-  const categories = ['computer', 'mathematics', 'physics', 'chemistry', 'biology']
-  const statuses = ['available', 'borrowed', 'reserved']
-
-  for (let i = 0; i < 20; i++) {
-    mockBooks.push({
-      id: i + 1,
-      title: titles[i % titles.length],
-      author: authors[i % authors.length],
-      category: categories[i % categories.length],
-      isbn: `978-7-${String(Math.floor(Math.random() * 900000) + 100000)}-${Math.floor(Math.random() * 90) + 10}-${Math.floor(Math.random() * 9) + 1}`,
-      publisher: '清华大学出版社',
-      publishDate: `202${Math.floor(Math.random() * 4)}`,
-      status: statuses[i % statuses.length],
-      coverUrl: null,
-      description: '这是一本优秀的图书，内容丰富，适合学习和研究。',
-      location: `A${Math.floor(Math.random() * 10) + 1}-${Math.floor(Math.random() * 100) + 1}`,
-      totalCopies: Math.floor(Math.random() * 10) + 1,
-      availableCopies: Math.floor(Math.random() * 5) + 1
-    })
-  }
-
-  return mockBooks
-}
 
 const loadMyBorrowedBooks = async () => {
   try {

@@ -23,7 +23,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * @since 2025-06-05
  */
 @Component
-@ConditionalOnProperty(name = "campus.monitor.enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(name = "spring.cache.type", havingValue = "redis")
 public class RedisMonitor {
 
     private static final Logger logger = LoggerFactory.getLogger(RedisMonitor.class);

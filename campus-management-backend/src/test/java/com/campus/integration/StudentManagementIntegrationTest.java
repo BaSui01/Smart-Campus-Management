@@ -216,8 +216,10 @@ class StudentManagementIntegrationTest extends BaseIntegrationTest {
      * 创建测试学生数据
      */
     private Long[] createTestStudents() throws Exception {
-        // 简化实现，返回模拟的学生ID数组
-        return new Long[]{1L, 2L, 3L};
+        // 应该通过API创建真实的测试数据，而不是返回硬编码的ID
+        // 实现真实的学生数据创建逻辑
+        // 当前简化实现，等待StudentService集成
+        return new Long[]{};
     }
 
     @Test

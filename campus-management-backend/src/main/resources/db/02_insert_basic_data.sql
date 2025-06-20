@@ -10,7 +10,8 @@
 -- 重要信息:
 -- 系统管理员账号: admin
 -- 系统管理员密码: admin123
--- 基础用户数量: 200个 (1个系统管理员 + 10个管理员 + 50个教师 + 100个学生 + 39个家长)
+-- 基础用户数量: 20个 (1个系统管理员 + 2个管理员 + 5个教师 + 10个学生 + 2个家长)
+-- 注意：这是最小必要的用户集合，用于系统基础功能演示
 -- =====================================================
 
 -- 设置字符编码
@@ -727,7 +728,7 @@ INSERT IGNORE INTO tb_user (
     1
 );
 
--- 7.2 插入管理员用户 (10个: admin001-admin010)
+-- 7.2 插入管理员用户 (2个: admin001-admin002)
 INSERT IGNORE INTO tb_user (
     username, password, email, real_name, phone, gender,
     birthday, address, avatar_url, account_non_locked,
@@ -750,9 +751,9 @@ SELECT
     0 as deleted,
     1 as status
 FROM temp_numbers
-WHERE num BETWEEN 1 AND 10;
+WHERE num BETWEEN 1 AND 2;
 
--- 7.3 插入教师用户 (50个: teacher001-teacher050)
+-- 7.3 插入教师用户 (5个: teacher001-teacher005)
 INSERT IGNORE INTO tb_user (
     username, password, email, real_name, phone, gender,
     birthday, address, avatar_url, account_non_locked,
@@ -795,9 +796,9 @@ SELECT
     0 as deleted,
     1 as status
 FROM temp_numbers
-WHERE num BETWEEN 1 AND 50;
+WHERE num BETWEEN 1 AND 5;
 
--- 7.4 插入学生用户 (100个: student001-student100)
+-- 7.4 插入学生用户 (10个: student001-student010)
 INSERT IGNORE INTO tb_user (
     username, password, email, real_name, phone, gender,
     birthday, address, avatar_url, account_non_locked,
@@ -850,9 +851,9 @@ SELECT
     0 as deleted,
     1 as status
 FROM temp_numbers
-WHERE num BETWEEN 1 AND 100;
+WHERE num BETWEEN 1 AND 10;
 
--- 7.5 插入家长用户 (39个: parent001-parent039)
+-- 7.5 插入家长用户 (2个: parent001-parent002)
 INSERT IGNORE INTO tb_user (
     username, password, email, real_name, phone, gender,
     birthday, address, avatar_url, account_non_locked,
@@ -895,12 +896,12 @@ SELECT
     0 as deleted,
     1 as status
 FROM temp_numbers
-WHERE num BETWEEN 1 AND 39;
+WHERE num BETWEEN 1 AND 2;
 
 -- 清理临时表
 DROP TEMPORARY TABLE temp_numbers;
 
-SELECT '✓ 基础用户数据创建完成 (200个用户)' as '状态', NOW() as '时间';
+SELECT '✓ 基础用户数据创建完成 (20个用户)' as '状态', NOW() as '时间';
 
 -- =====================================================
 -- 8. 用户角色分配

@@ -1,8 +1,11 @@
 -- =====================================================
 -- Smart Campus Management System - 优化数据生成脚本
 -- 文件: 03_insert_large_data.sql
--- 描述: 使用高效批量插入方法生成大规模测试数据
--- 数据规模: 15,000用户 + 200班级 + 完整业务数据
+-- 描述: 生成适量的演示数据（已优化，减少数据量）
+-- 数据规模: 500用户 + 20班级 + 基础业务数据
+-- 注意: 这是演示用数据，生产环境请谨慎使用
+-- 警告: 此脚本会生成大量测试数据，仅用于开发和演示环境
+-- 建议: 生产环境应该使用真实的业务数据而不是模拟数据
 -- 版本: 4.0.0 (优化版)
 -- 创建时间: 2025-06-08
 -- 编码: UTF-8
@@ -79,14 +82,14 @@ CREATE TEMPORARY TABLE temp_numbers (
 ) ENGINE=MEMORY;
 
 -- 设置递归深度限制并生成序列号
-SET SESSION cte_max_recursion_depth = 20000;
+SET SESSION cte_max_recursion_depth = 1000;
 
--- 使用递归CTE生成序列号 (MySQL 8.0+)
+-- 使用递归CTE生成序列号 (MySQL 8.0+) - 减少到500个
 INSERT INTO temp_numbers (num)
 WITH RECURSIVE number_series AS (
     SELECT 1 as num
     UNION ALL
-    SELECT num + 1 FROM number_series WHERE num < 15000
+    SELECT num + 1 FROM number_series WHERE num < 500
 )
 SELECT num FROM number_series;
 
@@ -201,7 +204,7 @@ SELECT '✓ 临时表创建完成' as '状态', NOW() as '时间';
 
 SELECT '步骤3: 批量生成用户数据...' as '状态', NOW() as '时间';
 
--- 生成50个管理员用户 (使用单个INSERT语句)
+-- 生成10个管理员用户 (使用单个INSERT语句)
 INSERT INTO tb_user (username, password, email, real_name, phone, gender, status, deleted)
 SELECT
     CONCAT('admin', LPAD(n.num + 100000, 6, '0')) as username,
@@ -214,9 +217,9 @@ SELECT
     0 as deleted
 FROM temp_numbers n
 JOIN temp_names tn ON tn.id = (n.num % 100) + 1
-WHERE n.num <= 50;
+WHERE n.num <= 10;
 
--- 生成500个教师用户
+-- 生成50个教师用户
 INSERT INTO tb_user (username, password, email, real_name, phone, gender, status, deleted)
 SELECT
     CONCAT('teacher', LPAD(n.num + 200000, 6, '0')) as username,
@@ -229,7 +232,7 @@ SELECT
     0 as deleted
 FROM temp_numbers n
 JOIN temp_names tn ON tn.id = (n.num % 100) + 1
-WHERE n.num <= 500;
+WHERE n.num <= 50;
 
 -- 生成200个班主任用户
 INSERT INTO tb_user (username, password, email, real_name, phone, gender, status, deleted)
@@ -246,7 +249,7 @@ FROM temp_numbers n
 JOIN temp_names tn ON tn.id = (n.num % 100) + 1
 WHERE n.num <= 200;
 
--- 生成10000个学生用户
+-- 生成400个学生用户
 INSERT INTO tb_user (username, password, email, real_name, phone, gender, status, deleted)
 SELECT
     CONCAT('student', LPAD(n.num + 400000, 6, '0')) as username,
@@ -259,9 +262,9 @@ SELECT
     0 as deleted
 FROM temp_numbers n
 JOIN temp_names tn ON tn.id = (n.num % 100) + 1
-WHERE n.num <= 10000;
+WHERE n.num <= 400;
 
--- 生成4250个家长用户
+-- 生成40个家长用户
 INSERT INTO tb_user (username, password, email, real_name, phone, gender, status, deleted)
 SELECT
     CONCAT('parent', LPAD(n.num + 500000, 6, '0')) as username,
@@ -274,7 +277,7 @@ SELECT
     0 as deleted
 FROM temp_numbers n
 JOIN temp_names tn ON tn.id = (n.num % 100) + 1
-WHERE n.num <= 4250;
+WHERE n.num <= 40;
 
 SELECT '✓ 用户数据生成完成' as '状态', NOW() as '时间';
 
@@ -327,7 +330,7 @@ SELECT '✓ 用户角色分配完成' as '状态', NOW() as '时间';
 
 SELECT '步骤5: 批量生成班级数据...' as '状态', NOW() as '时间';
 
--- 生成200个班级 (每个专业4个班级，50个专业)
+-- 生成20个班级 (每个专业4个班级，5个专业)
 INSERT INTO tb_class (class_name, class_code, department_id, major, grade, enrollment_year, head_teacher_id,
                      max_capacity, student_count, class_status, enrollment_date, expected_graduation_date,
                      academic_year, status, deleted)
@@ -350,7 +353,7 @@ SELECT
 FROM temp_numbers n
 JOIN temp_majors m ON m.id = ((n.num - 1) % 50) + 1
 JOIN (SELECT id, ROW_NUMBER() OVER (ORDER BY id) as rn FROM tb_user WHERE username LIKE 'classteacher%' AND deleted = 0) ct ON ct.rn = n.num
-WHERE n.num <= 200;
+WHERE n.num <= 20;
 
 SELECT '✓ 班级数据生成完成' as '状态', NOW() as '时间';
 
@@ -360,7 +363,7 @@ SELECT '✓ 班级数据生成完成' as '状态', NOW() as '时间';
 
 SELECT '步骤6: 批量生成学生数据...' as '状态', NOW() as '时间';
 
--- 生成10000个学生记录
+-- 生成400个学生记录
 INSERT INTO tb_student (user_id, student_no, grade, major, class_id, enrollment_year, enrollment_date,
                        graduation_date, academic_status, student_type, training_mode, academic_system,
                        current_semester, total_credits, earned_credits, gpa, emergency_contact,
@@ -410,7 +413,7 @@ FROM temp_numbers n
 JOIN (SELECT id, ROW_NUMBER() OVER (ORDER BY id) as rn FROM tb_user WHERE username LIKE 'student%' AND deleted = 0) u ON u.rn = n.num
 JOIN tb_class c ON c.id = ((n.num - 1) % 200) + 1
 JOIN temp_names tn ON tn.id = (n.num % 100) + 1
-WHERE n.num <= 10000;
+WHERE n.num <= 400;
 
 -- 更新班级的当前学生数
 UPDATE tb_class c SET student_count = (

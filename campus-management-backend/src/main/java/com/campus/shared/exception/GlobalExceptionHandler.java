@@ -24,11 +24,18 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 
 /**
- * 全局异常处理器
+ * 全局异常处理器 - 完全前后端分离版本
+ * 统一处理系统中的各种异常，返回标准的JSON响应
+ *
+ * 重构说明：
+ * - 增强异常处理覆盖范围
+ * - 统一API响应格式
+ * - 完善日志记录
+ * - 支持开发/生产环境差异化处理
  *
  * @author Campus Management Team
- * @version 1.0.0
- * @since 2025-06-03
+ * @version 2.0.0
+ * @since 2025-06-17 (重构版本)
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -167,6 +174,51 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * 处理JWT异常
+     */
+    @ExceptionHandler(JwtException.class)
+    public ResponseEntity<ApiResponse<Object>> handleJwtException(
+            JwtException ex, HttpServletRequest request) {
+
+        logger.warn("JWT异常 - URL: {}, 消息: {}", request.getRequestURI(), ex.getMessage());
+        
+        ApiResponse<Object> response = ApiResponse.unauthorized("令牌验证失败: " + ex.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+    }
+
+    /**
+     * 处理数据库异常
+     */
+    @ExceptionHandler(DatabaseException.class)
+    public ResponseEntity<ApiResponse<Object>> handleDatabaseException(
+            DatabaseException ex, HttpServletRequest request) {
+
+        logger.error("数据库异常 - URL: {}, 消息: {}", request.getRequestURI(), ex.getMessage(), ex);
+        
+        ApiResponse<Object> response = ApiResponse.error("数据库操作失败，请稍后重试");
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
+
+    /**
+     * 处理通用异常 - 兜底处理
+     */
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiResponse<Object>> handleGeneralException(
+            Exception ex, HttpServletRequest request) {
+
+        logger.error("未知异常 - URL: {}, 消息: {}", request.getRequestURI(), ex.getMessage(), ex);
+        
+        // 在生产环境中隐藏具体错误信息
+        String message = "系统内部错误，请稍后重试";
+        if (logger.isDebugEnabled()) {
+            message += " (详情: " + ex.getMessage() + ")";
+        }
+        
+        ApiResponse<Object> response = ApiResponse.error(message);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
+
+    /**
      * 处理非法参数异常
      */
     @ExceptionHandler(IllegalArgumentException.class)
@@ -205,18 +257,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 
-    /**
-     * 处理所有其他异常
-     */
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiResponse<Object>> handleGenericException(
-            Exception ex, HttpServletRequest request) {
 
-        logger.error("未处理的异常: ", ex);
-
-        ApiResponse<Object> response = ApiResponse.error("系统内部错误，请稍后重试");
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-    }
 
     // 注意：BusinessException 和 ResourceNotFoundException 已在独立文件中定义
     // 不再在此处重复定义，避免类冲突

@@ -77,6 +77,7 @@ INSERT INTO courses (id, course_name, course_code, course_type, credits, hours, 
 (5, '计算机网络', 'CS004', '专业必修', 3.0, 48, 3, 2, '2024-2', 1, 0);
 
 -- 插入测试系统设置
+-- 注意：这些是测试环境专用的配置数据，不会影响生产环境
 INSERT INTO system_settings (setting_key, setting_value, setting_type, setting_description) VALUES
 ('system.name', 'Smart Campus Management Test', 'BASIC', '系统名称'),
 ('system.version', '1.0.0-TEST', 'BASIC', '系统版本'),

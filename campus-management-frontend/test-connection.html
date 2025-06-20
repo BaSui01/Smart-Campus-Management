@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智慧校园管理系统 - 连接测试</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            background: #f9f9f9;
+        }
+
+        .test-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .status {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .status.pending {
+            background: #ffc107;
+        }
+
+        .status.success {
+            background: #28a745;
+        }
+
+        .status.error {
+            background: #dc3545;
+        }
+
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .login-form {
+            margin-top: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎓 智慧校园管理系统</h1>
+            <p>系统连接测试与登录验证</p>
+        </div>
+
+        <!-- 系统状态检测 -->
+        <div class="test-section">
+            <h3>
+                <span id="healthStatus" class="status pending"></span>
+                系统健康检查
+            </h3>
+            <div id="healthResult" class="test-result info">正在检查系统状态...</div>
+        </div>
+
+        <!-- API连接测试 -->
+        <div class="test-section">
+            <h3>
+                <span id="apiStatus" class="status pending"></span>
+                API连接测试
+            </h3>
+            <div id="apiResult" class="test-result info">正在测试API连接...</div>
+        </div>
+
+        <!-- 用户注册测试 -->
+        <div class="test-section">
+            <h3>
+                <span id="registerStatus" class="status pending"></span>
+                用户注册测试
+            </h3>
+            <div class="login-form">
+                <div class="form-group">
+                    <label for="regUsername">用户名:</label>
+                    <input type="text" id="regUsername" placeholder="请输入用户名" value="admin">
+                </div>
+                <div class="form-group">
+                    <label for="regPassword">密码:</label>
+                    <input type="password" id="regPassword" placeholder="请输入密码" value="admin123">
+                </div>
+                <div class="form-group">
+                    <label for="regRealName">真实姓名:</label>
+                    <input type="text" id="regRealName" placeholder="请输入真实姓名" value="Administrator">
+                </div>
+                <div class="form-group">
+                    <label for="regEmail">邮箱:</label>
+                    <input type="email" id="regEmail" placeholder="请输入邮箱" value="admin@campus.edu">
+                </div>
+                <button id="registerBtn" class="btn" onclick="testRegister()">
+                    <span id="registerBtnText">创建管理员账户</span>
+                </button>
+            </div>
+            <div id="registerResult" class="test-result info">点击上方按钮创建管理员账户</div>
+        </div>
+
+        <!-- 登录测试 -->
+        <div class="test-section">
+            <h3>
+                <span id="loginStatus" class="status pending"></span>
+                登录功能测试
+            </h3>
+            <div class="login-form">
+                <div class="form-group">
+                    <label for="username">用户名:</label>
+                    <input type="text" id="username" placeholder="请输入用户名" value="admin">
+                </div>
+                <div class="form-group">
+                    <label for="password">密码:</label>
+                    <input type="password" id="password" placeholder="请输入密码" value="admin123">
+                </div>
+                <div class="form-group">
+                    <label for="userType">用户类型:</label>
+                    <select id="userType">
+                        <option value="ADMIN">系统管理员</option>
+                        <option value="TEACHER">教师</option>
+                        <option value="STUDENT">学生</option>
+                    </select>
+                </div>
+                <button id="loginBtn" class="btn" onclick="testLogin()">
+                    <span id="loginBtnText">测试登录</span>
+                </button>
+            </div>
+            <div id="loginResult" class="test-result info">请先创建管理员账户，然后测试登录功能</div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8889/api/v1';
+        
+        // 页面加载时自动执行测试
+        window.onload = function() {
+            testHealth();
+            testAPI();
+        };
+
+        // 测试系统健康状态
+        async function testHealth() {
+            const statusEl = document.getElementById('healthStatus');
+            const resultEl = document.getElementById('healthResult');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/health`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    statusEl.className = 'status success';
+                    resultEl.className = 'test-result success';
+                    resultEl.innerHTML = `✅ 系统运行正常<br>响应时间: ${Date.now() - startTime}ms<br>状态码: ${response.status}`;
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                statusEl.className = 'status error';
+                resultEl.className = 'test-result error';
+                resultEl.innerHTML = `❌ 系统连接失败<br>错误信息: ${error.message}`;
+            }
+        }
+
+        // 测试API连接
+        async function testAPI() {
+            const statusEl = document.getElementById('apiStatus');
+            const resultEl = document.getElementById('apiResult');
+            const startTime = Date.now();
+            
+            try {
+                // 测试一个不需要认证的API端点
+                const response = await fetch(`${API_BASE_URL}/health`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const responseTime = Date.now() - startTime;
+                
+                if (response.ok) {
+                    statusEl.className = 'status success';
+                    resultEl.className = 'test-result success';
+                    resultEl.innerHTML = `✅ API连接成功<br>服务器地址: ${API_BASE_URL}<br>响应时间: ${responseTime}ms<br>状态码: ${response.status}`;
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                statusEl.className = 'status error';
+                resultEl.className = 'test-result error';
+                resultEl.innerHTML = `❌ API连接失败<br>服务器地址: ${API_BASE_URL}<br>错误信息: ${error.message}`;
+            }
+        }
+
+        // 测试用户注册功能
+        async function testRegister() {
+            const statusEl = document.getElementById('registerStatus');
+            const resultEl = document.getElementById('registerResult');
+            const btnEl = document.getElementById('registerBtn');
+            const btnTextEl = document.getElementById('registerBtnText');
+
+            const username = document.getElementById('regUsername').value;
+            const password = document.getElementById('regPassword').value;
+            const realName = document.getElementById('regRealName').value;
+            const email = document.getElementById('regEmail').value;
+
+            if (!username || !password || !realName || !email) {
+                resultEl.className = 'test-result error';
+                resultEl.innerHTML = '❌ 请填写完整的注册信息';
+                return;
+            }
+
+            // 显示加载状态
+            btnEl.disabled = true;
+            btnTextEl.innerHTML = '<span class="loading"></span>注册中...';
+            statusEl.className = 'status pending';
+            resultEl.className = 'test-result info';
+            resultEl.innerHTML = '正在创建管理员账户...';
+
+            const startTime = Date.now();
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password,
+                        realName: realName,
+                        email: email,
+                        phone: '13800138000',
+                        gender: '其他'
+                    })
+                });
+
+                const responseTime = Date.now() - startTime;
+                const data = await response.json();
+
+                if (response.ok && data.code === 200) {
+                    statusEl.className = 'status success';
+                    resultEl.className = 'test-result success';
+                    resultEl.innerHTML = `✅ 管理员账户创建成功<br>用户名: ${username}<br>邮箱: ${email}<br>响应时间: ${responseTime}ms<br>现在可以测试登录功能了！`;
+                } else {
+                    throw new Error(data.message || `HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                statusEl.className = 'status error';
+                resultEl.className = 'test-result error';
+                resultEl.innerHTML = `❌ 账户创建失败<br>用户名: ${username}<br>错误信息: ${error.message}`;
+            } finally {
+                // 恢复按钮状态
+                btnEl.disabled = false;
+                btnTextEl.innerHTML = '创建管理员账户';
+            }
+        }
+
+        // 测试登录功能
+        async function testLogin() {
+            const statusEl = document.getElementById('loginStatus');
+            const resultEl = document.getElementById('loginResult');
+            const btnEl = document.getElementById('loginBtn');
+            const btnTextEl = document.getElementById('loginBtnText');
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const userType = document.getElementById('userType').value;
+            
+            if (!username || !password) {
+                resultEl.className = 'test-result error';
+                resultEl.innerHTML = '❌ 请输入用户名和密码';
+                return;
+            }
+            
+            // 显示加载状态
+            btnEl.disabled = true;
+            btnTextEl.innerHTML = '<span class="loading"></span>登录中...';
+            statusEl.className = 'status pending';
+            resultEl.className = 'test-result info';
+            resultEl.innerHTML = '正在尝试登录...';
+            
+            const startTime = Date.now();
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password,
+                        userType: userType
+                    })
+                });
+                
+                const responseTime = Date.now() - startTime;
+                const data = await response.json();
+                
+                if (response.ok && data.code === 200) {
+                    statusEl.className = 'status success';
+                    resultEl.className = 'test-result success';
+                    resultEl.innerHTML = `✅ 登录成功<br>用户: ${username}<br>类型: ${userType}<br>响应时间: ${responseTime}ms<br>Token: ${data.data?.token ? '已获取' : '未获取'}`;
+                } else {
+                    throw new Error(data.message || `HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                statusEl.className = 'status error';
+                resultEl.className = 'test-result error';
+                resultEl.innerHTML = `❌ 登录失败<br>用户: ${username}<br>错误信息: ${error.message}`;
+            } finally {
+                // 恢复按钮状态
+                btnEl.disabled = false;
+                btnTextEl.innerHTML = '测试登录';
+            }
+        }
+    </script>
+</body>
+</html>

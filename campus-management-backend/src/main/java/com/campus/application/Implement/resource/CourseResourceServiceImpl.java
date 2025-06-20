@@ -206,18 +206,12 @@ public class CourseResourceServiceImpl implements CourseResourceService {
         logger.debug("获取资源访问统计: resourceId={}", resourceId);
 
         try {
-            // 注意：当前返回模拟的访问统计数据，后续可从ResourceAccessLog表获取真实数据
+            // 从ResourceAccessLog表获取真实的访问统计数据
+            // 应该按日期分组统计访问次数和下载次数
             List<Object[]> stats = new java.util.ArrayList<>();
 
-            // 模拟统计数据：[日期, 访问次数, 下载次数]
-            stats.add(new Object[]{java.time.LocalDate.now().minusDays(7), 15, 8});
-            stats.add(new Object[]{java.time.LocalDate.now().minusDays(6), 12, 5});
-            stats.add(new Object[]{java.time.LocalDate.now().minusDays(5), 18, 10});
-            stats.add(new Object[]{java.time.LocalDate.now().minusDays(4), 20, 12});
-            stats.add(new Object[]{java.time.LocalDate.now().minusDays(3), 25, 15});
-            stats.add(new Object[]{java.time.LocalDate.now().minusDays(2), 22, 13});
-            stats.add(new Object[]{java.time.LocalDate.now().minusDays(1), 30, 18});
-
+            // 当前返回空数据，等待ResourceAccessLog表和服务集成
+            logger.warn("资源访问统计功能需要集成ResourceAccessLog服务: resourceId={}", resourceId);
             return stats;
 
         } catch (Exception e) {

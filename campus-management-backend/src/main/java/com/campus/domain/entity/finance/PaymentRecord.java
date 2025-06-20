@@ -3,6 +3,8 @@ package com.campus.domain.entity.finance;
 import com.campus.domain.entity.auth.User;
 import com.campus.domain.entity.infrastructure.BaseEntity;
 import com.campus.domain.entity.organization.Student;
+import com.campus.shared.security.EncryptionConfig.EncryptedField;
+import com.campus.shared.security.EncryptionConfig.EncryptionEntityListener;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
@@ -26,6 +28,7 @@ import java.time.LocalDateTime;
     @Index(name = "idx_transaction_no", columnList = "transaction_no"),
     @Index(name = "idx_status_deleted", columnList = "status,deleted")
 })
+@EntityListeners(EncryptionEntityListener.class)
 public class PaymentRecord extends BaseEntity {
 
     /**
@@ -71,7 +74,8 @@ public class PaymentRecord extends BaseEntity {
      * 交易流水号
      */
     @Size(max = 100, message = "交易流水号长度不能超过100个字符")
-    @Column(name = "transaction_no", unique = true, length = 100)
+    @EncryptedField
+    @Column(name = "transaction_no", unique = true, length = 255)  // 增加长度以容纳加密数据
     private String transactionNo;
 
     /**

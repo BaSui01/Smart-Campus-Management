@@ -47,7 +47,7 @@ public class JwtTokenUtil {
     @Value("${campus.jwt.redis.refresh-prefix:jwt:refresh:}")
     private String refreshPrefix;
 
-    @Autowired
+    @Autowired(required = false)
     private RedisTemplate<String, Object> redisTemplate;
 
     /**
@@ -66,17 +66,22 @@ public class JwtTokenUtil {
         claims.put("authorities", userDetails.getAuthorities());
         
         String token = createToken(claims, userDetails.getUsername());
-        
-        // 存储到 Redis
-        String key = jwtPrefix + userDetails.getUsername();
-        redisTemplate.opsForValue().set(key, token, expiration, TimeUnit.MILLISECONDS);
-        
-        // 生成刷新令牌
-        String refreshToken = generateRefreshToken(userDetails.getUsername());
-        String refreshKey = refreshPrefix + userDetails.getUsername();
-        redisTemplate.opsForValue().set(refreshKey, refreshToken, refreshExpiration, TimeUnit.MILLISECONDS);
-        
-        logger.info("JWT Token 生成成功: {}", userDetails.getUsername());
+
+        // 如果Redis可用，存储到 Redis
+        if (redisTemplate != null) {
+            String key = jwtPrefix + userDetails.getUsername();
+            redisTemplate.opsForValue().set(key, token, expiration, TimeUnit.MILLISECONDS);
+
+            // 生成刷新令牌
+            String refreshToken = generateRefreshToken(userDetails.getUsername());
+            String refreshKey = refreshPrefix + userDetails.getUsername();
+            redisTemplate.opsForValue().set(refreshKey, refreshToken, refreshExpiration, TimeUnit.MILLISECONDS);
+
+            logger.info("JWT Token 生成成功（已存储到Redis）: {}", userDetails.getUsername());
+        } else {
+            logger.info("JWT Token 生成成功（Redis不可用，仅本地验证）: {}", userDetails.getUsername());
+        }
+
         return token;
     }
 
@@ -133,13 +138,15 @@ public class JwtTokenUtil {
      */
     public Boolean validateToken(String token, String username) {
         try {
-            // 检查 Redis 中是否存在
-            String key = jwtPrefix + username;
-            String cachedToken = (String) redisTemplate.opsForValue().get(key);
-            
-            if (cachedToken == null || !token.equals(cachedToken)) {
-                logger.warn("Token 在 Redis 中不存在或不匹配: {}", username);
-                return false;
+            // 如果Redis可用，检查 Redis 中是否存在
+            if (redisTemplate != null) {
+                String key = jwtPrefix + username;
+                String cachedToken = (String) redisTemplate.opsForValue().get(key);
+
+                if (cachedToken == null || !token.equals(cachedToken)) {
+                    logger.warn("Token 在 Redis 中不存在或不匹配: {}", username);
+                    return false;
+                }
             }
 
             // 验证 Token 本身
@@ -147,7 +154,7 @@ public class JwtTokenUtil {
                     .setSigningKey(getSigningKey())
                     .build()
                     .parseClaimsJws(token);
-            
+
             return true;
         } catch (ExpiredJwtException e) {
             logger.warn("Token 已过期: {}", username);
@@ -186,31 +193,35 @@ public class JwtTokenUtil {
      */
     public String refreshToken(String refreshToken, String username) {
         try {
-            String refreshKey = refreshPrefix + username;
-            String cachedRefreshToken = (String) redisTemplate.opsForValue().get(refreshKey);
-            
-            if (refreshToken.equals(cachedRefreshToken)) {
-                // 验证刷新令牌
-                Jwts.parserBuilder()
-                        .setSigningKey(getSigningKey())
-                        .build()
-                        .parseClaimsJws(refreshToken);
-                
-                // 生成新的访问令牌
-                Map<String, Object> claims = new HashMap<>();
-                claims.put("username", username);
-                
-                String newToken = createToken(claims, username);
-                
-                // 更新 Redis 中的 Token
+            if (redisTemplate != null) {
+                String refreshKey = refreshPrefix + username;
+                String cachedRefreshToken = (String) redisTemplate.opsForValue().get(refreshKey);
+
+                if (!refreshToken.equals(cachedRefreshToken)) {
+                    throw new RuntimeException("刷新令牌无效");
+                }
+            }
+
+            // 验证刷新令牌
+            Jwts.parserBuilder()
+                    .setSigningKey(getSigningKey())
+                    .build()
+                    .parseClaimsJws(refreshToken);
+
+            // 生成新的访问令牌
+            Map<String, Object> claims = new HashMap<>();
+            claims.put("username", username);
+
+            String newToken = createToken(claims, username);
+
+            // 如果Redis可用，更新 Redis 中的 Token
+            if (redisTemplate != null) {
                 String tokenKey = jwtPrefix + username;
                 redisTemplate.opsForValue().set(tokenKey, newToken, expiration, TimeUnit.MILLISECONDS);
-                
-                logger.info("Token 刷新成功: {}", username);
-                return newToken;
             }
-            
-            throw new RuntimeException("刷新令牌无效");
+
+            logger.info("Token 刷新成功: {}", username);
+            return newToken;
         } catch (Exception e) {
             logger.error("Token 刷新失败: {}", username, e);
             throw new RuntimeException("刷新令牌无效", e);
@@ -221,13 +232,17 @@ public class JwtTokenUtil {
      * 登出时清除 Token
      */
     public void logout(String username) {
-        String tokenKey = jwtPrefix + username;
-        String refreshKey = refreshPrefix + username;
-        
-        redisTemplate.delete(tokenKey);
-        redisTemplate.delete(refreshKey);
-        
-        logger.info("用户登出，清除 Token: {}", username);
+        if (redisTemplate != null) {
+            String tokenKey = jwtPrefix + username;
+            String refreshKey = refreshPrefix + username;
+
+            redisTemplate.delete(tokenKey);
+            redisTemplate.delete(refreshKey);
+
+            logger.info("用户登出，清除 Redis Token: {}", username);
+        } else {
+            logger.info("用户登出（Redis不可用，仅本地清理）: {}", username);
+        }
     }
 
     /**

@@ -47,6 +47,8 @@ public class AuthApiController extends BaseController {
     @Operation(summary = "用户登录", description = "用户登录获取JWT令牌")
     public ApiResponse<Map<String, Object>> login(@Parameter(description = "登录信息") @Valid @RequestBody LoginRequest loginRequest) {
         try {
+            log.info("用户登录请求: username={}, userType={}", loginRequest.getUsername(), loginRequest.getUserType());
+
             // 验证用户凭据
             User user = userService.authenticate(loginRequest.getUsername(), loginRequest.getPassword());
             if (user == null) {
@@ -66,7 +68,7 @@ public class AuthApiController extends BaseController {
             result.put("token", token);
             result.put("tokenType", "Bearer");
             result.put("expiresIn", jwtUtil.getExpirationTime());
-            
+
             // 用户信息（不包含敏感信息）
             Map<String, Object> userInfo = new HashMap<>();
             userInfo.put("id", user.getId());
@@ -76,11 +78,14 @@ public class AuthApiController extends BaseController {
             userInfo.put("phone", user.getPhone());
             userInfo.put("gender", user.getGender());
             userInfo.put("avatarUrl", user.getAvatarUrl());
-            
+            userInfo.put("userType", loginRequest.getUserType()); // 返回前端传递的用户类型
+
             result.put("user", userInfo);
 
+            log.info("用户登录成功: username={}, userType={}", loginRequest.getUsername(), loginRequest.getUserType());
             return ApiResponse.success("登录成功", result);
         } catch (Exception e) {
+            log.error("用户登录失败: username={}, error={}", loginRequest.getUsername(), e.getMessage(), e);
             return ApiResponse.error(500, "登录失败：" + e.getMessage());
         }
     }
@@ -439,12 +444,15 @@ public class AuthApiController extends BaseController {
     public static class LoginRequest {
         private String username;
         private String password;
+        private String userType;
 
         // Getter和Setter
         public String getUsername() { return username; }
         public void setUsername(String username) { this.username = username; }
         public String getPassword() { return password; }
         public void setPassword(String password) { this.password = password; }
+        public String getUserType() { return userType; }
+        public void setUserType(String userType) { this.userType = userType; }
     }
 
     public static class RegisterRequest {

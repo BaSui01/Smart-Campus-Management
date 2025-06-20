@@ -2,6 +2,8 @@ package com.campus.domain.entity.auth;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.campus.domain.entity.infrastructure.BaseEntity;
+import com.campus.shared.security.EncryptionConfig.EncryptedField;
+import com.campus.shared.security.EncryptionConfig.EncryptionEntityListener;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
@@ -29,6 +31,7 @@ import java.util.List;
     @Index(name = "idx_phone", columnList = "phone"),
     @Index(name = "idx_status_deleted", columnList = "status,deleted")
 })
+@EntityListeners(EncryptionEntityListener.class)
 public class User extends BaseEntity {
 
     /**
@@ -53,7 +56,8 @@ public class User extends BaseEntity {
      * 邮箱
      */
     @Email(message = "邮箱格式不正确")
-    @Column(name = "email", unique = true, length = 100)
+    @EncryptedField
+    @Column(name = "email", unique = true, length = 255)  // 增加长度以容纳加密数据
     private String email;
 
     /**
@@ -68,7 +72,8 @@ public class User extends BaseEntity {
      * 手机号码
      */
     @Pattern(regexp = "^1[3-9]\\d{9}$", message = "手机号码格式不正确")
-    @Column(name = "phone", length = 11)
+    @EncryptedField
+    @Column(name = "phone", length = 255)  // 增加长度以容纳加密数据
     private String phone;
 
     /**
@@ -89,7 +94,8 @@ public class User extends BaseEntity {
      */
     @Pattern(regexp = "^[1-9]\\d{5}(18|19|20)\\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\\d|3[01])\\d{3}[\\dXx]$",
              message = "身份证号格式不正确")
-    @Column(name = "id_card", length = 18)
+    @EncryptedField
+    @Column(name = "id_card", length = 255)  // 增加长度以容纳加密数据
     private String idCard;
 
     /**

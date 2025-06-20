@@ -127,7 +127,10 @@ public class TimeSlot extends BaseEntity {
         this.periodNumber = periodNumber;
         this.startTime = startTime;
         this.endTime = endTime;
-        this.durationMinutes = calculateDuration();
+        // 直接计算持续时间，避免调用实例方法
+        if (startTime != null && endTime != null) {
+            this.durationMinutes = (int) java.time.Duration.between(startTime, endTime).toMinutes();
+        }
     }
 
     // ================================

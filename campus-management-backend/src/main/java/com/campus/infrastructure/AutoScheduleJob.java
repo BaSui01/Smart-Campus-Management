@@ -2,7 +2,7 @@ package com.campus.infrastructure;
 
 import com.campus.application.service.academic.CourseScheduleService;
 import com.campus.domain.entity.academic.Course;
-import com.campus.shared.util.RedisDistributedLock;
+import com.campus.shared.util.DistributedLock;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -30,7 +30,7 @@ public class AutoScheduleJob implements Job {
     private CourseScheduleService courseScheduleService;
 
     @Autowired
-    private RedisDistributedLock distributedLock;
+    private DistributedLock distributedLock;
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {

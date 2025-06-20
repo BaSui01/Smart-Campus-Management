@@ -18,8 +18,8 @@ import java.util.List;
  * 专门为REST接口层提供通用功能和工具方法
  *
  * @author Campus Management Team
- * @version 1.0.0
- * @since 2025-06-07
+ * @version 2.0.0
+ * @since 2025-06-17 (重构版本)
  */
 public abstract class BaseController {
 
@@ -83,10 +83,24 @@ public abstract class BaseController {
     }
     
     /**
+     * 构建错误响应（带数据）
+     */
+    protected <T> ResponseEntity<ApiResponse<T>> error(String message, T data) {
+        return ResponseEntity.badRequest().body(ApiResponse.error(400, message, data));
+    }
+    
+    /**
      * 构建错误响应（带状态码）
      */
     protected <T> ResponseEntity<ApiResponse<T>> error(int code, String message) {
-        return ResponseEntity.status(code).body(ApiResponse.error(message));
+        return ResponseEntity.status(code).body(ApiResponse.error(code, message));
+    }
+    
+    /**
+     * 构建错误响应（带状态码和数据）
+     */
+    protected <T> ResponseEntity<ApiResponse<T>> error(int code, String message, T data) {
+        return ResponseEntity.status(code).body(ApiResponse.error(code, message, data));
     }
     
     /**
@@ -224,8 +238,6 @@ public abstract class BaseController {
             throw new IllegalArgumentException(paramName + "不能为空");
         }
     }
-    
-
     
     /**
      * 记录错误日志

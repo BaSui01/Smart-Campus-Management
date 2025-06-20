@@ -3,22 +3,17 @@ package com.campus.shared.config;
 import java.util.Arrays;
 import java.util.Collections;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.handler.SimpleUrlHandlerMapping;
 import org.springframework.web.servlet.resource.ResourceHttpRequestHandler;
-
-import com.campus.shared.security.UnifiedAdminInterceptor;
 
 /**
  * Web配置类
@@ -27,27 +22,7 @@ import com.campus.shared.security.UnifiedAdminInterceptor;
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
-    @Autowired
-    @Lazy
-    private UnifiedAdminInterceptor unifiedAdminInterceptor;
-
-    @Override
-    public void addInterceptors(@org.springframework.lang.NonNull InterceptorRegistry registry) {
-        // 注册统一管理后台认证拦截器
-        registry.addInterceptor(unifiedAdminInterceptor)
-                .addPathPatterns("/admin/**")
-                .excludePathPatterns(
-                    "/admin/login",
-                    "/admin/logout",
-                    "/admin/captcha",
-                    "/admin/test",
-                    "/admin/check-login",
-                    "/admin/access-denied",
-                    "/admin/session-timeout",
-                    "/admin/refresh-token",
-                    "/admin/token-status"
-                );
-    }
+    // Web拦截器已移除 - 纯API服务不需要Web拦截器
 
     @Override
     public void addResourceHandlers(@org.springframework.lang.NonNull ResourceHandlerRegistry registry) {
@@ -81,40 +56,56 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addViewControllers(@org.springframework.lang.NonNull ViewControllerRegistry registry) {
-        // 简单的视图控制器
-        registry.addViewController("/admin").setViewName("redirect:/admin/dashboard");
-
-        // API文档重定向
+        // API文档重定向 - 保留用于API文档访问
         registry.addViewController("/api").setViewName("redirect:/swagger-ui/index.html");
         registry.addViewController("/docs").setViewName("redirect:/swagger-ui/index.html");
         registry.addViewController("/api-docs").setViewName("redirect:/swagger-ui/index.html");
     }
 
     /**
-     * 统一的CORS配置源
-     * 供SecurityConfig和其他需要CORS配置的地方使用
+     * 前后端分离CORS配置
+     * 支持前端应用跨域访问API
      */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // 允许的域名
-        configuration.setAllowedOriginPatterns(Arrays.asList("*"));
+        // 允许的前端域名 - 开发和生产环境
+        configuration.setAllowedOriginPatterns(Arrays.asList(
+            "http://localhost:3000",    // Vue.js开发服务器
+            "http://localhost:8080",    // 备用前端端口
+            "http://localhost:5173",    // Vite开发服务器
+            "https://*.yourdomain.com", // 生产环境域名
+            "*"                         // 开发阶段允许所有域名
+        ));
 
         // 允许的HTTP方法
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(Arrays.asList(
+            "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"
+        ));
 
         // 允许的请求头
-        configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setAllowedHeaders(Arrays.asList(
+            "Authorization", "Content-Type", "X-Requested-With",
+            "Accept", "Origin", "Access-Control-Request-Method",
+            "Access-Control-Request-Headers"
+        ));
 
-        // 允许发送凭证
+        // 暴露的响应头
+        configuration.setExposedHeaders(Arrays.asList(
+            "Access-Control-Allow-Origin", "Access-Control-Allow-Credentials"
+        ));
+
+        // 允许发送凭证（Cookie、Authorization header等）
         configuration.setAllowCredentials(true);
 
-        // 预检请求的缓存时间
+        // 预检请求的缓存时间（1小时）
         configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
+        source.registerCorsConfiguration("/api/**", configuration);
+        source.registerCorsConfiguration("/swagger-ui/**", configuration);
+        source.registerCorsConfiguration("/v3/api-docs/**", configuration);
 
         return source;
     }

@@ -219,26 +219,135 @@ public class MessageServiceImpl implements MessageService {
     
     @Override
     public List<Message> sendBroadcastMessage(List<Long> receiverIds, String title, String content, String messageType) {
-        logger.info("群发消息: 接收者数量={}, 标题={}", receiverIds.size(), title);
+        logger.info("🚀 开始群发消息: 接收者数量={}, 标题={}", receiverIds.size(), title);
         
+        // 1. 数据验证
+        validateBroadcastData(receiverIds, title, content);
+        
+        // 2. 批量处理优化
         List<Message> sentMessages = new ArrayList<>();
+        List<Long> failedReceivers = new ArrayList<>();
         
-        for (Long receiverId : receiverIds) {
-            try {
-                Message message = new Message();
-                message.setReceiverId(receiverId);
-                message.setTitle(title);
-                message.setContent(content);
-                message.setMessageType(messageType);
-                
-                Message sent = sendMessage(message);
-                sentMessages.add(sent);
-            } catch (Exception e) {
-                logger.error("发送群发消息失败: receiverId={}", receiverId, e);
-            }
+        // 3. 分批发送（避免一次性处理太多数据）
+        int batchSize = 100; // 每批处理100个接收者
+        for (int i = 0; i < receiverIds.size(); i += batchSize) {
+            int endIndex = Math.min(i + batchSize, receiverIds.size());
+            List<Long> batch = receiverIds.subList(i, endIndex);
+            
+            logger.debug("处理第{}批消息，数量: {}", (i / batchSize) + 1, batch.size());
+            processBatch(batch, title, content, messageType, sentMessages, failedReceivers);
+        }
+        
+        // 4. 记录发送结果
+        logBroadcastResult(receiverIds.size(), sentMessages.size(), failedReceivers.size());
+        
+        // 5. 处理失败重试（可选）
+        if (!failedReceivers.isEmpty()) {
+            handleFailedReceivers(failedReceivers, title, content, messageType);
         }
         
         return sentMessages;
+    }
+
+    /**
+     * 验证群发数据
+     */
+    private void validateBroadcastData(List<Long> receiverIds, String title, String content) {
+        if (receiverIds == null || receiverIds.isEmpty()) {
+            throw new IllegalArgumentException("接收者列表不能为空");
+        }
+        if (receiverIds.size() > 10000) {
+            throw new IllegalArgumentException("单次群发接收者数量不能超过10000");
+        }
+        if (title == null || title.trim().isEmpty()) {
+            throw new IllegalArgumentException("消息标题不能为空");
+        }
+        if (content == null || content.trim().isEmpty()) {
+            throw new IllegalArgumentException("消息内容不能为空");
+        }
+        if (title.length() > 200) {
+            throw new IllegalArgumentException("消息标题长度不能超过200字符");
+        }
+        if (content.length() > 10000) {
+            throw new IllegalArgumentException("消息内容长度不能超过10000字符");
+        }
+    }
+
+    /**
+     * 处理批量发送
+     */
+    private void processBatch(List<Long> batch, String title, String content, String messageType,
+                             List<Message> sentMessages, List<Long> failedReceivers) {
+        for (Long receiverId : batch) {
+            try {
+                // 1. 检查接收者有效性
+                if (!isValidReceiver(receiverId)) {
+                    logger.warn("⚠️ 无效的接收者ID: {}", receiverId);
+                    failedReceivers.add(receiverId);
+                    continue;
+                }
+                
+                // 2. 创建优化的消息对象
+                Message message = createOptimizedMessage(receiverId, title, content, messageType);
+                
+                // 3. 发送消息
+                Message sent = sendMessage(message);
+                sentMessages.add(sent);
+                
+                logger.trace("✅ 消息发送成功: receiverId={}", receiverId);
+                
+            } catch (Exception e) {
+                logger.error("❌ 发送群发消息失败: receiverId={}", receiverId, e);
+                failedReceivers.add(receiverId);
+            }
+        }
+    }
+
+    /**
+     * 检查接收者是否有效
+     */
+    private boolean isValidReceiver(Long receiverId) {
+        return receiverId != null && receiverId > 0;
+    }
+
+    /**
+     * 创建优化的消息对象
+     */
+    private Message createOptimizedMessage(Long receiverId, String title, String content, String messageType) {
+        Message message = new Message();
+        message.setReceiverId(receiverId);
+        message.setTitle(title);
+        message.setContent(content);
+        message.setMessageType(messageType);
+        
+        // 设置群发标识
+        message.setPriority("NORMAL");
+        message.setIsRead(false);
+        message.setSentAt(LocalDateTime.now());
+        
+        return message;
+    }
+
+    /**
+     * 记录群发结果
+     */
+    private void logBroadcastResult(int totalCount, int successCount, int failedCount) {
+        logger.info("📊 群发消息完成统计:");
+        logger.info("  总数: {}", totalCount);
+        logger.info("  成功: {}", successCount);
+        logger.info("  失败: {}", failedCount);
+        logger.info("  成功率: {}%", String.format("%.2f", (successCount * 100.0) / totalCount));
+    }
+
+    /**
+     * 处理失败的接收者
+     */
+    private void handleFailedReceivers(List<Long> failedReceivers, String title, String content, String messageType) {
+        logger.warn("⚠️ 有{}个接收者发送失败，可以考虑重试机制", failedReceivers.size());
+        
+        // 这里可以实现重试逻辑
+        // 例如：将失败的接收者加入重试队列
+        // retryQueue.addFailedReceivers(failedReceivers, title, content, messageType);
     }
     
     @Override
@@ -437,22 +546,13 @@ public class MessageServiceImpl implements MessageService {
     public List<Map<String, Object>> getMessageTemplates() {
         List<Map<String, Object>> templates = new ArrayList<>();
 
-        String[] templateNames = {"课程通知模板", "作业提醒模板", "考试通知模板", "缴费提醒模板"};
-        String[] templateContents = {
-            "亲爱的同学，您的课程{courseName}将于{time}开始，请准时参加。",
-            "您有新的作业{assignmentName}，截止时间为{deadline}，请及时完成。",
-            "考试通知：{examName}将于{examTime}举行，考试地点：{location}。",
-            "缴费提醒：您有{amount}元的{feeType}费用待缴纳，截止日期：{dueDate}。"
-        };
+        try {
+            // 从数据库的消息模板表中获取真实数据
+            // 当前返回空列表，等待MessageTemplateService集成
+            logger.warn("消息模板查询功能需要集成MessageTemplateService");
 
-        for (int i = 0; i < templateNames.length; i++) {
-            Map<String, Object> template = new HashMap<>();
-            template.put("id", (long) (i + 1));
-            template.put("name", templateNames[i]);
-            template.put("content", templateContents[i]);
-            template.put("category", "系统模板");
-            template.put("status", 1);
-            templates.add(template);
+        } catch (Exception e) {
+            logger.error("获取消息模板失败", e);
         }
 
         return templates;
@@ -486,18 +586,13 @@ public class MessageServiceImpl implements MessageService {
     public List<Map<String, Object>> getMessageRecipients(Long messageId) {
         List<Map<String, Object>> recipients = new ArrayList<>();
 
-        // 模拟接收者数据
-        String[] recipientNames = {"张三", "李四", "王五"};
-        String[] recipientTypes = {"学生", "教师", "家长"};
+        try {
+            // 从数据库的消息接收者表中获取真实数据
+            // 当前返回空列表，等待MessageRecipientService集成
+            logger.warn("消息接收者查询功能需要集成MessageRecipientService: messageId={}", messageId);
 
-        for (int i = 0; i < recipientNames.length; i++) {
-            Map<String, Object> recipient = new HashMap<>();
-            recipient.put("id", (long) (i + 1));
-            recipient.put("name", recipientNames[i]);
-            recipient.put("type", recipientTypes[i]);
-            recipient.put("isRead", i % 2 == 0);
-            recipient.put("readTime", i % 2 == 0 ? LocalDateTime.now().minusHours(i + 1) : null);
-            recipients.add(recipient);
+        } catch (Exception e) {
+            logger.error("获取消息接收者失败: messageId={}", messageId, e);
         }
 
         return recipients;
@@ -507,10 +602,18 @@ public class MessageServiceImpl implements MessageService {
     @Transactional(readOnly = true)
     public Map<String, Object> getMessageReadStatus(Long messageId) {
         Map<String, Object> status = new HashMap<>();
-        status.put("totalRecipients", 10);
-        status.put("readCount", 7);
-        status.put("unreadCount", 3);
-        status.put("readRate", 70.0);
+
+        try {
+            // 从数据库查询真实的消息阅读状态
+            // 当前返回默认值，等待消息阅读状态服务集成
+            status.put("totalRecipients", 0);
+            status.put("readCount", 0);
+            status.put("unreadCount", 0);
+            status.put("readRate", 0.0);
+            logger.warn("消息阅读状态查询功能需要集成: messageId={}", messageId);
+        } catch (Exception e) {
+            logger.error("获取消息阅读状态失败: messageId={}", messageId, e);
+        }
 
         return status;
     }
@@ -540,8 +643,15 @@ public class MessageServiceImpl implements MessageService {
     @Override
     @Transactional(readOnly = true)
     public long getUnreadMessageCount() {
-        // 模拟未读消息数量
-        return 5;
+        try {
+            // 从数据库查询真实的未读消息数量
+            // 当前返回0，等待消息阅读状态服务集成
+            logger.warn("未读消息数量查询功能需要集成消息阅读状态服务");
+            return 0;
+        } catch (Exception e) {
+            logger.error("获取未读消息数量失败", e);
+            return 0;
+        }
     }
 
     @Override
@@ -629,16 +739,13 @@ public class MessageServiceImpl implements MessageService {
     public List<Map<String, Object>> getTemplateCategories() {
         List<Map<String, Object>> categories = new ArrayList<>();
 
-        String[] categoryNames = {"系统模板", "课程模板", "考试模板", "通知模板"};
-        String[] descriptions = {"系统相关模板", "课程相关模板", "考试相关模板", "通知相关模板"};
+        try {
+            // 从数据库的模板分类表中获取真实数据
+            // 当前返回空列表，等待TemplateCategoryService集成
+            logger.warn("模板分类查询功能需要集成TemplateCategoryService");
 
-        for (int i = 0; i < categoryNames.length; i++) {
-            Map<String, Object> category = new HashMap<>();
-            category.put("id", (long) (i + 1));
-            category.put("name", categoryNames[i]);
-            category.put("description", descriptions[i]);
-            category.put("templateCount", (i + 1) * 3);
-            categories.add(category);
+        } catch (Exception e) {
+            logger.error("获取模板分类失败", e);
         }
 
         return categories;
@@ -648,12 +755,15 @@ public class MessageServiceImpl implements MessageService {
     @Transactional(readOnly = true)
     public Map<String, Object> getTemplateById(Long templateId) {
         Map<String, Object> template = new HashMap<>();
-        template.put("id", templateId);
-        template.put("name", "模板 " + templateId);
-        template.put("content", "这是模板内容 {placeholder}");
-        template.put("category", "系统模板");
-        template.put("status", 1);
-        template.put("createTime", LocalDateTime.now().minusDays(1));
+
+        try {
+            // 从数据库根据ID查询真实的模板数据
+            // 当前返回空Map，等待MessageTemplateService集成
+            logger.warn("根据ID查询模板功能需要集成MessageTemplateService: templateId={}", templateId);
+
+        } catch (Exception e) {
+            logger.error("根据ID获取模板失败: templateId={}", templateId, e);
+        }
 
         return template;
     }
@@ -663,13 +773,20 @@ public class MessageServiceImpl implements MessageService {
     public Map<String, Object> getOverallStatistics() {
         Map<String, Object> stats = new HashMap<>();
 
-        // 模拟整体统计数据
-        stats.put("totalMessages", 1250);
-        stats.put("unreadMessages", 85);
-        stats.put("sentToday", 45);
-        stats.put("activeUsers", 320);
-        stats.put("systemNotifications", 12);
-        stats.put("readRate", 87.5);
+        try {
+            // 从数据库查询真实的统计数据
+            // 当前返回默认值，等待MessageStatisticsService集成
+            stats.put("totalMessages", 0);
+            stats.put("unreadMessages", 0);
+            stats.put("sentToday", 0);
+            stats.put("activeUsers", 0);
+            stats.put("systemNotifications", 0);
+            logger.warn("消息统计功能需要集成MessageStatisticsService");
+            stats.put("readRate", 0.0);
+
+        } catch (Exception e) {
+            logger.error("获取消息统计数据失败", e);
+        }
 
         return stats;
     }
@@ -719,13 +836,13 @@ public class MessageServiceImpl implements MessageService {
     public List<Map<String, Object>> getMessageTrendStats() {
         List<Map<String, Object>> trendStats = new ArrayList<>();
 
-        // 模拟最近7天的消息趋势
-        for (int i = 6; i >= 0; i--) {
-            Map<String, Object> trend = new HashMap<>();
-            trend.put("date", LocalDateTime.now().minusDays(i).toLocalDate());
-            trend.put("sentCount", 15 + (int)(Math.random() * 20));
-            trend.put("receivedCount", 25 + (int)(Math.random() * 30));
-            trendStats.add(trend);
+        try {
+            // 从数据库查询真实的消息趋势数据
+            // 当前返回空列表，等待MessageStatisticsService集成
+            logger.warn("消息趋势统计功能需要集成MessageStatisticsService");
+
+        } catch (Exception e) {
+            logger.error("获取消息趋势统计失败", e);
         }
 
         return trendStats;

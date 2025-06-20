@@ -99,6 +99,13 @@ public class ApiResponse<T> {
     }
 
     /**
+     * 失败响应（自定义码、消息和数据）
+     */
+    public static <T> ApiResponse<T> error(Integer code, String message, T data) {
+        return new ApiResponse<>(code, message, data);
+    }
+
+    /**
      * 参数错误响应
      */
     public static <T> ApiResponse<T> badRequest(String message) {

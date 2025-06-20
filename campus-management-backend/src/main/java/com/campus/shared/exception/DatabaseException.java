@@ -7,7 +7,9 @@ package com.campus.shared.exception;
  * @since 1.0.0
  */
 public class DatabaseException extends RuntimeException {
-    
+
+    private static final long serialVersionUID = 1L;
+
     private final int code;
     
     public DatabaseException(String message) {

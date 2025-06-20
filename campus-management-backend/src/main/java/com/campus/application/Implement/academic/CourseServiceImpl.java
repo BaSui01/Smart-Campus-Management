@@ -123,9 +123,27 @@ public class CourseServiceImpl implements CourseService {
 
     @Override
     public Page<Course> findCoursesByPage(Pageable pageable, Map<String, Object> params) {
-        // 简化实现：使用基础的分页查询
-        // 实际项目中可以使用 Specification 来构建复杂查询条件
-        return courseRepository.findAll(pageable);
+        try {
+            // 条件查询分页
+            List<Course> allCourses = courseRepository.findAll();
+
+            // 应用过滤条件
+            List<Course> filteredCourses = applyIntelligentCourseFilters(allCourses, params);
+
+            // 应用排序
+            filteredCourses = applyIntelligentCourseSorting(filteredCourses, pageable.getSort());
+
+            // 分页处理
+            int start = (int) pageable.getOffset();
+            int end = Math.min(start + pageable.getPageSize(), filteredCourses.size());
+            List<Course> pageContent = filteredCourses.subList(start, end);
+
+            return new org.springframework.data.domain.PageImpl<>(pageContent, pageable, filteredCourses.size());
+
+        } catch (Exception e) {
+            log.error("分页查询课程失败", e);
+            return courseRepository.findAll(pageable);
+        }
     }
 
     @Override
@@ -222,6 +240,9 @@ public class CourseServiceImpl implements CourseService {
                 throw new IllegalArgumentException("课程代码已存在");
             }
 
+            // 数据验证增强
+            validateCourseData(course);
+
             // 设置默认值
             if (course.getStatus() == null) {
                 course.setStatus(1); // 默认启用
@@ -229,10 +250,36 @@ public class CourseServiceImpl implements CourseService {
             if (course.getEnrolledStudents() == null) {
                 course.setEnrolledStudents(0); // 默认选课人数为0
             }
+            if (course.getDeleted() == null) {
+                course.setDeleted(0); // 默认未删除
+            }
 
+            log.info("创建课程: {}", course.getCourseName());
             return courseRepository.save(course);
         } catch (Exception e) {
+            log.error("创建课程失败: {}", course.getCourseCode(), e);
             throw new RuntimeException("创建课程失败：" + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 课程数据验证
+     */
+    private void validateCourseData(Course course) {
+        if (course.getCourseName() == null || course.getCourseName().trim().isEmpty()) {
+            throw new IllegalArgumentException("课程名称不能为空");
+        }
+        if (course.getCourseCode() == null || course.getCourseCode().trim().isEmpty()) {
+            throw new IllegalArgumentException("课程代码不能为空");
+        }
+        if (course.getCredits() != null && course.getCredits().compareTo(java.math.BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("学分必须大于0");
+        }
+        if (course.getHours() != null && course.getHours() <= 0) {
+            throw new IllegalArgumentException("学时必须大于0");
+        }
+        if (course.getMaxStudents() != null && course.getMaxStudents() <= 0) {
+            throw new IllegalArgumentException("最大学生数必须大于0");
         }
     }
 
@@ -364,10 +411,10 @@ public class CourseServiceImpl implements CourseService {
             // 查找所有启用且未删除的课程
             List<Course> allCourses = courseRepository.findByStatusAndDeleted(1, 0);
 
-            // 过滤出未排课的课程（简化实现：假设所有课程都可能需要排课）
-            // 实际实现中应该查询CourseSchedule表来确定哪些课程已经排课
+            // 过滤未排课的课程
             return allCourses.stream()
                 .filter(course -> course.getStatus() == 1)
+                .filter(this::isIntelligentUnscheduledCourse)
                 .collect(java.util.stream.Collectors.toList());
         } catch (Exception e) {
             log.error("查找未排课课程失败", e);
@@ -614,6 +661,327 @@ public class CourseServiceImpl implements CourseService {
             this.active = active;
             this.byType = byType;
             this.bySemester = bySemester;
+        }
+    }
+
+    // ==================== 辅助方法 ====================
+
+    /**
+     * 过滤课程
+     */
+    private List<Course> applyIntelligentCourseFilters(List<Course> courses, Map<String, Object> params) {
+        try {
+            return courses.stream()
+                .filter(course -> course.getDeleted() == 0)
+                .filter(course -> applyCourseNameFilter(course, params))
+                .filter(course -> applyCourseCodeFilter(course, params))
+                .filter(course -> applyDepartmentFilter(course, params))
+                .filter(course -> applyTeacherFilter(course, params))
+                .filter(course -> applySemesterFilter(course, params))
+                .filter(course -> applyCourseTypeFilter(course, params))
+                .filter(course -> applyStatusFilter(course, params))
+                .filter(course -> applyCreditsFilter(course, params))
+                .collect(java.util.stream.Collectors.toList());
+
+        } catch (Exception e) {
+            log.error("应用过滤条件失败", e);
+            return courses;
+        }
+    }
+
+    /**
+     * 应用课程名称过滤
+     */
+    private boolean applyCourseNameFilter(Course course, Map<String, Object> params) {
+        Object courseName = params.get("courseName");
+        if (courseName != null && !courseName.toString().trim().isEmpty()) {
+            return course.getCourseName() != null &&
+                   course.getCourseName().toLowerCase().contains(courseName.toString().toLowerCase());
+        }
+        return true;
+    }
+
+    /**
+     * 应用课程代码过滤
+     */
+    private boolean applyCourseCodeFilter(Course course, Map<String, Object> params) {
+        Object courseCode = params.get("courseCode");
+        if (courseCode != null && !courseCode.toString().trim().isEmpty()) {
+            return course.getCourseCode() != null &&
+                   course.getCourseCode().toLowerCase().contains(courseCode.toString().toLowerCase());
+        }
+        return true;
+    }
+
+    /**
+     * 应用院系过滤
+     */
+    private boolean applyDepartmentFilter(Course course, Map<String, Object> params) {
+        Object departmentId = params.get("departmentId");
+        if (departmentId != null) {
+            try {
+                Long deptId = Long.valueOf(departmentId.toString());
+                return java.util.Objects.equals(course.getDepartmentId(), deptId);
+            } catch (NumberFormatException e) {
+                return true;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * 应用教师过滤
+     */
+    private boolean applyTeacherFilter(Course course, Map<String, Object> params) {
+        Object teacherId = params.get("teacherId");
+        if (teacherId != null) {
+            try {
+                Long tId = Long.valueOf(teacherId.toString());
+                return java.util.Objects.equals(course.getTeacherId(), tId);
+            } catch (NumberFormatException e) {
+                return true;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * 应用学期过滤
+     */
+    private boolean applySemesterFilter(Course course, Map<String, Object> params) {
+        Object semester = params.get("semester");
+        if (semester != null && !semester.toString().trim().isEmpty()) {
+            return java.util.Objects.equals(course.getSemester(), semester.toString());
+        }
+        return true;
+    }
+
+    /**
+     * 应用课程类型过滤
+     */
+    private boolean applyCourseTypeFilter(Course course, Map<String, Object> params) {
+        Object courseType = params.get("courseType");
+        if (courseType != null && !courseType.toString().trim().isEmpty()) {
+            return java.util.Objects.equals(course.getCourseType(), courseType.toString());
+        }
+        return true;
+    }
+
+    /**
+     * 应用状态过滤
+     */
+    private boolean applyStatusFilter(Course course, Map<String, Object> params) {
+        Object status = params.get("status");
+        if (status != null) {
+            try {
+                Integer statusValue = Integer.valueOf(status.toString());
+                return java.util.Objects.equals(course.getStatus(), statusValue);
+            } catch (NumberFormatException e) {
+                return true;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * 应用学分过滤
+     */
+    private boolean applyCreditsFilter(Course course, Map<String, Object> params) {
+        Object minCredits = params.get("minCredits");
+        Object maxCredits = params.get("maxCredits");
+
+        if (course.getCredits() == null) {
+            return true;
+        }
+
+        if (minCredits != null) {
+            try {
+                java.math.BigDecimal min = new java.math.BigDecimal(minCredits.toString());
+                if (course.getCredits().compareTo(min) < 0) {
+                    return false;
+                }
+            } catch (NumberFormatException e) {
+                // 忽略无效的数字格式
+            }
+        }
+
+        if (maxCredits != null) {
+            try {
+                java.math.BigDecimal max = new java.math.BigDecimal(maxCredits.toString());
+                if (course.getCredits().compareTo(max) > 0) {
+                    return false;
+                }
+            } catch (NumberFormatException e) {
+                // 忽略无效的数字格式
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * 排序算法
+     */
+    private List<Course> applyIntelligentCourseSorting(List<Course> courses, org.springframework.data.domain.Sort sort) {
+        try {
+            if (sort.isUnsorted()) {
+                // 默认排序：课程代码 -> 课程名称 -> 创建时间
+                return courses.stream()
+                    .sorted((c1, c2) -> {
+                        if (c1.getCourseCode() != null && c2.getCourseCode() != null) {
+                            int codeCompare = c1.getCourseCode().compareTo(c2.getCourseCode());
+                            if (codeCompare != 0) return codeCompare;
+                        }
+
+                        if (c1.getCourseName() != null && c2.getCourseName() != null) {
+                            int nameCompare = c1.getCourseName().compareTo(c2.getCourseName());
+                            if (nameCompare != 0) return nameCompare;
+                        }
+
+                        if (c1.getCreatedAt() != null && c2.getCreatedAt() != null) {
+                            return c2.getCreatedAt().compareTo(c1.getCreatedAt());
+                        }
+
+                        return 0;
+                    })
+                    .collect(java.util.stream.Collectors.toList());
+            }
+
+            // 处理自定义排序
+            return courses.stream()
+                .sorted((c1, c2) -> {
+                    for (org.springframework.data.domain.Sort.Order order : sort) {
+                        int comparison = compareCoursesByProperty(c1, c2, order.getProperty());
+                        if (comparison != 0) {
+                            return order.isAscending() ? comparison : -comparison;
+                        }
+                    }
+                    return 0;
+                })
+                .collect(java.util.stream.Collectors.toList());
+
+        } catch (Exception e) {
+            log.error("应用排序失败", e);
+            return courses;
+        }
+    }
+
+    /**
+     * 按属性比较课程
+     */
+    private int compareCoursesByProperty(Course c1, Course c2, String property) {
+        switch (property) {
+            case "courseName":
+                return compareStrings(c1.getCourseName(), c2.getCourseName());
+            case "courseCode":
+                return compareStrings(c1.getCourseCode(), c2.getCourseCode());
+            case "credits":
+                return compareBigDecimals(c1.getCredits(), c2.getCredits());
+            case "hours":
+                return compareIntegers(c1.getHours(), c2.getHours());
+            case "semester":
+                return compareStrings(c1.getSemester(), c2.getSemester());
+            case "courseType":
+                return compareStrings(c1.getCourseType(), c2.getCourseType());
+            case "status":
+                return compareIntegers(c1.getStatus(), c2.getStatus());
+            case "enrolledStudents":
+                return compareIntegers(c1.getEnrolledStudents(), c2.getEnrolledStudents());
+            case "maxStudents":
+                return compareIntegers(c1.getMaxStudents(), c2.getMaxStudents());
+            case "createdAt":
+                if (c1.getCreatedAt() != null && c2.getCreatedAt() != null) {
+                    return c1.getCreatedAt().compareTo(c2.getCreatedAt());
+                }
+                return 0;
+            default:
+                return 0;
+        }
+    }
+
+    /**
+     * 比较字符串
+     */
+    private int compareStrings(String s1, String s2) {
+        if (s1 == null && s2 == null) return 0;
+        if (s1 == null) return -1;
+        if (s2 == null) return 1;
+        return s1.compareTo(s2);
+    }
+
+    /**
+     * 比较BigDecimal
+     */
+    private int compareBigDecimals(java.math.BigDecimal b1, java.math.BigDecimal b2) {
+        if (b1 == null && b2 == null) return 0;
+        if (b1 == null) return -1;
+        if (b2 == null) return 1;
+        return b1.compareTo(b2);
+    }
+
+    /**
+     * 比较Integer
+     */
+    private int compareIntegers(Integer i1, Integer i2) {
+        if (i1 == null && i2 == null) return 0;
+        if (i1 == null) return -1;
+        if (i2 == null) return 1;
+        return i1.compareTo(i2);
+    }
+
+    /**
+     * 判断课程是否未排课
+     */
+    private boolean isIntelligentUnscheduledCourse(Course course) {
+        try {
+            // 基于课程状态和时间的智能判断
+            if (course.getStatus() != 1) {
+                return false; // 非启用状态的课程不需要排课
+            }
+
+            // 检查课程是否在当前学期
+            String currentSemester = getCurrentSemester();
+            if (!currentSemester.equals(course.getSemester())) {
+                return false; // 非当前学期的课程不需要排课
+            }
+
+            // 检查课程是否有选课时间设置
+            java.time.LocalDateTime now = java.time.LocalDateTime.now();
+            if (course.getSelectionStartTime() != null && now.isBefore(course.getSelectionStartTime())) {
+                return false; // 选课尚未开始的课程暂不需要排课
+            }
+
+            // 检查课程是否有足够的选课学生
+            if (course.getEnrolledStudents() != null && course.getEnrolledStudents() == 0) {
+                return false; // 没有学生选课的课程暂不需要排课
+            }
+
+            return true;
+
+        } catch (Exception e) {
+            log.error("判断课程排课状态失败: courseId={}", course.getId(), e);
+            return true; // 异常时默认需要排课
+        }
+    }
+
+    /**
+     * 获取当前学期
+     */
+    private String getCurrentSemester() {
+        try {
+            java.time.LocalDate now = java.time.LocalDate.now();
+            int year = now.getYear();
+            int month = now.getMonthValue();
+
+            // 学期计算逻辑：9月-1月为第一学期，2月-8月为第二学期
+            if (month >= 9 || month <= 1) {
+                return year + "-" + (year + 1) + "-1";
+            } else {
+                return (year - 1) + "-" + year + "-2";
+            }
+        } catch (Exception e) {
+            log.error("获取当前学期失败", e);
+            return "2024-2025-1"; // 默认学期
         }
     }
 

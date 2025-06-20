@@ -3,10 +3,10 @@ package com.campus.shared.util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -21,6 +21,7 @@ import java.util.concurrent.TimeUnit;
  * @since 2025-06-13
  */
 @Component
+@ConditionalOnProperty(name = "spring.cache.type", havingValue = "redis")
 public class RedisUtil {
 
     private static final Logger logger = LoggerFactory.getLogger(RedisUtil.class);
@@ -74,13 +75,12 @@ public class RedisUtil {
      * 删除缓存
      * @param key 可以传一个值 或多个
      */
-    @SuppressWarnings("unchecked")
     public void del(String... key) {
         if (key != null && key.length > 0) {
             if (key.length == 1) {
                 redisTemplate.delete(key[0]);
             } else {
-                redisTemplate.delete((Collection<String>) List.of(key));
+                redisTemplate.delete(List.of(key));
             }
         }
     }
@@ -142,7 +142,8 @@ public class RedisUtil {
         if (delta < 0) {
             throw new RuntimeException("递增因子必须大于0");
         }
-        return redisTemplate.opsForValue().increment(key, delta);
+        Long result = redisTemplate.opsForValue().increment(key, delta);
+        return result != null ? result : 0L;
     }
 
     /**
@@ -154,7 +155,8 @@ public class RedisUtil {
         if (delta < 0) {
             throw new RuntimeException("递减因子必须大于0");
         }
-        return redisTemplate.opsForValue().increment(key, -delta);
+        Long result = redisTemplate.opsForValue().increment(key, -delta);
+        return result != null ? result : 0L;
     }
 
     // ================================Map=================================
@@ -307,7 +309,8 @@ public class RedisUtil {
      */
     public long sSet(String key, Object... values) {
         try {
-            return redisTemplate.opsForSet().add(key, values);
+            Long result = redisTemplate.opsForSet().add(key, values);
+            return result != null ? result : 0L;
         } catch (Exception e) {
             logger.error("将数据放入set缓存失败", e);
             return 0;
@@ -327,7 +330,7 @@ public class RedisUtil {
             if (time > 0) {
                 expire(key, time);
             }
-            return count;
+            return count != null ? count : 0L;
         } catch (Exception e) {
             logger.error("将set数据放入缓存失败", e);
             return 0;
@@ -340,7 +343,8 @@ public class RedisUtil {
      */
     public long sGetSetSize(String key) {
         try {
-            return redisTemplate.opsForSet().size(key);
+            Long result = redisTemplate.opsForSet().size(key);
+            return result != null ? result : 0L;
         } catch (Exception e) {
             logger.error("获取set缓存的长度失败", e);
             return 0;
@@ -356,7 +360,7 @@ public class RedisUtil {
     public long setRemove(String key, Object... values) {
         try {
             Long count = redisTemplate.opsForSet().remove(key, values);
-            return count;
+            return count != null ? count : 0L;
         } catch (Exception e) {
             logger.error("移除set中的值失败", e);
             return 0;
@@ -386,7 +390,8 @@ public class RedisUtil {
      */
     public long lGetListSize(String key) {
         try {
-            return redisTemplate.opsForList().size(key);
+            Long result = redisTemplate.opsForList().size(key);
+            return result != null ? result : 0L;
         } catch (Exception e) {
             logger.error("获取list缓存的长度失败", e);
             return 0;
@@ -501,7 +506,7 @@ public class RedisUtil {
     public long lRemove(String key, long count, Object value) {
         try {
             Long remove = redisTemplate.opsForList().remove(key, count, value);
-            return remove;
+            return remove != null ? remove : 0L;
         } catch (Exception e) {
             logger.error("移除list中的值失败", e);
             return 0;

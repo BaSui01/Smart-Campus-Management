@@ -118,12 +118,14 @@ public class OptimizedUserApiController extends BaseController {
             loginStats.put("averageLoginTime", "09:30");
             stats.put("loginStats", loginStats);
 
-            // 用户活跃度统计
+            // 用户活跃度统计从真实的活动日志数据计算
+            // 当前返回0值，等待活动日志服务集成
             Map<String, Long> activityStats = new HashMap<>();
-            activityStats.put("highlyActive", 200L);    // 高活跃度
-            activityStats.put("moderatelyActive", 400L); // 中等活跃度
-            activityStats.put("lowActive", 300L);        // 低活跃度
-            activityStats.put("inactive", 165L);         // 不活跃
+            activityStats.put("highlyActive", 0L);    // 高活跃度 - 需要从数据库计算
+            activityStats.put("moderatelyActive", 0L); // 中等活跃度 - 需要从数据库计算
+            activityStats.put("lowActive", 0L);        // 低活跃度 - 需要从数据库计算
+            log.warn("用户活跃度统计功能需要集成活动日志服务");
+            activityStats.put("inactive", totalUsers);         // 暂时将所有用户标记为不活跃
             stats.put("activityStats", activityStats);
 
             // 最近活动（简化实现）
@@ -408,10 +410,7 @@ public class OptimizedUserApiController extends BaseController {
             logOperation("批量删除用户", ids.size());
 
             // 验证参数
-            if (ids == null) {
-                return badRequest("用户ID列表不能为空");
-            }
-            if (ids.isEmpty()) {
+            if (ids == null || ids.isEmpty()) {
                 return badRequest("用户ID列表不能为空");
             }
 

@@ -2,7 +2,7 @@ package com.campus.infrastructure;
 
 import com.campus.application.service.academic.GradeService;
 import com.campus.application.service.communication.EmailService;
-import com.campus.shared.util.RedisDistributedLock;
+import com.campus.shared.util.DistributedLock;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -35,7 +35,7 @@ public class GradeStatisticsJob implements Job {
     private EmailService emailService;
 
     @Autowired
-    private RedisDistributedLock distributedLock;
+    private DistributedLock distributedLock;
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {

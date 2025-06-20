@@ -10,8 +10,10 @@ package com.campus.shared.exception;
  */
 public class ResourceNotFoundException extends RuntimeException {
 
+    private static final long serialVersionUID = 1L;
+
     private String resourceType;
-    private Object resourceId;
+    private transient Object resourceId; // 标记为 transient，避免序列化问题
 
     public ResourceNotFoundException(String message) {
         super(message);

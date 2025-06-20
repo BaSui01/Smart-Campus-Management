@@ -5,6 +5,8 @@ import com.campus.domain.entity.infrastructure.BaseEntity;
 import com.campus.domain.entity.academic.CourseSelection;
 import com.campus.domain.entity.academic.Grade;
 import com.campus.domain.entity.finance.PaymentRecord;
+import com.campus.shared.security.EncryptionConfig.EncryptedField;
+import com.campus.shared.security.EncryptionConfig.EncryptionEntityListener;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
@@ -35,6 +37,7 @@ import java.util.List;
     @Index(name = "idx_enrollment_year", columnList = "enrollment_year"),
     @Index(name = "idx_status_deleted", columnList = "status,deleted")
 })
+@EntityListeners(EncryptionEntityListener.class)
 public class Student extends BaseEntity {
 
     /**
@@ -159,7 +162,8 @@ public class Student extends BaseEntity {
      * 家长/监护人电话
      */
     @Pattern(regexp = "^1[3-9]\\d{9}$", message = "家长电话格式不正确")
-    @Column(name = "parent_phone", length = 11)
+    @EncryptedField
+    @Column(name = "parent_phone", length = 255)  // 增加长度以容纳加密数据
     private String parentPhone;
 
     /**
@@ -173,7 +177,8 @@ public class Student extends BaseEntity {
      * 紧急联系人电话
      */
     @Pattern(regexp = "^1[3-9]\\d{9}$", message = "紧急联系人电话格式不正确")
-    @Column(name = "emergency_phone", length = 11)
+    @EncryptedField
+    @Column(name = "emergency_phone", length = 255)  // 增加长度以容纳加密数据
     private String emergencyPhone;
 
     /**

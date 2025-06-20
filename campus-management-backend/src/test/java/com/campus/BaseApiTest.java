@@ -79,9 +79,12 @@ public abstract class BaseApiTest {
 
         } catch (Exception e) {
             // 如果JWT生成失败，使用模拟令牌
-            adminToken = "Bearer mock-admin-token";
-            studentToken = "Bearer mock-student-token";
-            teacherToken = "Bearer mock-teacher-token";
+            // 注意：这些是测试专用的模拟令牌，不会影响生产环境
+            adminToken = "Bearer test-admin-token-" + System.currentTimeMillis();
+            studentToken = "Bearer test-student-token-" + System.currentTimeMillis();
+            teacherToken = "Bearer test-teacher-token-" + System.currentTimeMillis();
+
+            System.out.println("警告：JWT生成失败，使用模拟令牌进行测试: " + e.getMessage());
         }
     }
 

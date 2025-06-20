@@ -389,9 +389,10 @@ public class SchoolClassServiceImpl implements SchoolClassService {
     @Transactional(readOnly = true)
     public long countCoursesByClass(Long classId) {
         try {
-            // 模拟统计班级课程数量
-            // 在实际项目中，需要根据课程选择表或课程安排表来统计
-            return 8; // 模拟数据
+            // 根据课程选择表或课程安排表来统计真实的班级课程数量
+            // 当前返回0，等待课程安排系统集成
+            System.out.println("⚠️ 班级课程数量统计功能需要集成课程安排系统: classId=" + classId);
+            return 0;
         } catch (Exception e) {
             System.err.println("统计班级课程数量失败: " + e.getMessage());
             return 0;
@@ -440,13 +441,16 @@ public class SchoolClassServiceImpl implements SchoolClassService {
         try {
             Map<String, Long> departmentStats = new HashMap<>();
 
-            // 模拟按部门统计班级数量
-            departmentStats.put("计算机学院", 15L);
-            departmentStats.put("数学学院", 12L);
-            departmentStats.put("物理学院", 10L);
-            departmentStats.put("化学学院", 8L);
-            departmentStats.put("生物学院", 6L);
-            departmentStats.put("外语学院", 9L);
+            // 使用真实的数据库查询按部门统计班级数量
+            // 当前返回空统计，等待部门服务集成
+            System.out.println("⚠️ 按部门统计班级数量功能需要集成部门服务");
+
+            // 当前返回空Map，等待真实的部门统计实现
+            // 需要在SchoolClassRepository中添加countClassesByDepartment方法
+            // 或者通过其他方式实现部门班级统计
+
+            // 临时实现：返回空统计，避免硬编码数据
+            System.out.println("警告：按部门统计班级数量功能需要实现真实的数据库查询");
 
             return departmentStats;
         } catch (Exception e) {

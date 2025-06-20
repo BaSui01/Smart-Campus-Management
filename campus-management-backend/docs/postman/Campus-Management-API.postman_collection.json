@@ -1,0 +1,530 @@
+{
+  "info": {
+    "name": "智慧校园管理系统 API",
+    "description": "智慧校园管理系统的完整API集合，包含认证、用户管理、学生管理、课程管理等功能模块",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8889/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "认证管理",
+      "item": [
+        {
+          "name": "用户登录",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "用户登录接口，返回JWT Token"
+          },
+          "response": []
+        },
+        {
+          "name": "用户注册",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"student001\",\n  \"password\": \"123456\",\n  \"realName\": \"张三\",\n  \"email\": \"zhangsan@student.edu\",\n  \"phone\": \"13800138000\",\n  \"userType\": \"STUDENT\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "用户注册接口"
+          },
+          "response": []
+        },
+        {
+          "name": "刷新Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "refresh"]
+            },
+            "description": "刷新JWT Token"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "用户管理",
+      "item": [
+        {
+          "name": "获取用户列表",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users?page=0&size=10&sort=id,desc",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                },
+                {
+                  "key": "sort",
+                  "value": "id,desc"
+                }
+              ]
+            },
+            "description": "分页获取用户列表"
+          },
+          "response": []
+        },
+        {
+          "name": "创建用户",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"teacher001\",\n  \"password\": \"123456\",\n  \"realName\": \"李老师\",\n  \"email\": \"liteacher@campus.edu\",\n  \"phone\": \"13800138002\",\n  \"userType\": \"TEACHER\",\n  \"departmentId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"]
+            },
+            "description": "创建新用户"
+          },
+          "response": []
+        },
+        {
+          "name": "获取用户详情",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "1"]
+            },
+            "description": "根据ID获取用户详情"
+          },
+          "response": []
+        },
+        {
+          "name": "更新用户",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"realName\": \"李教授\",\n  \"email\": \"professor.li@campus.edu\",\n  \"phone\": \"13800138003\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/2",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "2"]
+            },
+            "description": "更新用户信息"
+          },
+          "response": []
+        },
+        {
+          "name": "删除用户",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/2",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "2"]
+            },
+            "description": "删除用户"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "学生管理",
+      "item": [
+        {
+          "name": "获取学生列表",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/students?page=0&size=20&classId=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["students"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "20"
+                },
+                {
+                  "key": "classId",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "分页获取学生列表"
+          },
+          "response": []
+        },
+        {
+          "name": "创建学生",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studentNumber\": \"2025001\",\n  \"realName\": \"王小明\",\n  \"gender\": \"MALE\",\n  \"birthDate\": \"2005-03-15\",\n  \"email\": \"wangxiaoming@student.edu\",\n  \"phone\": \"13800138004\",\n  \"classId\": 1,\n  \"majorId\": 1,\n  \"enrollmentYear\": 2025\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/students",
+              "host": ["{{baseUrl}}"],
+              "path": ["students"]
+            },
+            "description": "创建新学生"
+          },
+          "response": []
+        },
+        {
+          "name": "获取学生详情",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/students/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["students", "1"]
+            },
+            "description": "根据ID获取学生详情"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "课程管理",
+      "item": [
+        {
+          "name": "获取课程列表",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/courses?page=0&size=10&semester=2025-1",
+              "host": ["{{baseUrl}}"],
+              "path": ["courses"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                },
+                {
+                  "key": "semester",
+                  "value": "2025-1"
+                }
+              ]
+            },
+            "description": "分页获取课程列表"
+          },
+          "response": []
+        },
+        {
+          "name": "创建课程",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"courseName\": \"数据结构与算法\",\n  \"courseCode\": \"CS101\",\n  \"credits\": 4,\n  \"courseType\": \"REQUIRED\",\n  \"description\": \"计算机科学基础课程\",\n  \"teacherId\": 1,\n  \"semester\": \"2025-1\",\n  \"maxStudents\": 60\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/courses",
+              "host": ["{{baseUrl}}"],
+              "path": ["courses"]
+            },
+            "description": "创建新课程"
+          },
+          "response": []
+        },
+        {
+          "name": "学生选课",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studentId\": 1,\n  \"courseId\": 1,\n  \"semester\": \"2025-1\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/course-selections",
+              "host": ["{{baseUrl}}"],
+              "path": ["course-selections"]
+            },
+            "description": "学生选课"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "成绩管理",
+      "item": [
+        {
+          "name": "录入成绩",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studentId\": 1,\n  \"courseId\": 1,\n  \"examType\": \"FINAL\",\n  \"score\": 85.5,\n  \"semester\": \"2025-1\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/grades",
+              "host": ["{{baseUrl}}"],
+              "path": ["grades"]
+            },
+            "description": "录入学生成绩"
+          },
+          "response": []
+        },
+        {
+          "name": "查询学生成绩",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/grades/student/1?semester=2025-1",
+              "host": ["{{baseUrl}}"],
+              "path": ["grades", "student", "1"],
+              "query": [
+                {
+                  "key": "semester",
+                  "value": "2025-1"
+                }
+              ]
+            },
+            "description": "查询指定学生的成绩"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "监控检查",
+      "item": [
+        {
+          "name": "健康检查",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/../../actuator/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["..", "..", "actuator", "health"]
+            },
+            "description": "应用健康检查"
+          },
+          "response": []
+        },
+        {
+          "name": "应用信息",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/../../actuator/info",
+              "host": ["{{baseUrl}}"],
+              "path": ["..", "..", "actuator", "info"]
+            },
+            "description": "获取应用信息"
+          },
+          "response": []
+        },
+        {
+          "name": "监控指标",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/../../actuator/metrics",
+              "host": ["{{baseUrl}}"],
+              "path": ["..", "..", "actuator", "metrics"]
+            },
+            "description": "获取监控指标列表"
+          },
+          "response": []
+        },
+        {
+          "name": "Prometheus指标",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/../../actuator/prometheus",
+              "host": ["{{baseUrl}}"],
+              "path": ["..", "..", "actuator", "prometheus"]
+            },
+            "description": "获取Prometheus格式的监控指标"
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// 自动设置Token",
+          "if (pm.request.url.path.includes('login')) {",
+          "    // 登录请求不需要Token",
+          "} else {",
+          "    // 其他请求需要Token",
+          "    const token = pm.environment.get('token') || pm.collectionVariables.get('token');",
+          "    if (token) {",
+          "        pm.request.headers.add({",
+          "            key: 'Authorization',",
+          "            value: 'Bearer ' + token",
+          "        });",
+          "    }",
+          "}"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// 自动保存登录Token",
+          "if (pm.request.url.path.includes('login') && pm.response.code === 200) {",
+          "    const responseJson = pm.response.json();",
+          "    if (responseJson.data && responseJson.data.token) {",
+          "        pm.environment.set('token', responseJson.data.token);",
+          "        pm.collectionVariables.set('token', responseJson.data.token);",
+          "        console.log('Token已保存:', responseJson.data.token);",
+          "    }",
+          "    if (responseJson.data && responseJson.data.refreshToken) {",
+          "        pm.environment.set('refreshToken', responseJson.data.refreshToken);",
+          "        pm.collectionVariables.set('refreshToken', responseJson.data.refreshToken);",
+          "    }",
+          "}",
+          "",
+          "// 通用响应检查",
+          "pm.test('响应状态码正常', function () {",
+          "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+          "});",
+          "",
+          "pm.test('响应时间小于2秒', function () {",
+          "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+          "});",
+          "",
+          "if (pm.response.headers.get('Content-Type') && pm.response.headers.get('Content-Type').includes('application/json')) {",
+          "    pm.test('响应格式为JSON', function () {",
+          "        pm.response.to.be.json;",
+          "    });",
+          "}"
+        ]
+      }
+    }
+  ]
+}

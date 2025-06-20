@@ -1,401 +1,365 @@
-# 智慧校园管理系统 - 后端服务
+# 🎓 智慧校园管理系统后端
 
-> 🚀 基于Spring Boot 3.x + JPA + MySQL + Redis构建的现代化校园管理系统
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.x-brightgreen.svg)](https://spring.io/projects/spring-boot)
+[![Java](https://img.shields.io/badge/Java-21-orange.svg)](https://openjdk.java.net/)
+[![MySQL](https://img.shields.io/badge/MySQL-8.0-blue.svg)](https://www.mysql.com/)
+[![Redis](https://img.shields.io/badge/Redis-6.0-red.svg)](https://redis.io/)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-## 📋 项目概述
+基于Spring Boot 3.2的现代化校园管理系统后端服务，提供完整的校园信息化管理解决方案。
 
-智慧校园管理系统是一个功能完善的校园信息化管理平台，支持学生管理、教师管理、课程管理、选课管理、成绩管理、缴费管理等核心业务功能。
+## ✨ 功能特性
 
-### ✨ 主要特性
+### 🔐 认证授权
+- JWT Token认证
+- 基于角色的权限控制(RBAC)
+- 多端登录支持
+- 密码安全策略
 
-- 🏗️ **现代化架构**: 基于Spring Boot 3.x + JPA + MySQL + Redis
-- 🔐 **安全认证**: JWT + Spring Security多层安全防护
-- 📊 **数据缓存**: Redis缓存提升系统性能
-- 🎯 **RESTful API**: 标准化API设计，支持前后端分离
-- 📝 **接口文档**: 集成Swagger/OpenAPI自动生成文档
-- 🔍 **数据验证**: 完善的参数校验和异常处理
-- 📦 **容器化**: Docker支持，一键部署
-- 🎨 **响应式**: 支持移动端和桌面端访问
+### 👥 用户管理
+- 学生信息管理
+- 教师信息管理
+- 管理员权限管理
+- 用户状态控制
+
+### 📚 教务管理
+- 课程信息管理
+- 课程表安排
+- 选课系统
+- 自动排课算法
+
+### 📝 考试管理
+- 考试安排
+- 成绩录入
+- 成绩查询
+- 统计分析
+
+### 💰 缴费管理
+- 学费管理
+- 缴费记录
+- 财务统计
+- 欠费提醒
+
+### 📢 通知公告
+- 系统通知
+- 消息推送
+- 公告管理
+- 邮件提醒
+
+### 📊 数据统计
+- 学生统计
+- 课程统计
+- 成绩分析
+- 财务报表
+
+### 🔧 系统管理
+- 系统配置
+- 日志管理
+- 数据备份
+- 监控告警
 
 ## 🛠️ 技术栈
 
-### 后端核心技术
-- **框架**: Spring Boot 3.2.0
-- **数据访问**: Spring Data JPA + Hibernate
-- **数据库**: MySQL 8.0+
-- **缓存**: Redis 7.0+
-- **安全**: Spring Security + JWT
-- **文档**: SpringDoc OpenAPI 3
-- **工具**: Lombok + Hutool
+### 后端技术
+- **框架**: Spring Boot 3.2.x
+- **安全**: Spring Security 6.x + JWT
+- **数据库**: MySQL 8.0 + MyBatis Plus
+- **缓存**: Redis 6.0 + Spring Cache
+- **文档**: SpringDoc OpenAPI 3 (Swagger)
+- **监控**: Micrometer + Prometheus
 - **构建**: Maven 3.8+
+- **Java**: JDK 21
 
-### 开发环境要求
-- **JDK**: 17+
-- **Maven**: 3.8+
-- **MySQL**: 8.0+
-- **Redis**: 7.0+
-- **IDE**: IntelliJ IDEA / Eclipse
+### 开发工具
+- **IDE**: IntelliJ IDEA 2023+
+- **版本控制**: Git
+- **API测试**: Postman
+- **数据库工具**: MySQL Workbench
+- **Redis工具**: RedisInsight
 
 ## 🚀 快速开始
 
-### 1. 克隆项目
+### 环境要求
+
+| 组件 | 版本要求 | 说明 |
+|------|----------|------|
+| Java | JDK 21+ | 推荐使用 OpenJDK 21 |
+| Maven | 3.8+ | 构建工具 |
+| MySQL | 8.0+ | 主数据库 |
+| Redis | 6.0+ | 缓存和会话存储 |
+
+### 安装步骤
+
+1. **克隆项目**
 ```bash
-git clone https://github.com/your-org/campus-management-backend.git
-cd campus-management-backend
+git clone https://github.com/your-org/campus-management.git
+cd campus-management/campus-management-backend
 ```
 
-### 2. 配置数据库
-创建MySQL数据库：
+2. **配置数据库**
 ```sql
+-- 创建数据库
 CREATE DATABASE campus_management_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- 创建用户（可选）
+CREATE USER 'campus_user'@'localhost' IDENTIFIED BY 'your_password';
+GRANT ALL PRIVILEGES ON campus_management_db.* TO 'campus_user'@'localhost';
+FLUSH PRIVILEGES;
 ```
 
-执行数据库脚本：
+3. **导入数据**
 ```bash
-# 1. 创建表结构
-mysql -u root -p campus_management_db < database/01_create_tables_updated.sql
+# 导入数据库结构
+mysql -u root -p campus_management_db < src/main/resources/db/migration/01_create_tables.sql
 
-# 2. 插入初始数据
-mysql -u root -p campus_management_db < database/02_insert_initial_data.sql
+# 导入基础数据
+mysql -u root -p campus_management_db < src/main/resources/db/migration/02_insert_basic_data.sql
+
+# 导入测试数据（可选）
+mysql -u root -p campus_management_db < src/main/resources/db/migration/03_insert_large_data.sql
 ```
 
-### 3. 配置应用
-修改 `src/main/resources/application.yml` 中的数据库和Redis配置：
-
+4. **修改配置文件**
 ```yaml
+# src/main/resources/application.yml
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/campus_management_db?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8&allowPublicKeyRetrieval=true
-    username: root
+    url: jdbc:mysql://localhost:3306/campus_management_db?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
+    username: root  # 或 campus_user
     password: your_password
   
   data:
     redis:
       host: localhost
       port: 6379
-      password: your_redis_password
+      password: # 如果Redis设置了密码
 ```
 
-### 4. 启动应用
+5. **启动项目**
 ```bash
 # 使用Maven启动
 mvn spring-boot:run
 
-# 或者打包后启动
+# 或者编译后启动
 mvn clean package
 java -jar target/campus-management-backend-1.0.0.jar
 ```
 
-### 5. 访问应用
-- **应用首页**: http://localhost:8080
-- **API文档**: http://localhost:8080/api/v1/swagger-ui.html
-- **管理后台**: http://localhost:8080/admin
+6. **验证启动**
+- 应用地址: http://localhost:8889
+- API文档: http://localhost:8889/swagger-ui/index.html
+- 健康检查: http://localhost:8889/actuator/health
 
-### 6. 默认账户
-| 角色 | 用户名 | 密码 | 说明 |
-|------|--------|------|------|
-| 管理员 | admin | admin123 | 系统管理员，拥有所有权限 |
-| 教师 | teacher001 | teacher123 | 教师账户，可管理课程和成绩 |
-| 学生 | student001 | student123 | 学生账户，可选课和查看成绩 |
-| 教务员 | academic001 | staff123 | 教务管理员 |
-| 财务员 | finance001 | finance123 | 财务管理员 |
+## 📖 文档
 
-## 📁 项目结构
+### 📚 完整文档
+- [📋 API使用示例](docs/API_USAGE_EXAMPLES.md) - 详细的API调用示例
+- [🚀 部署指南](docs/DEPLOYMENT_GUIDE.md) - 生产环境部署指南
+- [👨‍💻 开发者指南](docs/DEVELOPER_GUIDE.md) - 开发规范和最佳实践
+
+### 🔗 在线文档
+- **Swagger API文档**: http://localhost:8889/swagger-ui/index.html
+- **应用监控**: http://localhost:8889/actuator
+- **健康检查**: http://localhost:8889/actuator/health
+
+## 🏗️ 项目结构
 
 ```
 campus-management-backend/
 ├── src/main/java/com/campus/
-│   ├── CampusManagementApplication.java     # 启动类
-│   ├── application/                         # 应用层
-│   │   ├── controller/                      # 控制器
-│   │   ├── service/                         # 服务接口
-│   │   └── service/impl/                    # 服务实现
-│   ├── domain/                              # 领域层
-│   │   ├── entity/                          # 实体类
-│   │   └── repository/                      # 数据访问接口
-│   ├── shared/                              # 共享层
-│   │   ├── config/                          # 配置类
-│   │   ├── exception/                       # 异常处理
-│   │   ├── security/                        # 安全配置
-│   │   └── util/                            # 工具类
-│   └── web/                                 # Web层
-│       ├── controller/                      # Web控制器
-│       └── dto/                             # 数据传输对象
+│   ├── interfaces/              # 🌐 接口层 (REST API)
+│   │   └── rest/v1/            # REST API v1版本
+│   │       ├── auth/           # 认证相关API
+│   │       ├── user/           # 用户管理API
+│   │       ├── student/        # 学生管理API
+│   │       ├── course/         # 课程管理API
+│   │       └── ...
+│   ├── application/            # 🔧 应用层 (业务逻辑)
+│   │   ├── service/           # 业务服务接口
+│   │   └── Implement/         # 业务服务实现
+│   ├── domain/                # 🏛️ 领域层 (核心业务)
+│   │   ├── entity/           # 实体类
+│   │   ├── repository/       # 仓储接口
+│   │   └── dto/              # 数据传输对象
+│   ├── infrastructure/        # 🔨 基础设施层
+│   │   ├── config/           # 配置类
+│   │   ├── interceptor/      # 拦截器
+│   │   └── repository/       # 仓储实现
+│   └── shared/               # 🔄 共享组件
+│       ├── security/         # 安全组件
+│       ├── util/             # 工具类
+│       └── exception/        # 异常处理
 ├── src/main/resources/
-│   ├── application.yml                      # 主配置文件
-│   ├── static/                              # 静态资源
-│   └── templates/                           # 模板文件
-├── database/                                # 数据库脚本
-│   ├── 01_create_tables_updated.sql         # 建表脚本
-│   └── 02_insert_initial_data.sql           # 初始数据
-├── docs/                                    # 文档目录
-├── docker/                                  # Docker配置
-├── pom.xml                                  # Maven配置
-└── README.md                                # 项目说明
+│   ├── db/migration/         # 📊 数据库迁移脚本
+│   ├── static/               # 📁 静态资源
+│   ├── application.yml       # ⚙️ 主配置文件
+│   └── logback-spring.xml    # 📝 日志配置
+├── docs/                     # 📖 项目文档
+├── scripts/                  # 🔧 脚本文件
+└── pom.xml                   # 📦 Maven配置
 ```
-
-## 📊 数据库设计
-
-### 核心实体关系
-```
-用户 (tb_user) 1:N 学生 (tb_student)
-用户 (tb_user) 1:N 教师课程 (tb_course)
-院系 (tb_department) 1:N 班级 (tb_class)
-班级 (tb_class) 1:N 学生 (tb_student)
-课程 (tb_course) 1:N 课程表 (tb_course_schedule)
-学生 (tb_student) N:M 课程 (tb_course) -> 选课表 (tb_course_selection)
-学生 (tb_student) 1:N 成绩 (tb_grade)
-学生 (tb_student) 1:N 缴费记录 (tb_payment_record)
-```
-
-### 主要数据表
-- **tb_user**: 用户基础信息表
-- **tb_department**: 院系信息表
-- **tb_class**: 班级信息表
-- **tb_student**: 学生信息表
-- **tb_course**: 课程信息表
-- **tb_course_schedule**: 课程安排表
-- **tb_course_selection**: 选课记录表
-- **tb_grade**: 成绩记录表
-- **tb_payment_record**: 缴费记录表
-- **tb_role**: 角色表
-- **tb_permission**: 权限表
 
 ## 🔌 API接口
 
 ### 认证相关
-```http
-POST /api/v1/auth/login          # 用户登录
-POST /api/v1/auth/logout         # 用户登出
-POST /api/v1/auth/refresh        # 刷新令牌
-GET  /api/v1/auth/profile        # 获取用户信息
-```
+- `POST /api/v1/auth/login` - 用户登录
+- `POST /api/v1/auth/register` - 用户注册
+- `POST /api/v1/auth/logout` - 用户登出
+- `POST /api/v1/auth/refresh` - 刷新Token
 
 ### 用户管理
-```http
-GET    /api/v1/users             # 获取用户列表
-POST   /api/v1/users             # 创建用户
-GET    /api/v1/users/{id}        # 获取用户详情
-PUT    /api/v1/users/{id}        # 更新用户信息
-DELETE /api/v1/users/{id}        # 删除用户
-```
-
-### 院系管理
-```http
-GET    /api/v1/departments       # 获取院系列表
-POST   /api/v1/departments       # 创建院系
-GET    /api/v1/departments/{id}  # 获取院系详情
-PUT    /api/v1/departments/{id}  # 更新院系信息
-DELETE /api/v1/departments/{id}  # 删除院系
-GET    /api/v1/departments/tree  # 获取院系树结构
-```
-
-### 班级管理
-```http
-GET    /api/v1/classes           # 获取班级列表
-POST   /api/v1/classes           # 创建班级
-GET    /api/v1/classes/{id}      # 获取班级详情
-PUT    /api/v1/classes/{id}      # 更新班级信息
-DELETE /api/v1/classes/{id}      # 删除班级
-```
+- `GET /api/v1/users` - 获取用户列表
+- `POST /api/v1/users` - 创建用户
+- `PUT /api/v1/users/{id}` - 更新用户
+- `DELETE /api/v1/users/{id}` - 删除用户
 
 ### 学生管理
-```http
-GET    /api/v1/students          # 获取学生列表
-POST   /api/v1/students          # 创建学生
-GET    /api/v1/students/{id}     # 获取学生详情
-PUT    /api/v1/students/{id}     # 更新学生信息
-DELETE /api/v1/students/{id}     # 删除学生
-```
+- `GET /api/v1/students` - 获取学生列表
+- `POST /api/v1/students` - 创建学生
+- `GET /api/v1/students/{id}` - 获取学生详情
+- `PUT /api/v1/students/{id}` - 更新学生信息
 
 ### 课程管理
-```http
-GET    /api/v1/courses           # 获取课程列表
-POST   /api/v1/courses           # 创建课程
-GET    /api/v1/courses/{id}      # 获取课程详情
-PUT    /api/v1/courses/{id}      # 更新课程信息
-DELETE /api/v1/courses/{id}      # 删除课程
-```
+- `GET /api/v1/courses` - 获取课程列表
+- `POST /api/v1/courses` - 创建课程
+- `GET /api/v1/courses/{id}` - 获取课程详情
+- `POST /api/v1/course-selections` - 学生选课
 
-### 选课管理
-```http
-GET    /api/v1/course-selections        # 获取选课列表
-POST   /api/v1/course-selections        # 学生选课
-DELETE /api/v1/course-selections/{id}   # 学生退课
-GET    /api/v1/course-selections/my     # 获取我的选课
-```
-
-### 成绩管理
-```http
-GET    /api/v1/grades            # 获取成绩列表
-POST   /api/v1/grades            # 录入成绩
-GET    /api/v1/grades/{id}       # 获取成绩详情
-PUT    /api/v1/grades/{id}       # 更新成绩
-DELETE /api/v1/grades/{id}       # 删除成绩
-GET    /api/v1/grades/transcript # 获取成绩单
-```
-
-### 缴费管理
-```http
-GET    /api/v1/payments          # 获取缴费列表
-POST   /api/v1/payments          # 记录缴费
-GET    /api/v1/payments/{id}     # 获取缴费详情
-PUT    /api/v1/payments/{id}     # 更新缴费记录
-GET    /api/v1/fee-items         # 获取缴费项目
-```
-
-## 🔒 安全机制
-
-### 认证授权
-- **JWT Token**: 无状态认证，支持令牌刷新
-- **角色权限**: 基于RBAC的细粒度权限控制
-- **接口保护**: 所有API均需认证，敏感操作需授权
-
-### 数据安全
-- **参数验证**: 完善的输入参数校验
-- **SQL注入防护**: 使用JPA预编译语句
-- **XSS防护**: 输出编码和CSP策略
-- **密码加密**: BCrypt强加密算法
-
-### 系统安全
-- **访问控制**: IP白名单和访问频率限制
-- **审计日志**: 完整的操作日志记录
-- **异常处理**: 统一异常处理，避免信息泄露
-
-## 📈 性能优化
-
-### 缓存策略
-- **Redis缓存**: 用户信息、权限数据、常用查询结果
-- **查询优化**: 合理使用索引，避免N+1查询
-- **连接池**: HikariCP高性能连接池
-
-### 系统监控
-- **应用监控**: Spring Boot Actuator健康检查
-- **性能指标**: 接口响应时间、吞吐量统计
-- **日志管理**: 结构化日志，支持ELK Stack
-
-## 🐳 容器化部署
-
-### Docker部署
-```bash
-# 构建镜像
-docker build -t campus-management-backend .
-
-# 运行容器
-docker run -d \
-  -p 8080:8080 \
-  -e SPRING_PROFILES_ACTIVE=prod \
-  -e MYSQL_HOST=mysql \
-  -e REDIS_HOST=redis \
-  campus-management-backend
-```
-
-### Docker Compose
-```bash
-# 一键启动所有服务
-docker-compose up -d
-```
+更多API详情请查看 [API使用示例](docs/API_USAGE_EXAMPLES.md)
 
 ## 🧪 测试
 
-### 单元测试
+### 运行测试
 ```bash
-# 运行单元测试
+# 运行所有测试
 mvn test
+
+# 运行单元测试
+mvn test -Dtest="*Test"
+
+# 运行集成测试
+mvn test -Dtest="*IntegrationTest"
 
 # 生成测试报告
 mvn test jacoco:report
 ```
 
-### 集成测试
-```bash
-# 运行集成测试
-mvn verify -P integration-test
+### 测试覆盖率
+- 目标覆盖率: 80%+
+- 报告位置: `target/site/jacoco/index.html`
+
+## 📊 监控
+
+### 应用监控
+- **健康检查**: `/actuator/health`
+- **应用信息**: `/actuator/info`
+- **监控指标**: `/actuator/metrics`
+- **Prometheus指标**: `/actuator/prometheus`
+
+### 自定义指标
+- `campus.user.login.count` - 用户登录次数
+- `campus.api.request.count` - API请求次数
+- `campus.api.response.time` - API响应时间
+- `campus.user.active.count` - 活跃用户数
+
+## 🔧 配置
+
+### 环境配置
+- **开发环境**: `application-dev.yml`
+- **测试环境**: `application-test.yml`
+- **生产环境**: `application-prod.yml`
+
+### 关键配置项
+```yaml
+# JWT配置
+campus:
+  jwt:
+    secret: your-jwt-secret-key
+    expiration: 7200000  # 2小时
+    refresh-expiration: 604800000  # 7天
+
+# 文件上传配置
+  upload:
+    path: uploads/
+    max-file-size: 10MB
+    allowed-types: [jpg, jpeg, png, pdf, doc, docx]
+
+# 安全配置
+  security:
+    password:
+      min-length: 6
+      max-attempts: 5
+    session:
+      timeout: 1800
 ```
 
-### API测试
-推荐使用Postman或Insomnia导入API文档进行测试。
+## 🚀 部署
 
-## 📚 开发指南
+### Docker部署
+```bash
+# 构建镜像
+docker build -t campus-management:latest .
+
+# 运行容器
+docker run -d \
+  --name campus-management \
+  -p 8889:8889 \
+  -e SPRING_PROFILES_ACTIVE=prod \
+  campus-management:latest
+```
+
+### Docker Compose部署
+```bash
+# 启动所有服务
+docker-compose up -d
+
+# 查看日志
+docker-compose logs -f
+```
+
+详细部署指南请查看 [部署文档](docs/DEPLOYMENT_GUIDE.md)
+
+## 🤝 贡献
+
+我们欢迎所有形式的贡献！请查看 [开发者指南](docs/DEVELOPER_GUIDE.md) 了解详细信息。
+
+### 贡献流程
+1. Fork 项目
+2. 创建功能分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 创建 Pull Request
 
 ### 代码规范
-- 遵循阿里巴巴Java开发手册
-- 使用Lombok减少样板代码
-- 统一异常处理和响应格式
-- 完善的代码注释和文档
-
-### 扩展开发
-1. **添加新模块**: 按照DDD分层架构添加新的业务模块
-2. **数据库变更**: 使用Flyway进行数据库版本管理
-3. **接口开发**: 遵循RESTful设计原则
-4. **测试编写**: 为新功能编写单元测试和集成测试
-
-### 最佳实践
-- **事务管理**: 合理使用@Transactional注解
-- **异常处理**: 使用自定义业务异常
-- **日志记录**: 记录关键业务操作和异常信息
-- **性能监控**: 关注慢查询和高频接口
-
-## 🔧 故障排查
-
-### 常见问题
-1. **数据库连接失败**: 检查数据库配置和网络连接
-2. **Redis连接异常**: 确认Redis服务状态和配置
-3. **JWT令牌失效**: 检查令牌配置和时钟同步
-4. **权限访问拒绝**: 确认用户角色和权限配置
-
-### 日志查看
-```bash
-# 查看应用日志
-tail -f logs/campus-management.log
-
-# 查看错误日志
-grep "ERROR" logs/campus-management.log
-```
-
-## 🤝 贡献指南
-
-### 提交代码
-1. Fork项目到个人仓库
-2. 创建功能分支: `git checkout -b feature/new-feature`
-3. 提交变更: `git commit -am 'Add new feature'`
-4. 推送分支: `git push origin feature/new-feature`
-5. 创建Pull Request
-
-### 代码审查
-- 确保代码符合项目规范
-- 添加必要的测试用例
-- 更新相关文档
-- 通过CI/CD检查
+- 遵循 Java 编码规范
+- 单元测试覆盖率 > 80%
+- 提交信息使用约定式提交格式
+- 代码审查通过后方可合并
 
 ## 📄 许可证
 
-本项目采用MIT许可证，详情请查看 [LICENSE](LICENSE) 文件。
+本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
 
-## 📞 联系我们
+## 📞 支持
 
-- **项目主页**: https://github.com/your-org/campus-management-backend
-- **问题反馈**: https://github.com/your-org/campus-management-backend/issues
-- **技术支持**: support@campus.com
-- **开发团队**: Campus Management Team
+### 获取帮助
+- 📧 邮件支持: support@campus.edu
+- 💬 技术讨论: [GitHub Discussions](https://github.com/your-org/campus-management/discussions)
+- 🐛 问题反馈: [GitHub Issues](https://github.com/your-org/campus-management/issues)
+- 📖 文档站点: https://docs.campus.edu
 
----
-
-## 🎯 版本历史
-
-### v2.0.0 (2025-06-06) - 重大更新
-- ✨ 全新的实体设计和数据库架构
-- 🚀 基于Spring Boot 3.x重构
-- 🔐 增强的安全认证机制
-- 📊 完善的院系管理功能
-- 🎯 优化的API设计
-- 📝 完整的接口文档
-
-### v1.0.0 (2025-06-03) - 初始版本
-- 🎉 项目初始发布
-- 📚 基础功能实现
-- 🛠️ 核心模块开发
+### 常见问题
+1. **启动失败**: 检查Java版本和数据库连接
+2. **端口冲突**: 修改`server.port`配置
+3. **数据库连接失败**: 检查数据库服务和配置
+4. **Redis连接失败**: 检查Redis服务状态
 
 ---
 
-**⭐ 如果这个项目对你有帮助，请给我们一个Star！**
+<div align="center">
+
+**⭐ 如果这个项目对你有帮助，请给我们一个星标！**
+
+Made with ❤️ by Campus Management Team
+
+</div>

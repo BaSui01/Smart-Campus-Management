@@ -10,8 +10,11 @@ package com.campus.shared.exception;
  */
 public class BusinessException extends RuntimeException {
 
+    private static final long serialVersionUID = 1L;
+
     private String errorCode;
-    private Object data;
+    private transient Object data; // 标记为 transient，避免序列化问题
+    private int statusCode;
 
     public BusinessException(String message) {
         super(message);
@@ -20,6 +23,12 @@ public class BusinessException extends RuntimeException {
     public BusinessException(String errorCode, String message) {
         super(message);
         this.errorCode = errorCode;
+    }
+
+    public BusinessException(int statusCode, String message) {
+        super(message);
+        this.statusCode = statusCode;
+        this.errorCode = String.valueOf(statusCode);
     }
 
     public BusinessException(String message, Throwable cause) {
@@ -51,5 +60,13 @@ public class BusinessException extends RuntimeException {
 
     public void setData(Object data) {
         this.data = data;
+    }
+
+    public int getStatusCode() {
+        return statusCode;
+    }
+
+    public void setStatusCode(int statusCode) {
+        this.statusCode = statusCode;
     }
 }

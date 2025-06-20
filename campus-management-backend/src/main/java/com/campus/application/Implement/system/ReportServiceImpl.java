@@ -7,6 +7,8 @@ import com.campus.domain.repository.finance.PaymentRecordRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -24,6 +26,8 @@ import java.util.*;
  */
 @Service
 public class ReportServiceImpl implements ReportService {
+
+    private static final Logger logger = LoggerFactory.getLogger(ReportServiceImpl.class);
 
     @Autowired
     private PaymentRecordRepository paymentRecordRepository;
@@ -230,7 +234,7 @@ public class ReportServiceImpl implements ReportService {
             category.put("name", categoryNames[i]);
             category.put("icon", categoryIcons[i]);
             category.put("url", categoryUrls[i]);
-            category.put("count", (i + 1) * 5); // 模拟报表数量
+            category.put("count", 0); // 从数据库统计真实的报表数量，等待报表管理服务集成
             categories.add(category);
         }
 
@@ -442,24 +446,24 @@ public class ReportServiceImpl implements ReportService {
     public Map<String, Object> getAnalyticsData() {
         Map<String, Object> analytics = new HashMap<>();
 
-        // 模拟分析数据
-        analytics.put("totalStudents", 1500);
-        analytics.put("totalCourses", 120);
-        analytics.put("totalTeachers", 80);
-        analytics.put("attendanceRate", 95.5);
-        analytics.put("passRate", 88.2);
-        analytics.put("satisfactionScore", 4.3);
+        try {
+            // 从数据库获取真实的分析数据
+            // 当前返回默认值，等待各个Service集成
+            analytics.put("totalStudents", 0);
+            analytics.put("totalCourses", 0);
+            analytics.put("totalTeachers", 0);
+            analytics.put("attendanceRate", 0.0);
+            analytics.put("passRate", 0.0);
+            logger.warn("分析数据统计功能需要集成Student、Course、Teacher等服务");
+            analytics.put("satisfactionScore", 0.0);
 
-        // 趋势数据
-        List<Map<String, Object>> trends = new ArrayList<>();
-        for (int i = 0; i < 12; i++) {
-            Map<String, Object> trend = new HashMap<>();
-            trend.put("month", i + 1);
-            trend.put("students", 1400 + i * 10);
-            trend.put("courses", 100 + i * 2);
-            trends.add(trend);
+            // 趋势数据 - 应该从数据库查询真实的历史数据
+            List<Map<String, Object>> trends = new ArrayList<>();
+            analytics.put("trends", trends);
+
+        } catch (Exception e) {
+            logger.error("获取分析数据失败", e);
         }
-        analytics.put("trends", trends);
 
         return analytics;
     }

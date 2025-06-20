@@ -1,6 +1,6 @@
 package com.campus.interfaces.rest.v1.system;
 
-import com.campus.application.dto.DashboardStatsDTO;
+import com.campus.interfaces.rest.dto.DashboardStatsDTO;
 import com.campus.application.service.system.DashboardService;
 import com.campus.shared.common.ApiResponse;
 
